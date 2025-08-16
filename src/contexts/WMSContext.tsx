@@ -77,6 +77,7 @@ const mockPedidosLiberacao: PedidoLiberacao[] = [
   {
     id: '1',
     numeroPedido: 'PED001',
+    ordemCompra: 'OC-ABC-001',
     dataSolicitacao: '2024-01-16',
     cliente: 'Cliente Premium',
     cnpjCliente: '11.222.333/0001-44',
@@ -145,6 +146,7 @@ export function WMSProvider({ children }: { children: React.ReactNode }) {
     const pedidoLiberado: PedidoLiberado = {
       id: Date.now().toString(),
       numeroPedido: pedido.numeroPedido,
+      ordemCompra: pedido.ordemCompra,
       dataLiberacao: new Date().toISOString().split('T')[0],
       cliente: pedido.cliente,
       nfVinculada: pedido.nfVinculada,

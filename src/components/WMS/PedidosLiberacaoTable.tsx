@@ -62,6 +62,7 @@ export function PedidosLiberacaoTable() {
             <TableHeader>
               <TableRow>
                 <TableHead>Nº Pedido</TableHead>
+                <TableHead>Ordem Compra</TableHead>
                 <TableHead>Data Solicitação</TableHead>
                 <TableHead>Cliente</TableHead>
                 <TableHead>CNPJ</TableHead>
@@ -86,6 +87,7 @@ export function PedidosLiberacaoTable() {
                   )}
                 >
                   <TableCell className="font-medium">{pedido.numeroPedido}</TableCell>
+                  <TableCell>{pedido.ordemCompra}</TableCell>
                   <TableCell>{new Date(pedido.dataSolicitacao).toLocaleDateString('pt-BR')}</TableCell>
                   <TableCell>{pedido.cliente}</TableCell>
                   <TableCell>{pedido.cnpjCliente}</TableCell>

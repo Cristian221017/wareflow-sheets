@@ -20,6 +20,7 @@ export interface NotaFiscal {
 export interface PedidoLiberacao {
   id: string;
   numeroPedido: string;
+  ordemCompra: string;
   dataSolicitacao: string;
   cliente: string;
   cnpjCliente: string;
@@ -37,6 +38,7 @@ export interface PedidoLiberacao {
 export interface PedidoLiberado {
   id: string;
   numeroPedido: string;
+  ordemCompra: string;
   dataLiberacao: string;
   cliente: string;
   nfVinculada: string;

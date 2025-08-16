@@ -31,6 +31,7 @@ export function PedidosLiberadosTable() {
             <TableHeader>
               <TableRow>
                 <TableHead>Nº Pedido</TableHead>
+                <TableHead>Ordem Compra</TableHead>
                 <TableHead>Data Liberação</TableHead>
                 <TableHead>Cliente</TableHead>
                 <TableHead>NF Vinculada</TableHead>
@@ -46,6 +47,7 @@ export function PedidosLiberadosTable() {
               {pedidosLiberados.map((pedido) => (
                 <TableRow key={pedido.id}>
                   <TableCell className="font-medium">{pedido.numeroPedido}</TableCell>
+                  <TableCell>{pedido.ordemCompra}</TableCell>
                   <TableCell>{new Date(pedido.dataLiberacao).toLocaleDateString('pt-BR')}</TableCell>
                   <TableCell>{pedido.cliente}</TableCell>
                   <TableCell>{pedido.nfVinculada}</TableCell>
