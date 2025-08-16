@@ -47,6 +47,18 @@ export function TransportadoraLayout() {
             </div>
             
             <div className="flex gap-2">
+              <Dialog open={isClienteDialogOpen} onOpenChange={setIsClienteDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button className="bg-info text-info-foreground hover:bg-info/80">
+                    <User className="w-4 h-4 mr-2" />
+                    Novo Cliente
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+                  <FormCadastroCliente />
+                </DialogContent>
+              </Dialog>
+
               <Dialog open={isNFDialogOpen} onOpenChange={setIsNFDialogOpen}>
                 <DialogTrigger asChild>
                   <Button className="bg-success text-success-foreground hover:bg-success/80">
@@ -68,18 +80,6 @@ export function TransportadoraLayout() {
                 </DialogTrigger>
                 <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
                   <FormPedidoLiberacao />
-                </DialogContent>
-              </Dialog>
-
-              <Dialog open={isClienteDialogOpen} onOpenChange={setIsClienteDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button className="bg-info text-info-foreground hover:bg-info/80">
-                    <User className="w-4 h-4 mr-2" />
-                    Novo Cliente
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-                  <FormCadastroCliente />
                 </DialogContent>
               </Dialog>
 
