@@ -34,16 +34,16 @@ const getPriorityColor = (prioridade: PedidoLiberacao['prioridade']) => {
 export function PedidosLiberacaoTable() {
   const { pedidosLiberacao, liberarPedido } = useWMS();
   const [selectedPedido, setSelectedPedido] = useState<PedidoLiberacao | null>(null);
-  const [transportadora, setTransportadora] = useState('');
+  const [solicitanteLiberacao, setSolicitanteLiberacao] = useState('');
   const [dataExpedicao, setDataExpedicao] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const handleLiberar = () => {
     if (selectedPedido) {
-      liberarPedido(selectedPedido.id, transportadora, dataExpedicao || undefined);
+      liberarPedido(selectedPedido.id, solicitanteLiberacao, dataExpedicao || undefined);
       setIsDialogOpen(false);
       setSelectedPedido(null);
-      setTransportadora('');
+      setSolicitanteLiberacao('');
       setDataExpedicao('');
     }
   };
@@ -122,19 +122,19 @@ export function PedidosLiberacaoTable() {
                             Confirme os dados para liberação do pedido {selectedPedido?.numeroPedido}
                           </DialogDescription>
                         </DialogHeader>
-                        <div className="grid gap-4 py-4">
-                          <div className="grid grid-cols-4 items-center gap-4">
-                            <Label htmlFor="transportadora" className="text-right">
-                              Transportadora
-                            </Label>
-                            <Input
-                              id="transportadora"
-                              value={transportadora}
-                              onChange={(e) => setTransportadora(e.target.value)}
-                              className="col-span-3"
-                              placeholder="Nome da transportadora"
-                            />
-                          </div>
+                         <div className="grid gap-4 py-4">
+                           <div className="grid grid-cols-4 items-center gap-4">
+                             <Label htmlFor="solicitanteLiberacao" className="text-right">
+                               Solicitante
+                             </Label>
+                             <Input
+                               id="solicitanteLiberacao"
+                               value={solicitanteLiberacao}
+                               onChange={(e) => setSolicitanteLiberacao(e.target.value)}
+                               className="col-span-3"
+                               placeholder="Nome do solicitante da liberação"
+                             />
+                           </div>
                           <div className="grid grid-cols-4 items-center gap-4">
                             <Label htmlFor="dataExpedicao" className="text-right">
                               Data Expedição
@@ -149,12 +149,12 @@ export function PedidosLiberacaoTable() {
                           </div>
                         </div>
                         <DialogFooter>
-                          <Button 
-                            type="submit" 
-                            onClick={handleLiberar}
-                            disabled={!transportadora}
-                            className="bg-success text-success-foreground hover:bg-success/80"
-                          >
+                           <Button 
+                             type="submit" 
+                             onClick={handleLiberar}
+                             disabled={!solicitanteLiberacao}
+                             className="bg-success text-success-foreground hover:bg-success/80"
+                           >
                             Confirmar Liberação
                           </Button>
                         </DialogFooter>
