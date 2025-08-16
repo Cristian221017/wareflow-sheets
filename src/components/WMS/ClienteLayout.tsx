@@ -93,20 +93,22 @@ export function ClienteLayout() {
       {/* Main Content */}
       <main className="container mx-auto px-4 py-6">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="mercadorias" className="flex items-center gap-2">
-              <Package className="w-4 h-4" />
-              Mercadorias Armazenadas
-            </TabsTrigger>
-            <TabsTrigger value="pedidos" className="flex items-center gap-2">
-              <FileText className="w-4 h-4" />
-              Meus Pedidos
-            </TabsTrigger>
-            <TabsTrigger value="liberados" className="flex items-center gap-2">
-              <User className="w-4 h-4" />
-              Pedidos Liberados
-            </TabsTrigger>
-          </TabsList>
+          <div className="overflow-x-auto">
+            <TabsList className="inline-flex h-10 items-center justify-center rounded-md bg-muted p-1 text-muted-foreground min-w-max">
+              <TabsTrigger value="mercadorias" className="inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm gap-2">
+                <Package className="w-4 h-4" />
+                Mercadorias Armazenadas
+              </TabsTrigger>
+              <TabsTrigger value="pedidos" className="inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm gap-2">
+                <FileText className="w-4 h-4" />
+                Meus Pedidos
+              </TabsTrigger>
+              <TabsTrigger value="liberados" className="inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm gap-2">
+                <User className="w-4 h-4" />
+                Pedidos Liberados
+              </TabsTrigger>
+            </TabsList>
+          </div>
 
           <TabsContent value="mercadorias">
             <Card>
