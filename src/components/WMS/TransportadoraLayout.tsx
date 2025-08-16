@@ -95,6 +95,11 @@ export function TransportadoraLayout() {
 
             {/* Mobile Menu */}
             <div className="md:hidden flex gap-2">
+              <Button variant="outline" onClick={logout}>
+                <LogOut className="w-4 h-4 mr-2" />
+                Sair
+              </Button>
+              
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" size="icon">
