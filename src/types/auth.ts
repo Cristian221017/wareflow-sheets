@@ -6,6 +6,7 @@ export interface User {
   email: string;
   type: UserType;
   cnpj?: string;
+  emailRastreabilidade?: string;
 }
 
 export interface AuthContextType {
@@ -13,4 +14,6 @@ export interface AuthContextType {
   login: (email: string, password: string) => Promise<boolean>;
   logout: () => void;
   isAuthenticated: boolean;
+  clientes: User[];
+  addCliente: (cliente: Omit<User, 'id' | 'type'>) => Promise<void>;
 }

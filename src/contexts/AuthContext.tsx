@@ -33,6 +33,9 @@ const mockUsers: Array<User & { password: string }> = [
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
+  const [clientes, setClientes] = useState<User[]>(
+    mockUsers.filter(u => u.type === 'cliente').map(({ password, ...user }) => user)
+  );
 
   const login = async (email: string, password: string): Promise<boolean> => {
     const foundUser = mockUsers.find(u => u.email === email && u.password === password);
@@ -50,12 +53,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(null);
   };
 
+  const addCliente = async (clienteData: Omit<User, 'id' | 'type'>): Promise<void> => {
+    const novoCliente: User = {
+      ...clienteData,
+      id: Date.now().toString(),
+      type: 'cliente'
+    };
+    
+    setClientes(prev => [...prev, novoCliente]);
+    
+    // Simular envio de email de rastreabilidade
+    if (clienteData.emailRastreabilidade) {
+      console.log(`Email de boas-vindas enviado para: ${clienteData.emailRastreabilidade}`);
+    }
+  };
+
   return (
     <AuthContext.Provider value={{
       user,
       login,
       logout,
-      isAuthenticated: !!user
+      isAuthenticated: !!user,
+      clientes,
+      addCliente
     }}>
       {children}
     </AuthContext.Provider>

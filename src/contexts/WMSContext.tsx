@@ -1,5 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { NotaFiscal, PedidoLiberacao, PedidoLiberado } from '@/types/wms';
+import { notificationService } from '@/utils/notificationService';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface WMSContextType {
   notasFiscais: NotaFiscal[];
@@ -94,6 +96,7 @@ export function WMSProvider({ children }: { children: React.ReactNode }) {
   const [notasFiscais, setNotasFiscais] = useState<NotaFiscal[]>(mockNotasFiscais);
   const [pedidosLiberacao, setPedidosLiberacao] = useState<PedidoLiberacao[]>(mockPedidosLiberacao);
   const [pedidosLiberados, setPedidosLiberados] = useState<PedidoLiberado[]>([]);
+  const { clientes } = useAuth();
 
   const addNotaFiscal = (nf: Omit<NotaFiscal, 'id' | 'createdAt'>) => {
     const newNF: NotaFiscal = {
@@ -102,6 +105,16 @@ export function WMSProvider({ children }: { children: React.ReactNode }) {
       createdAt: new Date().toISOString()
     };
     setNotasFiscais(prev => [...prev, newNF]);
+
+    // Enviar notificação de rastreabilidade
+    const cliente = clientes.find(c => c.name === nf.cliente);
+    if (cliente?.emailRastreabilidade) {
+      notificationService.enviarNotificacaoNFCadastrada(
+        cliente.emailRastreabilidade,
+        nf.numeroNF,
+        nf.cliente
+      );
+    }
   };
 
   const addPedidoLiberacao = (pedido: Omit<PedidoLiberacao, 'id' | 'createdAt' | 'status'>) => {
@@ -112,6 +125,16 @@ export function WMSProvider({ children }: { children: React.ReactNode }) {
       createdAt: new Date().toISOString()
     };
     setPedidosLiberacao(prev => [...prev, newPedido]);
+
+    // Enviar notificação de rastreabilidade
+    const cliente = clientes.find(c => c.name === pedido.cliente);
+    if (cliente?.emailRastreabilidade) {
+      notificationService.enviarNotificacaoSolicitacaoLiberacao(
+        cliente.emailRastreabilidade,
+        pedido.numeroPedido,
+        pedido.cliente
+      );
+    }
   };
 
   const liberarPedido = (pedidoId: string, transportadora: string, dataExpedicao?: string) => {
@@ -141,6 +164,16 @@ export function WMSProvider({ children }: { children: React.ReactNode }) {
     const nf = notasFiscais.find(n => n.numeroNF === pedido.nfVinculada);
     if (nf) {
       updateNotaFiscalStatus(nf.id, 'Liberada');
+    }
+
+    // Enviar notificação de rastreabilidade
+    const cliente = clientes.find(c => c.name === pedido.cliente);
+    if (cliente?.emailRastreabilidade) {
+      notificationService.enviarNotificacaoLiberacaoAutorizada(
+        cliente.emailRastreabilidade,
+        pedido.numeroPedido,
+        transportadora
+      );
     }
   };
 

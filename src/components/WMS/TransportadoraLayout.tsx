@@ -6,6 +6,8 @@ import { PedidosLiberacaoTable } from './PedidosLiberacaoTable';
 import { PedidosLiberadosTable } from './PedidosLiberadosTable';
 import { FormNotaFiscal } from './FormNotaFiscal';
 import { FormPedidoLiberacao } from './FormPedidoLiberacao';
+import { FormCadastroCliente } from './FormCadastroCliente';
+import { ImpressaoPedidosLiberados } from './ImpressaoPedidosLiberados';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
 import { 
@@ -15,7 +17,9 @@ import {
   CheckCircle, 
   Plus,
   Warehouse,
-  LogOut
+  LogOut,
+  User,
+  Printer
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -78,7 +82,7 @@ export function TransportadoraLayout() {
       {/* Main Content */}
       <main className="container mx-auto px-4 py-6">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-6">
             <TabsTrigger value="dashboard" className="flex items-center gap-2">
               <BarChart3 className="w-4 h-4" />
               Dashboard
@@ -94,6 +98,14 @@ export function TransportadoraLayout() {
             <TabsTrigger value="pedidos-liberados" className="flex items-center gap-2">
               <CheckCircle className="w-4 h-4" />
               Pedidos Liberados
+            </TabsTrigger>
+            <TabsTrigger value="cadastro-cliente" className="flex items-center gap-2">
+              <User className="w-4 h-4" />
+              Cadastro Cliente
+            </TabsTrigger>
+            <TabsTrigger value="impressao" className="flex items-center gap-2">
+              <Printer className="w-4 h-4" />
+              Relatórios
             </TabsTrigger>
           </TabsList>
 
@@ -111,6 +123,14 @@ export function TransportadoraLayout() {
 
           <TabsContent value="pedidos-liberados">
             <PedidosLiberadosTable />
+          </TabsContent>
+
+          <TabsContent value="cadastro-cliente">
+            <FormCadastroCliente />
+          </TabsContent>
+
+          <TabsContent value="impressao">
+            <ImpressaoPedidosLiberados />
           </TabsContent>
         </Tabs>
       </main>
