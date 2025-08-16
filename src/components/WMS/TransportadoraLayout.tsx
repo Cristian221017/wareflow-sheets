@@ -96,7 +96,7 @@ export function TransportadoraLayout() {
       {/* Main Content */}
       <main className="container mx-auto px-4 py-6">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="dashboard" className="flex items-center gap-2">
               <BarChart3 className="w-4 h-4" />
               Dashboard
@@ -112,6 +112,10 @@ export function TransportadoraLayout() {
             <TabsTrigger value="pedidos-liberados" className="flex items-center gap-2">
               <CheckCircle className="w-4 h-4" />
               Pedidos Liberados
+            </TabsTrigger>
+            <TabsTrigger value="relatorios" className="flex items-center gap-2">
+              <BarChart3 className="w-4 h-4" />
+              Relatórios
             </TabsTrigger>
           </TabsList>
 
@@ -130,9 +134,12 @@ export function TransportadoraLayout() {
           <TabsContent value="pedidos-liberados">
             <div className="space-y-6">
               <PedidosLiberadosTable />
-              <RelatorioControleCargas />
               <ImpressaoPedidosLiberados />
             </div>
+          </TabsContent>
+
+          <TabsContent value="relatorios">
+            <RelatorioControleCargas />
           </TabsContent>
         </Tabs>
       </main>
