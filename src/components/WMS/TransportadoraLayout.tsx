@@ -36,57 +36,61 @@ export function TransportadoraLayout() {
       {/* Header */}
       <header className="border-b bg-card">
         <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div className="flex items-center gap-3">
               <Warehouse className="w-8 h-8 text-primary" />
               <div>
-                <h1 className="text-2xl font-bold text-foreground">Sistema WMS - Transportadora</h1>
+                <h1 className="text-xl sm:text-2xl font-bold text-foreground">Sistema WMS - Transportadora</h1>
                 <p className="text-sm text-muted-foreground">
                   Bem-vindo, {user?.name}
                 </p>
               </div>
             </div>
             
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               <Dialog open={isClienteDialogOpen} onOpenChange={setIsClienteDialogOpen}>
                 <DialogTrigger asChild>
-                  <Button className="bg-info text-info-foreground hover:bg-info/80">
-                    <User className="w-4 h-4 mr-2" />
-                    Cadastro de Cliente
+                  <Button className="bg-info text-info-foreground hover:bg-info/80 text-xs sm:text-sm">
+                    <User className="w-4 h-4 mr-1 sm:mr-2" />
+                    <span className="hidden sm:inline">Cadastro de Cliente</span>
+                    <span className="sm:hidden">Cliente</span>
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+                <DialogContent className="max-w-[95vw] sm:max-w-4xl max-h-[90vh] overflow-y-auto">
                   <FormCadastroCliente />
                 </DialogContent>
               </Dialog>
 
               <Dialog open={isNFDialogOpen} onOpenChange={setIsNFDialogOpen}>
                 <DialogTrigger asChild>
-                  <Button className="bg-success text-success-foreground hover:bg-success/80">
-                    <Plus className="w-4 h-4 mr-2" />
-                    Nova NF
+                  <Button className="bg-success text-success-foreground hover:bg-success/80 text-xs sm:text-sm">
+                    <Plus className="w-4 h-4 mr-1 sm:mr-2" />
+                    <span className="hidden sm:inline">Nova NF</span>
+                    <span className="sm:hidden">NF</span>
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+                <DialogContent className="max-w-[95vw] sm:max-w-4xl max-h-[90vh] overflow-y-auto">
                   <FormNotaFiscal />
                 </DialogContent>
               </Dialog>
 
               <Dialog open={isPedidoDialogOpen} onOpenChange={setIsPedidoDialogOpen}>
                 <DialogTrigger asChild>
-                  <Button className="bg-warning text-warning-foreground hover:bg-warning/80">
-                    <Plus className="w-4 h-4 mr-2" />
-                    Solicitar Liberação
+                  <Button className="bg-warning text-warning-foreground hover:bg-warning/80 text-xs sm:text-sm">
+                    <Plus className="w-4 h-4 mr-1 sm:mr-2" />
+                    <span className="hidden sm:inline">Solicitar Liberação</span>
+                    <span className="sm:hidden">Liberação</span>
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+                <DialogContent className="max-w-[95vw] sm:max-w-4xl max-h-[90vh] overflow-y-auto">
                   <FormPedidoLiberacao />
                 </DialogContent>
               </Dialog>
 
-              <Button variant="outline" onClick={logout}>
-                <LogOut className="w-4 h-4 mr-2" />
-                Sair
+              <Button variant="outline" onClick={logout} className="text-xs sm:text-sm">
+                <LogOut className="w-4 h-4 mr-1 sm:mr-2" />
+                <span className="hidden sm:inline">Sair</span>
+                <span className="sm:hidden">Sair</span>
               </Button>
             </div>
           </div>
@@ -96,26 +100,31 @@ export function TransportadoraLayout() {
       {/* Main Content */}
       <main className="container mx-auto px-4 py-6">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5">
-            <TabsTrigger value="dashboard" className="flex items-center gap-2">
+          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 text-xs sm:text-sm">
+            <TabsTrigger value="dashboard" className="flex items-center gap-1 sm:gap-2">
               <BarChart3 className="w-4 h-4" />
-              Dashboard
+              <span className="hidden sm:inline">Dashboard</span>
+              <span className="sm:hidden">Home</span>
             </TabsTrigger>
-            <TabsTrigger value="notas-fiscais" className="flex items-center gap-2">
+            <TabsTrigger value="notas-fiscais" className="flex items-center gap-1 sm:gap-2">
               <Package className="w-4 h-4" />
-              Notas Fiscais
+              <span className="hidden sm:inline">Notas Fiscais</span>
+              <span className="sm:hidden">NFs</span>
             </TabsTrigger>
-            <TabsTrigger value="pedidos-liberacao" className="flex items-center gap-2">
+            <TabsTrigger value="pedidos-liberacao" className="flex items-center gap-1 sm:gap-2">
               <FileText className="w-4 h-4" />
-              Pedidos de Liberação
+              <span className="hidden lg:inline">Pedidos de Liberação</span>
+              <span className="lg:hidden">Pedidos</span>
             </TabsTrigger>
-            <TabsTrigger value="pedidos-liberados" className="flex items-center gap-2">
+            <TabsTrigger value="pedidos-liberados" className="flex items-center gap-1 sm:gap-2">
               <CheckCircle className="w-4 h-4" />
-              Pedidos Liberados
+              <span className="hidden lg:inline">Pedidos Liberados</span>
+              <span className="lg:hidden">Liberados</span>
             </TabsTrigger>
-            <TabsTrigger value="relatorios" className="flex items-center gap-2">
+            <TabsTrigger value="relatorios" className="flex items-center gap-1 sm:gap-2">
               <BarChart3 className="w-4 h-4" />
-              Relatórios
+              <span className="hidden sm:inline">Relatórios</span>
+              <span className="sm:hidden">Rel.</span>
             </TabsTrigger>
           </TabsList>
 
