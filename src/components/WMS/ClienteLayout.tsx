@@ -122,6 +122,8 @@ export function ClienteLayout() {
                     <TableHeader>
                       <TableRow>
                         <TableHead>Número NF</TableHead>
+                        <TableHead>Nº Pedido</TableHead>
+                        <TableHead>Ordem Compra</TableHead>
                         <TableHead>Data Recebimento</TableHead>
                         <TableHead>Fornecedor</TableHead>
                         <TableHead>Produto</TableHead>
@@ -135,6 +137,8 @@ export function ClienteLayout() {
                       {clienteNFs.map((nf) => (
                         <TableRow key={nf.id}>
                           <TableCell className="font-medium">{nf.numeroNF}</TableCell>
+                          <TableCell className="text-primary font-medium">{nf.numeroPedido}</TableCell>
+                          <TableCell>{nf.ordemCompra}</TableCell>
                           <TableCell>{new Date(nf.dataRecebimento).toLocaleDateString('pt-BR')}</TableCell>
                           <TableCell>{nf.fornecedor}</TableCell>
                           <TableCell>{nf.produto}</TableCell>

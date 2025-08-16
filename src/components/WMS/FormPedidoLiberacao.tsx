@@ -3,6 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Combobox } from '@/components/ui/combobox';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -29,6 +30,14 @@ type FormData = z.infer<typeof formSchema>;
 
 export function FormPedidoLiberacao() {
   const { addPedidoLiberacao, notasFiscais } = useWMS();
+  
+  // Prepare NF options for combobox
+  const nfOptions = notasFiscais
+    .filter(nf => nf.status !== 'Liberada')
+    .map(nf => ({
+      value: nf.numeroNF,
+      label: `${nf.numeroNF} - ${nf.produto} (${nf.cliente})`
+    }));
   
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -131,23 +140,17 @@ export function FormPedidoLiberacao() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>NF Vinculada *</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecione uma NF" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {notasFiscais
-                          .filter(nf => nf.status !== 'Liberada')
-                          .map(nf => (
-                            <SelectItem key={nf.id} value={nf.numeroNF}>
-                              {nf.numeroNF} - {nf.produto} ({nf.cliente})
-                            </SelectItem>
-                          ))
-                        }
-                      </SelectContent>
-                    </Select>
+                    <FormControl>
+                      <Combobox
+                        options={nfOptions}
+                        value={field.value}
+                        onValueChange={field.onChange}
+                        placeholder="Selecione uma NF"
+                        searchPlaceholder="Buscar NF..."
+                        emptyText="Nenhuma NF encontrada"
+                        className="w-full"
+                      />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}

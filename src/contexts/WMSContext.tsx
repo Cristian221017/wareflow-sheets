@@ -18,6 +18,8 @@ const mockNotasFiscais: NotaFiscal[] = [
   {
     id: '1',
     numeroNF: 'NF001234',
+    numeroPedido: 'PED-2024-001',
+    ordemCompra: 'OC-ABC-001',
     dataRecebimento: '2024-01-15',
     fornecedor: 'Fornecedor ABC',
     cnpj: '12.345.678/0001-90',
@@ -34,6 +36,8 @@ const mockNotasFiscais: NotaFiscal[] = [
   {
     id: '2',
     numeroNF: 'NF001235',
+    numeroPedido: 'PED-2024-002',
+    ordemCompra: 'OC-XYZ-002',
     dataRecebimento: '2024-01-10',
     fornecedor: 'Fornecedor XYZ',
     cnpj: '98.765.432/0001-10',
@@ -50,6 +54,8 @@ const mockNotasFiscais: NotaFiscal[] = [
   {
     id: '3',
     numeroNF: 'NF001236',
+    numeroPedido: 'PED-2024-003',
+    ordemCompra: 'OC-DEF-003',
     dataRecebimento: '2024-01-12',
     fornecedor: 'Fornecedor DEF',
     cnpj: '55.666.777/0001-88',

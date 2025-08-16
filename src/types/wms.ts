@@ -1,6 +1,8 @@
 export interface NotaFiscal {
   id: string;
   numeroNF: string;
+  numeroPedido: string;
+  ordemCompra: string;
   dataRecebimento: string;
   fornecedor: string;
   cnpj: string;

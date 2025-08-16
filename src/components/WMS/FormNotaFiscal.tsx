@@ -13,6 +13,8 @@ import { Package } from 'lucide-react';
 
 const formSchema = z.object({
   numeroNF: z.string().min(1, 'Número da NF é obrigatório'),
+  numeroPedido: z.string().min(1, 'Número do pedido é obrigatório'),
+  ordemCompra: z.string().min(1, 'Ordem de compra é obrigatória'),
   dataRecebimento: z.string().min(1, 'Data de recebimento é obrigatória'),
   fornecedor: z.string().min(1, 'Fornecedor é obrigatório'),
   cnpj: z.string().min(14, 'CNPJ deve ter pelo menos 14 caracteres'),
@@ -35,6 +37,8 @@ export function FormNotaFiscal() {
     resolver: zodResolver(formSchema),
     defaultValues: {
       numeroNF: '',
+      numeroPedido: '',
+      ordemCompra: '',
       dataRecebimento: '',
       fornecedor: '',
       cnpj: '',
@@ -78,6 +82,34 @@ export function FormNotaFiscal() {
                     <FormLabel>Número NF *</FormLabel>
                     <FormControl>
                       <Input placeholder="NF123456" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="numeroPedido"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Número do Pedido *</FormLabel>
+                    <FormControl>
+                      <Input placeholder="PED-2024-001" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="ordemCompra"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Ordem de Compra *</FormLabel>
+                    <FormControl>
+                      <Input placeholder="OC-ABC-001" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

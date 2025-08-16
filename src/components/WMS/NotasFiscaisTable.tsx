@@ -8,7 +8,7 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Combobox } from '@/components/ui/combobox';
 import { useWMS } from '@/contexts/WMSContext';
 import { NotaFiscal } from '@/types/wms';
 import { cn } from '@/lib/utils';
@@ -39,9 +39,12 @@ export function NotasFiscaisTable() {
   const [selectedCliente, setSelectedCliente] = useState<string>('todos');
 
   // Get unique clients for filter
-  const clientes = useMemo(() => {
+  const clienteOptions = useMemo(() => {
     const uniqueClientes = Array.from(new Set(notasFiscais.map(nf => nf.cliente)));
-    return uniqueClientes;
+    return [
+      { value: 'todos', label: 'Todos os clientes' },
+      ...uniqueClientes.map(cliente => ({ value: cliente, label: cliente }))
+    ];
   }, [notasFiscais]);
 
   // Filter notes by selected client
@@ -62,19 +65,14 @@ export function NotasFiscaisTable() {
         <div className="flex gap-4 items-center">
           <div className="flex items-center gap-2">
             <span className="text-sm font-medium">Filtrar por cliente:</span>
-            <Select value={selectedCliente} onValueChange={setSelectedCliente}>
-              <SelectTrigger className="w-48">
-                <SelectValue placeholder="Selecione um cliente" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="todos">Todos os clientes</SelectItem>
-                {clientes.map(cliente => (
-                  <SelectItem key={cliente} value={cliente}>
-                    {cliente}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Combobox
+              options={clienteOptions}
+              value={selectedCliente}
+              onValueChange={setSelectedCliente}
+              placeholder="Selecione um cliente"
+              searchPlaceholder="Buscar cliente..."
+              className="w-48"
+            />
           </div>
         </div>
       </CardHeader>
@@ -84,6 +82,8 @@ export function NotasFiscaisTable() {
             <TableHeader>
               <TableRow>
                 <TableHead>Número NF</TableHead>
+                <TableHead>Nº Pedido</TableHead>
+                <TableHead>Ordem Compra</TableHead>
                 <TableHead>Data Recebimento</TableHead>
                 <TableHead>Fornecedor</TableHead>
                 <TableHead>CNPJ Fornecedor</TableHead>
@@ -111,6 +111,8 @@ export function NotasFiscaisTable() {
                   )}
                 >
                   <TableCell className="font-medium">{nf.numeroNF}</TableCell>
+                  <TableCell className="text-primary font-medium">{nf.numeroPedido}</TableCell>
+                  <TableCell>{nf.ordemCompra}</TableCell>
                   <TableCell>{new Date(nf.dataRecebimento).toLocaleDateString('pt-BR')}</TableCell>
                   <TableCell>{nf.fornecedor}</TableCell>
                   <TableCell>{nf.cnpj}</TableCell>
