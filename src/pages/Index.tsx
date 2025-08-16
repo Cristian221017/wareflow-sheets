@@ -1,4 +1,4 @@
-import { WMSLayout } from '@/components/WMS/WMSLayout';
+import { WMSLayout } from '@/components/WMS/WMSMain';
 
 const Index = () => {
   return <WMSLayout />;

@@ -48,7 +48,8 @@ export function FormPedidoLiberacao() {
   });
 
   const onSubmit = (data: FormData) => {
-    addPedidoLiberacao(data);
+    const pedidoData = data as unknown as Omit<PedidoLiberacao, 'id' | 'createdAt' | 'status'>;
+    addPedidoLiberacao(pedidoData);
     toast.success('Pedido de liberação criado com sucesso!');
     form.reset();
   };

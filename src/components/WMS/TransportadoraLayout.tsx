@@ -14,10 +14,13 @@ import {
   FileText, 
   CheckCircle, 
   Plus,
-  Warehouse
+  Warehouse,
+  LogOut
 } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
 
-export function WMSLayout() {
+export function TransportadoraLayout() {
+  const { user, logout } = useAuth();
   const [activeTab, setActiveTab] = useState('dashboard');
   const [isNFDialogOpen, setIsNFDialogOpen] = useState(false);
   const [isPedidoDialogOpen, setIsPedidoDialogOpen] = useState(false);
@@ -31,8 +34,10 @@ export function WMSLayout() {
             <div className="flex items-center gap-3">
               <Warehouse className="w-8 h-8 text-primary" />
               <div>
-                <h1 className="text-2xl font-bold text-foreground">Sistema WMS</h1>
-                <p className="text-sm text-muted-foreground">Warehouse Management System</p>
+                <h1 className="text-2xl font-bold text-foreground">Sistema WMS - Transportadora</h1>
+                <p className="text-sm text-muted-foreground">
+                  Bem-vindo, {user?.name}
+                </p>
               </div>
             </div>
             
@@ -60,6 +65,11 @@ export function WMSLayout() {
                   <FormPedidoLiberacao />
                 </DialogContent>
               </Dialog>
+
+              <Button variant="outline" onClick={logout}>
+                <LogOut className="w-4 h-4 mr-2" />
+                Sair
+              </Button>
             </div>
           </div>
         </div>

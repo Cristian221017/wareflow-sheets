@@ -6,7 +6,7 @@ interface WMSContextType {
   pedidosLiberacao: PedidoLiberacao[];
   pedidosLiberados: PedidoLiberado[];
   addNotaFiscal: (nf: Omit<NotaFiscal, 'id' | 'createdAt'>) => void;
-  addPedidoLiberacao: (pedido: Omit<PedidoLiberacao, 'id' | 'createdAt'>) => void;
+  addPedidoLiberacao: (pedido: Omit<PedidoLiberacao, 'id' | 'createdAt' | 'status'>) => void;
   liberarPedido: (pedidoId: string, transportadora: string, dataExpedicao?: string) => void;
   updateNotaFiscalStatus: (nfId: string, status: NotaFiscal['status']) => void;
 }
@@ -78,7 +78,7 @@ export function WMSProvider({ children }: { children: React.ReactNode }) {
     setNotasFiscais(prev => [...prev, newNF]);
   };
 
-  const addPedidoLiberacao = (pedido: Omit<PedidoLiberacao, 'id' | 'createdAt'>) => {
+  const addPedidoLiberacao = (pedido: Omit<PedidoLiberacao, 'id' | 'createdAt' | 'status'>) => {
     const newPedido: PedidoLiberacao = {
       ...pedido,
       id: Date.now().toString(),
