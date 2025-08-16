@@ -51,7 +51,7 @@ export function TransportadoraLayout() {
                 <DialogTrigger asChild>
                   <Button className="bg-info text-info-foreground hover:bg-info/80">
                     <User className="w-4 h-4 mr-2" />
-                    Novo Cliente
+                    Cadastro de Cliente
                   </Button>
                 </DialogTrigger>
                 <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
@@ -95,7 +95,7 @@ export function TransportadoraLayout() {
       {/* Main Content */}
       <main className="container mx-auto px-4 py-6">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-6">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="dashboard" className="flex items-center gap-2">
               <BarChart3 className="w-4 h-4" />
               Dashboard
@@ -111,10 +111,6 @@ export function TransportadoraLayout() {
             <TabsTrigger value="pedidos-liberados" className="flex items-center gap-2">
               <CheckCircle className="w-4 h-4" />
               Pedidos Liberados
-            </TabsTrigger>
-            <TabsTrigger value="cadastro-cliente" className="flex items-center gap-2">
-              <User className="w-4 h-4" />
-              Cadastro Cliente
             </TabsTrigger>
             <TabsTrigger value="impressao" className="flex items-center gap-2">
               <Printer className="w-4 h-4" />
@@ -136,10 +132,6 @@ export function TransportadoraLayout() {
 
           <TabsContent value="pedidos-liberados">
             <PedidosLiberadosTable />
-          </TabsContent>
-
-          <TabsContent value="cadastro-cliente">
-            <FormCadastroCliente />
           </TabsContent>
 
           <TabsContent value="impressao">
