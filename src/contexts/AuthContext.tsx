@@ -20,6 +20,14 @@ const mockUsers: Array<User & { password: string }> = [
     password: '123456',
     type: 'cliente',
     cnpj: '11.222.333/0001-44'
+  },
+  {
+    id: '3',
+    name: 'Cliente Corporativo',
+    email: 'cliente@corporativo.com',
+    password: '123456',
+    type: 'cliente',
+    cnpj: '22.333.444/0001-55'
   }
 ];
 

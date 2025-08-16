@@ -21,6 +21,8 @@ const mockNotasFiscais: NotaFiscal[] = [
     dataRecebimento: '2024-01-15',
     fornecedor: 'Fornecedor ABC',
     cnpj: '12.345.678/0001-90',
+    cliente: 'Cliente Premium',
+    cnpjCliente: '11.222.333/0001-44',
     produto: 'Produto A',
     quantidade: 100,
     peso: 50.5,
@@ -35,6 +37,8 @@ const mockNotasFiscais: NotaFiscal[] = [
     dataRecebimento: '2024-01-10',
     fornecedor: 'Fornecedor XYZ',
     cnpj: '98.765.432/0001-10',
+    cliente: 'Cliente Premium',
+    cnpjCliente: '11.222.333/0001-44',
     produto: 'Produto B',
     quantidade: 75,
     peso: 30.2,
@@ -42,6 +46,22 @@ const mockNotasFiscais: NotaFiscal[] = [
     localizacao: 'B1-C2-D3',
     status: 'Em Separação',
     createdAt: '2024-01-10T14:30:00Z'
+  },
+  {
+    id: '3',
+    numeroNF: 'NF001236',
+    dataRecebimento: '2024-01-12',
+    fornecedor: 'Fornecedor DEF',
+    cnpj: '55.666.777/0001-88',
+    cliente: 'Cliente Corporativo',
+    cnpjCliente: '22.333.444/0001-55',
+    produto: 'Produto C',
+    quantidade: 200,
+    peso: 80.0,
+    volume: 4.5,
+    localizacao: 'C1-D2-E3',
+    status: 'Armazenada',
+    createdAt: '2024-01-12T16:00:00Z'
   }
 ];
 

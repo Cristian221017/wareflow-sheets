@@ -16,6 +16,8 @@ const formSchema = z.object({
   dataRecebimento: z.string().min(1, 'Data de recebimento é obrigatória'),
   fornecedor: z.string().min(1, 'Fornecedor é obrigatório'),
   cnpj: z.string().min(14, 'CNPJ deve ter pelo menos 14 caracteres'),
+  cliente: z.string().min(1, 'Cliente é obrigatório'),
+  cnpjCliente: z.string().min(14, 'CNPJ do cliente deve ter pelo menos 14 caracteres'),
   produto: z.string().min(1, 'Produto é obrigatório'),
   quantidade: z.coerce.number().min(1, 'Quantidade deve ser maior que 0'),
   peso: z.coerce.number().min(0.1, 'Peso deve ser maior que 0'),
@@ -36,6 +38,8 @@ export function FormNotaFiscal() {
       dataRecebimento: '',
       fornecedor: '',
       cnpj: '',
+      cliente: '',
+      cnpjCliente: '',
       produto: '',
       quantidade: 0,
       peso: 0,
@@ -114,6 +118,34 @@ export function FormNotaFiscal() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>CNPJ *</FormLabel>
+                    <FormControl>
+                      <Input placeholder="00.000.000/0000-00" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="cliente"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Cliente *</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Nome do cliente" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="cnpjCliente"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>CNPJ do Cliente *</FormLabel>
                     <FormControl>
                       <Input placeholder="00.000.000/0000-00" {...field} />
                     </FormControl>

@@ -44,6 +44,7 @@ export function ClienteLayout() {
   const [isPedidoDialogOpen, setIsPedidoDialogOpen] = useState(false);
 
   // Filter data for current client
+  const clienteNFs = notasFiscais.filter(nf => nf.cnpjCliente === user?.cnpj);
   const clientePedidos = pedidosLiberacao.filter(p => p.cnpjCliente === user?.cnpj);
   const clienteLiberados = pedidosLiberados.filter(p => {
     // Find related pedido to get client CNPJ
@@ -131,7 +132,7 @@ export function ClienteLayout() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {notasFiscais.map((nf) => (
+                      {clienteNFs.map((nf) => (
                         <TableRow key={nf.id}>
                           <TableCell className="font-medium">{nf.numeroNF}</TableCell>
                           <TableCell>{new Date(nf.dataRecebimento).toLocaleDateString('pt-BR')}</TableCell>

@@ -142,7 +142,7 @@ export function FormPedidoLiberacao() {
                           .filter(nf => nf.status !== 'Liberada')
                           .map(nf => (
                             <SelectItem key={nf.id} value={nf.numeroNF}>
-                              {nf.numeroNF} - {nf.produto}
+                              {nf.numeroNF} - {nf.produto} ({nf.cliente})
                             </SelectItem>
                           ))
                         }

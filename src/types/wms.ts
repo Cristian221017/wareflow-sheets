@@ -4,6 +4,8 @@ export interface NotaFiscal {
   dataRecebimento: string;
   fornecedor: string;
   cnpj: string;
+  cliente: string;
+  cnpjCliente: string;
   produto: string;
   quantidade: number;
   peso: number;
