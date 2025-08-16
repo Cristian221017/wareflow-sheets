@@ -5,13 +5,15 @@ import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
 import { useAuth } from '@/contexts/AuthContext';
 import { useWMS } from '@/contexts/WMSContext';
 import { FormPedidoLiberacao } from './FormPedidoLiberacao';
+import { ClienteDashboard } from './ClienteDashboard';
 import { 
   Package, 
   FileText, 
   Plus,
   Warehouse,
   LogOut,
-  User
+  User,
+  BarChart3
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -40,7 +42,7 @@ const getStatusColor = (status: string) => {
 export function ClienteLayout() {
   const { user, logout } = useAuth();
   const { notasFiscais, pedidosLiberacao, pedidosLiberados } = useWMS();
-  const [activeTab, setActiveTab] = useState('mercadorias');
+  const [activeTab, setActiveTab] = useState('dashboard');
   const [isPedidoDialogOpen, setIsPedidoDialogOpen] = useState(false);
 
   // Filter data for current client
@@ -95,6 +97,10 @@ export function ClienteLayout() {
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <div className="overflow-x-auto">
             <TabsList className="inline-flex h-10 items-center justify-center rounded-md bg-muted p-1 text-muted-foreground min-w-max">
+              <TabsTrigger value="dashboard" className="inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm gap-2">
+                <BarChart3 className="w-4 h-4" />
+                Dashboard
+              </TabsTrigger>
               <TabsTrigger value="mercadorias" className="inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm gap-2">
                 <Package className="w-4 h-4" />
                 Mercadorias Armazenadas
@@ -109,6 +115,10 @@ export function ClienteLayout() {
               </TabsTrigger>
             </TabsList>
           </div>
+
+          <TabsContent value="dashboard">
+            <ClienteDashboard />
+          </TabsContent>
 
           <TabsContent value="mercadorias">
             <Card>
