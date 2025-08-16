@@ -108,9 +108,9 @@ export function WMSProvider({ children }: { children: React.ReactNode }) {
 
     // Enviar notificação de rastreabilidade
     const cliente = clientes.find(c => c.name === nf.cliente);
-    if (cliente?.emailRastreabilidade) {
+    if (cliente?.emailNotaFiscal) {
       notificationService.enviarNotificacaoNFCadastrada(
-        cliente.emailRastreabilidade,
+        cliente.emailNotaFiscal,
         nf.numeroNF,
         nf.cliente
       );
@@ -128,9 +128,9 @@ export function WMSProvider({ children }: { children: React.ReactNode }) {
 
     // Enviar notificação de rastreabilidade
     const cliente = clientes.find(c => c.name === pedido.cliente);
-    if (cliente?.emailRastreabilidade) {
+    if (cliente?.emailSolicitacaoLiberacao) {
       notificationService.enviarNotificacaoSolicitacaoLiberacao(
-        cliente.emailRastreabilidade,
+        cliente.emailSolicitacaoLiberacao,
         pedido.numeroPedido,
         pedido.cliente
       );
@@ -168,9 +168,9 @@ export function WMSProvider({ children }: { children: React.ReactNode }) {
 
     // Enviar notificação de rastreabilidade
     const cliente = clientes.find(c => c.name === pedido.cliente);
-    if (cliente?.emailRastreabilidade) {
+    if (cliente?.emailLiberacaoAutorizada) {
       notificationService.enviarNotificacaoLiberacaoAutorizada(
-        cliente.emailRastreabilidade,
+        cliente.emailLiberacaoAutorizada,
         pedido.numeroPedido,
         transportadora
       );

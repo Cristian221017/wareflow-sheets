@@ -6,7 +6,9 @@ export interface User {
   email: string;
   type: UserType;
   cnpj?: string;
-  emailRastreabilidade?: string;
+  emailNotaFiscal?: string;
+  emailSolicitacaoLiberacao?: string;
+  emailLiberacaoAutorizada?: string;
 }
 
 export interface AuthContextType {

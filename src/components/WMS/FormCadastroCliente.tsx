@@ -21,7 +21,9 @@ const formSchema = z.object({
   name: z.string().min(1, 'Nome é obrigatório'),
   email: z.string().email('Email inválido'),
   cnpj: z.string().min(14, 'CNPJ é obrigatório'),
-  emailRastreabilidade: z.string().email('Email de rastreabilidade inválido').optional().or(z.literal('')),
+  emailNotaFiscal: z.string().email('Email inválido').optional().or(z.literal('')),
+  emailSolicitacaoLiberacao: z.string().email('Email inválido').optional().or(z.literal('')),
+  emailLiberacaoAutorizada: z.string().email('Email inválido').optional().or(z.literal('')),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -36,7 +38,9 @@ export function FormCadastroCliente() {
       name: '',
       email: '',
       cnpj: '',
-      emailRastreabilidade: '',
+      emailNotaFiscal: '',
+      emailSolicitacaoLiberacao: '',
+      emailLiberacaoAutorizada: '',
     },
   });
 
@@ -47,7 +51,9 @@ export function FormCadastroCliente() {
         name: values.name,
         email: values.email,
         cnpj: values.cnpj,
-        emailRastreabilidade: values.emailRastreabilidade || undefined,
+        emailNotaFiscal: values.emailNotaFiscal || undefined,
+        emailSolicitacaoLiberacao: values.emailSolicitacaoLiberacao || undefined,
+        emailLiberacaoAutorizada: values.emailLiberacaoAutorizada || undefined,
       });
       
       toast.success('Cliente cadastrado com sucesso!');
@@ -73,7 +79,8 @@ export function FormCadastroCliente() {
       <CardContent>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="name"
@@ -115,27 +122,75 @@ export function FormCadastroCliente() {
                   </FormItem>
                 )}
               />
+            </div>
 
-              <FormField
+            <div className="space-y-4">
+              <h3 className="text-lg font-medium">Emails de Notificação</h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <FormField
                 control={form.control}
-                name="emailRastreabilidade"
+                name="emailNotaFiscal"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Email de Rastreabilidade (Opcional)</FormLabel>
+                    <FormLabel>Email para NF Cadastrada (Opcional)</FormLabel>
                     <FormControl>
                       <Input 
                         type="email" 
-                        placeholder="rastreamento@empresa.com" 
+                        placeholder="nf@empresa.com" 
                         {...field} 
                       />
                     </FormControl>
                     <FormMessage />
                     <p className="text-xs text-muted-foreground">
-                      Email para receber notificações sobre NFs e liberações
+                      Email para receber quando uma NF for cadastrada
                     </p>
                   </FormItem>
                 )}
               />
+
+              <FormField
+                control={form.control}
+                name="emailSolicitacaoLiberacao"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email para Solicitação de Liberação (Opcional)</FormLabel>
+                    <FormControl>
+                      <Input 
+                        type="email" 
+                        placeholder="solicitacao@empresa.com" 
+                        {...field} 
+                      />
+                    </FormControl>
+                    <FormMessage />
+                    <p className="text-xs text-muted-foreground">
+                      Email para receber solicitações de liberação
+                    </p>
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="emailLiberacaoAutorizada"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email para Liberação Autorizada (Opcional)</FormLabel>
+                    <FormControl>
+                      <Input 
+                        type="email" 
+                        placeholder="liberacao@empresa.com" 
+                        {...field} 
+                      />
+                    </FormControl>
+                    <FormMessage />
+                    <p className="text-xs text-muted-foreground">
+                      Email para receber quando pedidos forem liberados
+                    </p>
+                  </FormItem>
+                )}
+               />
+              </div>
+             </div>
             </div>
 
             <Button type="submit" disabled={isLoading} className="w-full">

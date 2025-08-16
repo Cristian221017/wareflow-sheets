@@ -62,9 +62,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     
     setClientes(prev => [...prev, novoCliente]);
     
-    // Simular envio de email de rastreabilidade
-    if (clienteData.emailRastreabilidade) {
-      console.log(`Email de boas-vindas enviado para: ${clienteData.emailRastreabilidade}`);
+    // Simular envio de emails de boas-vindas
+    if (clienteData.emailNotaFiscal) {
+      console.log(`Email de boas-vindas (NF) enviado para: ${clienteData.emailNotaFiscal}`);
+    }
+    if (clienteData.emailSolicitacaoLiberacao) {
+      console.log(`Email de boas-vindas (Solicitação) enviado para: ${clienteData.emailSolicitacaoLiberacao}`);
+    }
+    if (clienteData.emailLiberacaoAutorizada) {
+      console.log(`Email de boas-vindas (Liberação) enviado para: ${clienteData.emailLiberacaoAutorizada}`);
     }
   };
 
