@@ -8,6 +8,7 @@ import { FormNotaFiscal } from './FormNotaFiscal';
 import { FormPedidoLiberacao } from './FormPedidoLiberacao';
 import { FormCadastroCliente } from './FormCadastroCliente';
 import { ImpressaoPedidosLiberados } from './ImpressaoPedidosLiberados';
+import { RelatorioControleCargas } from './RelatorioControleCargas';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
 import { 
@@ -129,6 +130,7 @@ export function TransportadoraLayout() {
           <TabsContent value="pedidos-liberados">
             <div className="space-y-6">
               <PedidosLiberadosTable />
+              <RelatorioControleCargas />
               <ImpressaoPedidosLiberados />
             </div>
           </TabsContent>
