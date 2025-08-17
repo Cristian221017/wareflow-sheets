@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
-import { Warehouse, UserPlus, LogIn } from 'lucide-react';
+import { Warehouse, UserPlus, LogIn, Truck, User } from 'lucide-react';
 
 export function LoginPage() {
   const { login, signUp } = useAuth();
@@ -57,6 +57,20 @@ export function LoginPage() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleDemoLogin = (userType: 'admin' | 'transportadora' | 'cliente') => {
+    const demoCredentials = {
+      admin: { email: 'admin@sistema.com', password: 'admin123' },
+      transportadora: { email: 'transportadora@abc.com', password: '123456' },
+      cliente: { email: 'cliente@premium.com', password: '123456' }
+    };
+
+    setFormData(prev => ({ 
+      ...prev, 
+      ...demoCredentials[userType] 
+    }));
+    setActiveTab('login');
   };
 
   return (
@@ -189,6 +203,55 @@ export function LoginPage() {
             </CardContent>
           </Card>
         )}
+
+        {/* Demo Access */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm">Acesso Demo</CardTitle>
+            <CardDescription className="text-xs">
+              Clique para preencher automaticamente as credenciais de teste
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-2">
+              <Button 
+                variant="outline" 
+                className="w-full justify-start"
+                onClick={() => handleDemoLogin('admin')}
+              >
+                <UserPlus className="w-4 h-4 mr-2" />
+                Super Admin
+              </Button>
+              <p className="text-xs text-muted-foreground mb-3">
+                Acesso total: Gerenciar transportadoras e usuários
+              </p>
+              
+              <Button 
+                variant="outline" 
+                className="w-full justify-start"
+                onClick={() => handleDemoLogin('transportadora')}
+              >
+                <Truck className="w-4 h-4 mr-2" />
+                Transportadora ABC
+              </Button>
+              <p className="text-xs text-muted-foreground mb-3">
+                Acesso completo: Dashboard, cadastros, liberações
+              </p>
+              
+              <Button 
+                variant="outline" 
+                className="w-full justify-start"
+                onClick={() => handleDemoLogin('cliente')}
+              >
+                <User className="w-4 h-4 mr-2" />
+                Cliente Premium
+              </Button>
+              <p className="text-xs text-muted-foreground">
+                Acesso limitado: Consultas e solicitações
+              </p>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
