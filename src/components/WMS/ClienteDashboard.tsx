@@ -109,16 +109,16 @@ export function ClienteDashboard() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <div className="w-3 h-3 bg-warning rounded-full"></div>
-                  <span className="text-sm">Em Separação</span>
+                  <span className="text-sm">Ordem Solicitada</span>
                 </div>
-                <span className="text-sm font-medium">{getStatusCount('Em Separação')}</span>
+                <span className="text-sm font-medium">{getStatusCount('Ordem Solicitada')}</span>
               </div>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 bg-muted rounded-full"></div>
-                  <span className="text-sm">Liberadas</span>
+                  <div className="w-3 h-3 bg-primary rounded-full"></div>
+                  <span className="text-sm">Solicitação Confirmada</span>
                 </div>
-                <span className="text-sm font-medium">{getStatusCount('Liberada')}</span>
+                <span className="text-sm font-medium">{getStatusCount('Solicitação Confirmada')}</span>
               </div>
             </div>
           </CardContent>
