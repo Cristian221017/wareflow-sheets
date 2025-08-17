@@ -90,6 +90,23 @@ const mockPedidosLiberacao: PedidoLiberacao[] = [
     responsavel: 'João Silva',
     status: 'Em análise',
     createdAt: '2024-01-16T09:00:00Z'
+  },
+  {
+    id: '2',
+    numeroPedido: 'PED-2024-002',
+    ordemCompra: 'OC-XYZ-002',
+    dataSolicitacao: '2024-01-11',
+    cliente: 'Cliente Premium',
+    cnpjCliente: '11.222.333/0001-44',
+    nfVinculada: 'NF001235',
+    produto: 'Produto B',
+    quantidade: 75,
+    peso: 30.2,
+    volume: 1.8,
+    prioridade: 'Média',
+    responsavel: 'Maria Santos',
+    status: 'Em análise',
+    createdAt: '2024-01-11T10:00:00Z'
   }
 ];
 
