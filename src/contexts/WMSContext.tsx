@@ -127,11 +127,14 @@ export function WMSProvider({ children }: { children: React.ReactNode }) {
     };
     setPedidosLiberacao(prev => [...prev, newPedido]);
 
-    // Atualizar status da NF para "Ordem Solicitada"
-    const nf = notasFiscais.find(n => n.numeroNF === pedido.nfVinculada);
-    if (nf) {
-      updateNotaFiscalStatus(nf.id, 'Ordem Solicitada');
-    }
+    // Atualizar status da NF para "Ordem Solicitada" quando ordem de carregamento for criada
+    setNotasFiscais(prev => 
+      prev.map(nf => 
+        nf.numeroNF === pedido.nfVinculada 
+          ? { ...nf, status: 'Ordem Solicitada' as const }
+          : nf
+      )
+    );
 
     // Enviar notificação de rastreabilidade
     const cliente = clientes.find(c => c.name === pedido.cliente);
@@ -168,11 +171,14 @@ export function WMSProvider({ children }: { children: React.ReactNode }) {
     setPedidosLiberados(prev => [...prev, pedidoLiberado]);
     setPedidosLiberacao(prev => prev.filter(p => p.id !== pedidoId));
     
-    // Update NF status
-    const nf = notasFiscais.find(n => n.numeroNF === pedido.nfVinculada);
-    if (nf) {
-      updateNotaFiscalStatus(nf.id, 'Solicitação Confirmada');
-    }
+    // Update NF status to "Solicitação Confirmada" when order is confirmed
+    setNotasFiscais(prev => 
+      prev.map(nf => 
+        nf.numeroNF === pedido.nfVinculada 
+          ? { ...nf, status: 'Solicitação Confirmada' as const }
+          : nf
+      )
+    );
 
     // Enviar notificação de rastreabilidade
     const cliente = clientes.find(c => c.name === pedido.cliente);

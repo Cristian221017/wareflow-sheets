@@ -21,6 +21,7 @@ interface FormPedidoLiberacaoProps {
 
 const formSchema = z.object({
   numeroPedido: z.string().min(1, 'Número do pedido é obrigatório'),
+  ordemCompra: z.string().min(1, 'Ordem de compra é obrigatória'),
   dataSolicitacao: z.string().min(1, 'Data de solicitação é obrigatória'),
   cliente: z.string().min(1, 'Cliente é obrigatório'),
   cnpjCliente: z.string().min(14, 'CNPJ deve ter pelo menos 14 caracteres'),
@@ -55,6 +56,7 @@ export function FormPedidoLiberacao({ notaFiscal, onSuccess }: FormPedidoLiberac
     resolver: zodResolver(formSchema),
     defaultValues: {
       numeroPedido: notaFiscal?.numeroPedido || '',
+      ordemCompra: notaFiscal?.ordemCompra || '',
       dataSolicitacao: today,
       cliente: notaFiscal?.cliente || user?.name || '',
       cnpjCliente: notaFiscal?.cnpjCliente || user?.cnpj || '',
@@ -73,6 +75,7 @@ export function FormPedidoLiberacao({ notaFiscal, onSuccess }: FormPedidoLiberac
     if (notaFiscal) {
       form.reset({
         numeroPedido: notaFiscal.numeroPedido,
+        ordemCompra: notaFiscal.ordemCompra,
         dataSolicitacao: today,
         cliente: notaFiscal.cliente,
         cnpjCliente: notaFiscal.cnpjCliente,
@@ -127,6 +130,20 @@ export function FormPedidoLiberacao({ notaFiscal, onSuccess }: FormPedidoLiberac
                     <FormLabel>Número do Pedido *</FormLabel>
                     <FormControl>
                       <Input placeholder="PED001" {...field} readOnly={isPreFilled} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="ordemCompra"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Ordem de Compra *</FormLabel>
+                    <FormControl>
+                      <Input placeholder="OC-ABC-001" {...field} readOnly={isPreFilled} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
