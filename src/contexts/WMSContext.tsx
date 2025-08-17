@@ -75,23 +75,6 @@ const mockNotasFiscais: NotaFiscal[] = [
 
 const mockPedidosLiberacao: PedidoLiberacao[] = [
   {
-    id: '1',
-    numeroPedido: 'PED001',
-    ordemCompra: 'OC-ABC-001',
-    dataSolicitacao: '2024-01-16',
-    cliente: 'Cliente Premium',
-    cnpjCliente: '11.222.333/0001-44',
-    nfVinculada: 'NF001234',
-    produto: 'Produto A',
-    quantidade: 50,
-    peso: 25.0,
-    volume: 1.2,
-    prioridade: 'Alta',
-    responsavel: 'João Silva',
-    status: 'Em análise',
-    createdAt: '2024-01-16T09:00:00Z'
-  },
-  {
     id: '2',
     numeroPedido: 'PED-2024-002',
     ordemCompra: 'OC-XYZ-002',
