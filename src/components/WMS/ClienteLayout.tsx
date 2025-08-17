@@ -31,9 +31,9 @@ const getStatusColor = (status: string) => {
   switch (status) {
     case 'Armazenada':
       return 'bg-success text-success-foreground';
-    case 'Em Separação':
+    case 'Ordem Solicitada':
       return 'bg-warning text-warning-foreground';
-    case 'Liberada':
+    case 'Solicitação Confirmada':
       return 'bg-muted text-muted-foreground';
     default:
       return 'bg-muted text-muted-foreground';

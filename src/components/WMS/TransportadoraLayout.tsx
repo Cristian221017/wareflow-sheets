@@ -79,7 +79,7 @@ export function TransportadoraLayout() {
                 <DialogTrigger asChild>
                   <Button className="bg-warning text-warning-foreground hover:bg-warning/80">
                     <Plus className="w-4 h-4 mr-2" />
-                    Solicitar Liberação
+                    Ordem de Carregamento
                   </Button>
                 </DialogTrigger>
                 <DialogContent className="max-w-[95vw] sm:max-w-4xl max-h-[90vh] overflow-y-auto">
@@ -136,7 +136,7 @@ export function TransportadoraLayout() {
                     <DialogTrigger asChild>
                       <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
                         <Plus className="w-4 h-4 mr-2" />
-                        Solicitar Liberação
+                        Ordem de Carregamento
                       </DropdownMenuItem>
                     </DialogTrigger>
                     <DialogContent className="max-w-[95vw] max-h-[90vh] overflow-y-auto">
