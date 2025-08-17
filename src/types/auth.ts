@@ -9,13 +9,17 @@ export interface User {
   emailNotaFiscal?: string;
   emailSolicitacaoLiberacao?: string;
   emailLiberacaoAutorizada?: string;
+  role?: 'super_admin' | 'admin_transportadora' | 'operador' | 'cliente';
+  transportadoraId?: string;
 }
 
 export interface AuthContextType {
   user: User | null;
   login: (email: string, password: string) => Promise<boolean>;
+  signUp: (email: string, password: string, name: string) => Promise<{ error?: string }>;
   logout: () => void;
   isAuthenticated: boolean;
+  loading: boolean;
   clientes: User[];
   addCliente: (cliente: Omit<User, 'id' | 'type'>) => Promise<void>;
 }

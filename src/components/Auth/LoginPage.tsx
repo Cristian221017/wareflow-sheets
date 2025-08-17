@@ -6,14 +6,17 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
-import { Warehouse, Truck, User } from 'lucide-react';
+import { Warehouse, UserPlus, LogIn } from 'lucide-react';
 
 export function LoginPage() {
-  const { login } = useAuth();
+  const { login, signUp } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState<'login' | 'signup'>('login');
   const [formData, setFormData] = useState({
     email: '',
-    password: ''
+    password: '',
+    name: '',
+    confirmPassword: ''
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -21,26 +24,39 @@ export function LoginPage() {
     setIsLoading(true);
 
     try {
-      const success = await login(formData.email, formData.password);
-      if (success) {
-        toast.success('Login realizado com sucesso!');
+      if (activeTab === 'login') {
+        const success = await login(formData.email, formData.password);
+        if (success) {
+          toast.success('Login realizado com sucesso!');
+        } else {
+          toast.error('Credenciais inválidas!');
+        }
       } else {
-        toast.error('Credenciais inválidas!');
+        // Sign up
+        if (formData.password !== formData.confirmPassword) {
+          toast.error('As senhas não coincidem!');
+          return;
+        }
+
+        if (formData.password.length < 6) {
+          toast.error('A senha deve ter pelo menos 6 caracteres!');
+          return;
+        }
+
+        const { error } = await signUp(formData.email, formData.password, formData.name);
+        if (error) {
+          toast.error(error);
+        } else {
+          toast.success('Conta criada com sucesso! Verifique seu email para confirmar.');
+          setActiveTab('login');
+          setFormData(prev => ({ ...prev, password: '', confirmPassword: '', name: '' }));
+        }
       }
     } catch (error) {
-      toast.error('Erro ao fazer login');
+      toast.error('Erro inesperado');
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const handleDemoLogin = (userType: 'transportadora' | 'cliente') => {
-    const demoCredentials = {
-      transportadora: { email: 'transportadora@abc.com', password: '123456' },
-      cliente: { email: 'cliente@premium.com', password: '123456' }
-    };
-
-    setFormData(demoCredentials[userType]);
   };
 
   return (
@@ -55,16 +71,44 @@ export function LoginPage() {
           <p className="text-muted-foreground">Warehouse Management System</p>
         </div>
 
-        {/* Login Card */}
+        {/* Auth Card */}
         <Card>
           <CardHeader>
-            <CardTitle>Acesso ao Sistema</CardTitle>
-            <CardDescription>
-              Entre com suas credenciais para acessar o sistema
-            </CardDescription>
+            <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'login' | 'signup')}>
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="login">Entrar</TabsTrigger>
+                <TabsTrigger value="signup">Criar Conta</TabsTrigger>
+              </TabsList>
+              
+              <div className="mt-4">
+                <CardTitle>
+                  {activeTab === 'login' ? 'Acesso ao Sistema' : 'Criar Nova Conta'}
+                </CardTitle>
+                <CardDescription>
+                  {activeTab === 'login' 
+                    ? 'Entre com suas credenciais para acessar o sistema'
+                    : 'Crie sua conta para acessar o sistema WMS'
+                  }
+                </CardDescription>
+              </div>
+            </Tabs>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
+              {activeTab === 'signup' && (
+                <div className="space-y-2">
+                  <Label htmlFor="name">Nome Completo</Label>
+                  <Input
+                    id="name"
+                    type="text"
+                    placeholder="Seu nome completo"
+                    value={formData.name}
+                    onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                    required
+                  />
+                </div>
+              )}
+
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
                 <Input
@@ -82,69 +126,69 @@ export function LoginPage() {
                 <Input
                   id="password"
                   type="password"
-                  placeholder="Sua senha"
+                  placeholder={activeTab === 'signup' ? 'Mínimo 6 caracteres' : 'Sua senha'}
                   value={formData.password}
                   onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
                   required
+                  minLength={activeTab === 'signup' ? 6 : undefined}
                 />
               </div>
+
+              {activeTab === 'signup' && (
+                <div className="space-y-2">
+                  <Label htmlFor="confirmPassword">Confirmar Senha</Label>
+                  <Input
+                    id="confirmPassword"
+                    type="password"
+                    placeholder="Confirme sua senha"
+                    value={formData.confirmPassword}
+                    onChange={(e) => setFormData(prev => ({ ...prev, confirmPassword: e.target.value }))}
+                    required
+                  />
+                </div>
+              )}
 
               <Button 
                 type="submit" 
                 className="w-full" 
                 disabled={isLoading}
               >
-                {isLoading ? 'Entrando...' : 'Entrar'}
+                {isLoading ? (
+                  activeTab === 'login' ? 'Entrando...' : 'Criando conta...'
+                ) : (
+                  <>
+                    {activeTab === 'login' ? (
+                      <>
+                        <LogIn className="w-4 h-4 mr-2" />
+                        Entrar
+                      </>
+                    ) : (
+                      <>
+                        <UserPlus className="w-4 h-4 mr-2" />
+                        Criar Conta
+                      </>
+                    )}
+                  </>
+                )}
               </Button>
             </form>
           </CardContent>
         </Card>
 
-        {/* Demo Access */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-sm">Acesso Demo</CardTitle>
-            <CardDescription className="text-xs">
-              Clique para preencher automaticamente as credenciais
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Tabs defaultValue="transportadora" className="w-full">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="transportadora">Transportadora</TabsTrigger>
-                <TabsTrigger value="cliente">Cliente</TabsTrigger>
-              </TabsList>
-              
-              <TabsContent value="transportadora" className="space-y-2">
-                <Button 
-                  variant="outline" 
-                  className="w-full justify-start"
-                  onClick={() => handleDemoLogin('transportadora')}
-                >
-                  <Truck className="w-4 h-4 mr-2" />
-                  Transportadora ABC
-                </Button>
-                <p className="text-xs text-muted-foreground">
-                  Acesso completo: Dashboard, cadastros, liberações
-                </p>
-              </TabsContent>
-              
-              <TabsContent value="cliente" className="space-y-2">
-                <Button 
-                  variant="outline" 
-                  className="w-full justify-start"
-                  onClick={() => handleDemoLogin('cliente')}
-                >
-                  <User className="w-4 h-4 mr-2" />
-                  Cliente Premium
-                </Button>
-                <p className="text-xs text-muted-foreground">
-                  Acesso limitado: Consultas e solicitações
-                </p>
-              </TabsContent>
-            </Tabs>
-          </CardContent>
-        </Card>
+        {activeTab === 'signup' && (
+          <Card className="border-amber-200 bg-amber-50">
+            <CardContent className="pt-6">
+              <div className="text-sm text-amber-800">
+                <p className="font-medium mb-2">Após criar sua conta:</p>
+                <ul className="list-disc list-inside space-y-1 text-xs">
+                  <li>Verifique seu email para confirmar a conta</li>
+                  <li>Aguarde a liberação do acesso por um administrador</li>
+                  <li>Você será associado a uma transportadora</li>
+                </ul>
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </div>
   );
