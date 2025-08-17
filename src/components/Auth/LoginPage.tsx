@@ -220,36 +220,79 @@ export function LoginPage() {
           </CardContent>
         </Card>
 
-        {/* Quick test account creation */}
+        {/* Demo Accounts Section */}
         <Card className="border-green-200 bg-green-50">
           <CardHeader>
-            <CardTitle className="text-sm text-green-800">Teste Rápido</CardTitle>
+            <CardTitle className="text-sm text-green-800">Contas Demo</CardTitle>
             <CardDescription className="text-xs text-green-700">
-              Para testar o sistema rapidamente
+              Crie diferentes tipos de conta para testar o sistema
             </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
               <Button 
                 variant="outline" 
-                className="w-full justify-start"
+                className="w-full justify-start text-purple-700 border-purple-200 hover:bg-purple-50"
                 onClick={() => {
                   setFormData(prev => ({ 
                     ...prev, 
-                    email: 'teste@exemplo.com',
-                    name: 'Usuário Teste',
-                    password: '123456',
-                    confirmPassword: '123456'
+                    email: 'superadmin@sistema.com',
+                    name: 'Super Administrador',
+                    password: 'admin123',
+                    confirmPassword: 'admin123'
+                  }));
+                  setActiveTab('signup');
+                }}
+              >
+                <User className="w-4 h-4 mr-2" />
+                Super Admin (Gestão Completa)
+              </Button>
+              
+              <Button 
+                variant="outline" 
+                className="w-full justify-start text-blue-700 border-blue-200 hover:bg-blue-50"
+                onClick={() => {
+                  setFormData(prev => ({ 
+                    ...prev, 
+                    email: 'admin@transportadora.com',
+                    name: 'Admin Transportadora',
+                    password: 'trans123',
+                    confirmPassword: 'trans123'
+                  }));
+                  setActiveTab('signup');
+                }}
+              >
+                <Truck className="w-4 h-4 mr-2" />
+                Admin Transportadora
+              </Button>
+              
+              <Button 
+                variant="outline" 
+                className="w-full justify-start text-green-700 border-green-200 hover:bg-green-50"
+                onClick={() => {
+                  setFormData(prev => ({ 
+                    ...prev, 
+                    email: 'cliente@empresa.com',
+                    name: 'Cliente Empresa',
+                    password: 'cliente123',
+                    confirmPassword: 'cliente123'
                   }));
                   setActiveTab('signup');
                 }}
               >
                 <UserPlus className="w-4 h-4 mr-2" />
-                Criar Conta de Teste
+                Cliente Empresarial
               </Button>
-              <p className="text-xs text-green-700">
-                Preenche automaticamente os campos para criar uma conta de teste
-              </p>
+              
+              <div className="mt-3 p-2 bg-green-100 rounded-md">
+                <p className="text-xs text-green-800 font-medium">Como usar:</p>
+                <ol className="text-xs text-green-700 mt-1 space-y-1">
+                  <li>1. Clique no tipo de conta desejado</li>
+                  <li>2. Clique em "Criar Conta" para registrar</li>
+                  <li>3. Após criação, faça login normalmente</li>
+                  <li>4. O sistema definirá as permissões automaticamente</li>
+                </ol>
+              </div>
             </div>
           </CardContent>
         </Card>
