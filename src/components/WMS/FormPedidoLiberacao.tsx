@@ -36,6 +36,7 @@ const formSchema = z.object({
 type FormData = z.infer<typeof formSchema>;
 
 export function FormPedidoLiberacao({ notaFiscal, onSuccess }: FormPedidoLiberacaoProps = {}) {
+  console.log('FormPedidoLiberacao - notaFiscal recebida:', notaFiscal);
   const { addPedidoLiberacao, notasFiscais } = useWMS();
   const { user } = useAuth();
   

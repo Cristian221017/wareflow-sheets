@@ -140,6 +140,7 @@ export function ClienteMercadoriasTable() {
   };
 
   const handleSolicitarLiberacao = (nf: NotaFiscal) => {
+    console.log('handleSolicitarLiberacao - NF selecionada:', nf);
     setSelectedNF(nf);
     setIsLiberacaoDialogOpen(true);
   };
@@ -374,14 +375,19 @@ export function ClienteMercadoriasTable() {
       {/* Dialog for single NF liberation */}
       <Dialog open={isLiberacaoDialogOpen} onOpenChange={setIsLiberacaoDialogOpen}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-          <FormPedidoLiberacao 
-            notaFiscal={selectedNF || undefined}
-            onSuccess={() => {
-              setIsLiberacaoDialogOpen(false);
-              setSelectedNF(null);
-              toast.success('Pedido de liberação criado com sucesso!');
-            }}
-          />
+          {(() => {
+            console.log('Dialog renderizado - selectedNF:', selectedNF);
+            return (
+              <FormPedidoLiberacao 
+                notaFiscal={selectedNF || undefined}
+                onSuccess={() => {
+                  setIsLiberacaoDialogOpen(false);
+                  setSelectedNF(null);
+                  toast.success('Pedido de liberação criado com sucesso!');
+                }}
+              />
+            );
+          })()}
         </DialogContent>
       </Dialog>
 
