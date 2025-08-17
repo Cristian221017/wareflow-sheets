@@ -204,78 +204,52 @@ export function LoginPage() {
           </Card>
         )}
 
-        {/* Demo Access */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-sm">Acesso Demo</CardTitle>
-            <CardDescription className="text-xs">
-              Para usar os usuários demo, primeiro crie as contas usando "Criar Conta"
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid gap-3">
-              <div className="space-y-2">
-                <Button 
-                  variant="outline" 
-                  className="w-full justify-start"
-                  onClick={() => handleDemoLogin('admin')}
-                >
-                  <UserPlus className="w-4 h-4 mr-2" />
-                  Super Admin
-                </Button>
-                <div className="text-xs text-muted-foreground bg-muted p-2 rounded">
-                  <strong>Email:</strong> admin@sistema.com<br />
-                  <strong>Senha:</strong> admin123<br />
-                  <strong>Acesso:</strong> Gerenciar transportadoras e usuários
-                </div>
-              </div>
-              
-              <div className="space-y-2">
-                <Button 
-                  variant="outline" 
-                  className="w-full justify-start"
-                  onClick={() => handleDemoLogin('transportadora')}
-                >
-                  <Truck className="w-4 h-4 mr-2" />
-                  Transportadora ABC
-                </Button>
-                <div className="text-xs text-muted-foreground bg-muted p-2 rounded">
-                  <strong>Email:</strong> transportadora@abc.com<br />
-                  <strong>Senha:</strong> 123456<br />
-                  <strong>Acesso:</strong> Dashboard, cadastros, liberações
-                </div>
-              </div>
-              
-              <div className="space-y-2">
-                <Button 
-                  variant="outline" 
-                  className="w-full justify-start"
-                  onClick={() => handleDemoLogin('cliente')}
-                >
-                  <User className="w-4 h-4 mr-2" />
-                  Cliente Premium
-                </Button>
-                <div className="text-xs text-muted-foreground bg-muted p-2 rounded">
-                  <strong>Email:</strong> cliente@premium.com<br />
-                  <strong>Senha:</strong> 123456<br />
-                  <strong>Acesso:</strong> Consultas e solicitações
-                </div>
-              </div>
+        {/* Instructions for getting started */}
+        <Card className="border-blue-200 bg-blue-50">
+          <CardContent className="pt-6">
+            <div className="text-sm text-blue-800">
+              <p className="font-medium mb-2">Para começar a usar o sistema:</p>
+              <ol className="list-decimal list-inside space-y-1 text-xs">
+                <li>Clique em "Criar Conta" acima</li>
+                <li>Use seu email e defina uma senha</li>
+                <li>Confirme sua conta pelo email enviado</li>
+                <li>Entre normalmente com suas credenciais</li>
+                <li>Um administrador irá configurar suas permissões</li>
+              </ol>
             </div>
           </CardContent>
         </Card>
 
-        {/* Instructions */}
-        <Card className="border-blue-200 bg-blue-50">
-          <CardContent className="pt-6">
-            <div className="text-sm text-blue-800">
-              <p className="font-medium mb-2">Como usar os usuários demo:</p>
-              <ol className="list-decimal list-inside space-y-1 text-xs">
-                <li>Clique em "Criar Conta" acima</li>
-                <li>Use um dos emails demo listados</li>
-                <li>Confirme sua conta pelo email</li>
-                <li>Entre normalmente com as credenciais</li>
-              </ol>
+        {/* Quick test account creation */}
+        <Card className="border-green-200 bg-green-50">
+          <CardHeader>
+            <CardTitle className="text-sm text-green-800">Teste Rápido</CardTitle>
+            <CardDescription className="text-xs text-green-700">
+              Para testar o sistema rapidamente
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              <Button 
+                variant="outline" 
+                className="w-full justify-start"
+                onClick={() => {
+                  setFormData(prev => ({ 
+                    ...prev, 
+                    email: 'teste@exemplo.com',
+                    name: 'Usuário Teste',
+                    password: '123456',
+                    confirmPassword: '123456'
+                  }));
+                  setActiveTab('signup');
+                }}
+              >
+                <UserPlus className="w-4 h-4 mr-2" />
+                Criar Conta de Teste
+              </Button>
+              <p className="text-xs text-green-700">
+                Preenche automaticamente os campos para criar uma conta de teste
+              </p>
             </div>
           </CardContent>
         </Card>
