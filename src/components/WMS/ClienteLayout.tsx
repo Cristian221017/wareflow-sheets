@@ -6,6 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useWMS } from '@/contexts/WMSContext';
 import { FormPedidoLiberacao } from './FormPedidoLiberacao';
 import { ClienteDashboard } from './ClienteDashboard';
+import { ClienteMercadoriasTable } from './ClienteMercadoriasTable';
 import { 
   Package, 
   FileText, 
@@ -121,54 +122,7 @@ export function ClienteLayout() {
           </TabsContent>
 
           <TabsContent value="mercadorias">
-            <Card>
-              <CardHeader>
-                <CardTitle>Mercadorias Disponíveis</CardTitle>
-                <CardDescription>
-                  Consulte as mercadorias armazenadas disponíveis para liberação
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="overflow-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Número NF</TableHead>
-                        <TableHead>Nº Pedido</TableHead>
-                        <TableHead>Ordem Compra</TableHead>
-                        <TableHead>Data Recebimento</TableHead>
-                        <TableHead>Fornecedor</TableHead>
-                        <TableHead>Produto</TableHead>
-                        <TableHead>Quantidade</TableHead>
-                        <TableHead>Peso (kg)</TableHead>
-                        <TableHead>Volume (m³)</TableHead>
-                        <TableHead>Status</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {clienteNFs.map((nf) => (
-                        <TableRow key={nf.id}>
-                          <TableCell className="font-medium">{nf.numeroNF}</TableCell>
-                          <TableCell className="text-primary font-medium">{nf.numeroPedido}</TableCell>
-                          <TableCell>{nf.ordemCompra}</TableCell>
-                          <TableCell>{new Date(nf.dataRecebimento).toLocaleDateString('pt-BR')}</TableCell>
-                          <TableCell>{nf.fornecedor}</TableCell>
-                          <TableCell>{nf.produto}</TableCell>
-                          <TableCell>{nf.quantidade}</TableCell>
-                          <TableCell>{nf.peso.toFixed(1)}</TableCell>
-                          <TableCell>{nf.volume.toFixed(2)}</TableCell>
-                          <TableCell>
-                            <Badge className={getStatusColor(nf.status)}>
-                              {nf.status}
-                            </Badge>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              </CardContent>
-            </Card>
+            <ClienteMercadoriasTable />
           </TabsContent>
 
           <TabsContent value="pedidos">
