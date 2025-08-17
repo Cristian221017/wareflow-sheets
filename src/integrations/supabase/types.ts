@@ -467,6 +467,16 @@ export type Database = {
         }
         Returns: boolean
       }
+      setup_demo_user: {
+        Args: {
+          transportadora_cnpj?: string
+          user_email: string
+          user_id: string
+          user_name: string
+          user_role: Database["public"]["Enums"]["user_role"]
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       user_role: "super_admin" | "admin_transportadora" | "operador" | "cliente"
