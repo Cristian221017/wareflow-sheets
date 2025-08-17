@@ -8,9 +8,16 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { useWMS } from '@/contexts/WMSContext';
-import { PedidoLiberacao } from '@/types/wms';
+import { useAuth } from '@/contexts/AuthContext';
+import { PedidoLiberacao, NotaFiscal } from '@/types/wms';
 import { toast } from 'sonner';
 import { FileText } from 'lucide-react';
+import { useEffect } from 'react';
+
+interface FormPedidoLiberacaoProps {
+  notaFiscal?: NotaFiscal;
+  onSuccess?: () => void;
+}
 
 const formSchema = z.object({
   numeroPedido: z.string().min(1, 'Número do pedido é obrigatório'),
@@ -28,8 +35,9 @@ const formSchema = z.object({
 
 type FormData = z.infer<typeof formSchema>;
 
-export function FormPedidoLiberacao() {
+export function FormPedidoLiberacao({ notaFiscal, onSuccess }: FormPedidoLiberacaoProps = {}) {
   const { addPedidoLiberacao, notasFiscais } = useWMS();
+  const { user } = useAuth();
   
   // Prepare NF options for combobox
   const nfOptions = notasFiscais
@@ -38,40 +46,72 @@ export function FormPedidoLiberacao() {
       value: nf.numeroNF,
       label: `${nf.numeroNF} - ${nf.produto} (${nf.cliente})`
     }));
+
+  // Generate today's date in YYYY-MM-DD format
+  const today = new Date().toISOString().split('T')[0];
   
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      numeroPedido: '',
-      dataSolicitacao: '',
-      cliente: '',
-      cnpjCliente: '',
-      nfVinculada: '',
-      produto: '',
-      quantidade: 0,
-      peso: 0,
-      volume: 0,
+      numeroPedido: notaFiscal?.numeroPedido || '',
+      dataSolicitacao: today,
+      cliente: notaFiscal?.cliente || user?.name || '',
+      cnpjCliente: notaFiscal?.cnpjCliente || user?.cnpj || '',
+      nfVinculada: notaFiscal?.numeroNF || '',
+      produto: notaFiscal?.produto || '',
+      quantidade: notaFiscal?.quantidade || 0,
+      peso: notaFiscal?.peso || 0,
+      volume: notaFiscal?.volume || 0,
       prioridade: 'Média',
       responsavel: ''
     }
   });
 
+  // Update form when notaFiscal prop changes
+  useEffect(() => {
+    if (notaFiscal) {
+      form.reset({
+        numeroPedido: notaFiscal.numeroPedido,
+        dataSolicitacao: today,
+        cliente: notaFiscal.cliente,
+        cnpjCliente: notaFiscal.cnpjCliente,
+        nfVinculada: notaFiscal.numeroNF,
+        produto: notaFiscal.produto,
+        quantidade: notaFiscal.quantidade,
+        peso: notaFiscal.peso,
+        volume: notaFiscal.volume,
+        prioridade: 'Média',
+        responsavel: ''
+      });
+    }
+  }, [notaFiscal, form, today]);
+
   const onSubmit = (data: FormData) => {
     const pedidoData = data as unknown as Omit<PedidoLiberacao, 'id' | 'createdAt' | 'status'>;
     addPedidoLiberacao(pedidoData);
     toast.success('Pedido de liberação criado com sucesso!');
-    form.reset();
+    
+    if (onSuccess) {
+      onSuccess();
+    } else {
+      form.reset();
+    }
   };
+
+  const isPreFilled = !!notaFiscal;
 
   return (
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <FileText className="w-5 h-5" />
-          Solicitar Liberação
+          {isPreFilled ? 'Confirmar Solicitação de Liberação' : 'Solicitar Liberação'}
         </CardTitle>
         <CardDescription>
-          Criar uma nova solicitação de liberação de mercadoria
+          {isPreFilled 
+            ? `Confirme os dados da NF ${notaFiscal?.numeroNF} e informe o responsável pela solicitação`
+            : 'Criar uma nova solicitação de liberação de mercadoria'
+          }
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -85,7 +125,7 @@ export function FormPedidoLiberacao() {
                   <FormItem>
                     <FormLabel>Número do Pedido *</FormLabel>
                     <FormControl>
-                      <Input placeholder="PED001" {...field} />
+                      <Input placeholder="PED001" {...field} readOnly={isPreFilled} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -99,7 +139,7 @@ export function FormPedidoLiberacao() {
                   <FormItem>
                     <FormLabel>Data da Solicitação *</FormLabel>
                     <FormControl>
-                      <Input type="date" {...field} />
+                      <Input type="date" {...field} readOnly={isPreFilled} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -113,7 +153,7 @@ export function FormPedidoLiberacao() {
                   <FormItem>
                     <FormLabel>Cliente *</FormLabel>
                     <FormControl>
-                      <Input placeholder="Nome do cliente" {...field} />
+                      <Input placeholder="Nome do cliente" {...field} readOnly={isPreFilled} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -127,7 +167,7 @@ export function FormPedidoLiberacao() {
                   <FormItem>
                     <FormLabel>CNPJ do Cliente *</FormLabel>
                     <FormControl>
-                      <Input placeholder="00.000.000/0000-00" {...field} />
+                      <Input placeholder="00.000.000/0000-00" {...field} readOnly={isPreFilled} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -141,15 +181,23 @@ export function FormPedidoLiberacao() {
                   <FormItem>
                     <FormLabel>NF Vinculada *</FormLabel>
                     <FormControl>
-                      <Combobox
-                        options={nfOptions}
-                        value={field.value}
-                        onValueChange={field.onChange}
-                        placeholder="Selecione uma NF"
-                        searchPlaceholder="Buscar NF..."
-                        emptyText="Nenhuma NF encontrada"
-                        className="w-full"
-                      />
+                      {isPreFilled ? (
+                        <Input 
+                          value={field.value} 
+                          readOnly 
+                          className="bg-muted"
+                        />
+                      ) : (
+                        <Combobox
+                          options={nfOptions}
+                          value={field.value}
+                          onValueChange={field.onChange}
+                          placeholder="Selecione uma NF"
+                          searchPlaceholder="Buscar NF..."
+                          emptyText="Nenhuma NF encontrada"
+                          className="w-full"
+                        />
+                      )}
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -163,7 +211,7 @@ export function FormPedidoLiberacao() {
                   <FormItem>
                     <FormLabel>Produto *</FormLabel>
                     <FormControl>
-                      <Input placeholder="Nome do produto" {...field} />
+                      <Input placeholder="Nome do produto" {...field} readOnly={isPreFilled} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -177,7 +225,7 @@ export function FormPedidoLiberacao() {
                   <FormItem>
                     <FormLabel>Quantidade *</FormLabel>
                     <FormControl>
-                      <Input type="number" placeholder="50" {...field} />
+                      <Input type="number" placeholder="50" {...field} readOnly={isPreFilled} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -191,7 +239,7 @@ export function FormPedidoLiberacao() {
                   <FormItem>
                     <FormLabel>Peso (kg) *</FormLabel>
                     <FormControl>
-                      <Input type="number" step="0.1" placeholder="25.0" {...field} />
+                      <Input type="number" step="0.1" placeholder="25.0" {...field} readOnly={isPreFilled} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -205,7 +253,7 @@ export function FormPedidoLiberacao() {
                   <FormItem>
                     <FormLabel>Volume (m³) *</FormLabel>
                     <FormControl>
-                      <Input type="number" step="0.01" placeholder="1.2" {...field} />
+                      <Input type="number" step="0.01" placeholder="1.2" {...field} readOnly={isPreFilled} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -239,10 +287,16 @@ export function FormPedidoLiberacao() {
                 control={form.control}
                 name="responsavel"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Responsável pela Liberação *</FormLabel>
+                  <FormItem className={isPreFilled ? "border border-warning rounded-lg p-3 bg-warning/5" : ""}>
+                    <FormLabel className={isPreFilled ? "text-warning font-semibold" : ""}>
+                      Responsável pela Liberação * {isPreFilled && "(Campo obrigatório)"}
+                    </FormLabel>
                     <FormControl>
-                      <Input placeholder="Nome do responsável" {...field} />
+                      <Input 
+                        placeholder="Nome do responsável" 
+                        {...field} 
+                        className={isPreFilled ? "border-warning focus:border-warning focus:ring-warning" : ""}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -252,7 +306,7 @@ export function FormPedidoLiberacao() {
 
             <div className="flex justify-end">
               <Button type="submit" className="bg-warning text-warning-foreground hover:bg-warning/80">
-                Criar Pedido de Liberação
+                {isPreFilled ? 'Confirmar Solicitação' : 'Criar Pedido de Liberação'}
               </Button>
             </div>
           </form>

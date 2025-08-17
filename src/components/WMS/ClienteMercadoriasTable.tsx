@@ -374,7 +374,14 @@ export function ClienteMercadoriasTable() {
       {/* Dialog for single NF liberation */}
       <Dialog open={isLiberacaoDialogOpen} onOpenChange={setIsLiberacaoDialogOpen}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-          <FormPedidoLiberacao />
+          <FormPedidoLiberacao 
+            notaFiscal={selectedNF || undefined}
+            onSuccess={() => {
+              setIsLiberacaoDialogOpen(false);
+              setSelectedNF(null);
+              toast.success('Pedido de liberação criado com sucesso!');
+            }}
+          />
         </DialogContent>
       </Dialog>
 
