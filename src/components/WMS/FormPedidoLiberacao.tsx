@@ -42,7 +42,7 @@ export function FormPedidoLiberacao({ notaFiscal, onSuccess }: FormPedidoLiberac
   
   // Prepare NF options for combobox
   const nfOptions = notasFiscais
-    .filter(nf => nf.status !== 'Liberada')
+    .filter(nf => nf.status !== 'Solicitação Confirmada')
     .map(nf => ({
       value: nf.numeroNF,
       label: `${nf.numeroNF} - ${nf.produto} (${nf.cliente})`

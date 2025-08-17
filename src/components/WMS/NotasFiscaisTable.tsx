@@ -28,9 +28,9 @@ const getStatusColor = (status: NotaFiscal['status']) => {
   switch (status) {
     case 'Armazenada':
       return 'bg-success text-success-foreground';
-    case 'Em Separação':
+    case 'Ordem Solicitada':
       return 'bg-warning text-warning-foreground';
-    case 'Liberada':
+    case 'Solicitação Confirmada':
       return 'bg-muted text-muted-foreground';
     default:
       return 'bg-muted text-muted-foreground';
@@ -97,7 +97,7 @@ function SolicitarLiberacaoDialog({ notaFiscal }: { notaFiscal: NotaFiscal }) {
         <Button 
           variant="outline" 
           size="sm"
-          disabled={notaFiscal.status === 'Liberada'}
+          disabled={notaFiscal.status === 'Solicitação Confirmada'}
           className="gap-1"
         >
           <Send className="w-3 h-3" />
@@ -382,9 +382,9 @@ export function NotasFiscaisTable() {
                     isOverdue(nf.dataRecebimento) && nf.status === 'Armazenada' 
                       ? 'bg-destructive/10 hover:bg-destructive/20' 
                       : '',
-                    nf.status === 'Em Separação' 
-                      ? 'bg-warning/10 hover:bg-warning/20' 
-                      : ''
+                     nf.status === 'Ordem Solicitada' 
+                       ? 'bg-warning/10 hover:bg-warning/20' 
+                       : ''
                   )}
                 >
                   <TableCell className="font-medium">{nf.numeroNF}</TableCell>

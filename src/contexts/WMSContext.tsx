@@ -50,7 +50,7 @@ const mockNotasFiscais: NotaFiscal[] = [
     peso: 30.2,
     volume: 1.8,
     localizacao: 'B1-C2-D3',
-    status: 'Em Separação',
+    status: 'Ordem Solicitada',
     createdAt: '2024-01-10T14:30:00Z'
   },
   {
@@ -127,6 +127,12 @@ export function WMSProvider({ children }: { children: React.ReactNode }) {
     };
     setPedidosLiberacao(prev => [...prev, newPedido]);
 
+    // Atualizar status da NF para "Ordem Solicitada"
+    const nf = notasFiscais.find(n => n.numeroNF === pedido.nfVinculada);
+    if (nf) {
+      updateNotaFiscalStatus(nf.id, 'Ordem Solicitada');
+    }
+
     // Enviar notificação de rastreabilidade
     const cliente = clientes.find(c => c.name === pedido.cliente);
     if (cliente?.emailSolicitacaoLiberacao) {
@@ -165,7 +171,7 @@ export function WMSProvider({ children }: { children: React.ReactNode }) {
     // Update NF status
     const nf = notasFiscais.find(n => n.numeroNF === pedido.nfVinculada);
     if (nf) {
-      updateNotaFiscalStatus(nf.id, 'Liberada');
+      updateNotaFiscalStatus(nf.id, 'Solicitação Confirmada');
     }
 
     // Enviar notificação de rastreabilidade

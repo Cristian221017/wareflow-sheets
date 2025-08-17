@@ -310,7 +310,7 @@ export function ClienteMercadoriasTable() {
                     key={nf.id}
                     className={`
                       ${isNFOverdue && nf.status === 'Armazenada' ? 'bg-destructive/10' : ''}
-                      ${nf.status === 'Em Separação' ? 'bg-warning/10' : ''}
+                      ${nf.status === 'Ordem Solicitada' ? 'bg-warning/10' : ''}
                     `}
                   >
                     <TableCell>

@@ -18,13 +18,13 @@ export function Dashboard() {
         color: COLORS[0]
       },
       { 
-        name: 'Em Separação', 
-        value: notasFiscais.filter(nf => nf.status === 'Em Separação').length,
+        name: 'Ordem Solicitada', 
+        value: notasFiscais.filter(nf => nf.status === 'Ordem Solicitada').length,
         color: COLORS[1]
       },
       { 
-        name: 'Liberada', 
-        value: notasFiscais.filter(nf => nf.status === 'Liberada').length,
+        name: 'Solicitação Confirmada', 
+        value: notasFiscais.filter(nf => nf.status === 'Solicitação Confirmada').length,
         color: COLORS[2]
       }
     ];
