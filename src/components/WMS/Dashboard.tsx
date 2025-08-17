@@ -108,7 +108,7 @@ export function Dashboard() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Pedidos Liberados</CardTitle>
+            <CardTitle className="text-sm font-medium">Solicitação Confirmada</CardTitle>
             <CheckCircle className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -183,8 +183,8 @@ export function Dashboard() {
       {/* Timeline Chart */}
       <Card>
         <CardHeader>
-          <CardTitle>Pedidos Liberados por Período</CardTitle>
-          <CardDescription>Evolução temporal das liberações</CardDescription>
+          <CardTitle>Solicitações Confirmadas por Período</CardTitle>
+          <CardDescription>Evolução temporal das confirmações</CardDescription>
         </CardHeader>
         <CardContent>
           <ResponsiveContainer width="100%" height={300}>

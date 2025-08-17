@@ -51,7 +51,7 @@ export function PedidosLiberacaoTable() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Pedidos de Liberação</CardTitle>
+        <CardTitle>Ordem de Carregamento</CardTitle>
         <CardDescription>
           Pedidos aguardando análise e liberação
         </CardDescription>

@@ -31,7 +31,7 @@ export interface PedidoLiberacao {
   volume: number;
   prioridade: 'Alta' | 'Média' | 'Baixa';
   responsavel: string;
-  status: 'Em análise' | 'Liberado';
+  status: 'Em análise' | 'Confirmado';
   createdAt: string;
 }
 

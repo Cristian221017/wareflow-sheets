@@ -170,11 +170,11 @@ export function TransportadoraLayout() {
             </TabsTrigger>
             <TabsTrigger value="pedidos-liberacao" className="inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm gap-2">
               <FileText className="w-4 h-4" />
-              Pedidos de Liberação
+              Ordem de Carregamento
             </TabsTrigger>
             <TabsTrigger value="pedidos-liberados" className="inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm gap-2">
               <CheckCircle className="w-4 h-4" />
-              Pedidos Liberados
+              Solicitação Confirmada
             </TabsTrigger>
             <TabsTrigger value="relatorios" className="inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm gap-2">
               <BarChart3 className="w-4 h-4" />

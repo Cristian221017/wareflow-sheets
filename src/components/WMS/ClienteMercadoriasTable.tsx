@@ -147,7 +147,7 @@ export function ClienteMercadoriasTable() {
 
   const handleBulkLiberacao = () => {
     if (selectedNFs.length === 0) {
-      toast.error('Selecione pelo menos uma NF para solicitar liberação');
+      toast.error('Selecione pelo menos uma NF para solicitar carregamento');
       return;
     }
     setIsBulkLiberacaoDialogOpen(true);
@@ -383,7 +383,7 @@ export function ClienteMercadoriasTable() {
                 onSuccess={() => {
                   setIsLiberacaoDialogOpen(false);
                   setSelectedNF(null);
-                  toast.success('Pedido de liberação criado com sucesso!');
+                  toast.success('Ordem de carregamento criada com sucesso!');
                 }}
               />
             );
@@ -395,9 +395,9 @@ export function ClienteMercadoriasTable() {
       <Dialog open={isBulkLiberacaoDialogOpen} onOpenChange={setIsBulkLiberacaoDialogOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Solicitação de Liberação em Massa</DialogTitle>
+            <DialogTitle>Solicitação de Carregamento em Massa</DialogTitle>
             <DialogDescription>
-              Você está prestes a solicitar liberação para {selectedNFs.length} nota(s) fiscal(is).
+              Você está prestes a solicitar carregamento para {selectedNFs.length} nota(s) fiscal(is).
             </DialogDescription>
           </DialogHeader>
           
@@ -423,7 +423,7 @@ export function ClienteMercadoriasTable() {
               onClick={() => {
                 // Para liberação em massa, seria necessário implementar uma função específica
                 // Por enquanto, mostraremos uma mensagem
-                toast.info('Funcionalidade de liberação em massa será implementada em breve');
+                toast.info('Funcionalidade de carregamento em massa será implementada em breve');
                 setIsBulkLiberacaoDialogOpen(false);
                 setSelectedNFs([]);
               }}

@@ -130,7 +130,7 @@ export function WMSProvider({ children }: { children: React.ReactNode }) {
     // Enviar notificação de rastreabilidade
     const cliente = clientes.find(c => c.name === pedido.cliente);
     if (cliente?.emailSolicitacaoLiberacao) {
-      notificationService.enviarNotificacaoSolicitacaoLiberacao(
+      notificationService.enviarNotificacaoSolicitacaoCarregamento(
         cliente.emailSolicitacaoLiberacao,
         pedido.numeroPedido,
         pedido.cliente
@@ -171,7 +171,7 @@ export function WMSProvider({ children }: { children: React.ReactNode }) {
     // Enviar notificação de rastreabilidade
     const cliente = clientes.find(c => c.name === pedido.cliente);
     if (cliente?.emailLiberacaoAutorizada) {
-      notificationService.enviarNotificacaoLiberacaoAutorizada(
+      notificationService.enviarNotificacaoConfirmacaoAutorizada(
         cliente.emailLiberacaoAutorizada,
         pedido.numeroPedido,
         transportadora

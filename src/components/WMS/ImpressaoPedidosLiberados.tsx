@@ -40,7 +40,7 @@ export function ImpressaoPedidosLiberados() {
       <!DOCTYPE html>
       <html>
         <head>
-          <title>Relação de Pedidos Liberados</title>
+          <title>Relação de Solicitações Confirmadas</title>
           <style>
             body { font-family: Arial, sans-serif; margin: 20px; }
             h1 { color: #333; text-align: center; }
@@ -55,7 +55,7 @@ export function ImpressaoPedidosLiberados() {
         </head>
         <body>
           <div class="header">
-            <h1>Sistema WMS - Relação de Pedidos Liberados</h1>
+            <h1>Sistema WMS - Relação de Solicitações Confirmadas</h1>
             <p><strong>Data do Relatório:</strong> ${new Date().toLocaleDateString('pt-BR')}</p>
           </div>
           
@@ -144,10 +144,10 @@ export function ImpressaoPedidosLiberados() {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Printer className="w-5 h-5 text-primary" />
-          Impressão de Pedidos Liberados
+          Impressão de Solicitações Confirmadas
         </CardTitle>
         <CardDescription>
-          Gere relatórios de pedidos liberados com filtros personalizados
+          Gere relatórios de solicitações confirmadas com filtros personalizados
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">

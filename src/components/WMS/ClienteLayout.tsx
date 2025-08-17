@@ -76,7 +76,7 @@ export function ClienteLayout() {
                 <DialogTrigger asChild>
                   <Button className="bg-warning text-warning-foreground hover:bg-warning/80">
                     <Plus className="w-4 h-4 mr-2" />
-                    Solicitar Liberação
+                    Solicitar Carregamento
                   </Button>
                 </DialogTrigger>
                 <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
@@ -112,7 +112,7 @@ export function ClienteLayout() {
               </TabsTrigger>
               <TabsTrigger value="liberados" className="inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm gap-2">
                 <User className="w-4 h-4" />
-                Pedidos Liberados
+                Solicitação Confirmada
               </TabsTrigger>
             </TabsList>
           </div>
@@ -128,9 +128,9 @@ export function ClienteLayout() {
           <TabsContent value="pedidos">
             <Card>
               <CardHeader>
-                <CardTitle>Meus Pedidos de Liberação</CardTitle>
+                <CardTitle>Ordem de Carregamento</CardTitle>
                 <CardDescription>
-                  Acompanhe o status dos seus pedidos de liberação
+                  Acompanhe o status das suas ordens de carregamento
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -175,9 +175,9 @@ export function ClienteLayout() {
           <TabsContent value="liberados">
             <Card>
               <CardHeader>
-                <CardTitle>Pedidos Liberados</CardTitle>
+                <CardTitle>Solicitação Confirmada</CardTitle>
                 <CardDescription>
-                  Histórico de pedidos já liberados e em processo de entrega
+                  Histórico de solicitações confirmadas e em processo de entrega
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -186,7 +186,7 @@ export function ClienteLayout() {
                     <TableHeader>
                       <TableRow>
                         <TableHead>Nº Pedido</TableHead>
-                        <TableHead>Data Liberação</TableHead>
+                        <TableHead>Data Confirmação</TableHead>
                         <TableHead>NF Vinculada</TableHead>
                         <TableHead>Quantidade</TableHead>
                         <TableHead>Transportadora</TableHead>

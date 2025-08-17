@@ -153,7 +153,7 @@ export function FormCadastroCliente() {
                 name="emailSolicitacaoLiberacao"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Email para Solicitação de Liberação (Opcional)</FormLabel>
+                    <FormLabel>Email para Ordem de Carregamento (Opcional)</FormLabel>
                     <FormControl>
                       <Input 
                         type="email" 
@@ -163,7 +163,7 @@ export function FormCadastroCliente() {
                     </FormControl>
                     <FormMessage />
                     <p className="text-xs text-muted-foreground">
-                      Email para receber solicitações de liberação
+                      Email para receber ordens de carregamento
                     </p>
                   </FormItem>
                 )}
@@ -174,7 +174,7 @@ export function FormCadastroCliente() {
                 name="emailLiberacaoAutorizada"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Email para Liberação Autorizada (Opcional)</FormLabel>
+                    <FormLabel>Email para Confirmação Autorizada (Opcional)</FormLabel>
                     <FormControl>
                       <Input 
                         type="email" 
@@ -184,7 +184,7 @@ export function FormCadastroCliente() {
                     </FormControl>
                     <FormMessage />
                     <p className="text-xs text-muted-foreground">
-                      Email para receber quando pedidos forem liberados
+                      Email para receber quando pedidos forem confirmados
                     </p>
                   </FormItem>
                 )}

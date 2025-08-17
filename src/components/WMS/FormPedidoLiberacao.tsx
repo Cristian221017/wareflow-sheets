@@ -90,7 +90,7 @@ export function FormPedidoLiberacao({ notaFiscal, onSuccess }: FormPedidoLiberac
   const onSubmit = (data: FormData) => {
     const pedidoData = data as unknown as Omit<PedidoLiberacao, 'id' | 'createdAt' | 'status'>;
     addPedidoLiberacao(pedidoData);
-    toast.success('Pedido de liberação criado com sucesso!');
+    toast.success('Ordem de carregamento criada com sucesso!');
     
     if (onSuccess) {
       onSuccess();
@@ -106,12 +106,12 @@ export function FormPedidoLiberacao({ notaFiscal, onSuccess }: FormPedidoLiberac
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <FileText className="w-5 h-5" />
-          {isPreFilled ? 'Confirmar Solicitação de Liberação' : 'Solicitar Liberação'}
+          {isPreFilled ? 'Confirmar Ordem de Carregamento' : 'Solicitar Carregamento'}
         </CardTitle>
         <CardDescription>
           {isPreFilled 
             ? `Confirme os dados da NF ${notaFiscal?.numeroNF} e informe o responsável pela solicitação`
-            : 'Criar uma nova solicitação de liberação de mercadoria'
+            : 'Criar uma nova ordem de carregamento de mercadoria'
           }
         </CardDescription>
       </CardHeader>
@@ -307,7 +307,7 @@ export function FormPedidoLiberacao({ notaFiscal, onSuccess }: FormPedidoLiberac
 
             <div className="flex justify-end">
               <Button type="submit" className="bg-warning text-warning-foreground hover:bg-warning/80">
-                {isPreFilled ? 'Confirmar Solicitação' : 'Criar Pedido de Liberação'}
+                {isPreFilled ? 'Confirmar Ordem' : 'Criar Ordem de Carregamento'}
               </Button>
             </div>
           </form>

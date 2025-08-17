@@ -19,10 +19,10 @@ export function PedidosLiberadosTable() {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <CheckCircle className="w-5 h-5 text-success" />
-          Pedidos Liberados
+          Solicitação Confirmada
         </CardTitle>
         <CardDescription>
-          Histórico de pedidos já liberados e expedidos
+          Histórico de solicitações confirmadas e expedidas
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -32,7 +32,7 @@ export function PedidosLiberadosTable() {
               <TableRow>
                 <TableHead>Nº Pedido</TableHead>
                 <TableHead>Ordem Compra</TableHead>
-                <TableHead>Data Liberação</TableHead>
+                <TableHead>Data Confirmação</TableHead>
                 <TableHead>Cliente</TableHead>
                 <TableHead>NF Vinculada</TableHead>
                 <TableHead>Quantidade</TableHead>
@@ -67,7 +67,7 @@ export function PedidosLiberadosTable() {
                   <TableCell>
                     <Badge className="bg-success text-success-foreground">
                       <CheckCircle className="w-3 h-3 mr-1" />
-                      Liberado
+                      Confirmado
                     </Badge>
                   </TableCell>
                 </TableRow>

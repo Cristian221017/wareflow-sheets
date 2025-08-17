@@ -9,15 +9,15 @@ export const notificationService = {
     // Exemplo: SendGrid, AWS SES, etc.
   },
 
-  enviarNotificacaoSolicitacaoLiberacao: (emailRastreabilidade: string, numeroPedido: string, cliente: string) => {
+  enviarNotificacaoSolicitacaoCarregamento: (emailRastreabilidade: string, numeroPedido: string, cliente: string) => {
     console.log(`📧 Email enviado para ${emailRastreabilidade}`);
-    console.log(`Assunto: Solicitação de Liberação - ${numeroPedido}`);
-    console.log(`Mensagem: Foi solicitada a liberação do pedido ${numeroPedido} para ${cliente}.`);
+    console.log(`Assunto: Ordem de Carregamento - ${numeroPedido}`);
+    console.log(`Mensagem: Foi solicitada a ordem de carregamento do pedido ${numeroPedido} para ${cliente}.`);
   },
 
-  enviarNotificacaoLiberacaoAutorizada: (emailRastreabilidade: string, numeroPedido: string, transportadora: string) => {
+  enviarNotificacaoConfirmacaoAutorizada: (emailRastreabilidade: string, numeroPedido: string, transportadora: string) => {
     console.log(`📧 Email enviado para ${emailRastreabilidade}`);
-    console.log(`Assunto: Pedido Liberado - ${numeroPedido}`);
-    console.log(`Mensagem: O pedido ${numeroPedido} foi liberado para a transportadora ${transportadora}.`);
+    console.log(`Assunto: Pedido Confirmado - ${numeroPedido}`);
+    console.log(`Mensagem: O pedido ${numeroPedido} foi confirmado para a transportadora ${transportadora}.`);
   }
 };
