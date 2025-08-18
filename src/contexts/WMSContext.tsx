@@ -156,14 +156,21 @@ export function WMSProvider({ children }: { children: React.ReactNode }) {
   };
 
   const addNotaFiscal = async (nf: Omit<NotaFiscal, 'id' | 'createdAt'>) => {
+    console.log('addNotaFiscal - User:', user);
+    console.log('addNotaFiscal - Clientes disponíveis:', clientes);
+    console.log('addNotaFiscal - NF data:', nf);
+    
     if (!user?.transportadoraId) {
+      console.error('Usuário não tem transportadoraId:', user);
       throw new Error('Usuário não associado a uma transportadora');
     }
 
     try {
       // Find cliente in our loaded clientes
       const cliente = clientes.find(c => c.name === nf.cliente);
+      console.log('Cliente encontrado:', cliente);
       if (!cliente) {
+        console.error('Cliente não encontrado. Nome procurado:', nf.cliente, 'Clientes disponíveis:', clientes.map(c => c.name));
         throw new Error('Cliente não encontrado');
       }
 
@@ -186,8 +193,12 @@ export function WMSProvider({ children }: { children: React.ReactNode }) {
           status: nf.status
         }]);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Erro ao inserir NF no Supabase:', error);
+        throw error;
+      }
 
+      console.log('NF inserida com sucesso, recarregando dados...');
       // Reload data to get the new record
       await loadNotasFiscais();
 
