@@ -16,6 +16,7 @@ import {
   CheckCircle,
   BarChart3
 } from 'lucide-react';
+import { ClienteSolicitacaoCarregamento } from './ClienteSolicitacaoCarregamento';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Table,
@@ -114,50 +115,7 @@ export function ClienteLayout() {
           </TabsContent>
 
           <TabsContent value="pedidos">
-            <Card>
-              <CardHeader>
-                <CardTitle>Ordem de Carregamento</CardTitle>
-                <CardDescription>
-                  Acompanhe o status das suas ordens de carregamento
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="overflow-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Nº Pedido</TableHead>
-                        <TableHead>Data Solicitação</TableHead>
-                        <TableHead>NF Vinculada</TableHead>
-                        <TableHead>Produto</TableHead>
-                        <TableHead>Quantidade</TableHead>
-                        <TableHead>Prioridade</TableHead>
-                        <TableHead>Status</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {clientePedidos.map((pedido) => (
-                        <TableRow key={pedido.id}>
-                          <TableCell className="font-medium">{pedido.numeroPedido}</TableCell>
-                          <TableCell>{new Date(pedido.dataSolicitacao).toLocaleDateString('pt-BR')}</TableCell>
-                          <TableCell>{pedido.nfVinculada}</TableCell>
-                          <TableCell>{pedido.produto}</TableCell>
-                          <TableCell>{pedido.quantidade}</TableCell>
-                          <TableCell>
-                            <Badge variant={pedido.prioridade === 'Alta' ? 'destructive' : 'secondary'}>
-                              {pedido.prioridade}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant="outline">{pedido.status}</Badge>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              </CardContent>
-            </Card>
+            <ClienteSolicitacaoCarregamento />
           </TabsContent>
 
           <TabsContent value="liberados">

@@ -13,6 +13,7 @@ import { FormCadastroCliente } from './FormCadastroCliente';
 import { ImpressaoPedidosLiberados } from './ImpressaoPedidosLiberados';
 import { RelatorioControleCargas } from './RelatorioControleCargas';
 import { ClientesTable } from './ClientesTable';
+import { SolicitacoesPendentesTable } from './SolicitacoesPendentesTable';
 import { 
   Plus,
   Warehouse,
@@ -177,9 +178,10 @@ export function TransportadoraLayout() {
       <main className="max-w-7xl mx-auto py-4 sm:py-6 px-4 sm:px-6 lg:px-8">
         <div className="px-0 sm:px-0">
           <Tabs defaultValue="dashboard" className="w-full">
-            <TabsList className="grid w-full grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-1 mb-6">
+            <TabsList className="grid w-full grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-1 mb-6">
               <TabsTrigger value="dashboard" className="text-xs sm:text-sm">Dashboard</TabsTrigger>
               <TabsTrigger value="notas-fiscais" className="text-xs sm:text-sm">Notas Fiscais</TabsTrigger>
+              <TabsTrigger value="solicitacoes-pendentes" className="text-xs sm:text-sm">Solicitações Pendentes</TabsTrigger>
               <TabsTrigger value="pedidos-liberacao" className="text-xs sm:text-sm md:col-span-1 lg:col-span-1">Ordem de Carregamento</TabsTrigger>
               <TabsTrigger value="pedidos-liberados" className="text-xs sm:text-sm md:col-span-1 lg:col-span-1">Solicitação Confirmada</TabsTrigger>
               <TabsTrigger value="relatorios" className="text-xs sm:text-sm col-span-2 md:col-span-1 lg:col-span-1">Relatórios</TabsTrigger>
@@ -191,6 +193,10 @@ export function TransportadoraLayout() {
             
             <TabsContent value="notas-fiscais" className="space-y-4">
               <NotasFiscaisTable />
+            </TabsContent>
+            
+            <TabsContent value="solicitacoes-pendentes" className="space-y-4">
+              <SolicitacoesPendentesTable />
             </TabsContent>
             
             <TabsContent value="pedidos-liberacao" className="space-y-4">
