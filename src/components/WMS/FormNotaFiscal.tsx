@@ -53,10 +53,15 @@ export function FormNotaFiscal() {
     }
   });
 
-  const onSubmit = (data: FormData) => {
-    addNotaFiscal(data as Omit<NotaFiscal, 'id' | 'createdAt'>);
-    toast.success('Nota Fiscal cadastrada com sucesso!');
-    form.reset();
+  const onSubmit = async (data: FormData) => {
+    try {
+      await addNotaFiscal(data as Omit<NotaFiscal, 'id' | 'createdAt'>);
+      toast.success('Nota Fiscal cadastrada com sucesso!');
+      form.reset();
+    } catch (error) {
+      console.error('Erro ao cadastrar NF:', error);
+      toast.error(error instanceof Error ? error.message : 'Erro ao cadastrar Nota Fiscal');
+    }
   };
 
   return (
