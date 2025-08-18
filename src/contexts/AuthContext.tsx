@@ -59,8 +59,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .select(`
           role,
           is_active,
-          transportadora_id,
-          transportadoras(razao_social, cnpj)
+          transportadora_id
         `)
         .eq('user_id', supabaseUser.id)
         .eq('is_active', true)
@@ -77,7 +76,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         type: userTransportadora?.role === 'super_admin' ? 'transportadora' : 
               userTransportadora?.role === 'admin_transportadora' ? 'transportadora' :
               userTransportadora?.role === 'operador' ? 'transportadora' : 'cliente',
-        cnpj: userTransportadora?.transportadoras?.cnpj,
+        cnpj: undefined,
         role: userTransportadora?.role,
         transportadoraId: userTransportadora?.transportadora_id
       };

@@ -74,7 +74,14 @@ export function SuperAdminUsuarios() {
         console.error('Error loading profiles:', profilesError);
         toast.error('Erro ao carregar usuários');
       } else {
-        setUsuarios(profiles || []);
+        const formattedUsers = profiles?.map(profile => ({
+          id: profile.id,
+          name: profile.name,
+          email: profile.email,
+          created_at: profile.created_at,
+          user_transportadoras: []
+        })) || [];
+        setUsuarios(formattedUsers);
       }
 
       // Load transportadoras

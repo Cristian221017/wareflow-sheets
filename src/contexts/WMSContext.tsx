@@ -55,10 +55,7 @@ export function WMSProvider({ children }: { children: React.ReactNode }) {
     try {
       const { data, error } = await supabase
         .from('notas_fiscais')
-        .select(`
-          *,
-          clientes!cliente_id(razao_social, cnpj)
-        `)
+        .select('*')
         .eq('transportadora_id', user.transportadoraId)
         .order('created_at', { ascending: false });
 
@@ -72,8 +69,8 @@ export function WMSProvider({ children }: { children: React.ReactNode }) {
         dataRecebimento: nf.data_recebimento,
         fornecedor: nf.fornecedor,
         cnpj: nf.cnpj_fornecedor,
-        cliente: nf.clientes?.razao_social || '',
-        cnpjCliente: nf.clientes?.cnpj || '',
+        cliente: '',
+        cnpjCliente: '',
         produto: nf.produto,
         quantidade: nf.quantidade,
         peso: Number(nf.peso),
@@ -95,11 +92,7 @@ export function WMSProvider({ children }: { children: React.ReactNode }) {
     try {
       const { data, error } = await supabase
         .from('pedidos_liberacao')
-        .select(`
-          *,
-          clientes!cliente_id(razao_social, cnpj),
-          notas_fiscais!nota_fiscal_id(numero_nf)
-        `)
+        .select('*')
         .eq('transportadora_id', user.transportadoraId)
         .order('created_at', { ascending: false });
 
@@ -110,9 +103,9 @@ export function WMSProvider({ children }: { children: React.ReactNode }) {
         numeroPedido: pl.numero_pedido,
         ordemCompra: pl.ordem_compra,
         dataSolicitacao: pl.data_solicitacao,
-        cliente: pl.clientes?.razao_social || '',
-        cnpjCliente: pl.clientes?.cnpj || '',
-        nfVinculada: pl.notas_fiscais?.numero_nf || '',
+        cliente: '',
+        cnpjCliente: '',
+        nfVinculada: '',
         produto: pl.produto,
         quantidade: pl.quantidade,
         peso: Number(pl.peso),
@@ -135,11 +128,7 @@ export function WMSProvider({ children }: { children: React.ReactNode }) {
     try {
       const { data, error } = await supabase
         .from('pedidos_liberados')
-        .select(`
-          *,
-          clientes!cliente_id(razao_social),
-          notas_fiscais!nota_fiscal_id(numero_nf)
-        `)
+        .select('*')
         .eq('transportadora_id', user.transportadoraId)
         .order('created_at', { ascending: false });
 
@@ -150,8 +139,8 @@ export function WMSProvider({ children }: { children: React.ReactNode }) {
         numeroPedido: pl.numero_pedido,
         ordemCompra: pl.ordem_compra,
         dataLiberacao: pl.data_liberacao,
-        cliente: pl.clientes?.razao_social || '',
-        nfVinculada: pl.notas_fiscais?.numero_nf || '',
+        cliente: '',
+        nfVinculada: '',
         quantidade: pl.quantidade,
         peso: Number(pl.peso),
         volume: Number(pl.volume),
