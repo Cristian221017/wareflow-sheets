@@ -13,9 +13,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Initialize auth state
   useEffect(() => {
+    console.log('Initializing auth state...');
+    
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log('Auth state changed:', event, session?.user?.id);
         setSession(session);
         if (session?.user) {
           await loadUserProfile(session.user);
@@ -26,35 +29,63 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     );
 
-    // Check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      if (session?.user) {
-        loadUserProfile(session.user);
-      } else {
+    // Check for existing session with timeout
+    const checkSession = async () => {
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        console.log('Session check result:', session?.user?.id, error);
+        setSession(session);
+        if (session?.user) {
+          await loadUserProfile(session.user);
+        } else {
+          setLoading(false);
+        }
+      } catch (error) {
+        console.error('Session check error:', error);
         setLoading(false);
       }
-    });
+    };
 
-    return () => subscription.unsubscribe();
+    checkSession();
+
+    // Failsafe timeout to prevent infinite loading
+    const timeoutId = setTimeout(() => {
+      console.log('Auth loading timeout reached');
+      setLoading(false);
+    }, 15000);
+
+    return () => {
+      subscription.unsubscribe();
+      clearTimeout(timeoutId);
+    };
   }, []);
 
   const loadUserProfile = async (supabaseUser: SupabaseUser) => {
     try {
-      // Get profile data
-      const { data: profile, error: profileError } = await supabase
+      console.log('Loading user profile for:', supabaseUser.id);
+      
+      // Get profile data with timeout
+      const profilePromise = supabase
         .from('profiles')
         .select('*')
         .eq('user_id', supabaseUser.id)
-        .single();
+        .maybeSingle();
+
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Profile query timeout')), 10000)
+      );
+
+      const { data: profile, error: profileError } = await Promise.race([
+        profilePromise,
+        timeoutPromise
+      ]) as any;
 
       if (profileError && profileError.code !== 'PGRST116') {
         console.error('Error loading profile:', profileError);
-        return;
       }
 
-      // Get user role and transportadora
-      const { data: userTransportadora, error: roleError } = await supabase
+      // Get user role and transportadora with timeout
+      const rolePromise = supabase
         .from('user_transportadoras')
         .select(`
           role,
@@ -63,12 +94,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         `)
         .eq('user_id', supabaseUser.id)
         .eq('is_active', true)
-        .single();
+        .maybeSingle();
+
+      const { data: userTransportadora, error: roleError } = await Promise.race([
+        rolePromise,
+        timeoutPromise
+      ]) as any;
 
       if (roleError && roleError.code !== 'PGRST116') {
         console.error('Error loading user role:', roleError);
       }
 
+      // Create user data even if some queries failed
       const userData: User = {
         id: supabaseUser.id,
         name: profile?.name || supabaseUser.email || '',
@@ -81,9 +118,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         transportadoraId: userTransportadora?.transportadora_id
       };
 
+      console.log('User profile loaded:', userData);
       setUser(userData);
     } catch (error) {
       console.error('Error in loadUserProfile:', error);
+      // Even if there's an error, create a basic user object to prevent infinite loading
+      const userData: User = {
+        id: supabaseUser.id,
+        name: supabaseUser.email || '',
+        email: supabaseUser.email || '',
+        type: 'cliente',
+        cnpj: undefined,
+        role: undefined,
+        transportadoraId: undefined
+      };
+      setUser(userData);
     }
   };
 
