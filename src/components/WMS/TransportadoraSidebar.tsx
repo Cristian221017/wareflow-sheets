@@ -21,7 +21,6 @@ import {
 
 const mainItems = [
   { title: "Dashboard", path: "dashboard", icon: BarChart3 },
-  { title: "Clientes", path: "clientes", icon: Users },
   { title: "Notas Fiscais", path: "notas-fiscais", icon: Package },
   { title: "Ordem de Carregamento", path: "pedidos-liberacao", icon: FileText },
   { title: "Solicitação Confirmada", path: "pedidos-liberados", icon: CheckCircle },

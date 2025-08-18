@@ -77,6 +77,15 @@ export function TransportadoraLayout() {
                 
                 {/* Desktop Menu */}
                 <div className="hidden md:flex gap-2">
+                  <Button 
+                    onClick={() => setActiveTab('clientes')}
+                    variant={activeTab === 'clientes' ? 'default' : 'outline'}
+                    className="gap-2"
+                  >
+                    <User className="h-4 w-4" />
+                    Clientes
+                  </Button>
+                  
                   <Dialog open={isClienteDialogOpen} onOpenChange={setIsClienteDialogOpen}>
                     <DialogTrigger asChild>
                       <Button className="bg-info text-info-foreground hover:bg-info/80">
@@ -134,6 +143,11 @@ export function TransportadoraLayout() {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-48">
+                      <DropdownMenuItem onClick={() => setActiveTab('clientes')}>
+                        <User className="w-4 h-4 mr-2" />
+                        Clientes
+                      </DropdownMenuItem>
+                      
                       <Dialog open={isClienteDialogOpen} onOpenChange={setIsClienteDialogOpen}>
                         <DialogTrigger asChild>
                           <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
