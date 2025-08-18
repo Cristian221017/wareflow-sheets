@@ -29,11 +29,11 @@ import { Badge } from '@/components/ui/badge';
 
 const getStatusColor = (status: string) => {
   switch (status) {
-    case 'Armazenada':
+    case 'Em separação':
       return 'bg-success text-success-foreground';
-    case 'Ordem Solicitada':
+    case 'Liberada para carregar':
       return 'bg-warning text-warning-foreground';
-    case 'Solicitação Confirmada':
+    case 'Carregamento solicitado':
       return 'bg-muted text-muted-foreground';
     default:
       return 'bg-muted text-muted-foreground';

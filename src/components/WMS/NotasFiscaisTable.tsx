@@ -26,11 +26,11 @@ import { FileText, Send } from 'lucide-react';
 
 const getStatusColor = (status: NotaFiscal['status']) => {
   switch (status) {
-    case 'Armazenada':
+    case 'Em separação':
       return 'bg-success text-success-foreground';
-    case 'Ordem Solicitada':
+    case 'Liberada para carregar':
       return 'bg-warning text-warning-foreground';
-    case 'Solicitação Confirmada':
+    case 'Carregamento solicitado':
       return 'bg-muted text-muted-foreground';
     default:
       return 'bg-muted text-muted-foreground';
@@ -97,7 +97,7 @@ function SolicitarLiberacaoDialog({ notaFiscal }: { notaFiscal: NotaFiscal }) {
         <Button 
           variant="outline" 
           size="sm"
-          disabled={notaFiscal.status === 'Solicitação Confirmada'}
+          disabled={notaFiscal.status === 'Carregamento solicitado'}
           className="gap-1"
         >
           <Send className="w-3 h-3" />
@@ -379,10 +379,10 @@ export function NotasFiscaisTable() {
                 <TableRow 
                   key={nf.id}
                   className={cn(
-                    isOverdue(nf.dataRecebimento) && nf.status === 'Armazenada' 
-                      ? 'bg-destructive/10 hover:bg-destructive/20' 
-                      : '',
-                     nf.status === 'Ordem Solicitada' 
+                     isOverdue(nf.dataRecebimento) && nf.status === 'Em separação' 
+                       ? 'bg-destructive/10 hover:bg-destructive/20' 
+                       : '',
+                     nf.status === 'Liberada para carregar' 
                        ? 'bg-warning/10 hover:bg-warning/20' 
                        : ''
                   )}

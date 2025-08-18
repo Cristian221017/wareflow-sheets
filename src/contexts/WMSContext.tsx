@@ -243,7 +243,7 @@ export function WMSProvider({ children }: { children: React.ReactNode }) {
       if (error) throw error;
 
       // Update nota fiscal status
-      await updateNotaFiscalStatus(notaFiscal.id, 'Ordem Solicitada');
+      await updateNotaFiscalStatus(notaFiscal.id, 'Liberada para carregar');
       
       // Reload data
       await loadPedidosLiberacao();
@@ -310,7 +310,7 @@ export function WMSProvider({ children }: { children: React.ReactNode }) {
       if (deleteError) throw deleteError;
 
       // Update NF status
-      await updateNotaFiscalStatus(notaFiscal.id, 'Solicitação Confirmada');
+      await updateNotaFiscalStatus(notaFiscal.id, 'Carregamento solicitado');
 
       // Reload data
       await Promise.all([
