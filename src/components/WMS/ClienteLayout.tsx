@@ -72,18 +72,6 @@ export function ClienteLayout() {
             </div>
             
             <div className="flex items-center gap-2">
-              <Dialog open={isPedidoDialogOpen} onOpenChange={setIsPedidoDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button className="bg-warning text-warning-foreground hover:bg-warning/80">
-                    <Plus className="w-4 h-4 mr-2" />
-                    Solicitar Carregamento
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-                  <FormPedidoLiberacao />
-                </DialogContent>
-              </Dialog>
-
               <Button variant="outline" onClick={logout}>
                 <LogOut className="w-4 h-4 mr-2" />
                 Sair
@@ -109,6 +97,21 @@ export function ClienteLayout() {
               <TabsTrigger value="pedidos" className="inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm gap-2">
                 <FileText className="w-4 h-4" />
                 Solicitação de Carregamento
+                <Dialog open={isPedidoDialogOpen} onOpenChange={setIsPedidoDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button 
+                      size="sm" 
+                      className="ml-2 bg-warning text-warning-foreground hover:bg-warning/80"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <Plus className="w-3 h-3 mr-1" />
+                      Solicitar
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+                    <FormPedidoLiberacao />
+                  </DialogContent>
+                </Dialog>
               </TabsTrigger>
               <TabsTrigger value="liberados" className="inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm gap-2">
                 <User className="w-4 h-4" />
