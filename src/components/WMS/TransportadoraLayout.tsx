@@ -31,35 +31,37 @@ export function TransportadoraLayout() {
 
   if (showClientes) {
     return (
-      <div className="min-h-screen bg-gray-50">
-        <header className="bg-white shadow">
+      <div className="min-h-screen bg-background">
+        <header className="bg-card shadow-sm border-b">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-between items-center py-6">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center py-4 sm:py-6 gap-4">
               <div className="flex items-center">
-                <Warehouse className="w-8 h-8 text-blue-600 mr-3" />
+                <Warehouse className="w-6 h-6 sm:w-8 sm:h-8 text-primary mr-2 sm:mr-3" />
                 <div>
-                  <h1 className="text-3xl font-bold text-gray-900">Sistema WMS - Transportadora</h1>
-                  <p className="text-gray-600">Bem-vindo, {user?.name}</p>
+                  <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground">Sistema WMS - Transportadora</h1>
+                  <p className="text-sm sm:text-base text-muted-foreground">Bem-vindo, {user?.name}</p>
                 </div>
               </div>
-              <div className="flex gap-3">
+              <div className="flex gap-2 sm:gap-3">
                 <Button 
                   onClick={() => setShowClientes(false)}
                   variant="outline"
+                  size="sm"
                 >
                   Voltar
                 </Button>
-                <Button onClick={logout} variant="outline">
-                  <LogOut className="w-4 h-4 mr-2" />
-                  Sair
+                <Button onClick={logout} variant="outline" size="sm">
+                  <LogOut className="w-4 h-4 mr-1 sm:mr-2" />
+                  <span className="hidden sm:inline">Sair</span>
+                  <span className="sm:hidden">Sair</span>
                 </Button>
               </div>
             </div>
           </div>
         </header>
         
-        <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-          <div className="px-4 py-6 sm:px-0">
+        <main className="max-w-7xl mx-auto py-4 sm:py-6 px-4 sm:px-6 lg:px-8">
+          <div className="px-0 sm:px-0">
             <ClientesTable />
           </div>
         </main>
@@ -68,23 +70,23 @@ export function TransportadoraLayout() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow">
+    <div className="min-h-screen bg-background">
+      <header className="bg-card shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center py-6 gap-4">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center py-4 sm:py-6 gap-4">
             <div className="flex items-center">
-              <Warehouse className="w-8 h-8 text-blue-600 mr-3" />
+              <Warehouse className="w-6 h-6 sm:w-8 sm:h-8 text-primary mr-2 sm:mr-3" />
               <div>
-                <h1 className="text-3xl font-bold text-gray-900">Sistema WMS - Transportadora</h1>
-                <p className="text-gray-600">Bem-vindo, {user?.name}</p>
+                <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground">Sistema WMS - Transportadora</h1>
+                <p className="text-sm sm:text-base text-muted-foreground">Bem-vindo, {user?.name}</p>
               </div>
             </div>
             
             {/* Desktop Actions */}
-            <div className="hidden md:flex gap-3">
+            <div className="hidden lg:flex gap-2 xl:gap-3">
               <Dialog open={isClienteDialogOpen} onOpenChange={setIsClienteDialogOpen}>
                 <DialogTrigger asChild>
-                  <Button className="bg-blue-600 hover:bg-blue-700 text-white">
+                  <Button className="bg-primary hover:bg-primary/90 text-primary-foreground">
                     <User className="w-4 h-4 mr-2" />
                     Cadastro de Cliente
                   </Button>
@@ -96,7 +98,7 @@ export function TransportadoraLayout() {
 
               <Button 
                 onClick={() => setShowClientes(true)}
-                className="bg-green-600 hover:bg-green-700 text-white"
+                className="bg-secondary hover:bg-secondary/90 text-secondary-foreground"
               >
                 <User className="w-4 h-4 mr-2" />
                 Clientes
@@ -104,7 +106,7 @@ export function TransportadoraLayout() {
 
               <Dialog open={isNFDialogOpen} onOpenChange={setIsNFDialogOpen}>
                 <DialogTrigger asChild>
-                  <Button className="bg-green-600 hover:bg-green-700 text-white">
+                  <Button className="bg-accent hover:bg-accent/90 text-accent-foreground">
                     <Plus className="w-4 h-4 mr-2" />
                     Nova NF
                   </Button>
@@ -121,69 +123,66 @@ export function TransportadoraLayout() {
             </div>
 
             {/* Mobile Actions */}
-            <div className="md:hidden flex gap-2">
-              <Button onClick={logout} variant="outline">
-                <LogOut className="w-4 h-4 mr-2" />
-                Sair
-              </Button>
-              
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="icon">
-                    <Menu className="h-4 w-4" />
-                    <span className="sr-only">Abrir menu</span>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-48">
-                  <Dialog open={isClienteDialogOpen} onOpenChange={setIsClienteDialogOpen}>
-                    <DialogTrigger asChild>
-                      <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                        <User className="w-4 h-4 mr-2" />
-                        Cadastro de Cliente
-                      </DropdownMenuItem>
-                    </DialogTrigger>
-                    <DialogContent className="max-w-[95vw] max-h-[90vh] overflow-y-auto">
-                      <FormCadastroCliente />
-                    </DialogContent>
-                  </Dialog>
+            <div className="lg:hidden flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+              <div className="flex gap-2">
+                <Button onClick={logout} variant="outline" size="sm" className="flex-1 sm:flex-none">
+                  <LogOut className="w-4 h-4 mr-1" />
+                  Sair
+                </Button>
+                
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="sm" className="flex-1 sm:flex-none">
+                      <Menu className="h-4 w-4 mr-1" />
+                      Menu
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56">
+                    <Dialog open={isClienteDialogOpen} onOpenChange={setIsClienteDialogOpen}>
+                      <DialogTrigger asChild>
+                        <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                          <User className="w-4 h-4 mr-2" />
+                          Cadastro de Cliente
+                        </DropdownMenuItem>
+                      </DialogTrigger>
+                      <DialogContent className="max-w-[95vw] max-h-[90vh] overflow-y-auto">
+                        <FormCadastroCliente />
+                      </DialogContent>
+                    </Dialog>
 
-                  <DropdownMenuItem onClick={() => setShowClientes(true)}>
-                    <User className="w-4 h-4 mr-2" />
-                    Clientes
-                  </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setShowClientes(true)}>
+                      <User className="w-4 h-4 mr-2" />
+                      Clientes
+                    </DropdownMenuItem>
 
-                  <Dialog open={isNFDialogOpen} onOpenChange={setIsNFDialogOpen}>
-                    <DialogTrigger asChild>
-                      <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                        <Plus className="w-4 h-4 mr-2" />
-                        Nova NF
-                      </DropdownMenuItem>
-                    </DialogTrigger>
-                    <DialogContent className="max-w-[95vw] max-h-[90vh] overflow-y-auto">
-                      <FormNotaFiscal />
-                    </DialogContent>
-                  </Dialog>
-
-                  <DropdownMenuItem onClick={logout}>
-                    <LogOut className="w-4 h-4 mr-2" />
-                    Sair
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+                    <Dialog open={isNFDialogOpen} onOpenChange={setIsNFDialogOpen}>
+                      <DialogTrigger asChild>
+                        <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                          <Plus className="w-4 h-4 mr-2" />
+                          Nova NF
+                        </DropdownMenuItem>
+                      </DialogTrigger>
+                      <DialogContent className="max-w-[95vw] max-h-[90vh] overflow-y-auto">
+                        <FormNotaFiscal />
+                      </DialogContent>
+                    </Dialog>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
             </div>
           </div>
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        <div className="px-4 py-6 sm:px-0">
+      <main className="max-w-7xl mx-auto py-4 sm:py-6 px-4 sm:px-6 lg:px-8">
+        <div className="px-0 sm:px-0">
           <Tabs defaultValue="dashboard" className="w-full">
-            <TabsList className="grid w-full grid-cols-5">
-              <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
-              <TabsTrigger value="notas-fiscais">Notas Fiscais</TabsTrigger>
-              <TabsTrigger value="pedidos-liberacao">Ordem de Carregamento</TabsTrigger>
-              <TabsTrigger value="pedidos-liberados">Solicitação Confirmada</TabsTrigger>
-              <TabsTrigger value="relatorios">Relatórios</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-1 mb-6">
+              <TabsTrigger value="dashboard" className="text-xs sm:text-sm">Dashboard</TabsTrigger>
+              <TabsTrigger value="notas-fiscais" className="text-xs sm:text-sm">Notas Fiscais</TabsTrigger>
+              <TabsTrigger value="pedidos-liberacao" className="text-xs sm:text-sm md:col-span-1 lg:col-span-1">Ordem de Carregamento</TabsTrigger>
+              <TabsTrigger value="pedidos-liberados" className="text-xs sm:text-sm md:col-span-1 lg:col-span-1">Solicitação Confirmada</TabsTrigger>
+              <TabsTrigger value="relatorios" className="text-xs sm:text-sm col-span-2 md:col-span-1 lg:col-span-1">Relatórios</TabsTrigger>
             </TabsList>
             
             <TabsContent value="dashboard" className="space-y-4">
