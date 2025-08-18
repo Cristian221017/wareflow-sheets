@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { Warehouse, UserPlus, LogIn, Truck, User } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 export function LoginPage() {
   const { login, signUp } = useAuth();
@@ -232,24 +233,6 @@ export function LoginPage() {
             <div className="space-y-2">
               <Button 
                 variant="outline" 
-                className="w-full justify-start text-purple-700 border-purple-200 hover:bg-purple-50"
-                onClick={() => {
-                  setFormData(prev => ({ 
-                    ...prev, 
-                    email: 'superadmin@sistema.com',
-                    name: 'Super Administrador',
-                    password: 'admin123',
-                    confirmPassword: 'admin123'
-                  }));
-                  setActiveTab('signup');
-                }}
-              >
-                <User className="w-4 h-4 mr-2" />
-                Super Admin (Gestão Completa)
-              </Button>
-              
-              <Button 
-                variant="outline" 
                 className="w-full justify-start text-blue-700 border-blue-200 hover:bg-blue-50"
                 onClick={() => {
                   setFormData(prev => ({ 
@@ -293,6 +276,23 @@ export function LoginPage() {
                   <li>4. O sistema definirá as permissões automaticamente</li>
                 </ol>
               </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Admin Access Link */}
+        <Card className="border-red-200 bg-red-50">
+          <CardContent className="pt-6">
+            <div className="text-center">
+              <p className="text-sm text-red-800 mb-3">
+                Administrador do sistema?
+              </p>
+              <Link to="/system-admin">
+                <Button variant="outline" className="text-red-700 border-red-200 hover:bg-red-100">
+                  <User className="w-4 h-4 mr-2" />
+                  Acessar Painel de Administração
+                </Button>
+              </Link>
             </div>
           </CardContent>
         </Card>

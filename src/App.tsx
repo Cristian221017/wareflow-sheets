@@ -10,6 +10,7 @@ import Index from "./pages/Index";
 import SuperAdminPortal from "./pages/SuperAdminPortal";
 import TransportadoraPortal from "./pages/TransportadoraPortal";
 import ClientePortal from "./pages/ClientePortal";
+import SystemAdminLogin from "./pages/SystemAdminLogin";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -50,6 +51,7 @@ const App = () => (
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Index />} />
+            <Route path="/system-admin" element={<SystemAdminLogin />} />
             <Route 
               path="/admin" 
               element={
