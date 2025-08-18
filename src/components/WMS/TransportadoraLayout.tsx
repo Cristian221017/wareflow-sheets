@@ -114,18 +114,6 @@ export function TransportadoraLayout() {
                 </DialogContent>
               </Dialog>
 
-              <Dialog open={isPedidoDialogOpen} onOpenChange={setIsPedidoDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button className="bg-orange-600 hover:bg-orange-700 text-white">
-                    <Plus className="w-4 h-4 mr-2" />
-                    Ordem de Carregamento
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="max-w-[95vw] sm:max-w-4xl max-h-[90vh] overflow-y-auto">
-                  <FormPedidoLiberacao />
-                </DialogContent>
-              </Dialog>
-
               <Button onClick={logout} variant="outline">
                 <LogOut className="w-4 h-4 mr-2" />
                 Sair
@@ -173,18 +161,6 @@ export function TransportadoraLayout() {
                     </DialogTrigger>
                     <DialogContent className="max-w-[95vw] max-h-[90vh] overflow-y-auto">
                       <FormNotaFiscal />
-                    </DialogContent>
-                  </Dialog>
-
-                  <Dialog open={isPedidoDialogOpen} onOpenChange={setIsPedidoDialogOpen}>
-                    <DialogTrigger asChild>
-                      <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                        <Plus className="w-4 h-4 mr-2" />
-                        Ordem de Carregamento
-                      </DropdownMenuItem>
-                    </DialogTrigger>
-                    <DialogContent className="max-w-[95vw] max-h-[90vh] overflow-y-auto">
-                      <FormPedidoLiberacao />
                     </DialogContent>
                   </Dialog>
 
