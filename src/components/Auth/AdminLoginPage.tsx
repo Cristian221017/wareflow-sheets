@@ -24,6 +24,7 @@ export function AdminLoginPage() {
       const success = await login(formData.email, formData.password);
       if (success) {
         toast.success('Login de administrador realizado com sucesso!');
+        // Don't manually navigate - let WMSLayout handle it
       } else {
         toast.error('Credenciais inválidas ou acesso negado!');
       }
@@ -39,6 +40,7 @@ export function AdminLoginPage() {
       const success = await login('superadmin@sistema.com', 'admin123');
       if (success) {
         toast.success('Login de administrador realizado com sucesso!');
+        // Don't manually navigate - let WMSLayout handle it
       } else {
         toast.error('Credenciais inválidas ou acesso negado!');
       }
