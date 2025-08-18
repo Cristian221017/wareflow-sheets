@@ -181,8 +181,8 @@ export function TransportadoraLayout() {
             <TabsList className="grid w-full grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-1 mb-6">
               <TabsTrigger value="dashboard" className="text-xs sm:text-sm">Dashboard</TabsTrigger>
               <TabsTrigger value="notas-fiscais" className="text-xs sm:text-sm">Notas Fiscais</TabsTrigger>
-              <TabsTrigger value="solicitacoes-pendentes" className="text-xs sm:text-sm">Solicitações Pendentes</TabsTrigger>
               <TabsTrigger value="pedidos-liberacao" className="text-xs sm:text-sm md:col-span-1 lg:col-span-1">Ordem de Carregamento</TabsTrigger>
+              <TabsTrigger value="solicitacoes-pendentes" className="text-xs sm:text-sm">Solicitações Pendentes</TabsTrigger>
               <TabsTrigger value="pedidos-liberados" className="text-xs sm:text-sm md:col-span-1 lg:col-span-1">Solicitação Confirmada</TabsTrigger>
               <TabsTrigger value="relatorios" className="text-xs sm:text-sm col-span-2 md:col-span-1 lg:col-span-1">Relatórios</TabsTrigger>
             </TabsList>
