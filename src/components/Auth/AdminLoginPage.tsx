@@ -34,11 +34,17 @@ export function AdminLoginPage() {
     }
   };
 
-  const handleDemoLogin = () => {
-    setFormData({ 
-      email: 'superadmin@sistema.com', 
-      password: 'admin123' 
-    });
+  const handleDemoLogin = async () => {
+    try {
+      const success = await login('superadmin@sistema.com', 'admin123');
+      if (success) {
+        toast.success('Login de administrador realizado com sucesso!');
+      } else {
+        toast.error('Credenciais inválidas ou acesso negado!');
+      }
+    } catch (error) {
+      toast.error('Erro inesperado');
+    }
   };
 
   return (
