@@ -98,7 +98,7 @@ export function ClienteLayout() {
   );
 
   return (
-    <div className="min-h-screen bg-background">
+    <Tabs value={activeTab} onValueChange={setActiveTab} className="min-h-screen bg-background">
       {/* Header */}
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container flex h-14 items-center">
@@ -187,125 +187,123 @@ export function ClienteLayout() {
       </div>
 
       {/* Main Content */}
-      <main className="container mx-auto py-6">
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsContent value="dashboard" className="space-y-6">
-            <ClienteDashboard />
-          </TabsContent>
+      <main className="container mx-auto py-6 space-y-6">
+        <TabsContent value="dashboard" className="space-y-6">
+          <ClienteDashboard />
+        </TabsContent>
 
-          <TabsContent value="mercadorias" className="space-y-6">
-            <ClienteMercadoriasTable />
-          </TabsContent>
+        <TabsContent value="mercadorias" className="space-y-6">
+          <ClienteMercadoriasTable />
+        </TabsContent>
 
-          <TabsContent value="pedidos" className="space-y-6">
-            <ClienteSolicitacaoCarregamento />
-          </TabsContent>
+        <TabsContent value="pedidos" className="space-y-6">
+          <ClienteSolicitacaoCarregamento />
+        </TabsContent>
 
-          <TabsContent value="liberados" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Pedidos Confirmados</CardTitle>
-                <CardDescription>
-                  Histórico de solicitações confirmadas e em processo de entrega
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {clienteLiberados.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center py-12 text-center">
-                    <CheckCircle className="h-12 w-12 text-muted-foreground/50 mb-4" />
-                    <h3 className="text-lg font-medium text-muted-foreground mb-2">
-                      Nenhum pedido confirmado
-                    </h3>
-                    <p className="text-sm text-muted-foreground max-w-sm">
-                      Quando seus pedidos forem confirmados, eles aparecerão aqui
-                    </p>
-                  </div>
-                ) : (
-                  <>
-                    {/* Mobile Cards */}
-                    <div className="grid gap-4 md:hidden">
-                      {clienteLiberados.map((pedido) => (
-                        <Card key={pedido.id} className="p-4">
-                          <div className="space-y-3">
-                            <div className="flex items-start justify-between">
-                              <div>
-                                <h4 className="font-medium">Pedido #{pedido.numeroPedido}</h4>
-                                <p className="text-sm text-muted-foreground">
-                                  Confirmado em {new Date(pedido.dataLiberacao).toLocaleDateString('pt-BR')}
-                                </p>
-                              </div>
-                              <Badge variant="secondary">
-                                NF: {pedido.nfVinculada}
-                              </Badge>
+        <TabsContent value="liberados" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Pedidos Confirmados</CardTitle>
+              <CardDescription>
+                Histórico de solicitações confirmadas e em processo de entrega
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {clienteLiberados.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-12 text-center">
+                  <CheckCircle className="h-12 w-12 text-muted-foreground/50 mb-4" />
+                  <h3 className="text-lg font-medium text-muted-foreground mb-2">
+                    Nenhum pedido confirmado
+                  </h3>
+                  <p className="text-sm text-muted-foreground max-w-sm">
+                    Quando seus pedidos forem confirmados, eles aparecerão aqui
+                  </p>
+                </div>
+              ) : (
+                <>
+                  {/* Mobile Cards */}
+                  <div className="grid gap-4 md:hidden">
+                    {clienteLiberados.map((pedido) => (
+                      <Card key={pedido.id} className="p-4">
+                        <div className="space-y-3">
+                          <div className="flex items-start justify-between">
+                            <div>
+                              <h4 className="font-medium">Pedido #{pedido.numeroPedido}</h4>
+                              <p className="text-sm text-muted-foreground">
+                                Confirmado em {new Date(pedido.dataLiberacao).toLocaleDateString('pt-BR')}
+                              </p>
                             </div>
-                            
-                            <div className="grid grid-cols-2 gap-4 text-sm">
-                              <div>
-                                <span className="text-muted-foreground">Quantidade:</span>
-                                <p className="font-medium">{pedido.quantidade}</p>
-                              </div>
-                              <div>
-                                <span className="text-muted-foreground">Transportadora:</span>
-                                <p className="font-medium">{pedido.transportadora}</p>
-                              </div>
-                            </div>
-                            
-                            {pedido.dataExpedicao && (
-                              <div className="text-sm">
-                                <span className="text-muted-foreground">Expedição:</span>
-                                <p className="font-medium">
-                                  {new Date(pedido.dataExpedicao).toLocaleDateString('pt-BR')}
-                                </p>
-                              </div>
-                            )}
+                            <Badge variant="secondary">
+                              NF: {pedido.nfVinculada}
+                            </Badge>
                           </div>
-                        </Card>
-                      ))}
-                    </div>
+                          
+                          <div className="grid grid-cols-2 gap-4 text-sm">
+                            <div>
+                              <span className="text-muted-foreground">Quantidade:</span>
+                              <p className="font-medium">{pedido.quantidade}</p>
+                            </div>
+                            <div>
+                              <span className="text-muted-foreground">Transportadora:</span>
+                              <p className="font-medium">{pedido.transportadora}</p>
+                            </div>
+                          </div>
+                          
+                          {pedido.dataExpedicao && (
+                            <div className="text-sm">
+                              <span className="text-muted-foreground">Expedição:</span>
+                              <p className="font-medium">
+                                {new Date(pedido.dataExpedicao).toLocaleDateString('pt-BR')}
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      </Card>
+                    ))}
+                  </div>
 
-                    {/* Desktop Table */}
-                    <div className="hidden md:block">
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead>Nº Pedido</TableHead>
-                            <TableHead>Data Confirmação</TableHead>
-                            <TableHead>NF Vinculada</TableHead>
-                            <TableHead>Quantidade</TableHead>
-                            <TableHead>Transportadora</TableHead>
-                            <TableHead>Data Expedição</TableHead>
+                  {/* Desktop Table */}
+                  <div className="hidden md:block">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Nº Pedido</TableHead>
+                          <TableHead>Data Confirmação</TableHead>
+                          <TableHead>NF Vinculada</TableHead>
+                          <TableHead>Quantidade</TableHead>
+                          <TableHead>Transportadora</TableHead>
+                          <TableHead>Data Expedição</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {clienteLiberados.map((pedido) => (
+                          <TableRow key={pedido.id}>
+                            <TableCell className="font-medium">{pedido.numeroPedido}</TableCell>
+                            <TableCell>{new Date(pedido.dataLiberacao).toLocaleDateString('pt-BR')}</TableCell>
+                            <TableCell>{pedido.nfVinculada}</TableCell>
+                            <TableCell>{pedido.quantidade}</TableCell>
+                            <TableCell>{pedido.transportadora}</TableCell>
+                            <TableCell>
+                              {pedido.dataExpedicao 
+                                ? new Date(pedido.dataExpedicao).toLocaleDateString('pt-BR')
+                                : 'Não informado'
+                              }
+                            </TableCell>
                           </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {clienteLiberados.map((pedido) => (
-                            <TableRow key={pedido.id}>
-                              <TableCell className="font-medium">{pedido.numeroPedido}</TableCell>
-                              <TableCell>{new Date(pedido.dataLiberacao).toLocaleDateString('pt-BR')}</TableCell>
-                              <TableCell>{pedido.nfVinculada}</TableCell>
-                              <TableCell>{pedido.quantidade}</TableCell>
-                              <TableCell>{pedido.transportadora}</TableCell>
-                              <TableCell>
-                                {pedido.dataExpedicao 
-                                  ? new Date(pedido.dataExpedicao).toLocaleDateString('pt-BR')
-                                  : 'Não informado'
-                                }
-                              </TableCell>
-                            </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
-                    </div>
-                  </>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
 
-          <TabsContent value="financeiro" className="space-y-6">
-            <ClienteFinanceiro />
-          </TabsContent>
-        </Tabs>
+        <TabsContent value="financeiro" className="space-y-6">
+          <ClienteFinanceiro />
+        </TabsContent>
       </main>
-    </div>
+    </Tabs>
   );
 }
