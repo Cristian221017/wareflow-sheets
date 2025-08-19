@@ -238,31 +238,31 @@ export function ClienteLayout() {
     <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container flex h-16 items-center justify-between">
+        <div className="container flex h-16 items-center gap-4 px-4">
           {/* Logo and Title */}
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-3 flex-shrink-0">
             <Warehouse className="h-6 w-6 text-primary" />
-            <h1 className="text-lg font-semibold whitespace-nowrap">Portal do Cliente</h1>
+            <h1 className="text-lg font-semibold">Portal do Cliente</h1>
           </div>
           
-          {/* Desktop Navigation - Only visible on desktop */}
-          <div className="hidden lg:flex flex-1 justify-center px-8">
+          {/* Desktop Navigation - Centered with flex-grow */}
+          <div className="hidden lg:flex flex-grow justify-center">
             <DesktopNavigation />
           </div>
           
-          {/* User Info and Actions */}
-          <div className="flex items-center space-x-4">
-            {/* User greeting - Desktop only */}
-            <div className="hidden lg:flex items-center text-right">
-              <p className="text-sm text-muted-foreground whitespace-nowrap">
+          {/* User Info and Actions - Right side */}
+          <div className="flex items-center gap-2 flex-shrink-0">
+            {/* User greeting - Desktop only with max width */}
+            <div className="hidden xl:block max-w-[200px]">
+              <p className="text-sm text-muted-foreground truncate">
                 Bem-vindo, {user?.name}
               </p>
             </div>
             
-            {/* Desktop Logout */}
-            <Button variant="ghost" size="sm" onClick={logout} className="hidden lg:flex items-center">
-              <LogOut className="mr-2 h-4 w-4" />
-              <span className="whitespace-nowrap">Sair</span>
+            {/* Desktop Logout - Compact */}
+            <Button variant="ghost" size="sm" onClick={logout} className="hidden lg:flex">
+              <LogOut className="h-4 w-4" />
+              <span className="hidden xl:inline ml-2">Sair</span>
             </Button>
             
             {/* Mobile Menu */}
