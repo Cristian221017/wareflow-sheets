@@ -77,7 +77,7 @@ export function FinanceiroProvider({ children }: { children: ReactNode }) {
     try {
       // Primeiro, buscar a transportadora do usuário usando função RPC
       const { data: userTransportadora, error: userError } = await supabase
-        .rpc('get_user_transportadora', { user_id: user.id } as any);
+        .rpc('get_user_transportadora', { _user_id: user.id } as any);
 
       if (userError || !userTransportadora) {
         throw new Error('Erro ao identificar transportadora do usuário');
