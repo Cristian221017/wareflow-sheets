@@ -32,9 +32,9 @@ import { toast } from 'sonner';
 import { useRef } from 'react';
 
 const getStatusColor = (status: string, dataVencimento: string) => {
-  const isVencido = new Date(dataVencimento) < new Date() && status === 'Em aberto';
+  const vencido = isVencido(dataVencimento, status);
   
-  if (isVencido) return 'bg-destructive text-destructive-foreground';
+  if (vencido) return 'bg-destructive text-destructive-foreground';
   
   switch (status) {
     case 'Em aberto':
@@ -49,7 +49,11 @@ const getStatusColor = (status: string, dataVencimento: string) => {
 };
 
 const isVencido = (dataVencimento: string, status: string): boolean => {
-  return new Date(dataVencimento) < new Date() && status === 'Em aberto';
+  if (!dataVencimento || status !== 'Em aberto') return false;
+  const date = new Date(dataVencimento + 'T00:00:00');
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return date < today;
 };
 
 export function FinanceiroTransportadoraTable() {

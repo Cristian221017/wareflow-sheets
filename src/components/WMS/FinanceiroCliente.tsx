@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Download, Search, FileText, Receipt } from 'lucide-react';
 import { toast } from 'sonner';
+import { useDateUtils } from '@/hooks/useDateUtils';
 
 export function FinanceiroCliente() {
   const { documentosFinanceiros, downloadArquivo } = useFinanceiro();
@@ -51,8 +52,10 @@ export function FinanceiroCliente() {
     }
   };
 
+  const dateUtils = useDateUtils();
+  
   const getStatusColor = (status: string, dataVencimento: string) => {
-    const isVencido = new Date(dataVencimento) < new Date() && status === 'Em aberto';
+    const isVencido = dateUtils.isOverdue(dataVencimento, status);
     
     if (isVencido) return 'bg-destructive text-destructive-foreground';
     
@@ -135,7 +138,7 @@ export function FinanceiroCliente() {
                       <div>
                         <span>Vencimento:</span>
                         <p className="font-medium text-foreground">
-                          {new Date(documento.dataVencimento).toLocaleDateString('pt-BR')}
+                          {dateUtils.formatForDisplay(documento.dataVencimento)}
                         </p>
                       </div>
                       {documento.valor && (

@@ -4,6 +4,21 @@ import { DocumentoFinanceiro, DocumentoFinanceiroFormData, FileUploadData } from
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
+// Utilitários para padronizar datas
+const formatDateForDatabase = (dateString: string): string => {
+  if (!dateString) return '';
+  // Garante que a data seja interpretada corretamente no timezone local
+  return dateString;
+};
+
+const isDateOverdue = (dateString: string, status: string): boolean => {
+  if (!dateString || status !== 'Em aberto') return false;
+  const date = new Date(dateString + 'T00:00:00');
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return date < today;
+};
+
 interface FinanceiroContextType {
   documentosFinanceiros: DocumentoFinanceiro[];
   loading: boolean;
@@ -87,11 +102,11 @@ export function FinanceiroProvider({ children }: { children: ReactNode }) {
         transportadora_id: userTransportadora,
         cliente_id: data.clienteId,
         numero_cte: data.numeroCte,
-        data_vencimento: data.dataVencimento,
+        data_vencimento: formatDateForDatabase(data.dataVencimento),
         valor: data.valor,
         observacoes: data.observacoes,
         status: data.status || 'Em aberto',
-        data_pagamento: data.dataPagamento || null
+        data_pagamento: data.dataPagamento ? formatDateForDatabase(data.dataPagamento) : null
       };
 
       const { data: insertedData, error } = await supabase
@@ -120,7 +135,9 @@ export function FinanceiroProvider({ children }: { children: ReactNode }) {
       if (data.status !== undefined) updateData.status = data.status;
       if (data.valor !== undefined) updateData.valor = data.valor;
       if (data.observacoes !== undefined) updateData.observacoes = data.observacoes;
-      if (data.dataPagamento !== undefined) updateData.data_pagamento = data.dataPagamento;
+      if (data.dataPagamento !== undefined) {
+        updateData.data_pagamento = data.dataPagamento ? formatDateForDatabase(data.dataPagamento) : null;
+      }
 
       const { error } = await supabase
         .from('documentos_financeiros' as any)
