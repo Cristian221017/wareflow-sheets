@@ -1,0 +1,186 @@
+import { useState, useMemo } from 'react';
+import { useFinanceiro } from '@/contexts/FinanceiroContext';
+import { useAuth } from '@/contexts/AuthContext';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Download, Search, FileText, Receipt } from 'lucide-react';
+import { toast } from 'sonner';
+
+export function FinanceiroCliente() {
+  const { documentosFinanceiros, downloadArquivo } = useFinanceiro();
+  const { user } = useAuth();
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+
+  // Filtrar documentos do cliente logado
+  const documentosCliente = useMemo(() => {
+    if (!user?.cnpj) return [];
+    
+    return documentosFinanceiros.filter(doc => {
+      // Aqui assumimos que temos uma relação entre documento e cliente
+      // Na implementação real, você precisaria ajustar conforme sua estrutura
+      return true; // Placeholder - ajustar conforme necessário
+    });
+  }, [documentosFinanceiros, user?.cnpj]);
+
+  const documentosFiltrados = useMemo(() => {
+    let filtered = documentosCliente;
+    
+    if (searchTerm) {
+      filtered = filtered.filter(doc => 
+        doc.numeroCte.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+    
+    if (statusFilter !== 'all') {
+      filtered = filtered.filter(doc => doc.status === statusFilter);
+    }
+    
+    return filtered;
+  }, [documentosCliente, searchTerm, statusFilter]);
+
+  const handleDownload = async (documentoId: string, type: 'boleto' | 'cte') => {
+    try {
+      await downloadArquivo(documentoId, type);
+    } catch (error) {
+      toast.error(`Erro ao baixar ${type === 'boleto' ? 'boleto' : 'CTE'}`);
+    }
+  };
+
+  const getStatusColor = (status: string, dataVencimento: string) => {
+    const isVencido = new Date(dataVencimento) < new Date() && status === 'Em aberto';
+    
+    if (isVencido) return 'bg-destructive text-destructive-foreground';
+    
+    switch (status) {
+      case 'Em aberto':
+        return 'bg-warning text-warning-foreground';
+      case 'Pago':
+        return 'bg-success text-success-foreground';
+      case 'Vencido':
+        return 'bg-destructive text-destructive-foreground';
+      default:
+        return 'bg-muted text-muted-foreground';
+    }
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Receipt className="w-5 h-5" />
+          Documentos Financeiros
+        </CardTitle>
+        <CardDescription>
+          Visualize e baixe seus documentos financeiros (CTEs e Boletos)
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {/* Filters */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-3 bg-muted/50 rounded-lg">
+          <div className="space-y-2">
+            <Label htmlFor="search">Buscar CTE</Label>
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+              <Input
+                id="search"
+                placeholder="Número do CTE..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-9"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label>Status</Label>
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger>
+                <SelectValue placeholder="Todos os status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos os status</SelectItem>
+                <SelectItem value="Em aberto">Em aberto</SelectItem>
+                <SelectItem value="Pago">Pago</SelectItem>
+                <SelectItem value="Vencido">Vencido</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        {/* Documents List */}
+        <div className="space-y-4">
+          {documentosFiltrados.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              <FileText className="w-12 h-12 mx-auto mb-4 opacity-50" />
+              <p>Nenhum documento financeiro encontrado</p>
+            </div>
+          ) : (
+            documentosFiltrados.map((documento) => (
+              <Card key={documento.id} className="p-4">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-medium">CTE {documento.numeroCte}</h3>
+                      <Badge className={getStatusColor(documento.status, documento.dataVencimento)}>
+                        {documento.status}
+                      </Badge>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-4 text-sm text-muted-foreground">
+                      <div>
+                        <span>Vencimento:</span>
+                        <p className="font-medium text-foreground">
+                          {new Date(documento.dataVencimento).toLocaleDateString('pt-BR')}
+                        </p>
+                      </div>
+                      {documento.valor && (
+                        <div>
+                          <span>Valor:</span>
+                          <p className="font-medium text-foreground">
+                            R$ {documento.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+
+                    {documento.observacoes && (
+                      <p className="text-sm text-muted-foreground">{documento.observacoes}</p>
+                    )}
+                  </div>
+
+                  <div className="flex gap-2">
+                    {documento.arquivoBoletoPath && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleDownload(documento.id, 'boleto')}
+                      >
+                        <Download className="w-4 h-4 mr-2" />
+                        Boleto
+                      </Button>
+                    )}
+                    {documento.arquivoCtePath && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleDownload(documento.id, 'cte')}
+                      >
+                        <Download className="w-4 h-4 mr-2" />
+                        CTE
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              </Card>
+            ))
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
