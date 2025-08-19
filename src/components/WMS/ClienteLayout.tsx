@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { useWMS } from '@/contexts/WMSContext';
@@ -15,8 +14,7 @@ import {
   CheckCircle,
   BarChart3,
   Receipt,
-  Menu,
-  X
+  Menu
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -29,19 +27,6 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-
-const getStatusColor = (status: string) => {
-  switch (status) {
-    case 'Em separação':
-      return 'bg-success text-success-foreground';
-    case 'Liberada para carregar':
-      return 'bg-warning text-warning-foreground';
-    case 'Carregamento solicitado':
-      return 'bg-muted text-muted-foreground';
-    default:
-      return 'bg-muted text-muted-foreground';
-  }
-};
 
 export function ClienteLayout() {
   const { user, logout } = useAuth();
@@ -65,157 +50,90 @@ export function ClienteLayout() {
     { id: 'financeiro', label: 'Financeiro', icon: Receipt, shortLabel: 'Fin' }
   ];
 
-  const NavigationTabs = ({ isMobile = false }: { isMobile?: boolean }) => {
-    if (isMobile) {
-      return (
-        <div className="flex flex-col w-full h-auto space-y-1 bg-transparent p-0">
-          {navigationItems.map((item) => (
-            <button
-              key={item.id}
-              onClick={() => {
-                setActiveTab(item.id);
-                setMobileMenuOpen(false);
-              }}
-              className={`
-                w-full justify-start rounded-md px-3 py-2 text-sm font-medium transition-colors 
-                hover:bg-accent hover:text-accent-foreground
-                ${activeTab === item.id ? 'bg-accent text-accent-foreground' : ''}
-                flex items-center gap-2
-              `}
-            >
-              <item.icon className="w-4 h-4" />
-              {item.label}
-            </button>
-          ))}
-        </div>
-      );
-    }
+  const MobileNavigation = () => (
+    <div className="flex flex-col w-full h-auto space-y-1 bg-transparent p-0">
+      {navigationItems.map((item) => (
+        <button
+          key={item.id}
+          onClick={() => {
+            setActiveTab(item.id);
+            setMobileMenuOpen(false);
+          }}
+          className={`
+            w-full justify-start rounded-md px-3 py-2 text-sm font-medium transition-colors 
+            hover:bg-accent hover:text-accent-foreground
+            ${activeTab === item.id ? 'bg-accent text-accent-foreground' : ''}
+            flex items-center gap-2
+          `}
+        >
+          <item.icon className="w-4 h-4" />
+          {item.label}
+        </button>
+      ))}
+    </div>
+  );
 
-    return (
-      <TabsList className="inline-flex h-9 items-center justify-center rounded-lg bg-muted p-1 text-muted-foreground">
-        {navigationItems.map((item) => (
-          <TabsTrigger
-            key={item.id}
-            value={item.id}
-            className="inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm flex items-center gap-2"
-          >
-            <item.icon className="w-4 h-4" />
-            <span className="hidden sm:inline">
-              {item.shortLabel}
-            </span>
-            <span className="hidden lg:inline sm:hidden">
-              {item.label}
-            </span>
-          </TabsTrigger>
-        ))}
-      </TabsList>
-    );
-  };
+  const DesktopNavigation = () => (
+    <div className="inline-flex h-9 items-center justify-center rounded-lg bg-muted p-1 text-muted-foreground">
+      {navigationItems.map((item) => (
+        <button
+          key={item.id}
+          onClick={() => setActiveTab(item.id)}
+          className={`
+            inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium 
+            ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 
+            focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50
+            ${activeTab === item.id ? 'bg-background text-foreground shadow-sm' : 'hover:bg-background/50'}
+            flex items-center gap-2
+          `}
+        >
+          <item.icon className="w-4 h-4" />
+          <span className="hidden sm:inline">
+            {item.shortLabel}
+          </span>
+          <span className="hidden lg:inline sm:hidden">
+            {item.label}
+          </span>
+        </button>
+      ))}
+    </div>
+  );
 
-  return (
-    <Tabs value={activeTab} onValueChange={setActiveTab} className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container flex h-14 items-center">
-          <div className="flex items-center space-x-4 lg:space-x-6">
-            <Warehouse className="h-6 w-6 text-primary" />
-            <div className="hidden md:flex">
-              <h1 className="text-lg font-semibold">Portal do Cliente</h1>
-            </div>
-          </div>
-          
-          <div className="flex flex-1 items-center justify-between space-x-2 md:justify-end">
-            <div className="w-full flex-1 md:w-auto md:flex-none">
-              <p className="text-sm text-muted-foreground md:hidden">
-                Olá, {user?.name?.split(' ')[0]}
-              </p>
-              <p className="hidden text-sm text-muted-foreground md:block">
-                Bem-vindo, {user?.name}
-              </p>
-            </div>
-            
-            <nav className="flex items-center space-x-2">
-              {/* Desktop Navigation */}
-              <div className="hidden lg:block">
-                <NavigationTabs />
-              </div>
-              
-              {/* Mobile Menu */}
-              <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
-                <SheetTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    className="lg:hidden h-9 w-9 px-0"
-                    size="sm"
-                  >
-                    <Menu className="h-4 w-4" />
-                    <span className="sr-only">Abrir menu</span>
-                  </Button>
-                </SheetTrigger>
-                <SheetContent side="left" className="w-72">
-                  <div className="flex items-center space-x-2 pb-4">
-                    <Warehouse className="h-5 w-5" />
-                    <span className="font-semibold">Portal do Cliente</span>
-                  </div>
-                  <NavigationTabs isMobile />
-                  <div className="mt-6 pt-6 border-t">
-                    <Button 
-                      variant="ghost" 
-                      onClick={logout}
-                      className="w-full justify-start"
-                    >
-                      <LogOut className="mr-2 h-4 w-4" />
-                      Sair
-                    </Button>
-                  </div>
-                </SheetContent>
-              </Sheet>
-              
-              {/* Desktop Logout */}
-              <Button variant="ghost" size="sm" onClick={logout} className="hidden lg:flex">
-                <LogOut className="mr-2 h-4 w-4" />
-                Sair
-              </Button>
-            </nav>
-          </div>
-        </div>
-      </header>
-
-      {/* Mobile Tabs - Below Header */}
-      <div className="lg:hidden border-b bg-background">
-        <div className="container">
-          <div className="overflow-x-auto">
-            <div className="flex space-x-1 p-1 min-w-max">
-              {navigationItems.map((item) => (
-                <TabsTrigger
-                  key={item.id}
-                  value={item.id}
-                  className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium whitespace-nowrap rounded-md data-[state=active]:bg-muted"
-                >
-                  <item.icon className="w-3.5 h-3.5" />
-                  {item.shortLabel}
-                </TabsTrigger>
-              ))}
-            </div>
+  const MobileTabBar = () => (
+    <div className="lg:hidden border-b bg-background">
+      <div className="container">
+        <div className="overflow-x-auto">
+          <div className="flex space-x-1 p-1 min-w-max">
+            {navigationItems.map((item) => (
+              <button
+                key={item.id}
+                onClick={() => setActiveTab(item.id)}
+                className={`
+                  flex items-center gap-1.5 px-3 py-2 text-xs font-medium whitespace-nowrap rounded-md 
+                  transition-colors hover:bg-muted
+                  ${activeTab === item.id ? 'bg-muted text-foreground' : 'text-muted-foreground'}
+                `}
+              >
+                <item.icon className="w-3.5 h-3.5" />
+                {item.shortLabel}
+              </button>
+            ))}
           </div>
         </div>
       </div>
+    </div>
+  );
 
-      {/* Main Content */}
-      <main className="container mx-auto py-6 space-y-6">
-        <TabsContent value="dashboard" className="space-y-6">
-          <ClienteDashboard />
-        </TabsContent>
-
-        <TabsContent value="mercadorias" className="space-y-6">
-          <ClienteMercadoriasTable />
-        </TabsContent>
-
-        <TabsContent value="pedidos" className="space-y-6">
-          <ClienteSolicitacaoCarregamento />
-        </TabsContent>
-
-        <TabsContent value="liberados" className="space-y-6">
+  const renderContent = () => {
+    switch (activeTab) {
+      case 'dashboard':
+        return <ClienteDashboard />;
+      case 'mercadorias':
+        return <ClienteMercadoriasTable />;
+      case 'pedidos':
+        return <ClienteSolicitacaoCarregamento />;
+      case 'liberados':
+        return (
           <Card>
             <CardHeader>
               <CardTitle>Pedidos Confirmados</CardTitle>
@@ -313,12 +231,90 @@ export function ClienteLayout() {
               )}
             </CardContent>
           </Card>
-        </TabsContent>
+        );
+      case 'financeiro':
+        return <ClienteFinanceiro />;
+      default:
+        return <ClienteDashboard />;
+    }
+  };
 
-        <TabsContent value="financeiro" className="space-y-6">
-          <ClienteFinanceiro />
-        </TabsContent>
+  return (
+    <div className="min-h-screen bg-background">
+      {/* Header */}
+      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div className="container flex h-14 items-center">
+          <div className="flex items-center space-x-4 lg:space-x-6">
+            <Warehouse className="h-6 w-6 text-primary" />
+            <div className="hidden md:flex">
+              <h1 className="text-lg font-semibold">Portal do Cliente</h1>
+            </div>
+          </div>
+          
+          <div className="flex flex-1 items-center justify-between space-x-2 md:justify-end">
+            <div className="w-full flex-1 md:w-auto md:flex-none">
+              <p className="text-sm text-muted-foreground md:hidden">
+                Olá, {user?.name?.split(' ')[0]}
+              </p>
+              <p className="hidden text-sm text-muted-foreground md:block">
+                Bem-vindo, {user?.name}
+              </p>
+            </div>
+            
+            <nav className="flex items-center space-x-2">
+              {/* Desktop Navigation */}
+              <div className="hidden lg:block">
+                <DesktopNavigation />
+              </div>
+              
+              {/* Mobile Menu */}
+              <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+                <SheetTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    className="lg:hidden h-9 w-9 px-0"
+                    size="sm"
+                  >
+                    <Menu className="h-4 w-4" />
+                    <span className="sr-only">Abrir menu</span>
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="left" className="w-72">
+                  <div className="flex items-center space-x-2 pb-4">
+                    <Warehouse className="h-5 w-5" />
+                    <span className="font-semibold">Portal do Cliente</span>
+                  </div>
+                  <MobileNavigation />
+                  <div className="mt-6 pt-6 border-t">
+                    <Button 
+                      variant="ghost" 
+                      onClick={logout}
+                      className="w-full justify-start"
+                    >
+                      <LogOut className="mr-2 h-4 w-4" />
+                      Sair
+                    </Button>
+                  </div>
+                </SheetContent>
+              </Sheet>
+              
+              {/* Desktop Logout */}
+              <Button variant="ghost" size="sm" onClick={logout} className="hidden lg:flex">
+                <LogOut className="mr-2 h-4 w-4" />
+                Sair
+              </Button>
+            </nav>
+          </div>
+        </div>
+      </header>
+
+      {/* Mobile Tab Bar */}
+      <MobileTabBar />
+
+      {/* Main Content */}
+      <main className="container mx-auto py-6 space-y-6">
+        {renderContent()}
       </main>
-    </Tabs>
+    </div>
   );
 }
