@@ -238,63 +238,82 @@ export function ClienteLayout() {
     <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container flex h-16 items-center gap-4 px-4">
-          {/* Logo and Title */}
-          <div className="flex items-center space-x-3 flex-shrink-0">
-            <Warehouse className="h-6 w-6 text-primary" />
-            <h1 className="text-lg font-semibold">Portal do Cliente</h1>
-          </div>
-          
-          {/* Desktop Navigation - Centered with flex-grow */}
-          <div className="hidden lg:flex flex-grow justify-center">
-            <DesktopNavigation />
-          </div>
-          
-          {/* User Info and Actions - Right side */}
-          <div className="flex items-center gap-2 flex-shrink-0">
-            {/* User greeting - Desktop only with max width */}
-            <div className="hidden xl:block max-w-[200px]">
-              <p className="text-sm text-muted-foreground truncate">
-                Bem-vindo, {user?.name}
-              </p>
+        <div className="w-full max-w-full px-4 sm:px-6 lg:px-8">
+          <div className="flex h-16 items-center justify-between">
+            {/* Logo and Title - Left side */}
+            <div className="flex items-center space-x-2 min-w-0 flex-shrink-0">
+              <Warehouse className="h-5 w-5 text-primary" />
+              <h1 className="text-base lg:text-lg font-semibold truncate">Portal do Cliente</h1>
             </div>
             
-            {/* Desktop Logout - Compact */}
-            <Button variant="ghost" size="sm" onClick={logout} className="hidden lg:flex">
-              <LogOut className="h-4 w-4" />
-              <span className="hidden xl:inline ml-2">Sair</span>
-            </Button>
-            
-            {/* Mobile Menu */}
-            <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
-              <SheetTrigger asChild>
-                <Button
-                  variant="ghost"
-                  className="lg:hidden h-9 w-9 p-0"
-                  size="sm"
-                >
-                  <Menu className="h-4 w-4" />
-                  <span className="sr-only">Abrir menu</span>
-                </Button>
-              </SheetTrigger>
-              <SheetContent side="left" className="w-72">
-                <div className="flex items-center space-x-2 pb-4">
-                  <Warehouse className="h-5 w-5" />
-                  <span className="font-semibold">Portal do Cliente</span>
-                </div>
-                <MobileNavigation />
-                <div className="mt-6 pt-6 border-t">
-                  <Button 
-                    variant="ghost" 
-                    onClick={logout}
-                    className="w-full justify-start"
+            {/* Desktop Navigation - Center (only on large screens) */}
+            <div className="hidden lg:flex flex-1 justify-center mx-4">
+              <div className="flex items-center justify-center rounded-lg bg-muted p-1 text-muted-foreground max-w-fit">
+                {navigationItems.map((item) => (
+                  <button
+                    key={item.id}
+                    onClick={() => setActiveTab(item.id)}
+                    className={`
+                      inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium 
+                      ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 
+                      focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50
+                      ${activeTab === item.id ? 'bg-background text-foreground shadow-sm' : 'hover:bg-background/50'}
+                      gap-1.5
+                    `}
                   >
-                    <LogOut className="mr-2 h-4 w-4" />
-                    Sair
+                    <item.icon className="w-4 h-4" />
+                    <span className="hidden xl:inline">{item.label}</span>
+                    <span className="xl:hidden">{item.shortLabel}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+            
+            {/* Right side actions */}
+            <div className="flex items-center gap-2 min-w-0 flex-shrink-0">
+              {/* User greeting - Only on very large screens */}
+              <div className="hidden 2xl:block">
+                <p className="text-sm text-muted-foreground max-w-[120px] truncate">
+                  Olá, {user?.name?.split(' ')[0]}
+                </p>
+              </div>
+              
+              {/* Desktop Logout - Simplified */}
+              <Button variant="ghost" size="sm" onClick={logout} className="hidden lg:flex p-2">
+                <LogOut className="h-4 w-4" />
+              </Button>
+              
+              {/* Mobile Menu */}
+              <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+                <SheetTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    className="lg:hidden h-9 w-9 p-0"
+                    size="sm"
+                  >
+                    <Menu className="h-4 w-4" />
+                    <span className="sr-only">Abrir menu</span>
                   </Button>
-                </div>
-              </SheetContent>
-            </Sheet>
+                </SheetTrigger>
+                <SheetContent side="left" className="w-72">
+                  <div className="flex items-center space-x-2 pb-4">
+                    <Warehouse className="h-5 w-5" />
+                    <span className="font-semibold">Portal do Cliente</span>
+                  </div>
+                  <MobileNavigation />
+                  <div className="mt-6 pt-6 border-t">
+                    <Button 
+                      variant="ghost" 
+                      onClick={logout}
+                      className="w-full justify-start"
+                    >
+                      <LogOut className="mr-2 h-4 w-4" />
+                      Sair
+                    </Button>
+                  </div>
+                </SheetContent>
+              </Sheet>
+            </div>
           </div>
         </div>
       </header>
