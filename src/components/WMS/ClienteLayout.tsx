@@ -7,6 +7,7 @@ import { useWMS } from '@/contexts/WMSContext';
 import { FormPedidoLiberacao } from './FormPedidoLiberacao';
 import { ClienteDashboard } from './ClienteDashboard';
 import { ClienteMercadoriasTable } from './ClienteMercadoriasTable';
+import { ClienteFinanceiro } from './ClienteFinanceiro';
 import { 
   Package, 
   FileText, 
@@ -14,7 +15,8 @@ import {
   Warehouse,
   LogOut,
   CheckCircle,
-  BarChart3
+  BarChart3,
+  Receipt
 } from 'lucide-react';
 import { ClienteSolicitacaoCarregamento } from './ClienteSolicitacaoCarregamento';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -105,6 +107,11 @@ export function ClienteLayout() {
                 <CheckCircle className="w-3 h-3 sm:w-4 sm:h-4" />
                 <span className="hidden sm:inline">Confirmadas</span>
                 <span className="sm:hidden">OK</span>
+              </TabsTrigger>
+              <TabsTrigger value="financeiro" className="inline-flex items-center justify-center whitespace-nowrap rounded-sm px-2 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm gap-1 sm:gap-2">
+                <Receipt className="w-3 h-3 sm:w-4 sm:h-4" />
+                <span className="hidden sm:inline">Financeiro</span>
+                <span className="sm:hidden">$</span>
               </TabsTrigger>
             </TabsList>
           </div>
@@ -208,8 +215,12 @@ export function ClienteLayout() {
                      </TableBody>
                    </Table>
                  </div>
-               </CardContent>
+                </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="financeiro">
+            <ClienteFinanceiro />
           </TabsContent>
         </Tabs>
       </main>
