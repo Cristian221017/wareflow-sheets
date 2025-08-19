@@ -82,6 +82,54 @@ export type Database = {
           },
         ]
       }
+      documentos_financeiros: {
+        Row: {
+          arquivo_boleto_path: string | null
+          arquivo_cte_path: string | null
+          cliente_id: string
+          created_at: string
+          data_pagamento: string | null
+          data_vencimento: string
+          id: string
+          numero_cte: string
+          observacoes: string | null
+          status: string
+          transportadora_id: string
+          updated_at: string
+          valor: number | null
+        }
+        Insert: {
+          arquivo_boleto_path?: string | null
+          arquivo_cte_path?: string | null
+          cliente_id: string
+          created_at?: string
+          data_pagamento?: string | null
+          data_vencimento: string
+          id?: string
+          numero_cte: string
+          observacoes?: string | null
+          status?: string
+          transportadora_id: string
+          updated_at?: string
+          valor?: number | null
+        }
+        Update: {
+          arquivo_boleto_path?: string | null
+          arquivo_cte_path?: string | null
+          cliente_id?: string
+          created_at?: string
+          data_pagamento?: string | null
+          data_vencimento?: string
+          id?: string
+          numero_cte?: string
+          observacoes?: string | null
+          status?: string
+          transportadora_id?: string
+          updated_at?: string
+          valor?: number | null
+        }
+        Relationships: []
+      }
       notas_fiscais: {
         Row: {
           cliente_id: string
@@ -456,6 +504,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      atualizar_status_vencidos: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       get_user_transportadora: {
         Args: { _user_id: string }
         Returns: string
