@@ -78,7 +78,7 @@ export function FormNotaFiscal() {
       <CardContent>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               <FormField
                 control={form.control}
                 name="numeroNF"
@@ -286,7 +286,7 @@ export function FormNotaFiscal() {
             </div>
 
             <div className="flex justify-end">
-              <Button type="submit" className="bg-success text-success-foreground hover:bg-success/80">
+              <Button type="submit" className="w-full sm:w-auto bg-success text-success-foreground hover:bg-success/80">
                 Cadastrar Nota Fiscal
               </Button>
             </div>

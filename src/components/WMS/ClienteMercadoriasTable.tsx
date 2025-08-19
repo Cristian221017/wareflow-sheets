@@ -177,7 +177,8 @@ export function ClienteMercadoriasTable() {
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Filters */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 p-4 bg-muted/50 rounded-lg">
+        <div className="space-y-4 p-3 sm:p-4 bg-muted/50 rounded-lg">
+          {/* Mobile Search */}
           <div className="space-y-2">
             <Label htmlFor="search" className="text-sm font-medium">Buscar</Label>
             <div className="relative">
@@ -192,71 +193,74 @@ export function ClienteMercadoriasTable() {
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Label className="text-sm font-medium">Status</Label>
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger>
-                <SelectValue placeholder="Todos os status" />
-              </SelectTrigger>
+          {/* Filters Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">Status</Label>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Todos os status" />
+                </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos os status</SelectItem>
+                    <SelectItem value="Em separação">Em separação</SelectItem>
+                    <SelectItem value="Liberada para carregar">Liberada para carregar</SelectItem>
+                    <SelectItem value="Carregamento solicitado">Carregamento solicitado</SelectItem>
+                  </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">Período</Label>
+              <Select value={dateFilter} onValueChange={setDateFilter}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Todos os períodos" />
+                </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Todos os status</SelectItem>
-                  <SelectItem value="Em separação">Em separação</SelectItem>
-                  <SelectItem value="Liberada para carregar">Liberada para carregar</SelectItem>
-                  <SelectItem value="Carregamento solicitado">Carregamento solicitado</SelectItem>
+                  <SelectItem value="all">Todos os períodos</SelectItem>
+                  <SelectItem value="last7days">Últimos 7 dias</SelectItem>
+                  <SelectItem value="last30days">Últimos 30 dias</SelectItem>
+                  <SelectItem value="last90days">Últimos 90 dias</SelectItem>
+                  <SelectItem value="overdue">Vencidas (&gt;30 dias)</SelectItem>
                 </SelectContent>
-            </Select>
-          </div>
+              </Select>
+            </div>
 
-          <div className="space-y-2">
-            <Label className="text-sm font-medium">Período</Label>
-            <Select value={dateFilter} onValueChange={setDateFilter}>
-              <SelectTrigger>
-                <SelectValue placeholder="Todos os períodos" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos os períodos</SelectItem>
-                <SelectItem value="last7days">Últimos 7 dias</SelectItem>
-                <SelectItem value="last30days">Últimos 30 dias</SelectItem>
-                <SelectItem value="last90days">Últimos 90 dias</SelectItem>
-                <SelectItem value="overdue">Vencidas (&gt;30 dias)</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">Fornecedor</Label>
+              <Select value={fornecedorFilter} onValueChange={setFornecedorFilter}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Todos os fornecedores" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos os fornecedores</SelectItem>
+                  {fornecedores.map(fornecedor => (
+                    <SelectItem key={fornecedor} value={fornecedor}>
+                      {fornecedor}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
-          <div className="space-y-2">
-            <Label className="text-sm font-medium">Fornecedor</Label>
-            <Select value={fornecedorFilter} onValueChange={setFornecedorFilter}>
-              <SelectTrigger>
-                <SelectValue placeholder="Todos os fornecedores" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos os fornecedores</SelectItem>
-                {fornecedores.map(fornecedor => (
-                  <SelectItem key={fornecedor} value={fornecedor}>
-                    {fornecedor}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-2">
-            <Label className="text-sm font-medium">Ações</Label>
-            <div className="flex gap-2">
-              <Button variant="outline" size="sm" onClick={clearFilters}>
-                <RotateCcw className="w-4 h-4 mr-1" />
-                Limpar
-              </Button>
-              {selectedNFs.length > 0 && (
-                <Button 
-                  size="sm" 
-                  onClick={handleBulkLiberacao}
-                  className="bg-warning text-warning-foreground hover:bg-warning/80"
-                >
-                  <Plus className="w-4 h-4 mr-1" />
-                  Solicitar ({selectedNFs.length})
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">Ações</Label>
+              <div className="flex gap-2">
+                <Button variant="outline" size="sm" onClick={clearFilters} className="flex-1 sm:flex-none">
+                  <RotateCcw className="w-4 h-4 sm:mr-1" />
+                  <span className="hidden sm:inline">Limpar</span>
                 </Button>
-              )}
+                {selectedNFs.length > 0 && (
+                  <Button 
+                    size="sm" 
+                    onClick={handleBulkLiberacao}
+                    className="bg-warning text-warning-foreground hover:bg-warning/80 flex-1 sm:flex-none"
+                  >
+                    <Plus className="w-4 h-4 sm:mr-1" />
+                    <span className="hidden sm:inline">Solicitar</span> ({selectedNFs.length})
+                  </Button>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -273,8 +277,129 @@ export function ClienteMercadoriasTable() {
           )}
         </div>
 
-        {/* Table */}
-        <div className="rounded-md border overflow-auto">
+        {/* Mobile Card View */}
+        <div className="block lg:hidden space-y-4">
+          {clienteNFs.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              <Package className="w-12 h-12 mx-auto mb-4 opacity-50" />
+              <p>Nenhuma mercadoria encontrada</p>
+            </div>
+          ) : (
+            <>
+              {/* Bulk selection for mobile */}
+              {selectedNFs.length > 0 && (
+                <Card className="p-4 bg-warning/10 border-warning">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">{selectedNFs.length} item(s) selecionado(s)</span>
+                    <Button 
+                      size="sm" 
+                      onClick={handleBulkLiberacao}
+                      className="bg-warning text-warning-foreground hover:bg-warning/80"
+                    >
+                      <Plus className="w-4 h-4 mr-1" />
+                      Solicitar
+                    </Button>
+                  </div>
+                </Card>
+              )}
+              
+              {clienteNFs.map((nf) => {
+                const isNFOverdue = isOverdue(nf.dataRecebimento);
+                const canSelect = nf.status === 'Em separação';
+                
+                return (
+                  <Card key={nf.id} className={`p-4 ${
+                    isNFOverdue && nf.status === 'Em separação' ? 'border-destructive' : ''
+                  } ${nf.status === 'Liberada para carregar' ? 'border-warning' : ''}`}>
+                    <div className="space-y-3">
+                      {/* Header with selection and NF number */}
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          {canSelect && (
+                            <Checkbox
+                              checked={selectedNFs.includes(nf.id)}
+                              onCheckedChange={(checked) => handleSelectNF(nf.id, checked as boolean)}
+                              aria-label={`Selecionar NF ${nf.numeroNF}`}
+                            />
+                          )}
+                          <span className="font-bold text-sm">NF #{nf.numeroNF}</span>
+                        </div>
+                        <Badge className={getStatusColor(nf.status)}>
+                          {nf.status}
+                        </Badge>
+                      </div>
+
+                      {/* Main info grid */}
+                      <div className="grid grid-cols-2 gap-2 text-xs">
+                        <div>
+                          <span className="text-muted-foreground">Pedido:</span>
+                          <p className="font-medium text-primary">{nf.numeroPedido}</p>
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground">Produto:</span>
+                          <p className="font-medium truncate">{nf.produto}</p>
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground">Fornecedor:</span>
+                          <p className="font-medium truncate">{nf.fornecedor}</p>
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground">Quantidade:</span>
+                          <p className="font-medium">{nf.quantidade}</p>
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground">Data Receb.:</span>
+                          <p className="font-medium">
+                            {new Date(nf.dataRecebimento).toLocaleDateString('pt-BR')}
+                            {isNFOverdue && nf.status === 'Em separação' && (
+                              <Badge variant="destructive" className="text-xs ml-1">Vencida</Badge>
+                            )}
+                          </p>
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground">Localização:</span>
+                          <p className="font-medium">{nf.localizacao}</p>
+                        </div>
+                      </div>
+
+                      {/* Additional details (collapsible) */}
+                      <div className="grid grid-cols-3 gap-2 text-xs border-t pt-2">
+                        <div>
+                          <span className="text-muted-foreground">Peso:</span>
+                          <p className="font-medium">{nf.peso.toFixed(1)} kg</p>
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground">Volume:</span>
+                          <p className="font-medium">{nf.volume.toFixed(2)} m³</p>
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground">OC:</span>
+                          <p className="font-medium truncate">{nf.ordemCompra}</p>
+                        </div>
+                      </div>
+
+                      {/* Action button */}
+                      {nf.status === 'Em separação' && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleSolicitarLiberacao(nf)}
+                          className="w-full text-warning border-warning hover:bg-warning hover:text-warning-foreground"
+                        >
+                          <Plus className="w-3 h-3 mr-1" />
+                          Solicitar Carregamento
+                        </Button>
+                      )}
+                    </div>
+                  </Card>
+                );
+              })}
+            </>
+          )}
+        </div>
+
+        {/* Desktop Table View */}
+        <div className="hidden lg:block rounded-md border overflow-auto">
           <Table>
             <TableHeader>
               <TableRow>
@@ -374,7 +499,7 @@ export function ClienteMercadoriasTable() {
 
       {/* Dialog for single NF liberation */}
       <Dialog open={isLiberacaoDialogOpen} onOpenChange={setIsLiberacaoDialogOpen}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-[95vw] sm:max-w-4xl max-h-[90vh] overflow-y-auto p-2 sm:p-6">
           {(() => {
             console.log('Dialog renderizado - selectedNF:', selectedNF);
             return (
@@ -393,7 +518,7 @@ export function ClienteMercadoriasTable() {
 
       {/* Dialog for bulk liberation */}
       <Dialog open={isBulkLiberacaoDialogOpen} onOpenChange={setIsBulkLiberacaoDialogOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-[95vw] sm:max-w-2xl p-3 sm:p-6">
           <DialogHeader>
             <DialogTitle>Solicitação de Carregamento em Massa</DialogTitle>
             <DialogDescription>

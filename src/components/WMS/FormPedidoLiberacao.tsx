@@ -121,7 +121,7 @@ export function FormPedidoLiberacao({ notaFiscal, onSuccess }: FormPedidoLiberac
       <CardContent>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               <FormField
                 control={form.control}
                 name="numeroPedido"
@@ -323,7 +323,7 @@ export function FormPedidoLiberacao({ notaFiscal, onSuccess }: FormPedidoLiberac
             </div>
 
             <div className="flex justify-end">
-              <Button type="submit" className="bg-warning text-warning-foreground hover:bg-warning/80">
+              <Button type="submit" className="w-full sm:w-auto bg-warning text-warning-foreground hover:bg-warning/80">
                 {isPreFilled ? 'Confirmar Ordem' : 'Criar Ordem de Carregamento'}
               </Button>
             </div>
