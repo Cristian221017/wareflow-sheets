@@ -91,7 +91,7 @@ export function FinanceiroProvider({ children }: { children: ReactNode }) {
         valor: data.valor,
         observacoes: data.observacoes,
         status: data.status || 'Em aberto',
-        data_pagamento: data.dataPagamento
+        data_pagamento: data.dataPagamento || null
       };
 
       const { data: insertedData, error } = await supabase
