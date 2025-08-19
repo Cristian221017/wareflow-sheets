@@ -7,7 +7,7 @@ import { toast } from 'sonner';
 interface FinanceiroContextType {
   documentosFinanceiros: DocumentoFinanceiro[];
   loading: boolean;
-  addDocumentoFinanceiro: (data: DocumentoFinanceiroFormData) => Promise<void>;
+  addDocumentoFinanceiro: (data: DocumentoFinanceiroFormData) => Promise<{ id: string } | null>;
   updateDocumentoFinanceiro: (id: string, data: Partial<DocumentoFinanceiroFormData>) => Promise<void>;
   uploadArquivo: (documentoId: string, fileData: FileUploadData) => Promise<void>;
   downloadArquivo: (documentoId: string, type: 'boleto' | 'cte') => Promise<void>;
@@ -94,9 +94,11 @@ export function FinanceiroProvider({ children }: { children: ReactNode }) {
         data_pagamento: data.dataPagamento
       };
 
-      const { error } = await supabase
+      const { data: insertedData, error } = await supabase
         .from('documentos_financeiros' as any)
-        .insert([documentoData]);
+        .insert([documentoData])
+        .select()
+        .single();
 
       if (error) {
         console.error('Erro ao inserir documento financeiro:', error);
@@ -104,7 +106,7 @@ export function FinanceiroProvider({ children }: { children: ReactNode }) {
       }
 
       await fetchDocumentosFinanceiros();
-      toast.success('Documento financeiro cadastrado com sucesso!');
+      return { id: (insertedData as any).id };
     } catch (error) {
       console.error('Erro ao adicionar documento financeiro:', error);
       throw error;

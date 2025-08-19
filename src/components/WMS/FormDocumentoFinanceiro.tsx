@@ -34,7 +34,8 @@ export function FormDocumentoFinanceiro({ onSuccess }: FormDocumentoFinanceiroPr
   const { addDocumentoFinanceiro, uploadArquivo } = useFinanceiro();
   const { clientes } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
-  const [documentoId, setDocumentoId] = useState<string | null>(null);
+  const [boletoFile, setBoletoFile] = useState<File | null>(null);
+  const [cteFile, setCteFile] = useState<File | null>(null);
   const boletoInputRef = useRef<HTMLInputElement>(null);
   const cteInputRef = useRef<HTMLInputElement>(null);
   
@@ -53,9 +54,27 @@ export function FormDocumentoFinanceiro({ onSuccess }: FormDocumentoFinanceiroPr
   const onSubmit = async (data: FormData) => {
     try {
       setIsLoading(true);
-      await addDocumentoFinanceiro(data as DocumentoFinanceiroFormData);
+      
+      // Create the document first
+      const newDocumento = await addDocumentoFinanceiro(data as DocumentoFinanceiroFormData);
+      
+      // Upload files if they exist and we have a document ID
+      if (newDocumento?.id && (boletoFile || cteFile)) {
+        const numeroCte = data.numeroCte;
+        
+        if (boletoFile) {
+          await uploadArquivo(newDocumento.id, { file: boletoFile, type: 'boleto', numeroCte });
+        }
+        
+        if (cteFile) {
+          await uploadArquivo(newDocumento.id, { file: cteFile, type: 'cte', numeroCte });
+        }
+      }
+      
       toast.success('Documento financeiro cadastrado com sucesso!');
       form.reset();
+      setBoletoFile(null);
+      setCteFile(null);
       
       if (onSuccess) {
         onSuccess();
@@ -68,23 +87,13 @@ export function FormDocumentoFinanceiro({ onSuccess }: FormDocumentoFinanceiroPr
     }
   };
 
-  const handleFileUpload = async (file: File, type: 'boleto' | 'cte') => {
-    if (!documentoId) {
-      toast.error('Cadastre o documento primeiro antes de anexar arquivos');
-      return;
-    }
-
-    const numeroCte = form.getValues('numeroCte');
-    if (!numeroCte) {
-      toast.error('Número do CTE é obrigatório para anexar arquivos');
-      return;
-    }
-
-    try {
-      await uploadArquivo(documentoId, { file, type, numeroCte });
-    } catch (error) {
-      console.error('Erro ao fazer upload:', error);
-      toast.error('Erro ao anexar arquivo');
+  const handleFileSelect = (file: File, type: 'boleto' | 'cte') => {
+    if (type === 'boleto') {
+      setBoletoFile(file);
+      toast.success('Boleto selecionado para anexar');
+    } else {
+      setCteFile(file);
+      toast.success('CTE selecionado para anexar');
     }
   };
 
@@ -246,7 +255,7 @@ export function FormDocumentoFinanceiro({ onSuccess }: FormDocumentoFinanceiroPr
                       className="hidden"
                       onChange={(e) => {
                         const file = e.target.files?.[0];
-                        if (file) handleFileUpload(file, 'boleto');
+                        if (file) handleFileSelect(file, 'boleto');
                       }}
                     />
                     <Button 
@@ -254,10 +263,9 @@ export function FormDocumentoFinanceiro({ onSuccess }: FormDocumentoFinanceiroPr
                       variant="outline"
                       size="sm"
                       onClick={() => boletoInputRef.current?.click()}
-                      disabled={!documentoId}
                     >
                       <Upload className="w-4 h-4 mr-2" />
-                      Anexar Boleto
+                      {boletoFile ? boletoFile.name : 'Anexar Boleto'}
                     </Button>
                   </div>
                   <p className="text-xs text-muted-foreground">
@@ -275,7 +283,7 @@ export function FormDocumentoFinanceiro({ onSuccess }: FormDocumentoFinanceiroPr
                       className="hidden"
                       onChange={(e) => {
                         const file = e.target.files?.[0];
-                        if (file) handleFileUpload(file, 'cte');
+                        if (file) handleFileSelect(file, 'cte');
                       }}
                     />
                     <Button 
@@ -283,10 +291,9 @@ export function FormDocumentoFinanceiro({ onSuccess }: FormDocumentoFinanceiroPr
                       variant="outline"
                       size="sm"
                       onClick={() => cteInputRef.current?.click()}
-                      disabled={!documentoId}
                     >
                       <Upload className="w-4 h-4 mr-2" />
-                      Anexar CTE
+                      {cteFile ? cteFile.name : 'Anexar CTE'}
                     </Button>
                   </div>
                   <p className="text-xs text-muted-foreground">
@@ -295,11 +302,9 @@ export function FormDocumentoFinanceiro({ onSuccess }: FormDocumentoFinanceiroPr
                 </div>
               </div>
               
-              {!documentoId && (
-                <p className="text-xs text-amber-600 mt-2">
-                  Cadastre o documento primeiro para poder anexar arquivos
-                </p>
-              )}
+              <p className="text-xs text-muted-foreground mt-2">
+                Os arquivos serão anexados após o documento ser cadastrado
+              </p>
             </div>
 
             <div className="flex justify-end pt-4">
