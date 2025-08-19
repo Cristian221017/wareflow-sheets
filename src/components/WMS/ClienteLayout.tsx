@@ -65,37 +65,52 @@ export function ClienteLayout() {
     { id: 'financeiro', label: 'Financeiro', icon: Receipt, shortLabel: 'Fin' }
   ];
 
-  const NavigationTabs = ({ isMobile = false }: { isMobile?: boolean }) => (
-    <TabsList className={`
-      ${isMobile 
-        ? 'flex flex-col w-full h-auto space-y-1 bg-transparent p-0' 
-        : 'inline-flex h-9 items-center justify-center rounded-lg bg-muted p-1 text-muted-foreground'
-      }
-    `}>
-      {navigationItems.map((item) => (
-        <TabsTrigger
-          key={item.id}
-          value={item.id}
-          onClick={() => isMobile && setMobileMenuOpen(false)}
-          className={`
-            ${isMobile
-              ? 'w-full justify-start rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground data-[state=active]:bg-accent data-[state=active]:text-accent-foreground'
-              : 'inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm'
-            }
-            flex items-center gap-2
-          `}
-        >
-          <item.icon className="w-4 h-4" />
-          <span className={isMobile ? '' : 'hidden sm:inline'}>
-            {isMobile ? item.label : item.shortLabel}
-          </span>
-          <span className="hidden lg:inline sm:hidden">
-            {item.label}
-          </span>
-        </TabsTrigger>
-      ))}
-    </TabsList>
-  );
+  const NavigationTabs = ({ isMobile = false }: { isMobile?: boolean }) => {
+    if (isMobile) {
+      return (
+        <div className="flex flex-col w-full h-auto space-y-1 bg-transparent p-0">
+          {navigationItems.map((item) => (
+            <button
+              key={item.id}
+              onClick={() => {
+                setActiveTab(item.id);
+                setMobileMenuOpen(false);
+              }}
+              className={`
+                w-full justify-start rounded-md px-3 py-2 text-sm font-medium transition-colors 
+                hover:bg-accent hover:text-accent-foreground
+                ${activeTab === item.id ? 'bg-accent text-accent-foreground' : ''}
+                flex items-center gap-2
+              `}
+            >
+              <item.icon className="w-4 h-4" />
+              {item.label}
+            </button>
+          ))}
+        </div>
+      );
+    }
+
+    return (
+      <TabsList className="inline-flex h-9 items-center justify-center rounded-lg bg-muted p-1 text-muted-foreground">
+        {navigationItems.map((item) => (
+          <TabsTrigger
+            key={item.id}
+            value={item.id}
+            className="inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm flex items-center gap-2"
+          >
+            <item.icon className="w-4 h-4" />
+            <span className="hidden sm:inline">
+              {item.shortLabel}
+            </span>
+            <span className="hidden lg:inline sm:hidden">
+              {item.label}
+            </span>
+          </TabsTrigger>
+        ))}
+      </TabsList>
+    );
+  };
 
   return (
     <Tabs value={activeTab} onValueChange={setActiveTab} className="min-h-screen bg-background">
