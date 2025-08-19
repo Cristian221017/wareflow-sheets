@@ -125,7 +125,7 @@ export function TransportadoraLayout() {
                 <DialogTrigger asChild>
                   <Button className="bg-muted hover:bg-muted/90 text-muted-foreground">
                     <Receipt className="w-4 h-4 mr-2" />
-                    Novo Documento
+                    Novo Boleto
                   </Button>
                 </DialogTrigger>
                 <DialogContent className="max-w-[95vw] sm:max-w-4xl max-h-[90vh] overflow-y-auto">
@@ -188,7 +188,7 @@ export function TransportadoraLayout() {
                       <DialogTrigger asChild>
                         <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
                           <Receipt className="w-4 h-4 mr-2" />
-                          Novo Documento
+                          Novo Boleto
                         </DropdownMenuItem>
                       </DialogTrigger>
                       <DialogContent className="max-w-[95vw] max-h-[90vh] overflow-y-auto">
@@ -210,11 +210,11 @@ export function TransportadoraLayout() {
             <div className="lg:hidden w-full overflow-x-auto mb-6">
               <TabsList className="flex w-max min-w-full h-auto p-1 gap-1">
                 <TabsTrigger value="dashboard" className="text-xs px-2 py-2 whitespace-nowrap">Dashboard</TabsTrigger>
+                <TabsTrigger value="financeiro" className="text-xs px-2 py-2 whitespace-nowrap">Financeiro</TabsTrigger>
                 <TabsTrigger value="notas-fiscais" className="text-xs px-2 py-2 whitespace-nowrap">Notas Fiscais</TabsTrigger>
                 <TabsTrigger value="pedidos-liberacao" className="text-xs px-2 py-2 whitespace-nowrap">Carregamento</TabsTrigger>
                 <TabsTrigger value="solicitacoes-pendentes" className="text-xs px-2 py-2 whitespace-nowrap">Pendentes</TabsTrigger>
                 <TabsTrigger value="pedidos-liberados" className="text-xs px-2 py-2 whitespace-nowrap">Confirmadas</TabsTrigger>
-                <TabsTrigger value="financeiro" className="text-xs px-2 py-2 whitespace-nowrap">Financeiro</TabsTrigger>
                 <TabsTrigger value="relatorios" className="text-xs px-2 py-2 whitespace-nowrap">Relatórios</TabsTrigger>
               </TabsList>
             </div>
@@ -223,11 +223,11 @@ export function TransportadoraLayout() {
             <div className="hidden lg:block mb-6">
               <TabsList className="grid w-full grid-cols-7 gap-1">
                 <TabsTrigger value="dashboard" className="text-sm">Dashboard</TabsTrigger>
+                <TabsTrigger value="financeiro" className="text-sm">Financeiro</TabsTrigger>
                 <TabsTrigger value="notas-fiscais" className="text-sm">Notas Fiscais</TabsTrigger>
                 <TabsTrigger value="pedidos-liberacao" className="text-sm">Ordem de Carregamento</TabsTrigger>
                 <TabsTrigger value="solicitacoes-pendentes" className="text-sm">Solicitações Pendentes</TabsTrigger>
                 <TabsTrigger value="pedidos-liberados" className="text-sm">Solicitação Confirmada</TabsTrigger>
-                <TabsTrigger value="financeiro" className="text-sm">Financeiro</TabsTrigger>
                 <TabsTrigger value="relatorios" className="text-sm">Relatórios</TabsTrigger>
               </TabsList>
             </div>
