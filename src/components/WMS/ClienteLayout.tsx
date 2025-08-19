@@ -74,26 +74,21 @@ export function ClienteLayout() {
   );
 
   const DesktopNavigation = () => (
-    <div className="inline-flex h-9 items-center justify-center rounded-lg bg-muted p-1 text-muted-foreground">
+    <div className="hidden lg:flex items-center justify-center rounded-lg bg-muted p-1 text-muted-foreground">
       {navigationItems.map((item) => (
         <button
           key={item.id}
           onClick={() => setActiveTab(item.id)}
           className={`
-            inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium 
+            inline-flex items-center justify-center whitespace-nowrap rounded-sm px-4 py-2 text-sm font-medium 
             ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 
             focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50
             ${activeTab === item.id ? 'bg-background text-foreground shadow-sm' : 'hover:bg-background/50'}
-            flex items-center gap-2
+            gap-2 min-w-[100px]
           `}
         >
           <item.icon className="w-4 h-4" />
-          <span className="hidden sm:inline">
-            {item.shortLabel}
-          </span>
-          <span className="hidden lg:inline sm:hidden">
-            {item.label}
-          </span>
+          <span>{item.label}</span>
         </button>
       ))}
     </div>
@@ -243,29 +238,33 @@ export function ClienteLayout() {
     <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container flex h-14 items-center">
+        <div className="container flex h-16 items-center">
           <div className="flex items-center space-x-4 lg:space-x-6">
             <Warehouse className="h-6 w-6 text-primary" />
-            <div className="hidden md:flex">
+            <div className="flex">
               <h1 className="text-lg font-semibold">Portal do Cliente</h1>
             </div>
           </div>
           
-          <div className="flex flex-1 items-center justify-between space-x-2 md:justify-end">
-            <div className="w-full flex-1 md:w-auto md:flex-none">
-              <p className="text-sm text-muted-foreground md:hidden">
-                Olá, {user?.name?.split(' ')[0]}
-              </p>
-              <p className="hidden text-sm text-muted-foreground md:block">
-                Bem-vindo, {user?.name}
-              </p>
+          <div className="flex flex-1 items-center justify-center lg:justify-between space-x-4">
+            {/* Desktop Navigation - Centralized */}
+            <div className="flex-1 flex justify-center">
+              <DesktopNavigation />
             </div>
             
-            <nav className="flex items-center space-x-2">
-              {/* Desktop Navigation */}
-              <div className="hidden lg:block">
-                <DesktopNavigation />
+            {/* User Info and Actions */}
+            <div className="flex items-center space-x-4">
+              <div className="hidden lg:block text-right">
+                <p className="text-sm text-muted-foreground">
+                  Bem-vindo, {user?.name}
+                </p>
               </div>
+              
+              {/* Desktop Logout */}
+              <Button variant="ghost" size="sm" onClick={logout} className="hidden lg:flex">
+                <LogOut className="mr-2 h-4 w-4" />
+                Sair
+              </Button>
               
               {/* Mobile Menu */}
               <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
@@ -297,13 +296,7 @@ export function ClienteLayout() {
                   </div>
                 </SheetContent>
               </Sheet>
-              
-              {/* Desktop Logout */}
-              <Button variant="ghost" size="sm" onClick={logout} className="hidden lg:flex">
-                <LogOut className="mr-2 h-4 w-4" />
-                Sair
-              </Button>
-            </nav>
+            </div>
           </div>
         </div>
       </header>
@@ -312,7 +305,7 @@ export function ClienteLayout() {
       <MobileTabBar />
 
       {/* Main Content */}
-      <main className="container mx-auto py-6 space-y-6">
+      <main className="container mx-auto px-4 lg:px-6 py-6 space-y-6 max-w-7xl">
         {renderContent()}
       </main>
     </div>
