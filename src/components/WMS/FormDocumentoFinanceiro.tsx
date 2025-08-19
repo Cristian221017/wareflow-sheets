@@ -8,7 +8,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { useFinanceiro } from '@/contexts/FinanceiroContext';
-import { useWMS } from '@/contexts/WMSContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { DocumentoFinanceiroFormData } from '@/types/financeiro';
 import { toast } from 'sonner';
 import { Receipt, Upload } from 'lucide-react';
@@ -32,7 +32,6 @@ interface FormDocumentoFinanceiroProps {
 
 export function FormDocumentoFinanceiro({ onSuccess }: FormDocumentoFinanceiroProps) {
   const { addDocumentoFinanceiro, uploadArquivo } = useFinanceiro();
-  const { useAuth } from '@/contexts/AuthContext';
   const { clientes } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [documentoId, setDocumentoId] = useState<string | null>(null);
@@ -133,7 +132,7 @@ export function FormDocumentoFinanceiro({ onSuccess }: FormDocumentoFinanceiroPr
                       <SelectContent>
                         {clientes.map((cliente) => (
                           <SelectItem key={cliente.id} value={cliente.id}>
-                            {cliente.razao_social || cliente.nome_fantasia}
+                            {cliente.name}
                           </SelectItem>
                         ))}
                       </SelectContent>

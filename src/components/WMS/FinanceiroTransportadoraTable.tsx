@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useFinanceiro } from '@/contexts/FinanceiroContext';
-import { useWMS } from '@/contexts/WMSContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { DocumentoFinanceiro } from '@/types/financeiro';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -54,7 +54,6 @@ const isVencido = (dataVencimento: string, status: string): boolean => {
 
 export function FinanceiroTransportadoraTable() {
   const { documentosFinanceiros, updateDocumentoFinanceiro, uploadArquivo, downloadArquivo, atualizarStatusVencidos } = useFinanceiro();
-  const { useAuth } from '@/contexts/AuthContext';
   const { clientes } = useAuth();
   const [selectedDoc, setSelectedDoc] = useState<DocumentoFinanceiro | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -79,7 +78,7 @@ export function FinanceiroTransportadoraTable() {
     if (searchTerm) {
       filtered = filtered.filter(doc => 
         doc.numeroCte.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (clientes.find(c => c.id === doc.clienteId)?.razao_social || '').toLowerCase().includes(searchTerm.toLowerCase())
+        (clientes.find(c => c.id === doc.clienteId)?.name || '').toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
     
@@ -102,7 +101,7 @@ export function FinanceiroTransportadoraTable() {
 
   const getClienteNome = (clienteId: string) => {
     const cliente = clientes.find(c => c.id === clienteId);
-    return cliente?.razao_social || cliente?.nome_fantasia || 'Cliente não encontrado';
+    return cliente?.name || 'Cliente não encontrado';
   };
 
   const clearFilters = () => {
@@ -292,7 +291,7 @@ export function FinanceiroTransportadoraTable() {
                     <SelectItem value="all">Todos os clientes</SelectItem>
                     {clientes.map(cliente => (
                       <SelectItem key={cliente.id} value={cliente.id}>
-                        {cliente.razao_social || cliente.nome_fantasia}
+                        {cliente.name}
                       </SelectItem>
                     ))}
                   </SelectContent>
