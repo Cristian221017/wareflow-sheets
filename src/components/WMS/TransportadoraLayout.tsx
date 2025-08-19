@@ -14,6 +14,7 @@ import { ImpressaoPedidosLiberados } from './ImpressaoPedidosLiberados';
 import { RelatorioControleCargas } from './RelatorioControleCargas';
 import { ClientesTable } from './ClientesTable';
 import { SolicitacoesPendentesTable } from './SolicitacoesPendentesTable';
+import { FinanceiroTransportadora } from './FinanceiroTransportadora';
 import { 
   Plus,
   Warehouse,
@@ -178,12 +179,13 @@ export function TransportadoraLayout() {
       <main className="max-w-7xl mx-auto py-4 sm:py-6 px-4 sm:px-6 lg:px-8">
         <div className="px-0 sm:px-0">
           <Tabs defaultValue="dashboard" className="w-full">
-            <TabsList className="grid w-full grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-1 mb-6">
+            <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-1 mb-6">
               <TabsTrigger value="dashboard" className="text-xs sm:text-sm">Dashboard</TabsTrigger>
               <TabsTrigger value="notas-fiscais" className="text-xs sm:text-sm">Notas Fiscais</TabsTrigger>
               <TabsTrigger value="pedidos-liberacao" className="text-xs sm:text-sm md:col-span-1 lg:col-span-1">Ordem de Carregamento</TabsTrigger>
               <TabsTrigger value="solicitacoes-pendentes" className="text-xs sm:text-sm">Solicitações Pendentes</TabsTrigger>
               <TabsTrigger value="pedidos-liberados" className="text-xs sm:text-sm md:col-span-1 lg:col-span-1">Solicitação Confirmada</TabsTrigger>
+              <TabsTrigger value="financeiro" className="text-xs sm:text-sm">Financeiro</TabsTrigger>
               <TabsTrigger value="relatorios" className="text-xs sm:text-sm col-span-2 md:col-span-1 lg:col-span-1">Relatórios</TabsTrigger>
             </TabsList>
             
@@ -208,6 +210,10 @@ export function TransportadoraLayout() {
                 <PedidosLiberadosTable />
                 <ImpressaoPedidosLiberados />
               </div>
+            </TabsContent>
+            
+            <TabsContent value="financeiro" className="space-y-4">
+              <FinanceiroTransportadora />
             </TabsContent>
             
             <TabsContent value="relatorios" className="space-y-4">

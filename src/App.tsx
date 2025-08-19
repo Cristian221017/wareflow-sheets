@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { WMSProvider } from "@/contexts/WMSContext";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { FinanceiroProvider } from "@/contexts/FinanceiroContext";
 import { useAuth } from "@/contexts/AuthContext";
 import Index from "./pages/Index";
 import SuperAdminPortal from "./pages/SuperAdminPortal";
@@ -45,7 +46,8 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
       <WMSProvider>
-        <TooltipProvider>
+        <FinanceiroProvider>
+          <TooltipProvider>
           <Toaster />
           <Sonner />
         <BrowserRouter>
@@ -80,9 +82,10 @@ const App = () => (
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
-      </TooltipProvider>
-    </WMSProvider>
-  </AuthProvider>
+          </TooltipProvider>
+        </FinanceiroProvider>
+      </WMSProvider>
+    </AuthProvider>
 </QueryClientProvider>
 );
 
