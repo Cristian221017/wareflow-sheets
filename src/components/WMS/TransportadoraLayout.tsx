@@ -15,12 +15,14 @@ import { RelatorioControleCargas } from './RelatorioControleCargas';
 import { ClientesTable } from './ClientesTable';
 import { SolicitacoesPendentesTable } from './SolicitacoesPendentesTable';
 import { FinanceiroTransportadora } from './FinanceiroTransportadora';
+import { FormDocumentoFinanceiro } from './FormDocumentoFinanceiro';
 import { 
   Plus,
   Warehouse,
   LogOut,
   User,
-  Menu
+  Menu,
+  Receipt
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -29,6 +31,7 @@ export function TransportadoraLayout() {
   const [isNFDialogOpen, setIsNFDialogOpen] = useState(false);
   const [isPedidoDialogOpen, setIsPedidoDialogOpen] = useState(false);
   const [isClienteDialogOpen, setIsClienteDialogOpen] = useState(false);
+  const [isDocumentoDialogOpen, setIsDocumentoDialogOpen] = useState(false);
   const [showClientes, setShowClientes] = useState(false);
 
   if (showClientes) {
@@ -118,6 +121,18 @@ export function TransportadoraLayout() {
                 </DialogContent>
               </Dialog>
 
+              <Dialog open={isDocumentoDialogOpen} onOpenChange={setIsDocumentoDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button className="bg-muted hover:bg-muted/90 text-muted-foreground">
+                    <Receipt className="w-4 h-4 mr-2" />
+                    Novo Documento
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-[95vw] sm:max-w-4xl max-h-[90vh] overflow-y-auto">
+                  <FormDocumentoFinanceiro onSuccess={() => setIsDocumentoDialogOpen(false)} />
+                </DialogContent>
+              </Dialog>
+
               <Button onClick={logout} variant="outline">
                 <LogOut className="w-4 h-4 mr-2" />
                 Sair
@@ -166,6 +181,18 @@ export function TransportadoraLayout() {
                       </DialogTrigger>
                       <DialogContent className="max-w-[95vw] max-h-[90vh] overflow-y-auto">
                         <FormNotaFiscal />
+                      </DialogContent>
+                    </Dialog>
+
+                    <Dialog open={isDocumentoDialogOpen} onOpenChange={setIsDocumentoDialogOpen}>
+                      <DialogTrigger asChild>
+                        <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                          <Receipt className="w-4 h-4 mr-2" />
+                          Novo Documento
+                        </DropdownMenuItem>
+                      </DialogTrigger>
+                      <DialogContent className="max-w-[95vw] max-h-[90vh] overflow-y-auto">
+                        <FormDocumentoFinanceiro onSuccess={() => setIsDocumentoDialogOpen(false)} />
                       </DialogContent>
                     </Dialog>
                   </DropdownMenuContent>
