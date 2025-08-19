@@ -1,24 +1,23 @@
 import { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
 import { useAuth } from '@/contexts/AuthContext';
 import { useWMS } from '@/contexts/WMSContext';
-import { FormPedidoLiberacao } from './FormPedidoLiberacao';
 import { ClienteDashboard } from './ClienteDashboard';
 import { ClienteMercadoriasTable } from './ClienteMercadoriasTable';
 import { ClienteFinanceiro } from './ClienteFinanceiro';
+import { ClienteSolicitacaoCarregamento } from './ClienteSolicitacaoCarregamento';
 import { 
   Package, 
   FileText, 
-  Plus,
   Warehouse,
   LogOut,
   CheckCircle,
   BarChart3,
-  Receipt
+  Receipt,
+  Menu,
+  X
 } from 'lucide-react';
-import { ClienteSolicitacaoCarregamento } from './ClienteSolicitacaoCarregamento';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Table,
@@ -29,6 +28,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 
 const getStatusColor = (status: string) => {
   switch (status) {
@@ -47,88 +47,161 @@ export function ClienteLayout() {
   const { user, logout } = useAuth();
   const { notasFiscais, pedidosLiberacao, pedidosLiberados } = useWMS();
   const [activeTab, setActiveTab] = useState('dashboard');
-  const [isPedidoDialogOpen, setIsPedidoDialogOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // Filter data for current client
   const clienteNFs = notasFiscais.filter(nf => nf.cnpjCliente === user?.cnpj);
   const clientePedidos = pedidosLiberacao.filter(p => p.cnpjCliente === user?.cnpj);
   const clienteLiberados = pedidosLiberados.filter(p => {
-    // Find related pedido to get client CNPJ
     const pedido = pedidosLiberacao.find(pl => pl.numeroPedido === p.numeroPedido);
     return pedido?.cnpjCliente === user?.cnpj;
   });
 
+  const navigationItems = [
+    { id: 'dashboard', label: 'Dashboard', icon: BarChart3, shortLabel: 'Início' },
+    { id: 'mercadorias', label: 'Mercadorias', icon: Package, shortLabel: 'Estoque' },
+    { id: 'pedidos', label: 'Carregamento', icon: FileText, shortLabel: 'Pedir' },
+    { id: 'liberados', label: 'Confirmadas', icon: CheckCircle, shortLabel: 'OK' },
+    { id: 'financeiro', label: 'Financeiro', icon: Receipt, shortLabel: 'Fin' }
+  ];
+
+  const NavigationTabs = ({ isMobile = false }: { isMobile?: boolean }) => (
+    <TabsList className={`
+      ${isMobile 
+        ? 'flex flex-col w-full h-auto space-y-1 bg-transparent p-0' 
+        : 'inline-flex h-9 items-center justify-center rounded-lg bg-muted p-1 text-muted-foreground'
+      }
+    `}>
+      {navigationItems.map((item) => (
+        <TabsTrigger
+          key={item.id}
+          value={item.id}
+          onClick={() => isMobile && setMobileMenuOpen(false)}
+          className={`
+            ${isMobile
+              ? 'w-full justify-start rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground data-[state=active]:bg-accent data-[state=active]:text-accent-foreground'
+              : 'inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm'
+            }
+            flex items-center gap-2
+          `}
+        >
+          <item.icon className="w-4 h-4" />
+          <span className={isMobile ? '' : 'hidden sm:inline'}>
+            {isMobile ? item.label : item.shortLabel}
+          </span>
+          <span className="hidden lg:inline sm:hidden">
+            {item.label}
+          </span>
+        </TabsTrigger>
+      ))}
+    </TabsList>
+  );
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="border-b bg-card">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between flex-wrap gap-4">
-            <div className="flex items-center gap-3 min-w-0 flex-1">
-              <Warehouse className="w-6 h-6 sm:w-8 sm:h-8 text-primary flex-shrink-0" />
-              <div className="min-w-0">
-                <h1 className="text-lg sm:text-2xl font-bold text-foreground truncate">Portal do Cliente</h1>
-                <p className="text-xs sm:text-sm text-muted-foreground truncate">
-                  Bem-vindo, {user?.name}
-                </p>
-              </div>
+      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div className="container flex h-14 items-center">
+          <div className="flex items-center space-x-4 lg:space-x-6">
+            <Warehouse className="h-6 w-6 text-primary" />
+            <div className="hidden md:flex">
+              <h1 className="text-lg font-semibold">Portal do Cliente</h1>
+            </div>
+          </div>
+          
+          <div className="flex flex-1 items-center justify-between space-x-2 md:justify-end">
+            <div className="w-full flex-1 md:w-auto md:flex-none">
+              <p className="text-sm text-muted-foreground md:hidden">
+                Olá, {user?.name?.split(' ')[0]}
+              </p>
+              <p className="hidden text-sm text-muted-foreground md:block">
+                Bem-vindo, {user?.name}
+              </p>
             </div>
             
-            <div className="flex items-center gap-2 flex-shrink-0">
-              <Button variant="outline" size="sm" onClick={logout} className="text-xs sm:text-sm">
-                <LogOut className="w-3 h-3 sm:w-4 sm:h-4 sm:mr-2" />
-                <span className="hidden sm:inline">Sair</span>
+            <nav className="flex items-center space-x-2">
+              {/* Desktop Navigation */}
+              <div className="hidden lg:block">
+                <NavigationTabs />
+              </div>
+              
+              {/* Mobile Menu */}
+              <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+                <SheetTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    className="lg:hidden h-9 w-9 px-0"
+                    size="sm"
+                  >
+                    <Menu className="h-4 w-4" />
+                    <span className="sr-only">Abrir menu</span>
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="left" className="w-72">
+                  <div className="flex items-center space-x-2 pb-4">
+                    <Warehouse className="h-5 w-5" />
+                    <span className="font-semibold">Portal do Cliente</span>
+                  </div>
+                  <NavigationTabs isMobile />
+                  <div className="mt-6 pt-6 border-t">
+                    <Button 
+                      variant="ghost" 
+                      onClick={logout}
+                      className="w-full justify-start"
+                    >
+                      <LogOut className="mr-2 h-4 w-4" />
+                      Sair
+                    </Button>
+                  </div>
+                </SheetContent>
+              </Sheet>
+              
+              {/* Desktop Logout */}
+              <Button variant="ghost" size="sm" onClick={logout} className="hidden lg:flex">
+                <LogOut className="mr-2 h-4 w-4" />
+                Sair
               </Button>
-            </div>
+            </nav>
           </div>
         </div>
       </header>
 
-      {/* Main Content */}
-      <main className="container mx-auto px-2 sm:px-4 py-4 sm:py-6">
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 sm:space-y-6">
-          <div className="overflow-x-auto pb-2">
-            <TabsList className="inline-flex h-9 sm:h-10 items-center justify-center rounded-md bg-muted p-1 text-muted-foreground min-w-max">
-              <TabsTrigger value="dashboard" className="inline-flex items-center justify-center whitespace-nowrap rounded-sm px-2 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm gap-1 sm:gap-2">
-                <BarChart3 className="w-3 h-3 sm:w-4 sm:h-4" />
-                <span className="hidden xs:inline">Dashboard</span>
-              </TabsTrigger>
-              <TabsTrigger value="mercadorias" className="inline-flex items-center justify-center whitespace-nowrap rounded-sm px-2 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm gap-1 sm:gap-2">
-                <Package className="w-3 h-3 sm:w-4 sm:h-4" />
-                <span className="hidden sm:inline">Mercadorias</span>
-                <span className="sm:hidden">Estoque</span>
-              </TabsTrigger>
-              <TabsTrigger value="pedidos" className="inline-flex items-center justify-center whitespace-nowrap rounded-sm px-2 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm gap-1 sm:gap-2">
-                <FileText className="w-3 h-3 sm:w-4 sm:h-4" />
-                <span className="hidden sm:inline">Carregamento</span>
-                <span className="sm:hidden">Pedir</span>
-              </TabsTrigger>
-              <TabsTrigger value="liberados" className="inline-flex items-center justify-center whitespace-nowrap rounded-sm px-2 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm gap-1 sm:gap-2">
-                <CheckCircle className="w-3 h-3 sm:w-4 sm:h-4" />
-                <span className="hidden sm:inline">Confirmadas</span>
-                <span className="sm:hidden">OK</span>
-              </TabsTrigger>
-              <TabsTrigger value="financeiro" className="inline-flex items-center justify-center whitespace-nowrap rounded-sm px-2 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm gap-1 sm:gap-2">
-                <Receipt className="w-3 h-3 sm:w-4 sm:h-4" />
-                <span className="hidden sm:inline">Financeiro</span>
-                <span className="sm:hidden">$</span>
-              </TabsTrigger>
-            </TabsList>
+      {/* Mobile Tabs - Below Header */}
+      <div className="lg:hidden border-b bg-background">
+        <div className="container">
+          <div className="overflow-x-auto">
+            <div className="flex space-x-1 p-1 min-w-max">
+              {navigationItems.map((item) => (
+                <TabsTrigger
+                  key={item.id}
+                  value={item.id}
+                  className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium whitespace-nowrap rounded-md data-[state=active]:bg-muted"
+                >
+                  <item.icon className="w-3.5 h-3.5" />
+                  {item.shortLabel}
+                </TabsTrigger>
+              ))}
+            </div>
           </div>
+        </div>
+      </div>
 
-          <TabsContent value="dashboard">
+      {/* Main Content */}
+      <main className="container mx-auto py-6">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+          <TabsContent value="dashboard" className="space-y-6">
             <ClienteDashboard />
           </TabsContent>
 
-          <TabsContent value="mercadorias">
+          <TabsContent value="mercadorias" className="space-y-6">
             <ClienteMercadoriasTable />
           </TabsContent>
 
-          <TabsContent value="pedidos">
+          <TabsContent value="pedidos" className="space-y-6">
             <ClienteSolicitacaoCarregamento />
           </TabsContent>
 
-          <TabsContent value="liberados">
+          <TabsContent value="liberados" className="space-y-6">
             <Card>
               <CardHeader>
                 <CardTitle>Pedidos Confirmados</CardTitle>
@@ -136,90 +209,99 @@ export function ClienteLayout() {
                   Histórico de solicitações confirmadas e em processo de entrega
                 </CardDescription>
               </CardHeader>
-               <CardContent>
-                 {/* Mobile Card View */}
-                 <div className="block sm:hidden space-y-4">
-                   {clienteLiberados.length === 0 ? (
-                     <div className="text-center py-8 text-muted-foreground">
-                       <CheckCircle className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                       <p>Nenhum pedido confirmado encontrado</p>
-                     </div>
-                   ) : (
-                     clienteLiberados.map((pedido) => (
-                       <Card key={pedido.id} className="p-4">
-                         <div className="space-y-2">
-                           <div className="flex justify-between items-start">
-                             <span className="font-medium text-sm">Pedido #{pedido.numeroPedido}</span>
-                             <Badge variant="outline" className="text-xs">
-                               NF: {pedido.nfVinculada}
-                             </Badge>
-                           </div>
-                           <div className="grid grid-cols-2 gap-2 text-xs">
-                             <div>
-                               <span className="text-muted-foreground">Confirmação:</span>
-                               <p className="font-medium">{new Date(pedido.dataLiberacao).toLocaleDateString('pt-BR')}</p>
-                             </div>
-                             <div>
-                               <span className="text-muted-foreground">Quantidade:</span>
-                               <p className="font-medium">{pedido.quantidade}</p>
-                             </div>
-                             <div>
-                               <span className="text-muted-foreground">Transportadora:</span>
-                               <p className="font-medium">{pedido.transportadora}</p>
-                             </div>
-                             <div>
-                               <span className="text-muted-foreground">Expedição:</span>
-                               <p className="font-medium">
-                                 {pedido.dataExpedicao 
-                                   ? new Date(pedido.dataExpedicao).toLocaleDateString('pt-BR')
-                                   : 'Não informado'
-                                 }
-                               </p>
-                             </div>
-                           </div>
-                         </div>
-                       </Card>
-                     ))
-                   )}
-                 </div>
+              <CardContent>
+                {clienteLiberados.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-12 text-center">
+                    <CheckCircle className="h-12 w-12 text-muted-foreground/50 mb-4" />
+                    <h3 className="text-lg font-medium text-muted-foreground mb-2">
+                      Nenhum pedido confirmado
+                    </h3>
+                    <p className="text-sm text-muted-foreground max-w-sm">
+                      Quando seus pedidos forem confirmados, eles aparecerão aqui
+                    </p>
+                  </div>
+                ) : (
+                  <>
+                    {/* Mobile Cards */}
+                    <div className="grid gap-4 md:hidden">
+                      {clienteLiberados.map((pedido) => (
+                        <Card key={pedido.id} className="p-4">
+                          <div className="space-y-3">
+                            <div className="flex items-start justify-between">
+                              <div>
+                                <h4 className="font-medium">Pedido #{pedido.numeroPedido}</h4>
+                                <p className="text-sm text-muted-foreground">
+                                  Confirmado em {new Date(pedido.dataLiberacao).toLocaleDateString('pt-BR')}
+                                </p>
+                              </div>
+                              <Badge variant="secondary">
+                                NF: {pedido.nfVinculada}
+                              </Badge>
+                            </div>
+                            
+                            <div className="grid grid-cols-2 gap-4 text-sm">
+                              <div>
+                                <span className="text-muted-foreground">Quantidade:</span>
+                                <p className="font-medium">{pedido.quantidade}</p>
+                              </div>
+                              <div>
+                                <span className="text-muted-foreground">Transportadora:</span>
+                                <p className="font-medium">{pedido.transportadora}</p>
+                              </div>
+                            </div>
+                            
+                            {pedido.dataExpedicao && (
+                              <div className="text-sm">
+                                <span className="text-muted-foreground">Expedição:</span>
+                                <p className="font-medium">
+                                  {new Date(pedido.dataExpedicao).toLocaleDateString('pt-BR')}
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                        </Card>
+                      ))}
+                    </div>
 
-                 {/* Desktop Table View */}
-                 <div className="hidden sm:block overflow-auto">
-                   <Table>
-                     <TableHeader>
-                       <TableRow>
-                         <TableHead>Nº Pedido</TableHead>
-                         <TableHead>Data Confirmação</TableHead>
-                         <TableHead>NF Vinculada</TableHead>
-                         <TableHead>Quantidade</TableHead>
-                         <TableHead>Transportadora</TableHead>
-                         <TableHead>Data Expedição</TableHead>
-                       </TableRow>
-                     </TableHeader>
-                     <TableBody>
-                       {clienteLiberados.map((pedido) => (
-                         <TableRow key={pedido.id}>
-                           <TableCell className="font-medium">{pedido.numeroPedido}</TableCell>
-                           <TableCell>{new Date(pedido.dataLiberacao).toLocaleDateString('pt-BR')}</TableCell>
-                           <TableCell>{pedido.nfVinculada}</TableCell>
-                           <TableCell>{pedido.quantidade}</TableCell>
-                           <TableCell>{pedido.transportadora}</TableCell>
-                           <TableCell>
-                             {pedido.dataExpedicao 
-                               ? new Date(pedido.dataExpedicao).toLocaleDateString('pt-BR')
-                               : 'Não informado'
-                             }
-                           </TableCell>
-                         </TableRow>
-                       ))}
-                     </TableBody>
-                   </Table>
-                 </div>
-                </CardContent>
+                    {/* Desktop Table */}
+                    <div className="hidden md:block">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Nº Pedido</TableHead>
+                            <TableHead>Data Confirmação</TableHead>
+                            <TableHead>NF Vinculada</TableHead>
+                            <TableHead>Quantidade</TableHead>
+                            <TableHead>Transportadora</TableHead>
+                            <TableHead>Data Expedição</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {clienteLiberados.map((pedido) => (
+                            <TableRow key={pedido.id}>
+                              <TableCell className="font-medium">{pedido.numeroPedido}</TableCell>
+                              <TableCell>{new Date(pedido.dataLiberacao).toLocaleDateString('pt-BR')}</TableCell>
+                              <TableCell>{pedido.nfVinculada}</TableCell>
+                              <TableCell>{pedido.quantidade}</TableCell>
+                              <TableCell>{pedido.transportadora}</TableCell>
+                              <TableCell>
+                                {pedido.dataExpedicao 
+                                  ? new Date(pedido.dataExpedicao).toLocaleDateString('pt-BR')
+                                  : 'Não informado'
+                                }
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  </>
+                )}
+              </CardContent>
             </Card>
           </TabsContent>
 
-          <TabsContent value="financeiro">
+          <TabsContent value="financeiro" className="space-y-6">
             <ClienteFinanceiro />
           </TabsContent>
         </Tabs>

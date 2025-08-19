@@ -84,143 +84,150 @@ export function ClienteFinanceiro() {
         ) : (
           <>
             {/* Mobile Card View */}
-            <div className="block lg:hidden space-y-4">
+            <div className="grid gap-4 lg:hidden">
               {clienteDocumentos.map((documento) => (
-                <Card key={documento.id} className="p-4">
-                  <div className="space-y-3">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <span className="font-medium text-sm">CTE: {documento.numeroCte}</span>
-                        <p className="text-xs text-muted-foreground">
-                          Venc: {new Date(documento.dataVencimento).toLocaleDateString('pt-BR')}
-                        </p>
+                <Card key={documento.id} className="relative overflow-hidden">
+                  <CardContent className="p-4">
+                    <div className="space-y-4">
+                      <div className="flex items-start justify-between">
+                        <div className="space-y-1">
+                          <h4 className="font-medium">CTE: {documento.numeroCte}</h4>
+                          <p className="text-sm text-muted-foreground flex items-center gap-1">
+                            <Calendar className="w-3 h-3" />
+                            Venc: {new Date(documento.dataVencimento).toLocaleDateString('pt-BR')}
+                          </p>
+                        </div>
+                        <Badge className={getStatusColor(documento.status)} variant="secondary">
+                          {documento.status}
+                        </Badge>
                       </div>
-                      <Badge className={getStatusColor(documento.status)}>
-                        {documento.status}
-                      </Badge>
-                    </div>
-                    
-                    {documento.valor && (
-                      <div className="text-sm">
-                        <span className="text-muted-foreground">Valor: </span>
-                        <span className="font-medium">
-                          R$ {Number(documento.valor).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                        </span>
-                      </div>
-                    )}
-
-                    {documento.dataPagamento && (
-                      <div className="text-sm">
-                        <span className="text-muted-foreground">Pago em: </span>
-                        <span className="font-medium">
-                          {new Date(documento.dataPagamento).toLocaleDateString('pt-BR')}
-                        </span>
-                      </div>
-                    )}
-
-                    <div className="flex gap-2 flex-wrap">
-                      {documento.arquivoBoletoPath && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleDownload(documento.id, 'boleto', 'Boleto')}
-                          disabled={downloadingId === `${documento.id}-boleto`}
-                          className="flex-1 min-w-0"
-                        >
-                          <Download className="w-3 h-3 mr-1" />
-                          {downloadingId === `${documento.id}-boleto` ? 'Baixando...' : 'Boleto'}
-                        </Button>
-                      )}
                       
-                      {documento.arquivoCtePath && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleDownload(documento.id, 'cte', 'CTE')}
-                          disabled={downloadingId === `${documento.id}-cte`}
-                          className="flex-1 min-w-0"
-                        >
-                          <Download className="w-3 h-3 mr-1" />
-                          {downloadingId === `${documento.id}-cte` ? 'Baixando...' : 'CTE'}
-                        </Button>
-                      )}
+                      <div className="space-y-2">
+                        {documento.valor && (
+                          <div className="flex justify-between text-sm">
+                            <span className="text-muted-foreground">Valor:</span>
+                            <span className="font-medium">
+                              R$ {Number(documento.valor).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                            </span>
+                          </div>
+                        )}
+
+                        {documento.dataPagamento && (
+                          <div className="flex justify-between text-sm">
+                            <span className="text-muted-foreground">Pago em:</span>
+                            <span className="font-medium">
+                              {new Date(documento.dataPagamento).toLocaleDateString('pt-BR')}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="flex gap-2">
+                        {documento.arquivoBoletoPath && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleDownload(documento.id, 'boleto', 'Boleto')}
+                            disabled={downloadingId === `${documento.id}-boleto`}
+                            className="flex-1"
+                          >
+                            <Download className="w-3 h-3 mr-1" />
+                            {downloadingId === `${documento.id}-boleto` ? 'Baixando...' : 'Boleto'}
+                          </Button>
+                        )}
+                        
+                        {documento.arquivoCtePath && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleDownload(documento.id, 'cte', 'CTE')}
+                            disabled={downloadingId === `${documento.id}-cte`}
+                            className="flex-1"
+                          >
+                            <Download className="w-3 h-3 mr-1" />
+                            {downloadingId === `${documento.id}-cte` ? 'Baixando...' : 'CTE'}
+                          </Button>
+                        )}
+                      </div>
                     </div>
-                  </div>
+                  </CardContent>
                 </Card>
               ))}
             </div>
 
             {/* Desktop Table View */}
-            <div className="hidden lg:block overflow-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Nº CTE</TableHead>
-                    <TableHead>Data Vencimento</TableHead>
-                    <TableHead>Valor</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Data Pagamento</TableHead>
-                    <TableHead>Ações</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {clienteDocumentos.map((documento) => (
-                    <TableRow key={documento.id}>
-                      <TableCell className="font-medium">{documento.numeroCte}</TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-1">
-                          <Calendar className="w-3 h-3 text-muted-foreground" />
-                          {new Date(documento.dataVencimento).toLocaleDateString('pt-BR')}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        {documento.valor 
-                          ? `R$ ${Number(documento.valor).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`
-                          : '-'
-                        }
-                      </TableCell>
-                      <TableCell>
-                        <Badge className={getStatusColor(documento.status)}>
-                          {documento.status}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        {documento.dataPagamento
-                          ? new Date(documento.dataPagamento).toLocaleDateString('pt-BR')
-                          : '-'
-                        }
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex gap-1">
-                          {documento.arquivoBoletoPath && (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => handleDownload(documento.id, 'boleto', 'Boleto')}
-                              disabled={downloadingId === `${documento.id}-boleto`}
-                            >
-                              <Download className="w-3 h-3 mr-1" />
-                              {downloadingId === `${documento.id}-boleto` ? 'Baixando...' : 'Boleto'}
-                            </Button>
-                          )}
-                          
-                          {documento.arquivoCtePath && (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => handleDownload(documento.id, 'cte', 'CTE')}
-                              disabled={downloadingId === `${documento.id}-cte`}
-                            >
-                              <Download className="w-3 h-3 mr-1" />
-                              {downloadingId === `${documento.id}-cte` ? 'Baixando...' : 'CTE'}
-                            </Button>
-                          )}
-                        </div>
-                      </TableCell>
+            <div className="hidden lg:block">
+              <div className="rounded-md border">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-[120px]">Nº CTE</TableHead>
+                      <TableHead className="w-[130px]">Vencimento</TableHead>
+                      <TableHead className="w-[120px]">Valor</TableHead>
+                      <TableHead className="w-[100px]">Status</TableHead>
+                      <TableHead className="w-[130px]">Pagamento</TableHead>
+                      <TableHead className="w-[180px]">Ações</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {clienteDocumentos.map((documento) => (
+                      <TableRow key={documento.id}>
+                        <TableCell className="font-medium">{documento.numeroCte}</TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-1">
+                            <Calendar className="w-3 h-3 text-muted-foreground" />
+                            {new Date(documento.dataVencimento).toLocaleDateString('pt-BR')}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          {documento.valor 
+                            ? `R$ ${Number(documento.valor).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`
+                            : '-'
+                          }
+                        </TableCell>
+                        <TableCell>
+                          <Badge className={getStatusColor(documento.status)} variant="secondary">
+                            {documento.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          {documento.dataPagamento
+                            ? new Date(documento.dataPagamento).toLocaleDateString('pt-BR')
+                            : '-'
+                          }
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex gap-1">
+                            {documento.arquivoBoletoPath && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleDownload(documento.id, 'boleto', 'Boleto')}
+                                disabled={downloadingId === `${documento.id}-boleto`}
+                              >
+                                <Download className="w-3 h-3 mr-1" />
+                                {downloadingId === `${documento.id}-boleto` ? 'Baixando...' : 'Boleto'}
+                              </Button>
+                            )}
+                            
+                            {documento.arquivoCtePath && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleDownload(documento.id, 'cte', 'CTE')}
+                                disabled={downloadingId === `${documento.id}-cte`}
+                              >
+                                <Download className="w-3 h-3 mr-1" />
+                                {downloadingId === `${documento.id}-cte` ? 'Baixando...' : 'CTE'}
+                              </Button>
+                            )}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
             </div>
           </>
         )}
