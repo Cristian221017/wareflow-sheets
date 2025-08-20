@@ -11,6 +11,7 @@ import { fixClientPasswords } from '@/utils/fixClientPasswords';
 import { diagnoseClientAuth } from '@/utils/diagnoseClientAuth';
 import { fixSpecificUser } from '@/utils/fixSpecificUser';
 import { debugSpecificUser } from '@/utils/debugSpecificUser';
+import { forceCreateUser } from '@/utils/forceCreateUser';
 import { toast } from 'sonner';
 
 const COLORS = ['hsl(var(--success))', 'hsl(var(--warning))', 'hsl(var(--error))'];
@@ -24,6 +25,7 @@ export function Dashboard() {
   const [isDiagnosing, setIsDiagnosing] = useState(false);
   const [isFixingSpecific, setIsFixingSpecific] = useState(false);
   const [isDebugging, setIsDebugging] = useState(false);
+  const [isForcingCreation, setIsForcingCreation] = useState(false);
 
   const handleCreateAccounts = async () => {
     setIsCreatingAccounts(true);
@@ -106,6 +108,18 @@ export function Dashboard() {
       toast.error('Erro no debug. Verifique o console.');
     } finally {
       setIsDebugging(false);
+    }
+  };
+
+  const handleForceCreate = async () => {
+    setIsForcingCreation(true);
+    try {
+      await forceCreateUser();
+      toast.success('Criação forçada concluída! Verifique o console.');
+    } catch (error) {
+      toast.error('Erro na criação forçada. Verifique o console.');
+    } finally {
+      setIsForcingCreation(false);
     }
   };
 
@@ -198,6 +212,13 @@ export function Dashboard() {
         </CardHeader>
         <CardContent>
           <div className="flex gap-2 flex-wrap">
+            <Button 
+              onClick={handleForceCreate} 
+              disabled={isForcingCreation}
+              className="bg-green-600 hover:bg-green-700 text-white"
+            >
+              {isForcingCreation ? 'Criando Usuário...' : 'Criar Usuário Força'}
+            </Button>
             <Button 
               onClick={handleDebugSpecific} 
               disabled={isDebugging}
