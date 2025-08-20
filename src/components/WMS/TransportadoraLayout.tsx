@@ -250,8 +250,6 @@ export function TransportadoraLayout() {
                 <TabsTrigger value="solicitacoes-pendentes" className="text-xs px-2 py-2 whitespace-nowrap">Pendentes</TabsTrigger>
                 <TabsTrigger value="pedidos-liberados" className="text-xs px-2 py-2 whitespace-nowrap">Confirmadas</TabsTrigger>
                 <TabsTrigger value="relatorios" className="text-xs px-2 py-2 whitespace-nowrap">Relatórios</TabsTrigger>
-                <TabsTrigger value="integracoes" className="text-xs px-2 py-2 whitespace-nowrap">Integrações</TabsTrigger>
-                <TabsTrigger value="cadastro-usuario" className="text-xs px-2 py-2 whitespace-nowrap">Cadastro Usuários</TabsTrigger>
               </TabsList>
             </div>
             
