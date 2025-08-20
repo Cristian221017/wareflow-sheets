@@ -11,7 +11,7 @@ const corsHeaders = {
 interface EmailRequest {
   to: string;
   subject: string;
-  type: 'cliente_cadastrado' | 'transportadora_cadastrada' | 'boleto_cadastrado' | 'nf_cadastrada' | 'solicitacao_carregamento' | 'confirmacao_autorizada';
+  type: 'cliente_cadastrado' | 'transportadora_cadastrada' | 'boleto_cadastrado' | 'nf_cadastrada' | 'solicitacao_carregamento' | 'confirmacao_autorizada' | 'usuario_cadastrado';
   data: {
     nome: string;
     email: string;
@@ -19,6 +19,7 @@ interface EmailRequest {
     numeroDocumento?: string;
     transportadora?: string;
     cliente?: string;
+    role?: string;
   };
 }
 
@@ -106,6 +107,28 @@ const handler = async (req: Request): Promise<Response> => {
           <p>Olá <strong>${data.nome}</strong>,</p>
           <p>O pedido <strong>${data.numeroDocumento}</strong> foi confirmado para a transportadora ${data.transportadora}.</p>
           <p>Acesse o sistema para visualizar os detalhes.</p>
+          <p>Atenciosamente,<br>Equipe WMS</p>
+        `;
+        break;
+
+      case 'usuario_cadastrado':
+        const roleNames = {
+          'admin_transportadora': 'Administrador da Transportadora',
+          'operador': 'Operador',
+          'cliente': 'Cliente'
+        } as const;
+        
+        htmlContent = `
+          <h1>Bem-vindo ao Sistema WMS!</h1>
+          <p>Olá <strong>${data.nome}</strong>,</p>
+          <p>Sua conta foi criada com sucesso no Sistema WMS!</p>
+          <p><strong>Dados de acesso:</strong></p>
+          <ul>
+            <li>Email: ${data.email}</li>
+            <li>Tipo de usuário: ${roleNames[data.role as keyof typeof roleNames] || data.role}</li>
+            ${data.senha ? `<li>Senha temporária: <strong>${data.senha}</strong></li>` : '<li>Use a funcionalidade "Esqueci minha senha" para criar sua senha</li>'}
+          </ul>
+          <p>Acesse o sistema através do link: <a href="${Deno.env.get('SUPABASE_URL')?.replace('supabase.co', 'vercel.app')}/${data.role === 'cliente' ? 'cliente' : 'transportadora'}">Portal do Sistema</a></p>
           <p>Atenciosamente,<br>Equipe WMS</p>
         `;
         break;

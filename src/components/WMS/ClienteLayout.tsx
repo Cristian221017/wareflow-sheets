@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
 import { useAuth } from '@/contexts/AuthContext';
 import { useWMS } from '@/contexts/WMSContext';
 import { ClienteDashboard } from './ClienteDashboard';
 import { ClienteMercadoriasTable } from './ClienteMercadoriasTable';
 import { ClienteFinanceiro } from './ClienteFinanceiro';
 import { ClienteSolicitacaoCarregamento } from './ClienteSolicitacaoCarregamento';
+import { FormCadastroUsuario } from './FormCadastroUsuario';
 import { 
   Package, 
   FileText, 
@@ -14,7 +16,8 @@ import {
   CheckCircle,
   BarChart3,
   Receipt,
-  Menu
+  Menu,
+  UserPlus
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -33,6 +36,7 @@ export function ClienteLayout() {
   const { notasFiscais, pedidosLiberacao, pedidosLiberados } = useWMS();
   const [activeTab, setActiveTab] = useState('dashboard');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isUserDialogOpen, setIsUserDialogOpen] = useState(false);
 
   // Filter data for current client
   const clienteNFs = notasFiscais.filter(nf => nf.cnpjCliente === user?.cnpj);
@@ -271,6 +275,24 @@ export function ClienteLayout() {
             
             {/* Right side actions */}
             <div className="flex items-center gap-2 min-w-0 flex-shrink-0">
+              {/* New User Button - Desktop only, for clients with admin role */}
+              {user?.role === 'cliente' && (
+                <Dialog open={isUserDialogOpen} onOpenChange={setIsUserDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button variant="outline" size="sm" className="hidden lg:flex">
+                      <UserPlus className="h-4 w-4 mr-2" />
+                      Novo Usuário
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                    <FormCadastroUsuario 
+                      userType="cliente" 
+                      onSuccess={() => setIsUserDialogOpen(false)} 
+                    />
+                  </DialogContent>
+                </Dialog>
+              )}
+
               {/* User greeting - Only on very large screens */}
               <div className="hidden 2xl:block">
                 <p className="text-sm text-muted-foreground max-w-[120px] truncate">
@@ -301,7 +323,23 @@ export function ClienteLayout() {
                     <span className="font-semibold">Portal do Cliente</span>
                   </div>
                   <MobileNavigation />
-                  <div className="mt-6 pt-6 border-t">
+                  <div className="mt-6 pt-6 border-t space-y-2">
+                    {user?.role === 'cliente' && (
+                      <Dialog open={isUserDialogOpen} onOpenChange={setIsUserDialogOpen}>
+                        <DialogTrigger asChild>
+                          <Button variant="ghost" className="w-full justify-start">
+                            <UserPlus className="mr-2 h-4 w-4" />
+                            Novo Usuário
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                          <FormCadastroUsuario 
+                            userType="cliente" 
+                            onSuccess={() => setIsUserDialogOpen(false)} 
+                          />
+                        </DialogContent>
+                      </Dialog>
+                    )}
                     <Button 
                       variant="ghost" 
                       onClick={logout}

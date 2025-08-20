@@ -3,21 +3,28 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
 import { useAuth } from '@/contexts/AuthContext';
 import { SuperAdminTransportadoras } from './SuperAdminTransportadoras';
 import { SuperAdminUsuarios } from './SuperAdminUsuarios';
 import { SuperAdminDashboard } from './SuperAdminDashboard';
+import { FormCadastroUsuario } from './FormCadastroUsuario';
+import { FormCadastroTransportadora } from './FormCadastroTransportadora';
 import { 
   Building2, 
   Users, 
   BarChart3, 
   Settings,
   LogOut,
-  Warehouse
+  Warehouse,
+  Plus,
+  UserPlus
 } from 'lucide-react';
 
 export function SuperAdminLayout() {
   const { user, logout } = useAuth();
+  const [isUserDialogOpen, setIsUserDialogOpen] = useState(false);
+  const [isTransportadoraDialogOpen, setIsTransportadoraDialogOpen] = useState(false);
 
   return (
     <div className="min-h-screen bg-background">
@@ -33,6 +40,35 @@ export function SuperAdminLayout() {
           </div>
 
           <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2">
+              <Dialog open={isTransportadoraDialogOpen} onOpenChange={setIsTransportadoraDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="outline" size="sm">
+                    <Plus className="w-4 h-4 mr-2" />
+                    Nova Transportadora
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+                  <FormCadastroTransportadora />
+                </DialogContent>
+              </Dialog>
+
+              <Dialog open={isUserDialogOpen} onOpenChange={setIsUserDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="outline" size="sm">
+                    <UserPlus className="w-4 h-4 mr-2" />
+                    Novo Usuário
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                  <FormCadastroUsuario 
+                    userType="super_admin" 
+                    onSuccess={() => setIsUserDialogOpen(false)} 
+                  />
+                </DialogContent>
+              </Dialog>
+            </div>
+
             <div className="text-right">
               <p className="text-sm font-medium">{user?.name}</p>
               <div className="flex items-center space-x-2">

@@ -10,6 +10,7 @@ import { PedidosLiberadosTable } from './PedidosLiberadosTable';
 import { FormNotaFiscal } from './FormNotaFiscal';
 import { FormPedidoLiberacao } from './FormPedidoLiberacao';
 import { FormCadastroCliente } from './FormCadastroCliente';
+import { FormCadastroUsuario } from './FormCadastroUsuario';
 import { ImpressaoPedidosLiberados } from './ImpressaoPedidosLiberados';
 import { RelatorioControleCargas } from './RelatorioControleCargas';
 import { ClientesTable } from './ClientesTable';
@@ -23,7 +24,8 @@ import {
   LogOut,
   User,
   Menu,
-  Receipt
+  Receipt,
+  UserPlus
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -33,6 +35,7 @@ export function TransportadoraLayout() {
   const [isPedidoDialogOpen, setIsPedidoDialogOpen] = useState(false);
   const [isClienteDialogOpen, setIsClienteDialogOpen] = useState(false);
   const [isDocumentoDialogOpen, setIsDocumentoDialogOpen] = useState(false);
+  const [isUserDialogOpen, setIsUserDialogOpen] = useState(false);
   const [showClientes, setShowClientes] = useState(false);
 
   if (showClientes) {
@@ -102,6 +105,21 @@ export function TransportadoraLayout() {
                 </DialogContent>
               </Dialog>
 
+              <Dialog open={isUserDialogOpen} onOpenChange={setIsUserDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button className="bg-secondary hover:bg-secondary/90 text-secondary-foreground">
+                    <UserPlus className="w-4 h-4 mr-2" />
+                    Novo Usuário
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-[95vw] sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+                  <FormCadastroUsuario 
+                    userType="admin_transportadora" 
+                    onSuccess={() => setIsUserDialogOpen(false)} 
+                  />
+                </DialogContent>
+              </Dialog>
+
               <Button 
                 onClick={() => setShowClientes(true)}
                 className="bg-secondary hover:bg-secondary/90 text-secondary-foreground"
@@ -165,6 +183,21 @@ export function TransportadoraLayout() {
                       </DialogTrigger>
                       <DialogContent className="max-w-[95vw] max-h-[90vh] overflow-y-auto">
                         <FormCadastroCliente />
+                      </DialogContent>
+                    </Dialog>
+
+                    <Dialog open={isUserDialogOpen} onOpenChange={setIsUserDialogOpen}>
+                      <DialogTrigger asChild>
+                        <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                          <UserPlus className="w-4 h-4 mr-2" />
+                          Novo Usuário
+                        </DropdownMenuItem>
+                      </DialogTrigger>
+                      <DialogContent className="max-w-[95vw] max-h-[90vh] overflow-y-auto">
+                        <FormCadastroUsuario 
+                          userType="admin_transportadora" 
+                          onSuccess={() => setIsUserDialogOpen(false)} 
+                        />
                       </DialogContent>
                     </Dialog>
 
