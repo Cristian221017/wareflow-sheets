@@ -66,76 +66,92 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       // First check if this is a cliente (customer) - this is the most common case
       console.log('Checking cliente data...');
-      const { data: clienteData, error: clienteError } = await supabase
-        .from('clientes')
-        .select('*')
-        .eq('email', supabaseUser.email)
-        .eq('status', 'ativo')
-        .maybeSingle();
+      
+      try {
+        const { data: clienteData, error: clienteError } = await supabase
+          .from('clientes')
+          .select('*')
+          .eq('email', supabaseUser.email)
+          .eq('status', 'ativo')
+          .maybeSingle();
+        
+        console.log('Cliente query result:', { clienteData, clienteError });
 
-      console.log('Cliente query result:', { clienteData, clienteError });
+        // If this is a cliente login, prioritize cliente data
+        if (clienteData && !clienteError) {
+          const userData: User = {
+            id: clienteData.id,
+            name: clienteData.razao_social,
+            email: clienteData.email,
+            type: 'cliente',
+            cnpj: clienteData.cnpj,
+            emailNotaFiscal: clienteData.email_nota_fiscal,
+            emailSolicitacaoLiberacao: clienteData.email_solicitacao_liberacao,
+            emailLiberacaoAutorizada: clienteData.email_liberacao_autorizada,
+            transportadoraId: clienteData.transportadora_id
+          };
 
-      // If this is a cliente login, prioritize cliente data
-      if (clienteData && !clienteError) {
-        const userData: User = {
-          id: clienteData.id,
-          name: clienteData.razao_social,
-          email: clienteData.email,
-          type: 'cliente',
-          cnpj: clienteData.cnpj,
-          emailNotaFiscal: clienteData.email_nota_fiscal,
-          emailSolicitacaoLiberacao: clienteData.email_solicitacao_liberacao,
-          emailLiberacaoAutorizada: clienteData.email_liberacao_autorizada,
-          transportadoraId: clienteData.transportadora_id
-        };
-
-        console.log('Cliente profile loaded:', userData);
-        setUser(userData);
-        setLoading(false);
-        return;
+          console.log('Cliente profile loaded:', userData);
+          setUser(userData);
+          setLoading(false);
+          return;
+        }
+        
+        if (clienteError) {
+          console.error('Cliente query error:', clienteError);
+        }
+      } catch (clienteError) {
+        console.error('Cliente query failed:', clienteError);
+        // Continue to check system user profile
       }
 
       // If not a cliente, check for system user profile
       console.log('Checking profile data...');
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('user_id', supabaseUser.id)
-        .maybeSingle();
+      try {
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('user_id', supabaseUser.id)
+          .maybeSingle();
+        
+        console.log('Profile query result:', { profile, profileError });
 
-      console.log('Profile query result:', { profile, profileError });
+        // Get user role and transportadora
+        console.log('Checking user transportadora...');
+        const { data: userTransportadora, error: roleError } = await supabase
+          .from('user_transportadoras')
+          .select(`
+            role,
+            is_active,
+            transportadora_id
+          `)
+          .eq('user_id', supabaseUser.id)
+          .eq('is_active', true)
+          .maybeSingle();
+        
+        console.log('User transportadora result:', { userTransportadora, roleError });
 
-      // Get user role and transportadora
-      console.log('Checking user transportadora...');
-      const { data: userTransportadora, error: roleError } = await supabase
-        .from('user_transportadoras')
-        .select(`
-          role,
-          is_active,
-          transportadora_id
-        `)
-        .eq('user_id', supabaseUser.id)
-        .eq('is_active', true)
-        .maybeSingle();
+        // Create user data for system users
+        const userData: User = {
+          id: supabaseUser.id,
+          name: profile?.name || supabaseUser.email || '',
+          email: profile?.email || supabaseUser.email || '',
+          type: userTransportadora?.role === 'super_admin' ? 'transportadora' : 
+                userTransportadora?.role === 'admin_transportadora' ? 'transportadora' :
+                userTransportadora?.role === 'operador' ? 'transportadora' : 'cliente',
+          cnpj: undefined,
+          role: userTransportadora?.role,
+          transportadoraId: userTransportadora?.transportadora_id
+        };
 
-      console.log('User transportadora result:', { userTransportadora, roleError });
-
-      // Create user data for system users
-      const userData: User = {
-        id: supabaseUser.id,
-        name: profile?.name || supabaseUser.email || '',
-        email: profile?.email || supabaseUser.email || '',
-        type: userTransportadora?.role === 'super_admin' ? 'transportadora' : 
-              userTransportadora?.role === 'admin_transportadora' ? 'transportadora' :
-              userTransportadora?.role === 'operador' ? 'transportadora' : 'cliente',
-        cnpj: undefined,
-        role: userTransportadora?.role,
-        transportadoraId: userTransportadora?.transportadora_id
-      };
-
-      console.log('System user profile loaded:', userData);
-      setUser(userData);
-      setLoading(false);
+        console.log('System user profile loaded:', userData);
+        setUser(userData);
+        setLoading(false);
+      } catch (systemError) {
+        console.error('System user queries failed:', systemError);
+        // Fallback to basic user data
+        throw systemError;
+      }
     } catch (error) {
       console.error('Error in loadUserProfile:', error);
       // Even if there's an error, create a basic user object to prevent infinite loading
