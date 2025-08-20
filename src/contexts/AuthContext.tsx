@@ -192,6 +192,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     try {
+      // Criar usuário no Supabase Auth se senha foi fornecida
+      let authUserId = null;
+      if (clienteData.senha) {
+        const { data: authData, error: authError } = await supabase.auth.signUp({
+          email: clienteData.email,
+          password: clienteData.senha,
+          options: {
+            emailRedirectTo: `${window.location.origin}/cliente`
+          }
+        });
+
+        if (authError) {
+          console.error('Erro ao criar usuário de autenticação:', authError);
+        } else {
+          authUserId = authData.user?.id;
+        }
+      }
+
       const { error } = await supabase
         .from('clientes')
         .insert([{
@@ -206,6 +224,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (error) {
         throw error;
+      }
+
+      // Enviar email de notificação
+      try {
+        await supabase.functions.invoke('send-notification-email', {
+          body: {
+            to: clienteData.email,
+            subject: 'Bem-vindo ao Sistema WMS - Cliente Cadastrado',
+            type: 'cliente_cadastrado',
+            data: {
+              nome: clienteData.name,
+              email: clienteData.email,
+              senha: clienteData.senha
+            }
+          }
+        });
+      } catch (emailError) {
+        console.error('Erro ao enviar email de notificação:', emailError);
+        // Não falha o cadastro se o email falhar
       }
 
       // Refresh clientes list
@@ -240,6 +277,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         emailNotaFiscal: cliente.email_nota_fiscal,
         emailSolicitacaoLiberacao: cliente.email_solicitacao_liberacao,
         emailLiberacaoAutorizada: cliente.email_liberacao_autorizada,
+        emailNotificacaoBoleto: cliente.email_notificacao_boleto,
       })) || [];
 
       setClientes(clientesFormatted);

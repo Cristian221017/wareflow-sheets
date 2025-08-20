@@ -9,6 +9,8 @@ export interface User {
   emailNotaFiscal?: string;
   emailSolicitacaoLiberacao?: string;
   emailLiberacaoAutorizada?: string;
+  emailNotificacaoBoleto?: string;
+  senha?: string;
   role?: 'super_admin' | 'admin_transportadora' | 'operador' | 'cliente';
   transportadoraId?: string;
 }

@@ -24,6 +24,8 @@ const formSchema = z.object({
   emailNotaFiscal: z.string().email('Email inválido').optional().or(z.literal('')),
   emailSolicitacaoLiberacao: z.string().email('Email inválido').optional().or(z.literal('')),
   emailLiberacaoAutorizada: z.string().email('Email inválido').optional().or(z.literal('')),
+  emailNotificacaoBoleto: z.string().email('Email inválido').optional().or(z.literal('')),
+  senha: z.string().min(6, 'Senha deve ter pelo menos 6 caracteres').optional().or(z.literal('')),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -41,6 +43,8 @@ export function FormCadastroCliente() {
       emailNotaFiscal: '',
       emailSolicitacaoLiberacao: '',
       emailLiberacaoAutorizada: '',
+      emailNotificacaoBoleto: '',
+      senha: '',
     },
   });
 
@@ -54,6 +58,8 @@ export function FormCadastroCliente() {
         emailNotaFiscal: values.emailNotaFiscal || undefined,
         emailSolicitacaoLiberacao: values.emailSolicitacaoLiberacao || undefined,
         emailLiberacaoAutorizada: values.emailLiberacaoAutorizada || undefined,
+        emailNotificacaoBoleto: values.emailNotificacaoBoleto || undefined,
+        senha: values.senha || undefined,
       });
       
       toast.success('Cliente cadastrado com sucesso!');
@@ -189,7 +195,52 @@ export function FormCadastroCliente() {
                   </FormItem>
                 )}
                />
-              </div>
+
+               <FormField
+                control={form.control}
+                name="emailNotificacaoBoleto"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email para Notificação de Boleto (Opcional)</FormLabel>
+                    <FormControl>
+                      <Input 
+                        type="email" 
+                        placeholder="boleto@empresa.com" 
+                        {...field} 
+                      />
+                    </FormControl>
+                    <FormMessage />
+                    <p className="text-xs text-muted-foreground">
+                      Email para receber quando novos boletos forem cadastrados
+                    </p>
+                  </FormItem>
+                )}
+               />
+               </div>
+
+               <div className="space-y-4">
+                 <h3 className="text-lg font-medium">Acesso ao Sistema</h3>
+                 <FormField
+                   control={form.control}
+                   name="senha"
+                   render={({ field }) => (
+                     <FormItem>
+                       <FormLabel>Senha Temporária (Opcional)</FormLabel>
+                       <FormControl>
+                         <Input 
+                           type="password" 
+                           placeholder="Senha para o cliente" 
+                           {...field} 
+                         />
+                       </FormControl>
+                       <FormMessage />
+                       <p className="text-xs text-muted-foreground">
+                         Se não informada, o cliente poderá usar "Esqueci minha senha" para criar uma
+                       </p>
+                     </FormItem>
+                   )}
+                 />
+               </div>
              </div>
             </div>
 
