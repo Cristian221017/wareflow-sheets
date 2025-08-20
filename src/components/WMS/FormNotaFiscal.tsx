@@ -7,6 +7,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { useWMS } from '@/contexts/WMSContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { NotaFiscal } from '@/types/wms';
 import { toast } from 'sonner';
 import { Package } from 'lucide-react';
@@ -18,8 +19,7 @@ const formSchema = z.object({
   dataRecebimento: z.string().min(1, 'Data de recebimento é obrigatória'),
   fornecedor: z.string().min(1, 'Fornecedor é obrigatório'),
   cnpj: z.string().min(14, 'CNPJ deve ter pelo menos 14 caracteres'),
-  cliente: z.string().min(1, 'Cliente é obrigatório'),
-  cnpjCliente: z.string().min(14, 'CNPJ do cliente deve ter pelo menos 14 caracteres'),
+  clienteId: z.string().min(1, 'Cliente é obrigatório'),
   produto: z.string().min(1, 'Produto é obrigatório'),
   quantidade: z.coerce.number().min(1, 'Quantidade deve ser maior que 0'),
   peso: z.coerce.number().min(0.1, 'Peso deve ser maior que 0'),
@@ -32,6 +32,7 @@ type FormData = z.infer<typeof formSchema>;
 
 export function FormNotaFiscal() {
   const { addNotaFiscal } = useWMS();
+  const { clientes } = useAuth();
   
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -42,8 +43,7 @@ export function FormNotaFiscal() {
       dataRecebimento: '',
       fornecedor: '',
       cnpj: '',
-      cliente: '',
-      cnpjCliente: '',
+      clienteId: '',
       produto: '',
       quantidade: 0,
       peso: 0,
@@ -55,7 +55,30 @@ export function FormNotaFiscal() {
 
   const onSubmit = async (data: FormData) => {
     try {
-      await addNotaFiscal(data as Omit<NotaFiscal, 'id' | 'createdAt'>);
+      const selectedCliente = clientes.find(c => c.id === data.clienteId);
+      if (!selectedCliente) {
+        toast.error('Cliente não encontrado');
+        return;
+      }
+
+      const nfData = {
+        numeroNF: data.numeroNF,
+        numeroPedido: data.numeroPedido,
+        ordemCompra: data.ordemCompra,
+        dataRecebimento: data.dataRecebimento,
+        fornecedor: data.fornecedor,
+        cnpj: data.cnpj,
+        cliente: selectedCliente.name, // Use the client name for the WMS context
+        cnpjCliente: selectedCliente.cnpj || '',
+        produto: data.produto,
+        quantidade: data.quantidade,
+        peso: data.peso,
+        volume: data.volume,
+        localizacao: data.localizacao,
+        status: data.status
+      };
+
+      await addNotaFiscal(nfData as Omit<NotaFiscal, 'id' | 'createdAt'>);
       toast.success('Nota Fiscal cadastrada com sucesso!');
       form.reset();
     } catch (error) {
@@ -63,6 +86,10 @@ export function FormNotaFiscal() {
       toast.error(error instanceof Error ? error.message : 'Erro ao cadastrar Nota Fiscal');
     }
   };
+
+  // Watch for client selection to auto-populate CNPJ
+  const selectedClienteId = form.watch('clienteId');
+  const selectedCliente = clientes.find(c => c.id === selectedClienteId);
 
   return (
     <Card>
@@ -165,31 +192,34 @@ export function FormNotaFiscal() {
 
               <FormField
                 control={form.control}
-                name="cliente"
+                name="clienteId"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Cliente *</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Nome do cliente" {...field} />
-                    </FormControl>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione o cliente" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {clientes.map((cliente) => (
+                          <SelectItem key={cliente.id} value={cliente.id}>
+                            {cliente.name} - {cliente.cnpj}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
               />
 
-              <FormField
-                control={form.control}
-                name="cnpjCliente"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>CNPJ do Cliente *</FormLabel>
-                    <FormControl>
-                      <Input placeholder="00.000.000/0000-00" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              {selectedCliente && (
+                <div className="text-sm text-muted-foreground p-2 bg-muted rounded">
+                  Cliente selecionado: {selectedCliente.name} | CNPJ: {selectedCliente.cnpj}
+                </div>
+              )}
 
               <FormField
                 control={form.control}

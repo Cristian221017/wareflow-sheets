@@ -61,24 +61,40 @@ export function WMSProvider({ children }: { children: React.ReactNode }) {
 
       if (error) throw error;
 
-      const formattedData: NotaFiscal[] = data?.map(nf => ({
-        id: nf.id,
-        numeroNF: nf.numero_nf,
-        numeroPedido: nf.numero_pedido,
-        ordemCompra: nf.ordem_compra,
-        dataRecebimento: nf.data_recebimento,
-        fornecedor: nf.fornecedor,
-        cnpj: nf.cnpj_fornecedor,
-        cliente: '',
-        cnpjCliente: '',
-        produto: nf.produto,
-        quantidade: nf.quantidade,
-        peso: Number(nf.peso),
-        volume: Number(nf.volume),
-        localizacao: nf.localizacao,
-        status: nf.status as NotaFiscal['status'],
-        createdAt: nf.created_at
-      })) || [];
+      // Get all unique cliente_ids
+      const clienteIds = [...new Set(data?.map(nf => nf.cliente_id).filter(Boolean))];
+      
+      // Fetch clientes data
+      let clientesData: any[] = [];
+      if (clienteIds.length > 0) {
+        const { data: clientesResult } = await supabase
+          .from('clientes')
+          .select('id, razao_social, cnpj')
+          .in('id', clienteIds);
+        clientesData = clientesResult || [];
+      }
+
+      const formattedData: NotaFiscal[] = data?.map(nf => {
+        const cliente = clientesData.find(c => c.id === nf.cliente_id);
+        return {
+          id: nf.id,
+          numeroNF: nf.numero_nf,
+          numeroPedido: nf.numero_pedido,
+          ordemCompra: nf.ordem_compra,
+          dataRecebimento: nf.data_recebimento,
+          fornecedor: nf.fornecedor,
+          cnpj: nf.cnpj_fornecedor,
+          cliente: cliente?.razao_social || '',
+          cnpjCliente: cliente?.cnpj || '',
+          produto: nf.produto,
+          quantidade: nf.quantidade,
+          peso: Number(nf.peso),
+          volume: Number(nf.volume),
+          localizacao: nf.localizacao,
+          status: nf.status as NotaFiscal['status'],
+          createdAt: nf.created_at
+        };
+      }) || [];
 
       setNotasFiscais(formattedData);
     } catch (error) {
@@ -98,23 +114,51 @@ export function WMSProvider({ children }: { children: React.ReactNode }) {
 
       if (error) throw error;
 
-      const formattedData: PedidoLiberacao[] = data?.map(pl => ({
-        id: pl.id,
-        numeroPedido: pl.numero_pedido,
-        ordemCompra: pl.ordem_compra,
-        dataSolicitacao: pl.data_solicitacao,
-        cliente: '',
-        cnpjCliente: '',
-        nfVinculada: '',
-        produto: pl.produto,
-        quantidade: pl.quantidade,
-        peso: Number(pl.peso),
-        volume: Number(pl.volume),
-        prioridade: pl.prioridade as PedidoLiberacao['prioridade'],
-        responsavel: pl.responsavel,
-        status: pl.status as PedidoLiberacao['status'],
-        createdAt: pl.created_at
-      })) || [];
+      // Get all unique cliente_ids and nota_fiscal_ids
+      const clienteIds = [...new Set(data?.map(pl => pl.cliente_id).filter(Boolean))];
+      const nfIds = [...new Set(data?.map(pl => pl.nota_fiscal_id).filter(Boolean))];
+      
+      // Fetch related data
+      let clientesData: any[] = [];
+      let nfsData: any[] = [];
+      
+      if (clienteIds.length > 0) {
+        const { data: clientesResult } = await supabase
+          .from('clientes')
+          .select('id, razao_social, cnpj')
+          .in('id', clienteIds);
+        clientesData = clientesResult || [];
+      }
+
+      if (nfIds.length > 0) {
+        const { data: nfsResult } = await supabase
+          .from('notas_fiscais')
+          .select('id, numero_nf')
+          .in('id', nfIds);
+        nfsData = nfsResult || [];
+      }
+
+      const formattedData: PedidoLiberacao[] = data?.map(pl => {
+        const cliente = clientesData.find(c => c.id === pl.cliente_id);
+        const nf = nfsData.find(n => n.id === pl.nota_fiscal_id);
+        return {
+          id: pl.id,
+          numeroPedido: pl.numero_pedido,
+          ordemCompra: pl.ordem_compra,
+          dataSolicitacao: pl.data_solicitacao,
+          cliente: cliente?.razao_social || '',
+          cnpjCliente: cliente?.cnpj || '',
+          nfVinculada: nf?.numero_nf || '',
+          produto: pl.produto,
+          quantidade: pl.quantidade,
+          peso: Number(pl.peso),
+          volume: Number(pl.volume),
+          prioridade: pl.prioridade as PedidoLiberacao['prioridade'],
+          responsavel: pl.responsavel,
+          status: pl.status as PedidoLiberacao['status'],
+          createdAt: pl.created_at
+        };
+      }) || [];
 
       setPedidosLiberacao(formattedData);
     } catch (error) {
@@ -134,20 +178,48 @@ export function WMSProvider({ children }: { children: React.ReactNode }) {
 
       if (error) throw error;
 
-      const formattedData: PedidoLiberado[] = data?.map(pl => ({
-        id: pl.id,
-        numeroPedido: pl.numero_pedido,
-        ordemCompra: pl.ordem_compra,
-        dataLiberacao: pl.data_liberacao,
-        cliente: '',
-        nfVinculada: '',
-        quantidade: pl.quantidade,
-        peso: Number(pl.peso),
-        volume: Number(pl.volume),
-        transportadora: pl.transportadora_responsavel,
-        dataExpedicao: pl.data_expedicao,
-        createdAt: pl.created_at
-      })) || [];
+      // Get all unique cliente_ids and nota_fiscal_ids
+      const clienteIds = [...new Set(data?.map(pl => pl.cliente_id).filter(Boolean))];
+      const nfIds = [...new Set(data?.map(pl => pl.nota_fiscal_id).filter(Boolean))];
+      
+      // Fetch related data
+      let clientesData: any[] = [];
+      let nfsData: any[] = [];
+      
+      if (clienteIds.length > 0) {
+        const { data: clientesResult } = await supabase
+          .from('clientes')
+          .select('id, razao_social')
+          .in('id', clienteIds);
+        clientesData = clientesResult || [];
+      }
+
+      if (nfIds.length > 0) {
+        const { data: nfsResult } = await supabase
+          .from('notas_fiscais')
+          .select('id, numero_nf')
+          .in('id', nfIds);
+        nfsData = nfsResult || [];
+      }
+
+      const formattedData: PedidoLiberado[] = data?.map(pl => {
+        const cliente = clientesData.find(c => c.id === pl.cliente_id);
+        const nf = nfsData.find(n => n.id === pl.nota_fiscal_id);
+        return {
+          id: pl.id,
+          numeroPedido: pl.numero_pedido,
+          ordemCompra: pl.ordem_compra,
+          dataLiberacao: pl.data_liberacao,
+          cliente: cliente?.razao_social || '',
+          nfVinculada: nf?.numero_nf || '',
+          quantidade: pl.quantidade,
+          peso: Number(pl.peso),
+          volume: Number(pl.volume),
+          transportadora: pl.transportadora_responsavel,
+          dataExpedicao: pl.data_expedicao,
+          createdAt: pl.created_at
+        };
+      }) || [];
 
       setPedidosLiberados(formattedData);
     } catch (error) {
@@ -166,7 +238,7 @@ export function WMSProvider({ children }: { children: React.ReactNode }) {
     }
 
     try {
-      // Find cliente in our loaded clientes
+      // Find cliente in our loaded clientes by name (for backward compatibility)
       const cliente = clientes.find(c => c.name === nf.cliente);
       console.log('Cliente encontrado:', cliente);
       if (!cliente) {
