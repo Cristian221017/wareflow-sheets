@@ -9,6 +9,7 @@ import { resetClientPasswords } from '@/utils/resetClientPasswords';
 import { testClientLogin } from '@/utils/testClientLogin';
 import { fixClientPasswords } from '@/utils/fixClientPasswords';
 import { diagnoseClientAuth } from '@/utils/diagnoseClientAuth';
+import { fixSpecificUser } from '@/utils/fixSpecificUser';
 import { toast } from 'sonner';
 
 const COLORS = ['hsl(var(--success))', 'hsl(var(--warning))', 'hsl(var(--error))'];
@@ -20,6 +21,7 @@ export function Dashboard() {
   const [isTestingLogin, setIsTestingLogin] = useState(false);
   const [isFixingPasswords, setIsFixingPasswords] = useState(false);
   const [isDiagnosing, setIsDiagnosing] = useState(false);
+  const [isFixingSpecific, setIsFixingSpecific] = useState(false);
 
   const handleCreateAccounts = async () => {
     setIsCreatingAccounts(true);
@@ -78,6 +80,18 @@ export function Dashboard() {
       toast.error('Erro no diagnóstico. Verifique o console.');
     } finally {
       setIsDiagnosing(false);
+    }
+  };
+
+  const handleFixSpecific = async () => {
+    setIsFixingSpecific(true);
+    try {
+      await fixSpecificUser();
+      toast.success('Correção específica concluída! Verifique o console e email.');
+    } catch (error) {
+      toast.error('Erro na correção. Verifique o console.');
+    } finally {
+      setIsFixingSpecific(false);
     }
   };
 
@@ -162,14 +176,21 @@ export function Dashboard() {
             Setup Inicial - Criar Contas de Login
           </CardTitle>
           <CardDescription className="text-yellow-700 dark:text-yellow-300">
-            <strong>Siga esta sequência para resolver problemas de login dos clientes:</strong><br/>
-            1. <strong>Diagnóstico Completo</strong> - Verifica situação atual de todos os clientes<br/>
-            2. <strong>Corrigir Senhas</strong> - Envia reset de senha por email quando necessário<br/>
-            3. <strong>Testar Login</strong> - Confirma se todos conseguem acessar com senha: <strong>cliente123</strong>
+            <strong>Para resolver o problema específico do Comercial@rodoveigatransportes.com.br:</strong><br/>
+            1. <strong>Corrigir Usuário Específico</strong> - Corrige o problema específico deste email<br/>
+            2. <strong>Diagnóstico Completo</strong> - Verifica situação de todos os clientes<br/>
+            3. <strong>Testar Login</strong> - Confirma se conseguem acessar com senha: <strong>cliente123</strong>
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex gap-2 flex-wrap">
+            <Button 
+              onClick={handleFixSpecific} 
+              disabled={isFixingSpecific}
+              className="bg-red-600 hover:bg-red-700 text-white"
+            >
+              {isFixingSpecific ? 'Corrigindo...' : 'Corrigir Usuário Específico'}
+            </Button>
             <Button 
               onClick={handleDiagnose} 
               disabled={isDiagnosing}
