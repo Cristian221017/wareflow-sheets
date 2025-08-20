@@ -47,9 +47,13 @@ export function FormDocumentoFinanceiro({ onSuccess }: FormDocumentoFinanceiroPr
       valor: undefined,
       clienteId: '',
       observacoes: '',
-      status: 'Em aberto'
+      status: 'Em aberto',
+      dataPagamento: ''
     }
   });
+
+  // Watch for status changes to control date field
+  const statusValue = form.watch('status');
 
   const onSubmit = async (data: FormData) => {
     try {
@@ -214,7 +218,12 @@ export function FormDocumentoFinanceiro({ onSuccess }: FormDocumentoFinanceiroPr
                   <FormItem>
                     <FormLabel>Data de Pagamento</FormLabel>
                     <FormControl>
-                      <Input type="date" {...field} />
+                      <Input 
+                        type="date" 
+                        {...field} 
+                        disabled={statusValue !== 'Pago'}
+                        placeholder={statusValue !== 'Pago' ? 'Disponível apenas para status "Pago"' : ''}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

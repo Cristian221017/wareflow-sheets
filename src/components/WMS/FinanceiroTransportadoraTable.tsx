@@ -26,7 +26,8 @@ import {
   Edit,
   FileText,
   Calendar,
-  DollarSign
+  DollarSign,
+  Trash2
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useRef } from 'react';
@@ -57,7 +58,7 @@ const isVencido = (dataVencimento: string, status: string): boolean => {
 };
 
 export function FinanceiroTransportadoraTable() {
-  const { documentosFinanceiros, updateDocumentoFinanceiro, uploadArquivo, downloadArquivo, atualizarStatusVencidos } = useFinanceiro();
+  const { documentosFinanceiros, updateDocumentoFinanceiro, uploadArquivo, downloadArquivo, deleteDocumentoFinanceiro, atualizarStatusVencidos } = useFinanceiro();
   const { clientes } = useAuth();
   const [selectedDoc, setSelectedDoc] = useState<DocumentoFinanceiro | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -161,6 +162,16 @@ export function FinanceiroTransportadoraTable() {
       await downloadArquivo(documento.id, type);
     } catch (error) {
       toast.error(`Erro ao baixar ${type === 'boleto' ? 'boleto' : 'CTE'}`);
+    }
+  };
+
+  const handleDelete = async (documento: DocumentoFinanceiro) => {
+    if (window.confirm(`Tem certeza que deseja excluir o documento CTE ${documento.numeroCte}?`)) {
+      try {
+        await deleteDocumentoFinanceiro(documento.id);
+      } catch (error) {
+        toast.error('Erro ao excluir documento');
+      }
     }
   };
 
@@ -393,14 +404,24 @@ export function FinanceiroTransportadoraTable() {
                         </div>
                       </TableCell>
                       <TableCell className="text-center">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleEdit(documento)}
-                        >
-                          <Edit className="w-3 h-3 mr-1" />
-                          Editar
-                        </Button>
+                        <div className="flex justify-center gap-1">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleEdit(documento)}
+                          >
+                            <Edit className="w-3 h-3 mr-1" />
+                            Editar
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleDelete(documento)}
+                            className="text-destructive hover:text-destructive"
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   );
@@ -484,6 +505,15 @@ export function FinanceiroTransportadoraTable() {
                           <Edit className="w-3 h-3 mr-1" />
                           Editar
                         </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleDelete(documento)}
+                          className="flex-1 text-destructive hover:text-destructive"
+                        >
+                          <Trash2 className="w-3 h-3 mr-1" />
+                          Excluir
+                        </Button>
                       </div>
                     </div>
                   </Card>
@@ -544,6 +574,8 @@ export function FinanceiroTransportadoraTable() {
                   type="date"
                   value={editDataPagamento}
                   onChange={(e) => setEditDataPagamento(e.target.value)}
+                  disabled={editStatus !== 'Pago'}
+                  placeholder={editStatus !== 'Pago' ? 'Disponível apenas para status "Pago"' : ''}
                 />
               </div>
             </div>

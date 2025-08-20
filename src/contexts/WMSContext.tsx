@@ -3,6 +3,7 @@ import { NotaFiscal, PedidoLiberacao, PedidoLiberado } from '@/types/wms';
 import { notificationService } from '@/utils/notificationService';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 interface WMSContextType {
   notasFiscais: NotaFiscal[];
@@ -10,6 +11,7 @@ interface WMSContextType {
   pedidosLiberados: PedidoLiberado[];
   loading: boolean;
   addNotaFiscal: (nf: Omit<NotaFiscal, 'id' | 'createdAt'>) => Promise<void>;
+  deleteNotaFiscal: (id: string) => Promise<void>;
   addPedidoLiberacao: (pedido: Omit<PedidoLiberacao, 'id' | 'createdAt' | 'status'>) => Promise<void>;
   liberarPedido: (pedidoId: string, transportadora: string, dataExpedicao?: string) => Promise<void>;
   updateNotaFiscalStatus: (nfId: string, status: NotaFiscal['status']) => Promise<void>;
@@ -288,6 +290,26 @@ export function WMSProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const deleteNotaFiscal = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('notas_fiscais')
+        .delete()
+        .eq('id', id);
+
+      if (error) {
+        console.error('Erro ao excluir nota fiscal:', error);
+        throw new Error('Erro ao excluir nota fiscal');
+      }
+
+      await loadNotasFiscais();
+      toast.success('Nota fiscal excluída com sucesso!');
+    } catch (error) {
+      console.error('Erro ao excluir nota fiscal:', error);
+      throw error;
+    }
+  };
+
   const addPedidoLiberacao = async (pedido: Omit<PedidoLiberacao, 'id' | 'createdAt' | 'status'>) => {
     if (!user?.transportadoraId) {
       throw new Error('Usuário não associado a uma transportadora');
@@ -441,6 +463,7 @@ export function WMSProvider({ children }: { children: React.ReactNode }) {
       pedidosLiberados,
       loading,
       addNotaFiscal,
+      deleteNotaFiscal,
       addPedidoLiberacao,
       liberarPedido,
       updateNotaFiscalStatus,

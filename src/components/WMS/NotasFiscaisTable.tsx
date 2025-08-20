@@ -22,7 +22,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { toast } from 'sonner';
-import { FileText, Send } from 'lucide-react';
+import { FileText, Send, Trash2 } from 'lucide-react';
 
 const getStatusColor = (status: NotaFiscal['status']) => {
   switch (status) {
@@ -311,7 +311,7 @@ function SolicitarLiberacaoDialog({ notaFiscal }: { notaFiscal: NotaFiscal }) {
 }
 
 export function NotasFiscaisTable() {
-  const { notasFiscais } = useWMS();
+  const { notasFiscais, deleteNotaFiscal } = useWMS();
   const [selectedCliente, setSelectedCliente] = useState<string>('todos');
 
   // Get unique clients for filter
@@ -330,6 +330,16 @@ export function NotasFiscaisTable() {
     }
     return notasFiscais.filter(nf => nf.cliente === selectedCliente);
   }, [notasFiscais, selectedCliente]);
+
+  const handleDeleteNF = async (nf: NotaFiscal) => {
+    if (window.confirm(`Tem certeza que deseja excluir a NF ${nf.numeroNF}?`)) {
+      try {
+        await deleteNotaFiscal(nf.id);
+      } catch (error) {
+        toast.error('Erro ao excluir nota fiscal');
+      }
+    }
+  };
 
   return (
     <Card>
@@ -356,23 +366,23 @@ export function NotasFiscaisTable() {
         <div className="overflow-auto">
           <Table>
             <TableHeader>
-              <TableRow>
-                <TableHead>Número NF</TableHead>
-                <TableHead>Nº Pedido</TableHead>
-                <TableHead>Ordem Compra</TableHead>
-                <TableHead>Data Recebimento</TableHead>
-                <TableHead>Fornecedor</TableHead>
-                <TableHead>CNPJ Fornecedor</TableHead>
-                <TableHead>Cliente</TableHead>
-                <TableHead>CNPJ Cliente</TableHead>
-                <TableHead>Produto</TableHead>
-                <TableHead>Quantidade</TableHead>
-                <TableHead>Peso (kg)</TableHead>
-                <TableHead>Volume (m³)</TableHead>
-                <TableHead>Localização</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Ações</TableHead>
-              </TableRow>
+                <TableRow>
+                  <TableHead>Número NF</TableHead>
+                  <TableHead>Nº Pedido</TableHead>
+                  <TableHead>Ordem Compra</TableHead>
+                  <TableHead>Data Recebimento</TableHead>
+                  <TableHead>Fornecedor</TableHead>
+                  <TableHead>CNPJ Fornecedor</TableHead>
+                  <TableHead>Cliente</TableHead>
+                  <TableHead>CNPJ Cliente</TableHead>
+                  <TableHead>Produto</TableHead>
+                  <TableHead>Quantidade</TableHead>
+                  <TableHead>Peso (kg)</TableHead>
+                  <TableHead>Volume (m³)</TableHead>
+                  <TableHead>Localização</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Ações</TableHead>
+                </TableRow>
             </TableHeader>
             <TableBody>
               {filteredNFs.map((nf) => (
@@ -406,7 +416,17 @@ export function NotasFiscaisTable() {
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    <SolicitarLiberacaoDialog notaFiscal={nf} />
+                    <div className="flex gap-1">
+                      <SolicitarLiberacaoDialog notaFiscal={nf} />
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleDeleteNF(nf)}
+                        className="text-destructive hover:text-destructive"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}

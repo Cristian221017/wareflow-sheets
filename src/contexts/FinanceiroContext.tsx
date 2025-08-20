@@ -24,6 +24,7 @@ interface FinanceiroContextType {
   loading: boolean;
   addDocumentoFinanceiro: (data: DocumentoFinanceiroFormData) => Promise<{ id: string } | null>;
   updateDocumentoFinanceiro: (id: string, data: Partial<DocumentoFinanceiroFormData>) => Promise<void>;
+  deleteDocumentoFinanceiro: (id: string) => Promise<void>;
   uploadArquivo: (documentoId: string, fileData: FileUploadData) => Promise<void>;
   downloadArquivo: (documentoId: string, type: 'boleto' | 'cte') => Promise<void>;
   atualizarStatusVencidos: () => Promise<void>;
@@ -157,6 +158,26 @@ export function FinanceiroProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const deleteDocumentoFinanceiro = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('documentos_financeiros' as any)
+        .delete()
+        .eq('id', id);
+
+      if (error) {
+        console.error('Erro ao excluir documento financeiro:', error);
+        throw new Error('Erro ao excluir documento financeiro');
+      }
+
+      await fetchDocumentosFinanceiros();
+      toast.success('Documento financeiro excluído com sucesso!');
+    } catch (error) {
+      console.error('Erro ao excluir documento financeiro:', error);
+      throw error;
+    }
+  };
+
   const uploadArquivo = async (documentoId: string, fileData: FileUploadData) => {
     if (!user) {
       throw new Error('Usuário não autenticado');
@@ -274,6 +295,7 @@ export function FinanceiroProvider({ children }: { children: ReactNode }) {
         loading,
         addDocumentoFinanceiro,
         updateDocumentoFinanceiro,
+        deleteDocumentoFinanceiro,
         uploadArquivo,
         downloadArquivo,
         atualizarStatusVencidos,
