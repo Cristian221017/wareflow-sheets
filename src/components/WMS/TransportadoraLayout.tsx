@@ -36,6 +36,8 @@ export function TransportadoraLayout() {
   const [isClienteDialogOpen, setIsClienteDialogOpen] = useState(false);
   const [isDocumentoDialogOpen, setIsDocumentoDialogOpen] = useState(false);
   const [isUserDialogOpen, setIsUserDialogOpen] = useState(false);
+  const [isIntegracaoDialogOpen, setIsIntegracaoDialogOpen] = useState(false);
+  const [isCadastroUserDialogOpen, setIsCadastroUserDialogOpen] = useState(false);
   const [showClientes, setShowClientes] = useState(false);
 
   if (showClientes) {
@@ -152,6 +154,33 @@ export function TransportadoraLayout() {
                 </DialogContent>
               </Dialog>
 
+              <Dialog open={isIntegracaoDialogOpen} onOpenChange={setIsIntegracaoDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button className="bg-accent hover:bg-accent/90 text-accent-foreground">
+                    <Menu className="w-4 h-4 mr-2" />
+                    Integrações
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-[95vw] sm:max-w-6xl max-h-[90vh] overflow-y-auto">
+                  <IntegrationConfig />
+                </DialogContent>
+              </Dialog>
+
+              <Dialog open={isCadastroUserDialogOpen} onOpenChange={setIsCadastroUserDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button className="bg-secondary hover:bg-secondary/90 text-secondary-foreground">
+                    <UserPlus className="w-4 h-4 mr-2" />
+                    Cadastro Usuários
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-[95vw] sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+                  <FormCadastroUsuario 
+                    userType="admin_transportadora" 
+                    onSuccess={() => setIsCadastroUserDialogOpen(false)} 
+                  />
+                </DialogContent>
+              </Dialog>
+
               <Button onClick={logout} variant="outline">
                 <LogOut className="w-4 h-4 mr-2" />
                 Sair
@@ -229,6 +258,33 @@ export function TransportadoraLayout() {
                         <FormDocumentoFinanceiro onSuccess={() => setIsDocumentoDialogOpen(false)} />
                       </DialogContent>
                     </Dialog>
+
+                    <Dialog open={isIntegracaoDialogOpen} onOpenChange={setIsIntegracaoDialogOpen}>
+                      <DialogTrigger asChild>
+                        <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                          <Menu className="w-4 h-4 mr-2" />
+                          Integrações
+                        </DropdownMenuItem>
+                      </DialogTrigger>
+                      <DialogContent className="max-w-[95vw] max-h-[90vh] overflow-y-auto">
+                        <IntegrationConfig />
+                      </DialogContent>
+                    </Dialog>
+
+                    <Dialog open={isCadastroUserDialogOpen} onOpenChange={setIsCadastroUserDialogOpen}>
+                      <DialogTrigger asChild>
+                        <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                          <UserPlus className="w-4 h-4 mr-2" />
+                          Cadastro Usuários
+                        </DropdownMenuItem>
+                      </DialogTrigger>
+                      <DialogContent className="max-w-[95vw] max-h-[90vh] overflow-y-auto">
+                        <FormCadastroUsuario 
+                          userType="admin_transportadora" 
+                          onSuccess={() => setIsCadastroUserDialogOpen(false)} 
+                        />
+                      </DialogContent>
+                    </Dialog>
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>
@@ -255,7 +311,7 @@ export function TransportadoraLayout() {
             
             {/* Desktop: Grid layout */}
             <div className="hidden lg:block mb-6">
-              <TabsList className="grid w-full grid-cols-9 gap-1">
+              <TabsList className="grid w-full grid-cols-7 gap-1">
                 <TabsTrigger value="dashboard" className="text-sm">Dashboard</TabsTrigger>
                 <TabsTrigger value="financeiro" className="text-sm">Financeiro</TabsTrigger>
                 <TabsTrigger value="notas-fiscais" className="text-sm">Notas Fiscais</TabsTrigger>
@@ -263,8 +319,6 @@ export function TransportadoraLayout() {
                 <TabsTrigger value="solicitacoes-pendentes" className="text-sm">Solicitações Pendentes</TabsTrigger>
                 <TabsTrigger value="pedidos-liberados" className="text-sm">Solicitação Confirmada</TabsTrigger>
                 <TabsTrigger value="relatorios" className="text-sm">Relatórios</TabsTrigger>
-                <TabsTrigger value="integracoes" className="text-sm">Integrações</TabsTrigger>
-                <TabsTrigger value="cadastro-usuario" className="text-sm">Cadastro Usuários</TabsTrigger>
               </TabsList>
             </div>
             
@@ -297,14 +351,6 @@ export function TransportadoraLayout() {
             
             <TabsContent value="relatorios" className="space-y-4">
               <RelatorioControleCargas />
-            </TabsContent>
-            
-            <TabsContent value="integracoes" className="space-y-4">
-              <IntegrationConfig />
-            </TabsContent>
-            
-            <TabsContent value="cadastro-usuario" className="space-y-4">
-              <FormCadastroUsuario userType="admin_transportadora" />
             </TabsContent>
           </Tabs>
         </div>
