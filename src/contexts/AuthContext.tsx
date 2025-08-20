@@ -64,39 +64,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       console.log('Loading user profile for:', supabaseUser.id);
       
-      // Execute all queries in parallel for better performance
-      const [clienteResult, profileResult, userTransportadoraResult] = await Promise.all([
-        // Check if this is a cliente (customer)
-        supabase
-          .from('clientes')
-          .select('*')
-          .eq('email', supabaseUser.email)
-          .eq('status', 'ativo')
-          .maybeSingle(),
-        
-        // Check for regular user profile
-        supabase
-          .from('profiles')
-          .select('*')
-          .eq('user_id', supabaseUser.id)
-          .maybeSingle(),
-        
-        // Get user role and transportadora
-        supabase
-          .from('user_transportadoras')
-          .select(`
-            role,
-            is_active,
-            transportadora_id
-          `)
-          .eq('user_id', supabaseUser.id)
-          .eq('is_active', true)
-          .maybeSingle()
-      ]);
+      // First check if this is a cliente (customer) - this is the most common case
+      console.log('Checking cliente data...');
+      const { data: clienteData, error: clienteError } = await supabase
+        .from('clientes')
+        .select('*')
+        .eq('email', supabaseUser.email)
+        .eq('status', 'ativo')
+        .maybeSingle();
 
-      const { data: clienteData, error: clienteError } = clienteResult;
-      const { data: profile, error: profileError } = profileResult;
-      const { data: userTransportadora, error: roleError } = userTransportadoraResult;
+      console.log('Cliente query result:', { clienteData, clienteError });
 
       // If this is a cliente login, prioritize cliente data
       if (clienteData && !clienteError) {
@@ -118,13 +95,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
-      // Log errors (but don't throw)
-      if (profileError && profileError.code !== 'PGRST116') {
-        console.error('Error loading profile:', profileError);
-      }
-      if (roleError && roleError.code !== 'PGRST116') {
-        console.error('Error loading user role:', roleError);
-      }
+      // If not a cliente, check for system user profile
+      console.log('Checking profile data...');
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('user_id', supabaseUser.id)
+        .maybeSingle();
+
+      console.log('Profile query result:', { profile, profileError });
+
+      // Get user role and transportadora
+      console.log('Checking user transportadora...');
+      const { data: userTransportadora, error: roleError } = await supabase
+        .from('user_transportadoras')
+        .select(`
+          role,
+          is_active,
+          transportadora_id
+        `)
+        .eq('user_id', supabaseUser.id)
+        .eq('is_active', true)
+        .maybeSingle();
+
+      console.log('User transportadora result:', { userTransportadora, roleError });
 
       // Create user data for system users
       const userData: User = {
@@ -139,7 +133,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         transportadoraId: userTransportadora?.transportadora_id
       };
 
-      console.log('User profile loaded:', userData);
+      console.log('System user profile loaded:', userData);
       setUser(userData);
       setLoading(false);
     } catch (error) {
