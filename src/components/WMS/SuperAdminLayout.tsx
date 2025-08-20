@@ -91,7 +91,7 @@ export function SuperAdminLayout() {
       {/* Main Content */}
       <div className="flex-1 p-6">
         <Tabs defaultValue="dashboard" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4 max-w-2xl">
+          <TabsList className="grid w-full grid-cols-5 max-w-3xl">
             <TabsTrigger value="dashboard" className="flex items-center space-x-2">
               <BarChart3 className="w-4 h-4" />
               <span>Dashboard</span>
@@ -103,6 +103,10 @@ export function SuperAdminLayout() {
             <TabsTrigger value="usuarios" className="flex items-center space-x-2">
               <Users className="w-4 h-4" />
               <span>Usuários</span>
+            </TabsTrigger>
+            <TabsTrigger value="cadastro-usuario" className="flex items-center space-x-2">
+              <UserPlus className="w-4 h-4" />
+              <span>Cadastro de Usuários</span>
             </TabsTrigger>
             <TabsTrigger value="configuracoes" className="flex items-center space-x-2">
               <Settings className="w-4 h-4" />
@@ -120,6 +124,10 @@ export function SuperAdminLayout() {
 
           <TabsContent value="usuarios">
             <SuperAdminUsuarios />
+          </TabsContent>
+
+          <TabsContent value="cadastro-usuario">
+            <FormCadastroUsuario userType="super_admin" />
           </TabsContent>
 
           <TabsContent value="configuracoes">

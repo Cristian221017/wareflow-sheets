@@ -51,7 +51,8 @@ export function ClienteLayout() {
     { id: 'mercadorias', label: 'Mercadorias', icon: Package, shortLabel: 'Estoque' },
     { id: 'pedidos', label: 'Carregamento', icon: FileText, shortLabel: 'Pedir' },
     { id: 'liberados', label: 'Confirmadas', icon: CheckCircle, shortLabel: 'OK' },
-    { id: 'financeiro', label: 'Financeiro', icon: Receipt, shortLabel: 'Fin' }
+    { id: 'financeiro', label: 'Financeiro', icon: Receipt, shortLabel: 'Fin' },
+    { id: 'cadastro-usuario', label: 'Cadastro de Usuários', icon: UserPlus, shortLabel: 'Users' }
   ];
 
   const MobileNavigation = () => (
@@ -233,6 +234,8 @@ export function ClienteLayout() {
         );
       case 'financeiro':
         return <ClienteFinanceiro />;
+      case 'cadastro-usuario':
+        return <FormCadastroUsuario userType="cliente" />;
       default:
         return <ClienteDashboard />;
     }

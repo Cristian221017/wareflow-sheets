@@ -251,12 +251,13 @@ export function TransportadoraLayout() {
                 <TabsTrigger value="pedidos-liberados" className="text-xs px-2 py-2 whitespace-nowrap">Confirmadas</TabsTrigger>
                 <TabsTrigger value="relatorios" className="text-xs px-2 py-2 whitespace-nowrap">Relatórios</TabsTrigger>
                 <TabsTrigger value="integracoes" className="text-xs px-2 py-2 whitespace-nowrap">Integrações</TabsTrigger>
+                <TabsTrigger value="cadastro-usuario" className="text-xs px-2 py-2 whitespace-nowrap">Cadastro Usuários</TabsTrigger>
               </TabsList>
             </div>
             
             {/* Desktop: Grid layout */}
             <div className="hidden lg:block mb-6">
-              <TabsList className="grid w-full grid-cols-8 gap-1">
+              <TabsList className="grid w-full grid-cols-9 gap-1">
                 <TabsTrigger value="dashboard" className="text-sm">Dashboard</TabsTrigger>
                 <TabsTrigger value="financeiro" className="text-sm">Financeiro</TabsTrigger>
                 <TabsTrigger value="notas-fiscais" className="text-sm">Notas Fiscais</TabsTrigger>
@@ -265,6 +266,7 @@ export function TransportadoraLayout() {
                 <TabsTrigger value="pedidos-liberados" className="text-sm">Solicitação Confirmada</TabsTrigger>
                 <TabsTrigger value="relatorios" className="text-sm">Relatórios</TabsTrigger>
                 <TabsTrigger value="integracoes" className="text-sm">Integrações</TabsTrigger>
+                <TabsTrigger value="cadastro-usuario" className="text-sm">Cadastro Usuários</TabsTrigger>
               </TabsList>
             </div>
             
@@ -301,6 +303,10 @@ export function TransportadoraLayout() {
             
             <TabsContent value="integracoes" className="space-y-4">
               <IntegrationConfig />
+            </TabsContent>
+            
+            <TabsContent value="cadastro-usuario" className="space-y-4">
+              <FormCadastroUsuario userType="admin_transportadora" />
             </TabsContent>
           </Tabs>
         </div>
