@@ -35,7 +35,6 @@ export function TransportadoraLayout() {
   const [isPedidoDialogOpen, setIsPedidoDialogOpen] = useState(false);
   const [isClienteDialogOpen, setIsClienteDialogOpen] = useState(false);
   const [isDocumentoDialogOpen, setIsDocumentoDialogOpen] = useState(false);
-  const [isUserDialogOpen, setIsUserDialogOpen] = useState(false);
   const [isIntegracaoDialogOpen, setIsIntegracaoDialogOpen] = useState(false);
   const [isCadastroUserDialogOpen, setIsCadastroUserDialogOpen] = useState(false);
   const [showClientes, setShowClientes] = useState(false);
@@ -104,21 +103,6 @@ export function TransportadoraLayout() {
                 </DialogTrigger>
                 <DialogContent className="max-w-[95vw] sm:max-w-4xl max-h-[90vh] overflow-y-auto">
                   <FormCadastroCliente />
-                </DialogContent>
-              </Dialog>
-
-              <Dialog open={isUserDialogOpen} onOpenChange={setIsUserDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button className="bg-secondary hover:bg-secondary/90 text-secondary-foreground">
-                    <UserPlus className="w-4 h-4 mr-2" />
-                    Novo Usuário
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="max-w-[95vw] sm:max-w-2xl max-h-[90vh] overflow-y-auto">
-                  <FormCadastroUsuario 
-                    userType="admin_transportadora" 
-                    onSuccess={() => setIsUserDialogOpen(false)} 
-                  />
                 </DialogContent>
               </Dialog>
 
@@ -212,21 +196,6 @@ export function TransportadoraLayout() {
                       </DialogTrigger>
                       <DialogContent className="max-w-[95vw] max-h-[90vh] overflow-y-auto">
                         <FormCadastroCliente />
-                      </DialogContent>
-                    </Dialog>
-
-                    <Dialog open={isUserDialogOpen} onOpenChange={setIsUserDialogOpen}>
-                      <DialogTrigger asChild>
-                        <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                          <UserPlus className="w-4 h-4 mr-2" />
-                          Novo Usuário
-                        </DropdownMenuItem>
-                      </DialogTrigger>
-                      <DialogContent className="max-w-[95vw] max-h-[90vh] overflow-y-auto">
-                        <FormCadastroUsuario 
-                          userType="admin_transportadora" 
-                          onSuccess={() => setIsUserDialogOpen(false)} 
-                        />
                       </DialogContent>
                     </Dialog>
 
