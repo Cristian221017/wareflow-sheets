@@ -277,7 +277,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         emailNotaFiscal: cliente.email_nota_fiscal,
         emailSolicitacaoLiberacao: cliente.email_solicitacao_liberacao,
         emailLiberacaoAutorizada: cliente.email_liberacao_autorizada,
-        emailNotificacaoBoleto: cliente.email_notificacao_boleto,
       })) || [];
 
       setClientes(clientesFormatted);

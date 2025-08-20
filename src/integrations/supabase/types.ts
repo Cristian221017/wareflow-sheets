@@ -23,6 +23,7 @@ export type Database = {
           email: string
           email_liberacao_autorizada: string | null
           email_nota_fiscal: string | null
+          email_notificacao_boleto: string | null
           email_solicitacao_liberacao: string | null
           endereco: string | null
           estado: string | null
@@ -42,6 +43,7 @@ export type Database = {
           email: string
           email_liberacao_autorizada?: string | null
           email_nota_fiscal?: string | null
+          email_notificacao_boleto?: string | null
           email_solicitacao_liberacao?: string | null
           endereco?: string | null
           estado?: string | null
@@ -61,6 +63,7 @@ export type Database = {
           email?: string
           email_liberacao_autorizada?: string | null
           email_nota_fiscal?: string | null
+          email_notificacao_boleto?: string | null
           email_solicitacao_liberacao?: string | null
           endereco?: string | null
           estado?: string | null
