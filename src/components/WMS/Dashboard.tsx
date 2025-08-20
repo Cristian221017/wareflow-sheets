@@ -7,6 +7,8 @@ import { useMemo, useState } from 'react';
 import { createAccountsForExistingClients } from '@/utils/createClientAccounts';
 import { resetClientPasswords } from '@/utils/resetClientPasswords';
 import { testClientLogin } from '@/utils/testClientLogin';
+import { fixClientPasswords } from '@/utils/fixClientPasswords';
+import { diagnoseClientAuth } from '@/utils/diagnoseClientAuth';
 import { toast } from 'sonner';
 
 const COLORS = ['hsl(var(--success))', 'hsl(var(--warning))', 'hsl(var(--error))'];
@@ -16,6 +18,8 @@ export function Dashboard() {
   const [isCreatingAccounts, setIsCreatingAccounts] = useState(false);
   const [isResettingPasswords, setIsResettingPasswords] = useState(false);
   const [isTestingLogin, setIsTestingLogin] = useState(false);
+  const [isFixingPasswords, setIsFixingPasswords] = useState(false);
+  const [isDiagnosing, setIsDiagnosing] = useState(false);
 
   const handleCreateAccounts = async () => {
     setIsCreatingAccounts(true);
@@ -50,6 +54,30 @@ export function Dashboard() {
       toast.error('Erro no teste de login. Verifique o console.');
     } finally {
       setIsTestingLogin(false);
+    }
+  };
+
+  const handleFixPasswords = async () => {
+    setIsFixingPasswords(true);
+    try {
+      await fixClientPasswords();
+      toast.success('Correção de senhas concluída! Verifique o console e emails.');
+    } catch (error) {
+      toast.error('Erro na correção de senhas. Verifique o console.');
+    } finally {
+      setIsFixingPasswords(false);
+    }
+  };
+
+  const handleDiagnose = async () => {
+    setIsDiagnosing(true);
+    try {
+      await diagnoseClientAuth();
+      toast.success('Diagnóstico concluído! Verifique o console para detalhes.');
+    } catch (error) {
+      toast.error('Erro no diagnóstico. Verifique o console.');
+    } finally {
+      setIsDiagnosing(false);
     }
   };
 
@@ -134,12 +162,21 @@ export function Dashboard() {
             Setup Inicial - Criar Contas de Login
           </CardTitle>
           <CardDescription className="text-yellow-700 dark:text-yellow-300">
-            Execute este processo uma vez para criar contas de login para todos os clientes cadastrados. 
-            Senha padrão: <strong>cliente123</strong>
+            <strong>Siga esta sequência para resolver problemas de login dos clientes:</strong><br/>
+            1. <strong>Diagnóstico Completo</strong> - Verifica situação atual de todos os clientes<br/>
+            2. <strong>Corrigir Senhas</strong> - Envia reset de senha por email quando necessário<br/>
+            3. <strong>Testar Login</strong> - Confirma se todos conseguem acessar com senha: <strong>cliente123</strong>
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex gap-2 flex-wrap">
+            <Button 
+              onClick={handleDiagnose} 
+              disabled={isDiagnosing}
+              className="bg-purple-600 hover:bg-purple-700 text-white"
+            >
+              {isDiagnosing ? 'Diagnosticando...' : 'Diagnóstico Completo'}
+            </Button>
             <Button 
               onClick={handleCreateAccounts} 
               disabled={isCreatingAccounts}
@@ -154,6 +191,14 @@ export function Dashboard() {
               className="border-blue-600 text-blue-700 hover:bg-blue-50"
             >
               {isTestingLogin ? 'Testando...' : 'Testar Login'}
+            </Button>
+            <Button 
+              onClick={handleFixPasswords} 
+              disabled={isFixingPasswords}
+              variant="outline"
+              className="border-red-600 text-red-700 hover:bg-red-50"
+            >
+              {isFixingPasswords ? 'Corrigindo...' : 'Corrigir Senhas'}
             </Button>
             <Button 
               onClick={handleResetPasswords} 
