@@ -20,6 +20,7 @@ export type Database = {
           cidade: string | null
           cnpj: string
           created_at: string
+          edi_id: string | null
           email: string
           email_liberacao_autorizada: string | null
           email_nota_fiscal: string | null
@@ -27,10 +28,14 @@ export type Database = {
           email_solicitacao_liberacao: string | null
           endereco: string | null
           estado: string | null
+          external_id: string | null
           id: string
+          integration_metadata: Json | null
+          last_sync: string | null
           nome_fantasia: string | null
           razao_social: string
           status: string
+          sync_status: string | null
           telefone: string | null
           transportadora_id: string
           updated_at: string
@@ -40,6 +45,7 @@ export type Database = {
           cidade?: string | null
           cnpj: string
           created_at?: string
+          edi_id?: string | null
           email: string
           email_liberacao_autorizada?: string | null
           email_nota_fiscal?: string | null
@@ -47,10 +53,14 @@ export type Database = {
           email_solicitacao_liberacao?: string | null
           endereco?: string | null
           estado?: string | null
+          external_id?: string | null
           id?: string
+          integration_metadata?: Json | null
+          last_sync?: string | null
           nome_fantasia?: string | null
           razao_social: string
           status?: string
+          sync_status?: string | null
           telefone?: string | null
           transportadora_id: string
           updated_at?: string
@@ -60,6 +70,7 @@ export type Database = {
           cidade?: string | null
           cnpj?: string
           created_at?: string
+          edi_id?: string | null
           email?: string
           email_liberacao_autorizada?: string | null
           email_nota_fiscal?: string | null
@@ -67,10 +78,14 @@ export type Database = {
           email_solicitacao_liberacao?: string | null
           endereco?: string | null
           estado?: string | null
+          external_id?: string | null
           id?: string
+          integration_metadata?: Json | null
+          last_sync?: string | null
           nome_fantasia?: string | null
           razao_social?: string
           status?: string
+          sync_status?: string | null
           telefone?: string | null
           transportadora_id?: string
           updated_at?: string
@@ -93,10 +108,15 @@ export type Database = {
           created_at: string
           data_pagamento: string | null
           data_vencimento: string
+          edi_id: string | null
+          external_id: string | null
           id: string
+          integration_metadata: Json | null
+          last_sync: string | null
           numero_cte: string
           observacoes: string | null
           status: string
+          sync_status: string | null
           transportadora_id: string
           updated_at: string
           valor: number | null
@@ -108,10 +128,15 @@ export type Database = {
           created_at?: string
           data_pagamento?: string | null
           data_vencimento: string
+          edi_id?: string | null
+          external_id?: string | null
           id?: string
+          integration_metadata?: Json | null
+          last_sync?: string | null
           numero_cte: string
           observacoes?: string | null
           status?: string
+          sync_status?: string | null
           transportadora_id: string
           updated_at?: string
           valor?: number | null
@@ -123,13 +148,117 @@ export type Database = {
           created_at?: string
           data_pagamento?: string | null
           data_vencimento?: string
+          edi_id?: string | null
+          external_id?: string | null
           id?: string
+          integration_metadata?: Json | null
+          last_sync?: string | null
           numero_cte?: string
           observacoes?: string | null
           status?: string
+          sync_status?: string | null
           transportadora_id?: string
           updated_at?: string
           valor?: number | null
+        }
+        Relationships: []
+      }
+      integration_configs: {
+        Row: {
+          api_key: string | null
+          certificate_path: string | null
+          config_data: Json | null
+          created_at: string | null
+          endpoint_url: string | null
+          id: string
+          integration_type: string
+          is_active: boolean | null
+          last_sync: string | null
+          password: string | null
+          transportadora_id: string
+          updated_at: string | null
+          username: string | null
+        }
+        Insert: {
+          api_key?: string | null
+          certificate_path?: string | null
+          config_data?: Json | null
+          created_at?: string | null
+          endpoint_url?: string | null
+          id?: string
+          integration_type: string
+          is_active?: boolean | null
+          last_sync?: string | null
+          password?: string | null
+          transportadora_id: string
+          updated_at?: string | null
+          username?: string | null
+        }
+        Update: {
+          api_key?: string | null
+          certificate_path?: string | null
+          config_data?: Json | null
+          created_at?: string | null
+          endpoint_url?: string | null
+          id?: string
+          integration_type?: string
+          is_active?: boolean | null
+          last_sync?: string | null
+          password?: string | null
+          transportadora_id?: string
+          updated_at?: string | null
+          username?: string | null
+        }
+        Relationships: []
+      }
+      integration_logs: {
+        Row: {
+          created_at: string | null
+          error_details: Json | null
+          external_id: string | null
+          id: string
+          integration_type: string
+          message: string | null
+          operation: string
+          record_id: string | null
+          request_data: Json | null
+          response_data: Json | null
+          retry_count: number | null
+          status: string
+          table_name: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          error_details?: Json | null
+          external_id?: string | null
+          id?: string
+          integration_type: string
+          message?: string | null
+          operation: string
+          record_id?: string | null
+          request_data?: Json | null
+          response_data?: Json | null
+          retry_count?: number | null
+          status?: string
+          table_name: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          error_details?: Json | null
+          external_id?: string | null
+          id?: string
+          integration_type?: string
+          message?: string | null
+          operation?: string
+          record_id?: string | null
+          request_data?: Json | null
+          response_data?: Json | null
+          retry_count?: number | null
+          status?: string
+          table_name?: string
+          updated_at?: string | null
         }
         Relationships: []
       }
@@ -139,9 +268,14 @@ export type Database = {
           cnpj_fornecedor: string
           created_at: string
           data_recebimento: string
+          edi_id: string | null
+          external_id: string | null
           fornecedor: string
           id: string
+          integration_metadata: Json | null
+          last_sync: string | null
           localizacao: string
+          nfe_key: string | null
           numero_nf: string
           numero_pedido: string
           ordem_compra: string
@@ -149,6 +283,7 @@ export type Database = {
           produto: string
           quantidade: number
           status: string
+          sync_status: string | null
           transportadora_id: string
           updated_at: string
           volume: number
@@ -158,9 +293,14 @@ export type Database = {
           cnpj_fornecedor: string
           created_at?: string
           data_recebimento: string
+          edi_id?: string | null
+          external_id?: string | null
           fornecedor: string
           id?: string
+          integration_metadata?: Json | null
+          last_sync?: string | null
           localizacao: string
+          nfe_key?: string | null
           numero_nf: string
           numero_pedido: string
           ordem_compra: string
@@ -168,6 +308,7 @@ export type Database = {
           produto: string
           quantidade: number
           status?: string
+          sync_status?: string | null
           transportadora_id: string
           updated_at?: string
           volume: number
@@ -177,9 +318,14 @@ export type Database = {
           cnpj_fornecedor?: string
           created_at?: string
           data_recebimento?: string
+          edi_id?: string | null
+          external_id?: string | null
           fornecedor?: string
           id?: string
+          integration_metadata?: Json | null
+          last_sync?: string | null
           localizacao?: string
+          nfe_key?: string | null
           numero_nf?: string
           numero_pedido?: string
           ordem_compra?: string
@@ -187,6 +333,7 @@ export type Database = {
           produto?: string
           quantidade?: number
           status?: string
+          sync_status?: string | null
           transportadora_id?: string
           updated_at?: string
           volume?: number
@@ -213,7 +360,11 @@ export type Database = {
           cliente_id: string
           created_at: string
           data_solicitacao: string
+          edi_id: string | null
+          external_id: string | null
           id: string
+          integration_metadata: Json | null
+          last_sync: string | null
           nota_fiscal_id: string
           numero_pedido: string
           ordem_compra: string
@@ -223,6 +374,7 @@ export type Database = {
           quantidade: number
           responsavel: string
           status: string
+          sync_status: string | null
           transportadora_id: string
           updated_at: string
           volume: number
@@ -231,7 +383,11 @@ export type Database = {
           cliente_id: string
           created_at?: string
           data_solicitacao?: string
+          edi_id?: string | null
+          external_id?: string | null
           id?: string
+          integration_metadata?: Json | null
+          last_sync?: string | null
           nota_fiscal_id: string
           numero_pedido: string
           ordem_compra: string
@@ -241,6 +397,7 @@ export type Database = {
           quantidade: number
           responsavel: string
           status?: string
+          sync_status?: string | null
           transportadora_id: string
           updated_at?: string
           volume: number
@@ -249,7 +406,11 @@ export type Database = {
           cliente_id?: string
           created_at?: string
           data_solicitacao?: string
+          edi_id?: string | null
+          external_id?: string | null
           id?: string
+          integration_metadata?: Json | null
+          last_sync?: string | null
           nota_fiscal_id?: string
           numero_pedido?: string
           ordem_compra?: string
@@ -259,6 +420,7 @@ export type Database = {
           quantidade?: number
           responsavel?: string
           status?: string
+          sync_status?: string | null
           transportadora_id?: string
           updated_at?: string
           volume?: number
@@ -293,13 +455,18 @@ export type Database = {
           created_at: string
           data_expedicao: string | null
           data_liberacao: string
+          edi_id: string | null
+          external_id: string | null
           id: string
+          integration_metadata: Json | null
+          last_sync: string | null
           nota_fiscal_id: string
           numero_pedido: string
           ordem_compra: string
           pedido_liberacao_id: string
           peso: number
           quantidade: number
+          sync_status: string | null
           transportadora_id: string
           transportadora_responsavel: string
           updated_at: string
@@ -310,13 +477,18 @@ export type Database = {
           created_at?: string
           data_expedicao?: string | null
           data_liberacao?: string
+          edi_id?: string | null
+          external_id?: string | null
           id?: string
+          integration_metadata?: Json | null
+          last_sync?: string | null
           nota_fiscal_id: string
           numero_pedido: string
           ordem_compra: string
           pedido_liberacao_id: string
           peso: number
           quantidade: number
+          sync_status?: string | null
           transportadora_id: string
           transportadora_responsavel: string
           updated_at?: string
@@ -327,13 +499,18 @@ export type Database = {
           created_at?: string
           data_expedicao?: string | null
           data_liberacao?: string
+          edi_id?: string | null
+          external_id?: string | null
           id?: string
+          integration_metadata?: Json | null
+          last_sync?: string | null
           nota_fiscal_id?: string
           numero_pedido?: string
           ordem_compra?: string
           pedido_liberacao_id?: string
           peso?: number
           quantidade?: number
+          sync_status?: string | null
           transportadora_id?: string
           transportadora_responsavel?: string
           updated_at?: string
@@ -394,6 +571,36 @@ export type Database = {
           name?: string
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      status_mappings: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          external_status: string
+          id: string
+          integration_type: string
+          internal_status: string
+          table_name: string
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          external_status: string
+          id?: string
+          integration_type: string
+          internal_status: string
+          table_name: string
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          external_status?: string
+          id?: string
+          integration_type?: string
+          internal_status?: string
+          table_name?: string
         }
         Relationships: []
       }

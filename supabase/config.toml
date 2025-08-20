@@ -2,3 +2,6 @@ project_id = "vyqnnnyamoovzxmuvtkl"
 
 [functions.send-notification-email]
 verify_jwt = false
+
+[functions.integration-sync]
+verify_jwt = true
