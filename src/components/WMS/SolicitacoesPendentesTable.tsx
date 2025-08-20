@@ -9,44 +9,118 @@ import {
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Clock, CheckCircle, X } from 'lucide-react';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { Clock, CheckCircle, X, Truck } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
+import { useWMS } from '@/contexts/WMSContext';
+import { PedidoLiberacao } from '@/types/wms';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 
-// Tipo temporário para solicitações de carregamento
-interface SolicitacaoCarregamento {
-  id: string;
-  nfVinculada: string;
-  numeroPedido: string;
-  ordemCompra: string;
-  cliente: string;
-  produto: string;
-  quantidade: number;
-  peso: number;
-  volume: number;
-  dataSolicitacao: string;
-  status: 'Pendente' | 'Aprovada' | 'Rejeitada';
-  prioridade: 'Alta' | 'Média' | 'Baixa';
+const formSchema = z.object({
+  transportadora: z.string().min(1, 'Transportadora é obrigatória'),
+  dataExpedicao: z.string().optional()
+});
+
+type FormData = z.infer<typeof formSchema>;
+
+function AprovarDialog({ pedido }: { pedido: PedidoLiberacao }) {
+  const { liberarPedido } = useWMS();
+  const [open, setOpen] = useState(false);
+  
+  const form = useForm<FormData>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      transportadora: '',
+      dataExpedicao: ''
+    }
+  });
+
+  const onSubmit = async (data: FormData) => {
+    try {
+      await liberarPedido(pedido.id, data.transportadora, data.dataExpedicao);
+      toast.success(`Pedido aprovado e liberado para a transportadora: ${data.transportadora}`);
+      setOpen(false);
+      form.reset();
+    } catch (error) {
+      console.error('Erro ao aprovar pedido:', error);
+      toast.error('Erro ao aprovar pedido');
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button
+          size="sm"
+          variant="outline"
+          className="text-success border-success hover:bg-success hover:text-success-foreground"
+        >
+          <CheckCircle className="w-3 h-3 mr-1" />
+          Aprovar
+        </Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Truck className="w-5 h-5" />
+            Aprovar Pedido de Liberação
+          </DialogTitle>
+          <DialogDescription>
+            Pedido: {pedido.numeroPedido} - NF: {pedido.nfVinculada}
+          </DialogDescription>
+        </DialogHeader>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <FormField
+              control={form.control}
+              name="transportadora"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Transportadora Responsável *</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Nome da transportadora" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="dataExpedicao"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Data de Expedição (Opcional)</FormLabel>
+                  <FormControl>
+                    <Input type="date" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <div className="flex justify-end gap-2">
+              <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+                Cancelar
+              </Button>
+              <Button type="submit" className="bg-success text-success-foreground hover:bg-success/80">
+                Confirmar Aprovação
+              </Button>
+            </div>
+          </form>
+        </Form>
+      </DialogContent>
+    </Dialog>
+  );
 }
 
 export function SolicitacoesPendentesTable() {
-  // Dados temporários para demonstração
-  const [solicitacoes] = useState<SolicitacaoCarregamento[]>([
-    {
-      id: '1',
-      nfVinculada: 'NF-2024-001',
-      numeroPedido: 'PED-001',
-      ordemCompra: 'OC-2024-001',
-      cliente: 'Premium Corp',
-      produto: 'Produtos Eletrônicos',
-      quantidade: 100,
-      peso: 50.5,
-      volume: 2.5,
-      dataSolicitacao: '2024-01-15',
-      status: 'Pendente',
-      prioridade: 'Alta'
-    }
-  ]);
+  const { pedidosLiberacao } = useWMS();
 
   const getPriorityColor = (prioridade: string) => {
     switch (prioridade) {
@@ -61,17 +135,12 @@ export function SolicitacoesPendentesTable() {
     }
   };
 
-  const handleAprovar = (solicitacao: SolicitacaoCarregamento) => {
-    toast.success(`Solicitação de carregamento aprovada para NF: ${solicitacao.nfVinculada}`);
-    // Aqui implementaremos a lógica de aprovação
+  const handleRejeitar = (pedido: PedidoLiberacao) => {
+    // TODO: Implementar lógica de rejeição (remover da lista ou marcar como rejeitado)
+    toast.error(`Solicitação de carregamento rejeitada para NF: ${pedido.nfVinculada}`);
   };
 
-  const handleRejeitar = (solicitacao: SolicitacaoCarregamento) => {
-    toast.error(`Solicitação de carregamento rejeitada para NF: ${solicitacao.nfVinculada}`);
-    // Aqui implementaremos a lógica de rejeição
-  };
-
-  const solicitacoesPendentes = solicitacoes.filter(s => s.status === 'Pendente');
+  const pedidosPendentes = pedidosLiberacao.filter(p => p.status === 'Em análise');
 
   return (
     <Card>
@@ -103,37 +172,29 @@ export function SolicitacoesPendentesTable() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {solicitacoesPendentes.map((solicitacao) => (
-                <TableRow key={solicitacao.id}>
-                  <TableCell className="font-medium">{solicitacao.nfVinculada}</TableCell>
-                  <TableCell>{solicitacao.numeroPedido}</TableCell>
-                  <TableCell>{solicitacao.ordemCompra}</TableCell>
-                  <TableCell>{solicitacao.cliente}</TableCell>
-                  <TableCell>{solicitacao.produto}</TableCell>
-                  <TableCell>{solicitacao.quantidade}</TableCell>
-                  <TableCell>{solicitacao.peso.toFixed(1)}</TableCell>
-                  <TableCell>{solicitacao.volume.toFixed(2)}</TableCell>
-                  <TableCell>{new Date(solicitacao.dataSolicitacao).toLocaleDateString('pt-BR')}</TableCell>
+              {pedidosPendentes.map((pedido) => (
+                <TableRow key={pedido.id}>
+                  <TableCell className="font-medium">{pedido.nfVinculada}</TableCell>
+                  <TableCell>{pedido.numeroPedido}</TableCell>
+                  <TableCell>{pedido.ordemCompra}</TableCell>
+                  <TableCell>{pedido.cliente}</TableCell>
+                  <TableCell>{pedido.produto}</TableCell>
+                  <TableCell>{pedido.quantidade}</TableCell>
+                  <TableCell>{pedido.peso.toFixed(1)}</TableCell>
+                  <TableCell>{pedido.volume.toFixed(2)}</TableCell>
+                  <TableCell>{new Date(pedido.dataSolicitacao).toLocaleDateString('pt-BR')}</TableCell>
                   <TableCell>
-                    <Badge className={getPriorityColor(solicitacao.prioridade)}>
-                      {solicitacao.prioridade}
+                    <Badge className={getPriorityColor(pedido.prioridade)}>
+                      {pedido.prioridade}
                     </Badge>
                   </TableCell>
                   <TableCell className="text-center">
                     <div className="flex gap-2 justify-center">
+                      <AprovarDialog pedido={pedido} />
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => handleAprovar(solicitacao)}
-                        className="text-success border-success hover:bg-success hover:text-success-foreground"
-                      >
-                        <CheckCircle className="w-3 h-3 mr-1" />
-                        Aprovar
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleRejeitar(solicitacao)}
+                        onClick={() => handleRejeitar(pedido)}
                         className="text-destructive border-destructive hover:bg-destructive hover:text-destructive-foreground"
                       >
                         <X className="w-3 h-3 mr-1" />
@@ -147,7 +208,7 @@ export function SolicitacoesPendentesTable() {
           </Table>
         </div>
 
-        {solicitacoesPendentes.length === 0 && (
+        {pedidosPendentes.length === 0 && (
           <div className="text-center py-8 text-muted-foreground">
             <Clock className="w-12 h-12 mx-auto mb-4 opacity-50" />
             <p>Nenhuma solicitação de carregamento pendente</p>
