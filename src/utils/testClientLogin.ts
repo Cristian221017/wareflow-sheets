@@ -5,7 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
  */
 export const testClientLogin = async () => {
   const clients = [
-    { email: 'comercial@rodoveigatransportes.com.br', password: 'cliente123' },
+    { email: 'Comercial@rodoveigatransportes.com.br', password: 'cliente123' },
     { email: 'contato@premiumcorp.com', password: 'cliente123' }
   ];
 

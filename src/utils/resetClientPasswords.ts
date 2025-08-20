@@ -7,7 +7,7 @@ export const resetClientPasswords = async () => {
   try {
     // Lista de clientes e suas novas senhas
     const clientCredentials = [
-      { email: 'comercial@rodoveigatransportes.com.br', password: 'cliente123' },
+      { email: 'Comercial@rodoveigatransportes.com.br', password: 'cliente123' },
       { email: 'contato@premiumcorp.com', password: 'cliente123' }
     ];
 

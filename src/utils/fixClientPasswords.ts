@@ -9,7 +9,7 @@ export const fixClientPasswords = async () => {
 
     // Lista de clientes para corrigir
     const clientsToFix = [
-      { email: 'comercial@rodoveigatransportes.com.br', password: 'cliente123' },
+      { email: 'Comercial@rodoveigatransportes.com.br', password: 'cliente123' },
       { email: 'contato@premiumcorp.com', password: 'cliente123' }
     ];
 
