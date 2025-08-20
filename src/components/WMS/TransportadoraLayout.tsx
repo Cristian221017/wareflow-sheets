@@ -33,7 +33,6 @@ export function TransportadoraLayout() {
   const { user, logout } = useAuth();
   const [isNFDialogOpen, setIsNFDialogOpen] = useState(false);
   const [isPedidoDialogOpen, setIsPedidoDialogOpen] = useState(false);
-  const [isClienteDialogOpen, setIsClienteDialogOpen] = useState(false);
   const [isDocumentoDialogOpen, setIsDocumentoDialogOpen] = useState(false);
   const [isIntegracaoDialogOpen, setIsIntegracaoDialogOpen] = useState(false);
   const [isCadastroUserDialogOpen, setIsCadastroUserDialogOpen] = useState(false);
@@ -94,18 +93,6 @@ export function TransportadoraLayout() {
             
             {/* Desktop Actions */}
             <div className="hidden lg:flex gap-2 xl:gap-3">
-              <Dialog open={isClienteDialogOpen} onOpenChange={setIsClienteDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button className="bg-primary hover:bg-primary/90 text-primary-foreground">
-                    <User className="w-4 h-4 mr-2" />
-                    Cadastro de Cliente
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="max-w-[95vw] sm:max-w-4xl max-h-[90vh] overflow-y-auto">
-                  <FormCadastroCliente />
-                </DialogContent>
-              </Dialog>
-
               <Button 
                 onClick={() => setShowClientes(true)}
                 className="bg-secondary hover:bg-secondary/90 text-secondary-foreground"
@@ -187,18 +174,6 @@ export function TransportadoraLayout() {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-56">
-                    <Dialog open={isClienteDialogOpen} onOpenChange={setIsClienteDialogOpen}>
-                      <DialogTrigger asChild>
-                        <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                          <User className="w-4 h-4 mr-2" />
-                          Cadastro de Cliente
-                        </DropdownMenuItem>
-                      </DialogTrigger>
-                      <DialogContent className="max-w-[95vw] max-h-[90vh] overflow-y-auto">
-                        <FormCadastroCliente />
-                      </DialogContent>
-                    </Dialog>
-
                     <DropdownMenuItem onClick={() => setShowClientes(true)}>
                       <User className="w-4 h-4 mr-2" />
                       Clientes
