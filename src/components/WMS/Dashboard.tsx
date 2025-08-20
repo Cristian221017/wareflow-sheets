@@ -5,6 +5,8 @@ import { Button } from '@/components/ui/button';
 import { useWMS } from '@/contexts/WMSContext';
 import { useMemo, useState } from 'react';
 import { createAccountsForExistingClients } from '@/utils/createClientAccounts';
+import { resetClientPasswords } from '@/utils/resetClientPasswords';
+import { testClientLogin } from '@/utils/testClientLogin';
 import { toast } from 'sonner';
 
 const COLORS = ['hsl(var(--success))', 'hsl(var(--warning))', 'hsl(var(--error))'];
@@ -12,6 +14,8 @@ const COLORS = ['hsl(var(--success))', 'hsl(var(--warning))', 'hsl(var(--error))
 export function Dashboard() {
   const { notasFiscais, pedidosLiberacao, pedidosLiberados } = useWMS();
   const [isCreatingAccounts, setIsCreatingAccounts] = useState(false);
+  const [isResettingPasswords, setIsResettingPasswords] = useState(false);
+  const [isTestingLogin, setIsTestingLogin] = useState(false);
 
   const handleCreateAccounts = async () => {
     setIsCreatingAccounts(true);
@@ -22,6 +26,30 @@ export function Dashboard() {
       toast.error('Erro ao criar contas. Verifique o console.');
     } finally {
       setIsCreatingAccounts(false);
+    }
+  };
+
+  const handleResetPasswords = async () => {
+    setIsResettingPasswords(true);
+    try {
+      await resetClientPasswords();
+      toast.success('Verificação de senhas concluída! Verifique o console.');
+    } catch (error) {
+      toast.error('Erro ao verificar senhas. Verifique o console.');
+    } finally {
+      setIsResettingPasswords(false);
+    }
+  };
+
+  const handleTestLogin = async () => {
+    setIsTestingLogin(true);
+    try {
+      await testClientLogin();
+      toast.success('Teste de login concluído! Verifique o console para detalhes.');
+    } catch (error) {
+      toast.error('Erro no teste de login. Verifique o console.');
+    } finally {
+      setIsTestingLogin(false);
     }
   };
 
@@ -111,13 +139,31 @@ export function Dashboard() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Button 
-            onClick={handleCreateAccounts} 
-            disabled={isCreatingAccounts}
-            className="bg-yellow-600 hover:bg-yellow-700 text-white"
-          >
-            {isCreatingAccounts ? 'Criando contas...' : 'Criar Contas para Clientes Existentes'}
-          </Button>
+          <div className="flex gap-2 flex-wrap">
+            <Button 
+              onClick={handleCreateAccounts} 
+              disabled={isCreatingAccounts}
+              className="bg-yellow-600 hover:bg-yellow-700 text-white"
+            >
+              {isCreatingAccounts ? 'Criando contas...' : 'Criar Contas'}
+            </Button>
+            <Button 
+              onClick={handleTestLogin} 
+              disabled={isTestingLogin}
+              variant="outline"
+              className="border-blue-600 text-blue-700 hover:bg-blue-50"
+            >
+              {isTestingLogin ? 'Testando...' : 'Testar Login'}
+            </Button>
+            <Button 
+              onClick={handleResetPasswords} 
+              disabled={isResettingPasswords}
+              variant="outline"
+              className="border-yellow-600 text-yellow-700 hover:bg-yellow-50"
+            >
+              {isResettingPasswords ? 'Verificando...' : 'Resetar Senhas'}
+            </Button>
+          </div>
         </CardContent>
       </Card>
 
