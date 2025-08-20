@@ -26,11 +26,11 @@ import { FileText, Send, Trash2 } from 'lucide-react';
 
 const getStatusColor = (status: NotaFiscal['status']) => {
   switch (status) {
-    case 'Em separação':
+    case 'Armazenada':
       return 'bg-success text-success-foreground';
-    case 'Liberada para carregar':
+    case 'Ordem Solicitada':
       return 'bg-warning text-warning-foreground';
-    case 'Carregamento solicitado':
+    case 'Solicitação Confirmada':
       return 'bg-muted text-muted-foreground';
     default:
       return 'bg-muted text-muted-foreground';
@@ -97,7 +97,7 @@ function SolicitarLiberacaoDialog({ notaFiscal }: { notaFiscal: NotaFiscal }) {
         <Button 
           variant="outline" 
           size="sm"
-          disabled={notaFiscal.status === 'Carregamento solicitado'}
+          disabled={notaFiscal.status === 'Solicitação Confirmada'}
           className="gap-1"
         >
           <Send className="w-3 h-3" />
@@ -388,14 +388,14 @@ export function NotasFiscaisTable() {
               {filteredNFs.map((nf) => (
                 <TableRow 
                   key={nf.id}
-                  className={cn(
-                     isOverdue(nf.dataRecebimento) && nf.status === 'Em separação' 
-                       ? 'bg-destructive/10 hover:bg-destructive/20' 
-                       : '',
-                     nf.status === 'Liberada para carregar' 
-                       ? 'bg-warning/10 hover:bg-warning/20' 
-                       : ''
-                  )}
+                   className={cn(
+                      isOverdue(nf.dataRecebimento) && nf.status === 'Armazenada' 
+                        ? 'bg-destructive/10 hover:bg-destructive/20' 
+                        : '',
+                      nf.status === 'Ordem Solicitada' 
+                        ? 'bg-warning/10 hover:bg-warning/20' 
+                        : ''
+                   )}
                 >
                   <TableCell className="font-medium">{nf.numeroNF}</TableCell>
                   <TableCell className="text-primary font-medium">{nf.numeroPedido}</TableCell>

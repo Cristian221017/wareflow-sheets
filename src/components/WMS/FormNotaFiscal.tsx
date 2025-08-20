@@ -25,7 +25,7 @@ const formSchema = z.object({
   peso: z.coerce.number().min(0.1, 'Peso deve ser maior que 0'),
   volume: z.coerce.number().min(0.01, 'Volume deve ser maior que 0'),
   localizacao: z.string().min(1, 'Localização é obrigatória'),
-  status: z.enum(['Em separação', 'Liberada para carregar', 'Carregamento solicitado'])
+  status: z.enum(['Armazenada', 'Ordem Solicitada', 'Solicitação Confirmada'])
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -49,7 +49,7 @@ export function FormNotaFiscal() {
       peso: 0,
       volume: 0,
       localizacao: '',
-      status: 'Em separação'
+      status: 'Armazenada'
     }
   });
 
@@ -305,9 +305,9 @@ export function FormNotaFiscal() {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="Em separação">Em separação</SelectItem>
-                        <SelectItem value="Liberada para carregar">Liberada para carregar</SelectItem>
-                        <SelectItem value="Carregamento solicitado">Carregamento solicitado</SelectItem>
+                        <SelectItem value="Armazenada">Armazenada</SelectItem>
+                        <SelectItem value="Ordem Solicitada">Ordem Solicitada</SelectItem>
+                        <SelectItem value="Solicitação Confirmada">Solicitação Confirmada</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />

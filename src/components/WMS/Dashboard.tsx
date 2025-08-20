@@ -13,18 +13,18 @@ export function Dashboard() {
     // Status distribution
     const statusData = [
       { 
-        name: 'Em separação', 
-        value: notasFiscais.filter(nf => nf.status === 'Em separação').length,
+        name: 'Armazenada', 
+        value: notasFiscais.filter(nf => nf.status === 'Armazenada').length,
         color: COLORS[0]
       },
       { 
-        name: 'Liberada para carregar',
-        value: notasFiscais.filter(nf => nf.status === 'Liberada para carregar').length,
+        name: 'Ordem Solicitada',
+        value: notasFiscais.filter(nf => nf.status === 'Ordem Solicitada').length,
         color: COLORS[1]
       },
       { 
-        name: 'Carregamento solicitado',
-        value: notasFiscais.filter(nf => nf.status === 'Carregamento solicitado').length,
+        name: 'Solicitação Confirmada',
+        value: notasFiscais.filter(nf => nf.status === 'Solicitação Confirmada').length,
         color: COLORS[2]
       }
     ];

@@ -33,11 +33,11 @@ import { toast } from 'sonner';
 
 const getStatusColor = (status: string) => {
   switch (status) {
-    case 'Em separação':
+    case 'Armazenada':
       return 'bg-success text-success-foreground';
-    case 'Liberada para carregar':
+    case 'Ordem Solicitada':
       return 'bg-warning text-warning-foreground';
-    case 'Carregamento solicitado':
+    case 'Solicitação Confirmada':
       return 'bg-muted text-muted-foreground';
     default:
       return 'bg-muted text-muted-foreground';
@@ -132,7 +132,7 @@ export function ClienteMercadoriasTable() {
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
-      const availableNFs = clienteNFs.filter(nf => nf.status === 'Em separação').map(nf => nf.id);
+      const availableNFs = clienteNFs.filter(nf => nf.status === 'Armazenada').map(nf => nf.id);
       setSelectedNFs(availableNFs);
     } else {
       setSelectedNFs([]);
@@ -161,8 +161,8 @@ export function ClienteMercadoriasTable() {
   };
 
   const selectedNFsForBulk = clienteNFs.filter(nf => selectedNFs.includes(nf.id));
-  const allAvailableSelected = clienteNFs.filter(nf => nf.status === 'Em separação').length > 0 && 
-    clienteNFs.filter(nf => nf.status === 'Em separação').every(nf => selectedNFs.includes(nf.id));
+  const allAvailableSelected = clienteNFs.filter(nf => nf.status === 'Armazenada').length > 0 && 
+    clienteNFs.filter(nf => nf.status === 'Armazenada').every(nf => selectedNFs.includes(nf.id));
 
   return (
     <Card>
@@ -203,9 +203,9 @@ export function ClienteMercadoriasTable() {
                 </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">Todos os status</SelectItem>
-                    <SelectItem value="Em separação">Em separação</SelectItem>
-                    <SelectItem value="Liberada para carregar">Liberada para carregar</SelectItem>
-                    <SelectItem value="Carregamento solicitado">Carregamento solicitado</SelectItem>
+                    <SelectItem value="Armazenada">Armazenada</SelectItem>
+                    <SelectItem value="Ordem Solicitada">Ordem Solicitada</SelectItem>
+                    <SelectItem value="Solicitação Confirmada">Solicitação Confirmada</SelectItem>
                   </SelectContent>
               </Select>
             </div>
@@ -305,12 +305,12 @@ export function ClienteMercadoriasTable() {
               
               {clienteNFs.map((nf) => {
                 const isNFOverdue = isOverdue(nf.dataRecebimento);
-                const canSelect = nf.status === 'Em separação';
+                const canSelect = nf.status === 'Armazenada';
                 
                 return (
                   <Card key={nf.id} className={`p-4 ${
-                    isNFOverdue && nf.status === 'Em separação' ? 'border-destructive' : ''
-                  } ${nf.status === 'Liberada para carregar' ? 'border-warning' : ''}`}>
+                    isNFOverdue && nf.status === 'Armazenada' ? 'border-destructive' : ''
+                  } ${nf.status === 'Ordem Solicitada' ? 'border-warning' : ''}`}>
                     <div className="space-y-3">
                       {/* Header with selection and NF number */}
                       <div className="flex items-center justify-between">
@@ -351,7 +351,7 @@ export function ClienteMercadoriasTable() {
                           <span className="text-muted-foreground">Data Receb.:</span>
                           <p className="font-medium">
                             {new Date(nf.dataRecebimento).toLocaleDateString('pt-BR')}
-                            {isNFOverdue && nf.status === 'Em separação' && (
+                            {isNFOverdue && nf.status === 'Armazenada' && (
                               <Badge variant="destructive" className="text-xs ml-1">Vencida</Badge>
                             )}
                           </p>
@@ -379,7 +379,7 @@ export function ClienteMercadoriasTable() {
                       </div>
 
                       {/* Action button */}
-                      {nf.status === 'Em separação' && (
+                      {nf.status === 'Armazenada' && (
                         <Button
                           size="sm"
                           variant="outline"
@@ -428,14 +428,14 @@ export function ClienteMercadoriasTable() {
             <TableBody>
               {clienteNFs.map((nf) => {
                 const isNFOverdue = isOverdue(nf.dataRecebimento);
-                const canSelect = nf.status === 'Em separação';
+                const canSelect = nf.status === 'Armazenada';
                 
                 return (
                   <TableRow 
                     key={nf.id}
                     className={`
-                      ${isNFOverdue && nf.status === 'Em separação' ? 'bg-destructive/10' : ''}
-                      ${nf.status === 'Liberada para carregar' ? 'bg-warning/10' : ''}
+                      ${isNFOverdue && nf.status === 'Armazenada' ? 'bg-destructive/10' : ''}
+                      ${nf.status === 'Ordem Solicitada' ? 'bg-warning/10' : ''}
                     `}
                   >
                     <TableCell>
@@ -452,7 +452,7 @@ export function ClienteMercadoriasTable() {
                     <TableCell>
                       <div className="flex items-center gap-1">
                         {new Date(nf.dataRecebimento).toLocaleDateString('pt-BR')}
-                        {isNFOverdue && nf.status === 'Em separação' && (
+                        {isNFOverdue && nf.status === 'Armazenada' && (
                           <Badge variant="destructive" className="text-xs">Vencida</Badge>
                         )}
                       </div>
@@ -469,9 +469,9 @@ export function ClienteMercadoriasTable() {
                         {nf.status}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-center">
-                      {nf.status === 'Em separação' && (
-                        <Button
+                  <TableCell className="text-center">
+                    {nf.status === 'Armazenada' && (
+                      <Button
                           size="sm"
                           variant="outline"
                           onClick={() => handleSolicitarLiberacao(nf)}

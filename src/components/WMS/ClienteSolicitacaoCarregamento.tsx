@@ -17,8 +17,8 @@ import { NotaFiscal } from '@/types/wms';
 export function ClienteSolicitacaoCarregamento() {
   const { notasFiscais } = useWMS();
   
-  // Filtrar NFs que estão "Liberada para carregar"
-  const nfsLiberadas = notasFiscais.filter(nf => nf.status === 'Liberada para carregar');
+  // Filtrar NFs que estão "Ordem Solicitada"
+  const nfsLiberadas = notasFiscais.filter(nf => nf.status === 'Ordem Solicitada');
 
   const handleSolicitarCarregamento = async (nf: NotaFiscal) => {
     try {

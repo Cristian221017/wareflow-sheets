@@ -14,7 +14,7 @@ export interface NotaFiscal {
   peso: number;
   volume: number;
   localizacao: string;
-  status: 'Em separação' | 'Liberada para carregar' | 'Carregamento solicitado';
+  status: 'Armazenada' | 'Ordem Solicitada' | 'Solicitação Confirmada';
   createdAt: string;
 }
 
