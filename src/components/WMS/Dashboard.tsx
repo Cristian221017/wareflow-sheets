@@ -10,6 +10,7 @@ import { testClientLogin } from '@/utils/testClientLogin';
 import { fixClientPasswords } from '@/utils/fixClientPasswords';
 import { diagnoseClientAuth } from '@/utils/diagnoseClientAuth';
 import { fixSpecificUser } from '@/utils/fixSpecificUser';
+import { debugSpecificUser } from '@/utils/debugSpecificUser';
 import { toast } from 'sonner';
 
 const COLORS = ['hsl(var(--success))', 'hsl(var(--warning))', 'hsl(var(--error))'];
@@ -22,6 +23,7 @@ export function Dashboard() {
   const [isFixingPasswords, setIsFixingPasswords] = useState(false);
   const [isDiagnosing, setIsDiagnosing] = useState(false);
   const [isFixingSpecific, setIsFixingSpecific] = useState(false);
+  const [isDebugging, setIsDebugging] = useState(false);
 
   const handleCreateAccounts = async () => {
     setIsCreatingAccounts(true);
@@ -92,6 +94,18 @@ export function Dashboard() {
       toast.error('Erro na correção. Verifique o console.');
     } finally {
       setIsFixingSpecific(false);
+    }
+  };
+
+  const handleDebugSpecific = async () => {
+    setIsDebugging(true);
+    try {
+      await debugSpecificUser();
+      toast.success('Debug concluído! Verifique o console para diagnóstico detalhado.');
+    } catch (error) {
+      toast.error('Erro no debug. Verifique o console.');
+    } finally {
+      setIsDebugging(false);
     }
   };
 
@@ -184,6 +198,13 @@ export function Dashboard() {
         </CardHeader>
         <CardContent>
           <div className="flex gap-2 flex-wrap">
+            <Button 
+              onClick={handleDebugSpecific} 
+              disabled={isDebugging}
+              className="bg-orange-600 hover:bg-orange-700 text-white"
+            >
+              {isDebugging ? 'Debugando...' : 'Debug Específico'}
+            </Button>
             <Button 
               onClick={handleFixSpecific} 
               disabled={isFixingSpecific}
