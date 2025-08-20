@@ -114,6 +114,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         console.log('Cliente profile loaded:', userData);
         setUser(userData);
+        setLoading(false);
         return;
       }
 
@@ -140,6 +141,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       console.log('User profile loaded:', userData);
       setUser(userData);
+      setLoading(false);
     } catch (error) {
       console.error('Error in loadUserProfile:', error);
       // Even if there's an error, create a basic user object to prevent infinite loading
@@ -153,6 +155,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         transportadoraId: undefined
       };
       setUser(userData);
+      setLoading(false);
     }
   };
 
