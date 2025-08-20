@@ -164,37 +164,35 @@ export function FormCadastroUsuario({ userType = 'admin_transportadora', usuario
         }
       }
 
-      // Enviar email de notificação
-      try {
-        await supabase.functions.invoke('send-notification-email', {
-          body: {
-            to: values.email,
-            subject: 'Bem-vindo ao Sistema WMS - Conta Criada',
-            type: 'usuario_cadastrado',
-            data: {
-              nome: values.name,
-              email: values.email,
-              senha: values.senha,
-              role: values.role
-            }
+      // Enviar email de notificação de forma assíncrona (não bloqueante)
+      supabase.functions.invoke('send-notification-email', {
+        body: {
+          to: values.email,
+          subject: 'Bem-vindo ao Sistema WMS - Conta Criada',
+          type: 'usuario_cadastrado',  
+          data: {
+            nome: values.name,
+            email: values.email,
+            senha: values.senha,
+            role: values.role
           }
-        });
-      } catch (emailError) {
+        }
+      }).catch(emailError => {
         console.error('Erro ao enviar email de notificação:', emailError);
-      }
+      });
       
-        toast.success('Usuário cadastrado com sucesso!');
-      }
-      
-      form.reset();
-      onSuccess?.();
-    } catch (error) {
-      console.error('Erro ao cadastrar usuário:', error);
-      toast.error('Erro ao cadastrar usuário');
-    } finally {
-      setIsLoading(false);
+      toast.success('Usuário cadastrado com sucesso!');
     }
-  };
+    
+    form.reset();
+    onSuccess?.();
+  } catch (error) {
+    console.error('Erro ao cadastrar usuário:', error);
+    toast.error('Erro ao cadastrar usuário');
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   const getRoleOptions = () => {
     switch (userType) {

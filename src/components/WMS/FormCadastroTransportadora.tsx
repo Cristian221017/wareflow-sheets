@@ -147,23 +147,21 @@ export function FormCadastroTransportadora({ transportadoraToEdit, onSuccess }: 
           }
         }
 
-        // Enviar email de notificação
-        try {
-          await supabase.functions.invoke('send-notification-email', {
-            body: {
-              to: values.email,
-              subject: 'Bem-vindo ao Sistema WMS - Transportadora Cadastrada',
-              type: 'transportadora_cadastrada',
-              data: {
-                nome: values.razaoSocial,
-                email: values.email,
-                senha: values.senha
-              }
+        // Enviar email de notificação de forma assíncrona (não bloqueante)
+        supabase.functions.invoke('send-notification-email', {
+          body: {
+            to: values.email,
+            subject: 'Bem-vindo ao Sistema WMS - Transportadora Cadastrada',
+            type: 'transportadora_cadastrada',
+            data: {
+              nome: values.razaoSocial,
+              email: values.email,
+              senha: values.senha
             }
-          });
-        } catch (emailError) {
+          }
+        }).catch(emailError => {
           console.error('Erro ao enviar email de notificação:', emailError);
-        }
+        });
         
         toast.success('Transportadora cadastrada com sucesso!');
       }

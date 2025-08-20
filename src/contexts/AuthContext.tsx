@@ -239,24 +239,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         throw error;
       }
 
-      // Enviar email de notificação
-      try {
-        await supabase.functions.invoke('send-notification-email', {
-          body: {
-            to: clienteData.email,
-            subject: 'Bem-vindo ao Sistema WMS - Cliente Cadastrado',
-            type: 'cliente_cadastrado',
-            data: {
-              nome: clienteData.name,
-              email: clienteData.email,
-              senha: clienteData.senha
-            }
+      // Enviar email de notificação de forma assíncrona (não bloqueante)
+      supabase.functions.invoke('send-notification-email', {
+        body: {
+          to: clienteData.email,
+          subject: 'Bem-vindo ao Sistema WMS - Cliente Cadastrado',
+          type: 'cliente_cadastrado',
+          data: {
+            nome: clienteData.name,
+            email: clienteData.email,
+            senha: clienteData.senha
           }
-        });
-      } catch (emailError) {
+        }
+      }).catch(emailError => {
         console.error('Erro ao enviar email de notificação:', emailError);
-        // Não falha o cadastro se o email falhar
-      }
+      });
 
       // Refresh clientes list
       await loadClientes();
