@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
+import { AlterarSenhaDialog } from './AlterarSenhaDialog';
 import { toast } from 'sonner';
 import { 
   Users, 
@@ -15,7 +16,9 @@ import {
   UserCheck,
   UserX,
   Calendar,
-  Building2
+  Building2,
+  KeyRound,
+  Edit
 } from 'lucide-react';
 
 interface Usuario {
@@ -49,6 +52,8 @@ export function SuperAdminUsuarios() {
     transportadora_id: '',
     role: 'operador' as const
   });
+  const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false);
+  const [passwordChangeUser, setPasswordChangeUser] = useState<Usuario | null>(null);
 
   useEffect(() => {
     loadData();
@@ -315,6 +320,18 @@ export function SuperAdminUsuarios() {
                       </TableCell>
                       <TableCell>
                         <div className="flex space-x-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setPasswordChangeUser(usuario);
+                              setIsPasswordDialogOpen(true);
+                            }}
+                            title="Alterar senha"
+                          >
+                            <KeyRound className="w-3 h-3" />
+                          </Button>
+                          
                           {assignment ? (
                             <Button 
                               variant="outline" 
@@ -324,6 +341,7 @@ export function SuperAdminUsuarios() {
                                 assignment.transportadora_id, 
                                 assignment.is_active
                               )}
+                              title="Ativar/Desativar usuário"
                             >
                               {assignment.is_active ? (
                                 <UserX className="w-3 h-3" />
@@ -351,8 +369,9 @@ export function SuperAdminUsuarios() {
                                     role: (assignment?.role as any) || 'operador'
                                   });
                                 }}
+                                title="Editar usuário"
                               >
-                                {assignment ? 'Editar' : 'Atribuir'}
+                                <Edit className="w-3 h-3" />
                               </Button>
                             </DialogTrigger>
                             <DialogContent>
@@ -441,6 +460,19 @@ export function SuperAdminUsuarios() {
           )}
         </CardContent>
       </Card>
+
+      {/* Dialog para alterar senha */}
+      {passwordChangeUser && (
+        <AlterarSenhaDialog 
+          isOpen={isPasswordDialogOpen}
+          onClose={() => {
+            setIsPasswordDialogOpen(false);
+            setPasswordChangeUser(null);
+          }}
+          userEmail={passwordChangeUser.email}
+          userName={passwordChangeUser.name}
+        />
+      )}
     </div>
   );
 }

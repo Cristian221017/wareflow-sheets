@@ -32,21 +32,39 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 
-export function FormCadastroTransportadora() {
+interface Transportadora {
+  id: string;
+  razaoSocial: string;
+  email: string;
+  cnpj: string;
+  telefone?: string;
+  endereco?: string;
+  cidade?: string;
+  estado?: string;
+  cep?: string;
+  nomeFantasia?: string;
+}
+
+interface FormCadastroTransportadoraProps {
+  transportadoraToEdit?: Transportadora;
+  onSuccess?: () => void;
+}
+
+export function FormCadastroTransportadora({ transportadoraToEdit, onSuccess }: FormCadastroTransportadoraProps) {
   const [isLoading, setIsLoading] = useState(false);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      razaoSocial: '',
-      email: '',
-      cnpj: '',
-      telefone: '',
-      endereco: '',
-      cidade: '',
-      estado: '',
-      cep: '',
-      nomeFantasia: '',
+      razaoSocial: transportadoraToEdit?.razaoSocial || '',
+      email: transportadoraToEdit?.email || '',
+      cnpj: transportadoraToEdit?.cnpj || '',
+      telefone: transportadoraToEdit?.telefone || '',
+      endereco: transportadoraToEdit?.endereco || '',
+      cidade: transportadoraToEdit?.cidade || '',
+      estado: transportadoraToEdit?.estado || '',
+      cep: transportadoraToEdit?.cep || '',
+      nomeFantasia: transportadoraToEdit?.nomeFantasia || '',
       senha: '',
     },
   });
@@ -54,82 +72,104 @@ export function FormCadastroTransportadora() {
   const onSubmit = async (values: FormValues) => {
     setIsLoading(true);
     try {
-      // Criar usuário no Supabase Auth se senha foi fornecida
-      let authUserId = null;
-      if (values.senha) {
-        const { data: authData, error: authError } = await supabase.auth.signUp({
-          email: values.email,
-          password: values.senha,
-          options: {
-            emailRedirectTo: `${window.location.origin}/transportadora`
-          }
-        });
+      if (transportadoraToEdit) {
+        // Editar transportadora existente
+        const { error } = await supabase
+          .from('transportadoras')
+          .update({
+            razao_social: values.razaoSocial,
+            cnpj: values.cnpj,
+            email: values.email,
+            telefone: values.telefone,
+            endereco: values.endereco,
+            cidade: values.cidade,
+            estado: values.estado,
+            cep: values.cep,
+            nome_fantasia: values.nomeFantasia,
+          })
+          .eq('id', transportadoraToEdit.id);
 
-        if (authError) {
-          console.error('Erro ao criar usuário de autenticação:', authError);
-        } else {
-          authUserId = authData.user?.id;
-        }
-      }
-
-      // Inserir transportadora
-      const { data: transportadoraData, error: transportadoraError } = await supabase
-        .from('transportadoras')
-        .insert([{
-          razao_social: values.razaoSocial,
-          cnpj: values.cnpj,
-          email: values.email,
-          telefone: values.telefone,
-          endereco: values.endereco,
-          cidade: values.cidade,
-          estado: values.estado,
-          cep: values.cep,
-          nome_fantasia: values.nomeFantasia,
-        }])
-        .select()
-        .single();
-
-      if (transportadoraError) {
-        throw transportadoraError;
-      }
-
-      // Se criou usuário de auth, associar à transportadora como admin
-      if (authUserId && transportadoraData) {
-        const { error: userTransportadoraError } = await supabase
-          .from('user_transportadoras')
-          .insert([{
-            user_id: authUserId,
-            transportadora_id: transportadoraData.id,
-            role: 'admin_transportadora',
-            is_active: true
-          }]);
-
-        if (userTransportadoraError) {
-          console.error('Erro ao associar usuário à transportadora:', userTransportadoraError);
-        }
-      }
-
-      // Enviar email de notificação
-      try {
-        await supabase.functions.invoke('send-notification-email', {
-          body: {
-            to: values.email,
-            subject: 'Bem-vindo ao Sistema WMS - Transportadora Cadastrada',
-            type: 'transportadora_cadastrada',
-            data: {
-              nome: values.razaoSocial,
-              email: values.email,
-              senha: values.senha
+        if (error) throw error;
+        toast.success('Transportadora atualizada com sucesso!');
+      } else {
+        // Criar usuário no Supabase Auth se senha foi fornecida
+        let authUserId = null;
+        if (values.senha) {
+          const { data: authData, error: authError } = await supabase.auth.signUp({
+            email: values.email,
+            password: values.senha,
+            options: {
+              emailRedirectTo: `${window.location.origin}/transportadora`
             }
+          });
+
+          if (authError) {
+            console.error('Erro ao criar usuário de autenticação:', authError);
+          } else {
+            authUserId = authData.user?.id;
           }
-        });
-      } catch (emailError) {
-        console.error('Erro ao enviar email de notificação:', emailError);
-        // Não falha o cadastro se o email falhar
+        }
+
+        // Inserir transportadora
+        const { data: transportadoraData, error: transportadoraError } = await supabase
+          .from('transportadoras')
+          .insert([{
+            razao_social: values.razaoSocial,
+            cnpj: values.cnpj,
+            email: values.email,
+            telefone: values.telefone,
+            endereco: values.endereco,
+            cidade: values.cidade,
+            estado: values.estado,
+            cep: values.cep,
+            nome_fantasia: values.nomeFantasia,
+          }])
+          .select()
+          .single();
+
+        if (transportadoraError) {
+          throw transportadoraError;
+        }
+
+        // Se criou usuário de auth, associar à transportadora como admin
+        if (authUserId && transportadoraData) {
+          const { error: userTransportadoraError } = await supabase
+            .from('user_transportadoras')
+            .insert([{
+              user_id: authUserId,
+              transportadora_id: transportadoraData.id,
+              role: 'admin_transportadora',
+              is_active: true
+            }]);
+
+          if (userTransportadoraError) {
+            console.error('Erro ao associar usuário à transportadora:', userTransportadoraError);
+          }
+        }
+
+        // Enviar email de notificação
+        try {
+          await supabase.functions.invoke('send-notification-email', {
+            body: {
+              to: values.email,
+              subject: 'Bem-vindo ao Sistema WMS - Transportadora Cadastrada',
+              type: 'transportadora_cadastrada',
+              data: {
+                nome: values.razaoSocial,
+                email: values.email,
+                senha: values.senha
+              }
+            }
+          });
+        } catch (emailError) {
+          console.error('Erro ao enviar email de notificação:', emailError);
+        }
+        
+        toast.success('Transportadora cadastrada com sucesso!');
       }
       
-      toast.success('Transportadora cadastrada com sucesso!');
       form.reset();
+      onSuccess?.();
     } catch (error) {
       console.error('Erro ao cadastrar transportadora:', error);
       toast.error('Erro ao cadastrar transportadora');
@@ -143,10 +183,10 @@ export function FormCadastroTransportadora() {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Building2 className="w-5 h-5 text-primary" />
-          Cadastro de Transportadora
+          {transportadoraToEdit ? 'Editar Transportadora' : 'Cadastro de Transportadora'}
         </CardTitle>
         <CardDescription>
-          Cadastre uma nova transportadora no sistema
+          {transportadoraToEdit ? 'Atualize os dados da transportadora' : 'Cadastre uma nova transportadora no sistema'}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -295,20 +335,23 @@ export function FormCadastroTransportadora() {
                   control={form.control}
                   name="senha"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Senha Temporária (Opcional)</FormLabel>
-                      <FormControl>
-                        <Input 
-                          type="password" 
-                          placeholder="Senha para a transportadora" 
-                          {...field} 
-                        />
-                      </FormControl>
-                      <FormMessage />
-                      <p className="text-xs text-muted-foreground">
-                        Se não informada, o usuário poderá usar "Esqueci minha senha" para criar uma
-                      </p>
-                    </FormItem>
+                  <FormItem>
+                    <FormLabel>{transportadoraToEdit ? 'Nova Senha (Opcional)' : 'Senha Temporária (Opcional)'}</FormLabel>
+                    <FormControl>
+                      <Input 
+                        type="password" 
+                        placeholder={transportadoraToEdit ? "Nova senha para a transportadora" : "Senha para a transportadora"} 
+                        {...field} 
+                      />
+                    </FormControl>
+                    <FormMessage />
+                    <p className="text-xs text-muted-foreground">
+                      {transportadoraToEdit 
+                        ? 'Deixe em branco para manter a senha atual'
+                        : 'Se não informada, o usuário poderá usar "Esqueci minha senha" para criar uma'
+                      }
+                    </p>
+                  </FormItem>
                   )}
                 />
               </div>
@@ -316,7 +359,10 @@ export function FormCadastroTransportadora() {
 
             <Button type="submit" disabled={isLoading} className="w-full">
               <Plus className="w-4 h-4 mr-2" />
-              {isLoading ? 'Cadastrando...' : 'Cadastrar Transportadora'}
+              {isLoading 
+                ? (transportadoraToEdit ? 'Atualizando...' : 'Cadastrando...') 
+                : (transportadoraToEdit ? 'Atualizar Transportadora' : 'Cadastrar Transportadora')
+              }
             </Button>
           </form>
         </Form>

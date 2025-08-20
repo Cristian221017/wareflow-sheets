@@ -31,44 +31,85 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 
+interface Usuario {
+  id: string;
+  name: string;
+  email: string;
+  role: 'admin_transportadora' | 'operador' | 'cliente';
+  transportadoraId?: string;
+}
+
 interface FormCadastroUsuarioProps {
   userType?: 'super_admin' | 'admin_transportadora' | 'cliente';
+  usuarioToEdit?: Usuario;
   onSuccess?: () => void;
 }
 
-export function FormCadastroUsuario({ userType = 'admin_transportadora', onSuccess }: FormCadastroUsuarioProps) {
+export function FormCadastroUsuario({ userType = 'admin_transportadora', usuarioToEdit, onSuccess }: FormCadastroUsuarioProps) {
   const [isLoading, setIsLoading] = useState(false);
   const { user } = useAuth();
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      name: '',
-      email: '',
-      role: userType === 'cliente' ? 'cliente' : 'operador',
+      name: usuarioToEdit?.name || '',
+      email: usuarioToEdit?.email || '',
+      role: usuarioToEdit?.role || (userType === 'cliente' ? 'cliente' : 'operador'),
       senha: '',
-      transportadoraId: user?.transportadoraId || '',
+      transportadoraId: usuarioToEdit?.transportadoraId || user?.transportadoraId || '',
     },
   });
 
   const onSubmit = async (values: FormValues) => {
     setIsLoading(true);
     try {
-      // Criar usuário no Supabase Auth se senha foi fornecida
-      let authUserId = null;
-      if (values.senha) {
-        const { data: authData, error: authError } = await supabase.auth.signUp({
-          email: values.email,
-          password: values.senha,
-          options: {
-            emailRedirectTo: `${window.location.origin}/${values.role === 'cliente' ? 'cliente' : 'transportadora'}`
-          }
-        });
+      if (usuarioToEdit) {
+        // Editar usuário existente
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .update({
+            name: values.name,
+            email: values.email,
+          })
+          .eq('user_id', usuarioToEdit.id);
 
-        if (authError) {
-          console.error('Erro ao criar usuário de autenticação:', authError);
-        } else {
-          authUserId = authData.user?.id;
+        if (profileError) {
+          console.error('Erro ao atualizar perfil:', profileError);
+          toast.error('Erro ao atualizar usuário');
+          return;
+        }
+
+        // Atualizar role se não for cliente
+        if (values.role !== 'cliente') {
+          const { error: roleError } = await supabase
+            .from('user_transportadoras')
+            .update({
+              role: values.role as 'admin_transportadora' | 'operador',
+            })
+            .eq('user_id', usuarioToEdit.id);
+
+          if (roleError) {
+            console.error('Erro ao atualizar role:', roleError);
+          }
+        }
+
+        toast.success('Usuário atualizado com sucesso!');
+      } else {
+        // Criar usuário no Supabase Auth se senha foi fornecida
+        let authUserId = null;
+        if (values.senha) {
+          const { data: authData, error: authError } = await supabase.auth.signUp({
+            email: values.email,
+            password: values.senha,
+            options: {
+              emailRedirectTo: `${window.location.origin}/${values.role === 'cliente' ? 'cliente' : 'transportadora'}`
+            }
+          });
+
+          if (authError) {
+            console.error('Erro ao criar usuário de autenticação:', authError);
+          } else {
+            authUserId = authData.user?.id;
         }
       }
 
@@ -142,7 +183,9 @@ export function FormCadastroUsuario({ userType = 'admin_transportadora', onSucce
         console.error('Erro ao enviar email de notificação:', emailError);
       }
       
-      toast.success('Usuário cadastrado com sucesso!');
+        toast.success('Usuário cadastrado com sucesso!');
+      }
+      
       form.reset();
       onSuccess?.();
     } catch (error) {
@@ -180,10 +223,10 @@ export function FormCadastroUsuario({ userType = 'admin_transportadora', onSucce
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <UserPlus className="w-5 h-5 text-primary" />
-          Cadastro de Usuário
+          {usuarioToEdit ? 'Editar Usuário' : 'Cadastro de Usuário'}
         </CardTitle>
         <CardDescription>
-          Cadastre um novo usuário para acessar o sistema
+          {usuarioToEdit ? 'Atualize os dados do usuário' : 'Cadastre um novo usuário para acessar o sistema'}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -248,20 +291,23 @@ export function FormCadastroUsuario({ userType = 'admin_transportadora', onSucce
                   control={form.control}
                   name="senha"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Senha Temporária (Opcional)</FormLabel>
-                      <FormControl>
-                        <Input 
-                          type="password" 
-                          placeholder="Senha para o usuário" 
-                          {...field} 
-                        />
-                      </FormControl>
-                      <FormMessage />
-                      <p className="text-xs text-muted-foreground">
-                        Se não informada, o usuário poderá usar "Esqueci minha senha"
-                      </p>
-                    </FormItem>
+                  <FormItem>
+                    <FormLabel>{usuarioToEdit ? 'Nova Senha (Opcional)' : 'Senha Temporária (Opcional)'}</FormLabel>
+                    <FormControl>
+                      <Input 
+                        type="password" 
+                        placeholder={usuarioToEdit ? "Nova senha para o usuário" : "Senha para o usuário"} 
+                        {...field} 
+                      />
+                    </FormControl>
+                    <FormMessage />
+                    <p className="text-xs text-muted-foreground">
+                      {usuarioToEdit 
+                        ? 'Deixe em branco para manter a senha atual'
+                        : 'Se não informada, o usuário poderá usar "Esqueci minha senha"'
+                      }
+                    </p>
+                  </FormItem>
                   )}
                 />
               </div>
@@ -269,7 +315,10 @@ export function FormCadastroUsuario({ userType = 'admin_transportadora', onSucce
 
             <Button type="submit" disabled={isLoading} className="w-full">
               <UserPlus className="w-4 h-4 mr-2" />
-              {isLoading ? 'Cadastrando...' : 'Cadastrar Usuário'}
+              {isLoading 
+                ? (usuarioToEdit ? 'Atualizando...' : 'Cadastrando...') 
+                : (usuarioToEdit ? 'Atualizar Usuário' : 'Cadastrar Usuário')
+              }
             </Button>
           </form>
         </Form>

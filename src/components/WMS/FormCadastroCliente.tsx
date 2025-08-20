@@ -15,6 +15,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { User, UserPlus } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
 const formSchema = z.object({
@@ -30,20 +31,36 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 
-export function FormCadastroCliente() {
+interface Cliente {
+  id: string;
+  name: string;
+  email: string;
+  cnpj: string;
+  emailNotaFiscal?: string;
+  emailSolicitacaoLiberacao?: string;
+  emailLiberacaoAutorizada?: string;
+  emailNotificacaoBoleto?: string;
+}
+
+interface FormCadastroClienteProps {
+  clienteToEdit?: Cliente;
+  onSuccess?: () => void;
+}
+
+export function FormCadastroCliente({ clienteToEdit, onSuccess }: FormCadastroClienteProps) {
   const { addCliente } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      name: '',
-      email: '',
-      cnpj: '',
-      emailNotaFiscal: '',
-      emailSolicitacaoLiberacao: '',
-      emailLiberacaoAutorizada: '',
-      emailNotificacaoBoleto: '',
+      name: clienteToEdit?.name || '',
+      email: clienteToEdit?.email || '',
+      cnpj: clienteToEdit?.cnpj || '',
+      emailNotaFiscal: clienteToEdit?.emailNotaFiscal || '',
+      emailSolicitacaoLiberacao: clienteToEdit?.emailSolicitacaoLiberacao || '',
+      emailLiberacaoAutorizada: clienteToEdit?.emailLiberacaoAutorizada || '',
+      emailNotificacaoBoleto: clienteToEdit?.emailNotificacaoBoleto || '',
       senha: '',
     },
   });
@@ -51,24 +68,61 @@ export function FormCadastroCliente() {
   const onSubmit = async (values: FormValues) => {
     setIsLoading(true);
     try {
-      await addCliente({
-        name: values.name,
-        email: values.email,
-        cnpj: values.cnpj,
-        emailNotaFiscal: values.emailNotaFiscal || undefined,
-        emailSolicitacaoLiberacao: values.emailSolicitacaoLiberacao || undefined,
-        emailLiberacaoAutorizada: values.emailLiberacaoAutorizada || undefined,
-        emailNotificacaoBoleto: values.emailNotificacaoBoleto || undefined,
-        senha: values.senha || undefined,
-      });
+      if (clienteToEdit) {
+        // Editar cliente existente
+        await updateCliente(clienteToEdit.id, {
+          name: values.name,
+          email: values.email,
+          cnpj: values.cnpj,
+          emailNotaFiscal: values.emailNotaFiscal || undefined,
+          emailSolicitacaoLiberacao: values.emailSolicitacaoLiberacao || undefined,
+          emailLiberacaoAutorizada: values.emailLiberacaoAutorizada || undefined,
+          emailNotificacaoBoleto: values.emailNotificacaoBoleto || undefined,
+          senha: values.senha || undefined,
+        });
+        toast.success('Cliente atualizado com sucesso!');
+      } else {
+        // Criar novo cliente
+        await addCliente({
+          name: values.name,
+          email: values.email,
+          cnpj: values.cnpj,
+          emailNotaFiscal: values.emailNotaFiscal || undefined,
+          emailSolicitacaoLiberacao: values.emailSolicitacaoLiberacao || undefined,
+          emailLiberacaoAutorizada: values.emailLiberacaoAutorizada || undefined,
+          emailNotificacaoBoleto: values.emailNotificacaoBoleto || undefined,
+          senha: values.senha || undefined,
+        });
+        toast.success('Cliente cadastrado com sucesso!');
+      }
       
-      toast.success('Cliente cadastrado com sucesso!');
       form.reset();
+      onSuccess?.();
     } catch (error) {
-      toast.error('Erro ao cadastrar cliente');
+      toast.error(`Erro ao ${clienteToEdit ? 'atualizar' : 'cadastrar'} cliente`);
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const updateCliente = async (id: string, cliente: any) => {
+    const { user } = useAuth();
+    if (!user?.transportadoraId) throw new Error('Transportadora não encontrada');
+    
+    const { error } = await supabase
+      .from('clientes')
+      .update({
+        razao_social: cliente.name,
+        email: cliente.email,
+        cnpj: cliente.cnpj,
+        email_nota_fiscal: cliente.emailNotaFiscal,
+        email_solicitacao_liberacao: cliente.emailSolicitacaoLiberacao,
+        email_liberacao_autorizada: cliente.emailLiberacaoAutorizada,
+        email_notificacao_boleto: cliente.emailNotificacaoBoleto,
+      })
+      .eq('id', id);
+    
+    if (error) throw error;
   };
 
   return (
@@ -76,10 +130,10 @@ export function FormCadastroCliente() {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <UserPlus className="w-5 h-5 text-primary" />
-          Cadastro de Cliente
+          {clienteToEdit ? 'Editar Cliente' : 'Cadastro de Cliente'}
         </CardTitle>
         <CardDescription>
-          Cadastre um novo cliente no sistema
+          {clienteToEdit ? 'Atualize os dados do cliente' : 'Cadastre um novo cliente no sistema'}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -224,20 +278,23 @@ export function FormCadastroCliente() {
                    control={form.control}
                    name="senha"
                    render={({ field }) => (
-                     <FormItem>
-                       <FormLabel>Senha Temporária (Opcional)</FormLabel>
-                       <FormControl>
-                         <Input 
-                           type="password" 
-                           placeholder="Senha para o cliente" 
-                           {...field} 
-                         />
-                       </FormControl>
-                       <FormMessage />
-                       <p className="text-xs text-muted-foreground">
-                         Se não informada, o cliente poderá usar "Esqueci minha senha" para criar uma
-                       </p>
-                     </FormItem>
+                      <FormItem>
+                        <FormLabel>{clienteToEdit ? 'Nova Senha (Opcional)' : 'Senha Temporária (Opcional)'}</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="password" 
+                            placeholder={clienteToEdit ? "Nova senha para o cliente" : "Senha para o cliente"} 
+                            {...field} 
+                          />
+                        </FormControl>
+                        <FormMessage />
+                        <p className="text-xs text-muted-foreground">
+                          {clienteToEdit 
+                            ? 'Deixe em branco para manter a senha atual'
+                            : 'Se não informada, o cliente poderá usar "Esqueci minha senha" para criar uma'
+                          }
+                        </p>
+                      </FormItem>
                    )}
                  />
                </div>
@@ -246,7 +303,10 @@ export function FormCadastroCliente() {
 
             <Button type="submit" disabled={isLoading} className="w-full">
               <User className="w-4 h-4 mr-2" />
-              {isLoading ? 'Cadastrando...' : 'Cadastrar Cliente'}
+              {isLoading 
+                ? (clienteToEdit ? 'Atualizando...' : 'Cadastrando...') 
+                : (clienteToEdit ? 'Atualizar Cliente' : 'Cadastrar Cliente')
+              }
             </Button>
           </form>
         </Form>

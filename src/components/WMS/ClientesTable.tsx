@@ -35,6 +35,7 @@ interface Cliente {
   email_nota_fiscal?: string;
   email_solicitacao_liberacao?: string;
   email_liberacao_autorizada?: string;
+  email_notificacao_boleto?: string;
 }
 
 export function ClientesTable() {
@@ -43,6 +44,7 @@ export function ClientesTable() {
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingCliente, setEditingCliente] = useState<Cliente | null>(null);
 
   const loadClientes = async () => {
     if (!user?.transportadoraId) return;
@@ -184,6 +186,36 @@ export function ClientesTable() {
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
+                        <Dialog>
+                          <DialogTrigger asChild>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setEditingCliente(cliente)}
+                              title="Editar cliente"
+                            >
+                              <Edit className="w-4 h-4" />
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent className="max-w-[95vw] sm:max-w-4xl max-h-[90vh] overflow-y-auto">
+                            <FormCadastroCliente 
+                              clienteToEdit={{
+                                id: cliente.id,
+                                name: cliente.razao_social,
+                                email: cliente.email,
+                                cnpj: cliente.cnpj,
+                                emailNotaFiscal: cliente.email_nota_fiscal || '',
+                                emailSolicitacaoLiberacao: cliente.email_solicitacao_liberacao || '',
+                                emailLiberacaoAutorizada: cliente.email_liberacao_autorizada || '',
+                                emailNotificacaoBoleto: cliente.email_notificacao_boleto || '',
+                              }}
+                              onSuccess={() => {
+                                loadClientes();
+                                setEditingCliente(null);
+                              }}
+                            />
+                          </DialogContent>
+                        </Dialog>
                         <Button
                           variant="outline"
                           size="sm"
