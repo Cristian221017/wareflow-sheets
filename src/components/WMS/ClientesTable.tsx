@@ -135,7 +135,12 @@ export function ClientesTable() {
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-[95vw] sm:max-w-4xl max-h-[90vh] overflow-y-auto">
-              <FormCadastroCliente />
+              <FormCadastroCliente 
+                onSuccess={() => {
+                  loadClientes();
+                  setIsDialogOpen(false);
+                }}
+              />
             </DialogContent>
           </Dialog>
         </div>

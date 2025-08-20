@@ -105,10 +105,12 @@ export function FormCadastroCliente({ clienteToEdit, onSuccess }: FormCadastroCl
     }
   };
 
+  const { user } = useAuth();
+
   const updateCliente = async (id: string, cliente: any) => {
-    const { user } = useAuth();
     if (!user?.transportadoraId) throw new Error('Transportadora não encontrada');
     
+    // Atualizar dados do cliente na tabela clientes
     const { error } = await supabase
       .from('clientes')
       .update({
@@ -123,6 +125,22 @@ export function FormCadastroCliente({ clienteToEdit, onSuccess }: FormCadastroCl
       .eq('id', id);
     
     if (error) throw error;
+
+    // Se uma nova senha foi fornecida, criar/atualizar autenticação
+    if (cliente.senha) {
+      try {
+        await supabase.auth.signUp({
+          email: cliente.email,
+          password: cliente.senha,
+          options: {
+            emailRedirectTo: `${window.location.origin}/cliente`
+          }
+        });
+      } catch (authError) {
+        console.error('Erro ao atualizar autenticação:', authError);
+        // Não falha a atualização se a auth falhar
+      }
+    }
   };
 
   return (

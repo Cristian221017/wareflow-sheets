@@ -52,7 +52,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const timeoutId = setTimeout(() => {
       console.log('Auth loading timeout reached');
       setLoading(false);
-    }, 15000);
+    }, 5000);
 
     return () => {
       subscription.unsubscribe();
