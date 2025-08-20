@@ -55,23 +55,31 @@ export function AlterarSenhaDialog({ isOpen, onClose, userEmail, userName }: Alt
   const onSubmit = async (values: FormValues) => {
     setIsLoading(true);
     try {
-      // Enviar email de redefinição de senha
-      const { error } = await supabase.auth.resetPasswordForEmail(userEmail, {
-        redirectTo: `${window.location.origin}/auth/reset-password`,
+      // Criar/atualizar usuário no Supabase Auth
+      const { error } = await supabase.auth.signUp({
+        email: userEmail,
+        password: values.novaSenha,
+        options: {
+          emailRedirectTo: `${window.location.origin}/cliente`,
+          data: {
+            name: userName
+          }
+        }
       });
 
-      if (error) {
-        console.error('Erro ao enviar email de redefinição:', error);
-        toast.error('Erro ao solicitar alteração de senha');
+      // Se o usuário já existe, o erro será sobre usuário já registrado, isso é ok
+      if (error && !error.message.includes('already registered')) {
+        console.error('Erro ao criar/atualizar usuário:', error);
+        toast.error('Erro ao configurar acesso');
         return;
       }
 
-      // Simular atualização local da senha (em uma implementação real, isso seria feito no backend)
+      // Enviar email de notificação
       try {
         await supabase.functions.invoke('send-notification-email', {
           body: {
             to: userEmail,
-            subject: 'Senha Alterada - Sistema WMS',
+            subject: 'Acesso Criado - Sistema WMS',
             type: 'senha_alterada',
             data: {
               nome: userName,
@@ -84,12 +92,12 @@ export function AlterarSenhaDialog({ isOpen, onClose, userEmail, userName }: Alt
         console.error('Erro ao enviar email de notificação:', emailError);
       }
 
-      toast.success('Solicitação de alteração de senha enviada por email!');
+      toast.success('Acesso configurado com sucesso! O cliente pode fazer login no portal.');
       form.reset();
       onClose();
     } catch (error) {
-      console.error('Erro ao alterar senha:', error);
-      toast.error('Erro ao alterar senha');
+      console.error('Erro ao configurar acesso:', error);
+      toast.error('Erro ao configurar acesso');
     } finally {
       setIsLoading(false);
     }

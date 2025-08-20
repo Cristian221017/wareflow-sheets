@@ -64,28 +64,46 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       console.log('Loading user profile for:', supabaseUser.id);
       
-      // Get profile data with timeout
-      const profilePromise = supabase
+      // First check if this is a cliente (customer)
+      const { data: clienteData, error: clienteError } = await supabase
+        .from('clientes')
+        .select('*')
+        .eq('email', supabaseUser.email)
+        .eq('status', 'ativo')
+        .maybeSingle();
+
+      if (clienteData && !clienteError) {
+        // This is a cliente login
+        const userData: User = {
+          id: clienteData.id,
+          name: clienteData.razao_social,
+          email: clienteData.email,
+          type: 'cliente',
+          cnpj: clienteData.cnpj,
+          emailNotaFiscal: clienteData.email_nota_fiscal,
+          emailSolicitacaoLiberacao: clienteData.email_solicitacao_liberacao,
+          emailLiberacaoAutorizada: clienteData.email_liberacao_autorizada,
+          transportadoraId: clienteData.transportadora_id
+        };
+
+        console.log('Cliente profile loaded:', userData);
+        setUser(userData);
+        return;
+      }
+
+      // If not a cliente, check for regular user profile
+      const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('*')
         .eq('user_id', supabaseUser.id)
         .maybeSingle();
 
-      const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('Profile query timeout')), 5000)
-      );
-
-      const { data: profile, error: profileError } = await Promise.race([
-        profilePromise,
-        timeoutPromise
-      ]) as any;
-
       if (profileError && profileError.code !== 'PGRST116') {
         console.error('Error loading profile:', profileError);
       }
 
-      // Get user role and transportadora with timeout
-      const rolePromise = supabase
+      // Get user role and transportadora
+      const { data: userTransportadora, error: roleError } = await supabase
         .from('user_transportadoras')
         .select(`
           role,
@@ -96,16 +114,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .eq('is_active', true)
         .maybeSingle();
 
-      const { data: userTransportadora, error: roleError } = await Promise.race([
-        rolePromise,
-        timeoutPromise
-      ]) as any;
-
       if (roleError && roleError.code !== 'PGRST116') {
         console.error('Error loading user role:', roleError);
       }
 
-      // Create user data even if some queries failed
+      // Create user data for system users
       const userData: User = {
         id: supabaseUser.id,
         name: profile?.name || supabaseUser.email || '',
