@@ -68,7 +68,8 @@ export function FormNotaFiscal() {
         dataRecebimento: data.dataRecebimento,
         fornecedor: data.fornecedor,
         cnpj: data.cnpj,
-        cliente: selectedCliente.name, // Use the client name for the WMS context
+        clienteId: data.clienteId, // Pass the client ID directly
+        cliente: selectedCliente.name, // Keep for compatibility 
         cnpjCliente: selectedCliente.cnpj || '',
         produto: data.produto,
         quantidade: data.quantidade,

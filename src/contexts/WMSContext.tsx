@@ -240,11 +240,11 @@ export function WMSProvider({ children }: { children: React.ReactNode }) {
     }
 
     try {
-      // Find cliente in our loaded clientes by name (for backward compatibility)
-      const cliente = clientes.find(c => c.name === nf.cliente);
+      // Find cliente by ID directly
+      const cliente = clientes.find(c => c.id === nf.clienteId);
       console.log('Cliente encontrado:', cliente);
       if (!cliente) {
-        console.error('Cliente não encontrado. Nome procurado:', nf.cliente, 'Clientes disponíveis:', clientes.map(c => c.name));
+        console.error('Cliente não encontrado. ID procurado:', nf.clienteId, 'Clientes disponíveis:', clientes.map(c => ({ id: c.id, name: c.name })));
         throw new Error('Cliente não encontrado');
       }
 

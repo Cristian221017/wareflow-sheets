@@ -6,6 +6,7 @@ export interface NotaFiscal {
   dataRecebimento: string;
   fornecedor: string;
   cnpj: string;
+  clienteId?: string; // Add clienteId for proper client identification
   cliente: string;
   cnpjCliente: string;
   produto: string;
