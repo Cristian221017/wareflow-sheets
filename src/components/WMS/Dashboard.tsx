@@ -1,13 +1,29 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from 'recharts';
-import { Package, Clock, CheckCircle, TrendingUp } from 'lucide-react';
+import { Package, Clock, CheckCircle, TrendingUp, UserPlus } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { useWMS } from '@/contexts/WMSContext';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
+import { createAccountsForExistingClients } from '@/utils/createClientAccounts';
+import { toast } from 'sonner';
 
 const COLORS = ['hsl(var(--success))', 'hsl(var(--warning))', 'hsl(var(--error))'];
 
 export function Dashboard() {
   const { notasFiscais, pedidosLiberacao, pedidosLiberados } = useWMS();
+  const [isCreatingAccounts, setIsCreatingAccounts] = useState(false);
+
+  const handleCreateAccounts = async () => {
+    setIsCreatingAccounts(true);
+    try {
+      await createAccountsForExistingClients('cliente123');
+      toast.success('Contas criadas com sucesso! Senha padrão: cliente123');
+    } catch (error) {
+      toast.error('Erro ao criar contas. Verifique o console.');
+    } finally {
+      setIsCreatingAccounts(false);
+    }
+  };
 
   const dashboardData = useMemo(() => {
     // Status distribution
@@ -82,6 +98,29 @@ export function Dashboard() {
 
   return (
     <div className="space-y-6">
+      {/* Botão temporário para criar contas de clientes */}
+      <Card className="border-yellow-200 bg-yellow-50 dark:bg-yellow-950/10 dark:border-yellow-800">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-yellow-800 dark:text-yellow-200">
+            <UserPlus className="h-5 w-5" />
+            Setup Inicial - Criar Contas de Login
+          </CardTitle>
+          <CardDescription className="text-yellow-700 dark:text-yellow-300">
+            Execute este processo uma vez para criar contas de login para todos os clientes cadastrados. 
+            Senha padrão: <strong>cliente123</strong>
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button 
+            onClick={handleCreateAccounts} 
+            disabled={isCreatingAccounts}
+            className="bg-yellow-600 hover:bg-yellow-700 text-white"
+          >
+            {isCreatingAccounts ? 'Criando contas...' : 'Criar Contas para Clientes Existentes'}
+          </Button>
+        </CardContent>
+      </Card>
+
       {/* KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>

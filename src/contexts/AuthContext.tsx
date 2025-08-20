@@ -213,6 +213,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     try {
+      // 1. Inserir cliente na tabela clientes
       const { error } = await supabase
         .from('clientes')
         .insert([{
@@ -223,10 +224,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           email_nota_fiscal: clienteData.emailNotaFiscal,
           email_solicitacao_liberacao: clienteData.emailSolicitacaoLiberacao,
           email_liberacao_autorizada: clienteData.emailLiberacaoAutorizada,
+          email_notificacao_boleto: clienteData.emailNotificacaoBoleto,
         }]);
 
       if (error) {
         throw error;
+      }
+
+      // 2. Se uma senha foi fornecida, criar conta de usuário
+      if (clienteData.senha) {
+        try {
+          const { error: authError } = await supabase.auth.signUp({
+            email: clienteData.email,
+            password: clienteData.senha,
+            options: {
+              emailRedirectTo: `${window.location.origin}/cliente`,
+              data: {
+                name: clienteData.name,
+                cnpj: clienteData.cnpj
+              }
+            }
+          });
+
+          if (authError && !authError.message.includes('User already registered')) {
+            console.error('Erro ao criar conta de usuário:', authError);
+            // Não falha o cadastro do cliente se a auth falhar
+          }
+        } catch (authError) {
+          console.error('Erro ao criar autenticação:', authError);
+          // Não falha o cadastro do cliente se a auth falhar
+        }
       }
 
       await loadClientes();
