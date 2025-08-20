@@ -39,8 +39,8 @@ export const testClientLogin = async () => {
         console.log(`   Email confirmado: ${data.user?.email_confirmed_at ? 'Sim' : 'Não'}`);
         console.log(`   Última vez ativo: ${data.user?.last_sign_in_at}`);
         
-        // Fazer logout para próximo teste
-        await supabase.auth.signOut();
+        // Não fazer logout automático - deixar usuário logado se o teste passou
+        console.log(`⚠️  Usuário permanece logado para testes`);
       }
     } catch (error) {
       console.log(`❌ ERRO INESPERADO:`, error);
@@ -48,6 +48,7 @@ export const testClientLogin = async () => {
   }
 
   console.log('\n=== FIM DO TESTE ===');
+  console.log('💡 Se login funcionou, o usuário permanece logado');
   console.log('💡 Se houver problemas de confirmação, vá para:');
   console.log('   Supabase > Authentication > Settings > Desabilitar "Enable email confirmations"');
 };
