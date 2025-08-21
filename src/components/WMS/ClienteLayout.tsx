@@ -48,9 +48,9 @@ export function ClienteLayout() {
 
   const navigationItems = [
     { id: 'dashboard', label: 'Dashboard', icon: BarChart3, shortLabel: 'Início' },
-    { id: 'mercadorias', label: 'Mercadorias', icon: Package, shortLabel: 'Estoque' },
-    { id: 'pedidos', label: 'Carregamento Solicitado', icon: FileText, shortLabel: 'Pedir' },
-    { id: 'liberados', label: 'Confirmadas', icon: CheckCircle, shortLabel: 'OK' },
+    { id: 'mercadorias', label: 'Mercadorias', icon: Package, shortLabel: 'Armazenadas' },
+    { id: 'pedidos', label: 'Carregamento Solicitado', icon: FileText, shortLabel: 'Solicitadas' },
+    { id: 'liberados', label: 'Confirmadas', icon: CheckCircle, shortLabel: 'Confirmadas' },
     { id: 'financeiro', label: 'Financeiro', icon: Receipt, shortLabel: 'Fin' },
     { id: 'cadastro-usuario', label: 'Cadastro de Usuários', icon: UserPlus, shortLabel: 'Users' }
   ];
