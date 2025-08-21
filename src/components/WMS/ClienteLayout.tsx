@@ -9,6 +9,7 @@ import { ClienteSolicitacaoCarregamento } from './ClienteSolicitacaoCarregamento
 import { ClienteFinanceiro } from './ClienteFinanceiro';
 import { PedidosConfirmadosTable } from './PedidosConfirmadosTable';
 import { FormCadastroUsuario } from './FormCadastroUsuario';
+import FluxoNFs from './FluxoNFs';
 import { 
   Package, 
   FileText, 
@@ -35,7 +36,7 @@ import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 export function ClienteLayout() {
   const { user, logout } = useAuth();
   const { notasFiscais, pedidosLiberacao, pedidosLiberados } = useWMS();
-  const [activeTab, setActiveTab] = useState('dashboard');
+  const [activeTab, setActiveTab] = useState('fluxo-nfs');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isUserDialogOpen, setIsUserDialogOpen] = useState(false);
 
@@ -48,6 +49,7 @@ export function ClienteLayout() {
   });
 
   const navigationItems = [
+    { id: 'fluxo-nfs', label: 'Fluxo NFs', icon: Package, shortLabel: 'Fluxo' },
     { id: 'dashboard', label: 'Dashboard', icon: BarChart3, shortLabel: 'Início' },
     { id: 'mercadorias', label: 'Notas Fiscais', icon: Package, shortLabel: 'Notas' },
     { id: 'pedidos', label: 'Carregamento Solicitado', icon: FileText, shortLabel: 'Solicitadas' },
@@ -127,6 +129,8 @@ export function ClienteLayout() {
 
   const renderContent = () => {
     switch (activeTab) {
+      case 'fluxo-nfs':
+        return <FluxoNFs />;
       case 'dashboard':
         return <ClienteDashboard />;
       case 'mercadorias':

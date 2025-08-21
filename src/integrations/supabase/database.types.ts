@@ -383,6 +383,27 @@ export type Database = {
         }
         Returns: boolean
       }
+      nf_solicitar: {
+        Args: {
+          p_nf_id: string
+          p_user_id: string
+        }
+        Returns: undefined
+      }
+      nf_confirmar: {
+        Args: {
+          p_nf_id: string
+          p_user_id: string
+        }
+        Returns: undefined
+      }
+      nf_recusar: {
+        Args: {
+          p_nf_id: string
+          p_user_id: string
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       user_role: "super_admin" | "admin_transportadora" | "operador"

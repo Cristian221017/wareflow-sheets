@@ -264,6 +264,8 @@ export type Database = {
       }
       notas_fiscais: {
         Row: {
+          approved_at: string | null
+          approved_by: string | null
           cliente_id: string
           cnpj_fornecedor: string
           created_at: string
@@ -282,6 +284,8 @@ export type Database = {
           peso: number
           produto: string
           quantidade: number
+          requested_at: string | null
+          requested_by: string | null
           status: string
           sync_status: string | null
           transportadora_id: string
@@ -289,6 +293,8 @@ export type Database = {
           volume: number
         }
         Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
           cliente_id: string
           cnpj_fornecedor: string
           created_at?: string
@@ -307,6 +313,8 @@ export type Database = {
           peso: number
           produto: string
           quantidade: number
+          requested_at?: string | null
+          requested_by?: string | null
           status?: string
           sync_status?: string | null
           transportadora_id: string
@@ -314,6 +322,8 @@ export type Database = {
           volume: number
         }
         Update: {
+          approved_at?: string | null
+          approved_by?: string | null
           cliente_id?: string
           cnpj_fornecedor?: string
           created_at?: string
@@ -332,6 +342,8 @@ export type Database = {
           peso?: number
           produto?: string
           quantidade?: number
+          requested_at?: string | null
+          requested_by?: string | null
           status?: string
           sync_status?: string | null
           transportadora_id?: string
@@ -737,6 +749,18 @@ export type Database = {
         }
         Returns: boolean
       }
+      nf_confirmar: {
+        Args: { p_nf_id: string; p_user_id: string }
+        Returns: undefined
+      }
+      nf_recusar: {
+        Args: { p_nf_id: string; p_user_id: string }
+        Returns: undefined
+      }
+      nf_solicitar: {
+        Args: { p_nf_id: string; p_user_id: string }
+        Returns: undefined
+      }
       setup_demo_user: {
         Args: {
           transportadora_cnpj?: string
@@ -749,6 +773,7 @@ export type Database = {
       }
     }
     Enums: {
+      nf_status: "Armazenada" | "Ordem Solicitada" | "Solicitação Confirmada"
       user_role: "super_admin" | "admin_transportadora" | "operador" | "cliente"
     }
     CompositeTypes: {
@@ -877,6 +902,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      nf_status: ["Armazenada", "Ordem Solicitada", "Solicitação Confirmada"],
       user_role: ["super_admin", "admin_transportadora", "operador", "cliente"],
     },
   },

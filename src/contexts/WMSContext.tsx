@@ -3,6 +3,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './AuthContext';
 import { NotaFiscal, PedidoLiberacao, PedidoLiberado } from '@/types/wms';
 import { toast } from 'sonner';
+import { subscribeNfChanges } from '@/lib/realtimeNfs';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface WMSContextType {
   // Data
@@ -33,6 +35,7 @@ const WMSContext = createContext<WMSContextType | undefined>(undefined);
 
 export function WMSProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const [notasFiscais, setNotasFiscais] = useState<NotaFiscal[]>([]);
   const [pedidosLiberacao, setPedidosLiberacao] = useState<PedidoLiberacao[]>([]);
   const [pedidosLiberados, setPedidosLiberados] = useState<PedidoLiberado[]>([]);
@@ -482,10 +485,20 @@ export function WMSProvider({ children }: { children: ReactNode }) {
 
   // Load data on mount and when user changes
   useEffect(() => {
+    let unsubscribe: (() => void) | undefined;
+    
     if (user) {
       loadData();
+      // Configurar realtime para atualizar as queries das NFs
+      unsubscribe = subscribeNfChanges(queryClient);
     }
-  }, [user]);
+    
+    return () => {
+      if (unsubscribe) {
+        unsubscribe();
+      }
+    };
+  }, [user, queryClient]);
 
   // Legacy API functions for compatibility
   const addPedidoLiberacao = async (data: any) => {
