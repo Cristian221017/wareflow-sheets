@@ -523,7 +523,7 @@ export function WMSProvider({ children }: { children: React.ReactNode }) {
       console.log('🔄 Forçando atualização imediata do estado local...');
       setNotasFiscais(prev => prev.map(nf => 
         nf.id === notaFiscal.id 
-          ? { ...nf, status: 'Ordem Solicitada' }
+          ? { ...nf, status: 'Ordem Solicitada' as NotaFiscal['status'] }
           : nf
       ));
       
