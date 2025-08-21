@@ -428,9 +428,13 @@ export function WMSProvider({ children }: { children: React.ReactNode }) {
     }
 
     try {
+      console.log('🚀 INICIANDO SOLICITAÇÃO DE CARREGAMENTO:', pedido);
+      
       // Find cliente and nota fiscal
       const cliente = clientes.find(c => c.name === pedido.cliente);
       const notaFiscal = notasFiscais.find(nf => nf.numeroNF === pedido.nfVinculada);
+      
+      console.log('📊 Estado atual - Cliente:', cliente?.id, '| NF:', notaFiscal?.id, '| Status atual:', notaFiscal?.status);
       
       if (!cliente) {
         throw new Error('Cliente não encontrado');
@@ -450,7 +454,7 @@ export function WMSProvider({ children }: { children: React.ReactNode }) {
         throw new Error(`Não é possível solicitar carregamento. Status atual: ${notaFiscal.status}`);
       }
 
-      console.log('Criando pedido de liberação para NF:', notaFiscal.numeroNF);
+      console.log('✅ Validações passaram - Inserindo pedido no banco...');
 
       const { error } = await supabase
         .from('pedidos_liberacao')
@@ -472,27 +476,30 @@ export function WMSProvider({ children }: { children: React.ReactNode }) {
 
       if (error) throw error;
 
+      console.log('✅ Pedido inserido no banco com sucesso');
+
       // CRITICAL: Update nota fiscal status to "Ordem Solicitada" 
-      console.log('🔄 Atualizando NF para "Ordem Solicitada":', notaFiscal.numeroNF);
+      console.log('🔄 ATUALIZANDO STATUS DA NF para "Ordem Solicitada":', notaFiscal.numeroNF);
       const { error: updateError } = await supabase
         .from('notas_fiscais')
         .update({ status: 'Ordem Solicitada' })
         .eq('id', notaFiscal.id);
 
       if (updateError) {
-        console.error('❌ Erro ao atualizar status da NF:', updateError);
+        console.error('❌ ERRO CRÍTICO ao atualizar status da NF:', updateError);
         throw updateError;
       }
 
-      console.log('✅ Status da NF atualizado com sucesso');
+      console.log('✅ STATUS DA NF ATUALIZADO COM SUCESSO para "Ordem Solicitada"');
       
       // Force complete data reload for perfect synchronization
+      console.log('🔄 Recarregando dados para sincronização...');
       await Promise.all([
         loadNotasFiscais(),
         loadPedidosLiberacao()
       ]);
 
-      console.log('🔄 Dados recarregados após solicitação');
+      console.log('✅ FLUXO COMPLETO: NF movida de "Armazenada" para "Ordem Solicitada"');
 
       // Enviar notificação de rastreabilidade
       if (cliente?.emailSolicitacaoLiberacao) {
@@ -503,7 +510,7 @@ export function WMSProvider({ children }: { children: React.ReactNode }) {
         );
       }
     } catch (error) {
-      console.error('Error adding pedido liberacao:', error);
+      console.error('❌ ERRO NO FLUXO DE SOLICITAÇÃO:', error);
       throw error;
     }
   };
@@ -514,6 +521,8 @@ export function WMSProvider({ children }: { children: React.ReactNode }) {
     }
 
     try {
+      console.log('🚛 INICIANDO CONFIRMAÇÃO DE CARREGAMENTO:', { pedidoId, transportadora });
+      
       const pedido = pedidosLiberacao.find(p => p.id === pedidoId);
       if (!pedido) {
         throw new Error('Pedido não encontrado');
@@ -523,11 +532,13 @@ export function WMSProvider({ children }: { children: React.ReactNode }) {
       const cliente = clientes.find(c => c.name === pedido.cliente);
       const notaFiscal = notasFiscais.find(nf => nf.numeroNF === pedido.nfVinculada);
       
+      console.log('📊 Estado atual - Pedido:', pedido.numeroPedido, '| NF:', notaFiscal?.numeroNF, '| Status atual:', notaFiscal?.status);
+      
       if (!cliente || !notaFiscal) {
         throw new Error('Cliente ou nota fiscal não encontrado');
       }
 
-      console.log('Liberando pedido:', pedidoId, 'Transportadora:', transportadora);
+      console.log('✅ Validações passaram - Criando pedido liberado...');
 
       // Create liberado record
       const { error: insertError } = await supabase
@@ -549,6 +560,8 @@ export function WMSProvider({ children }: { children: React.ReactNode }) {
 
       if (insertError) throw insertError;
 
+      console.log('✅ Pedido liberado criado no banco');
+
       // Delete from pedidos_liberacao
       const { error: deleteError } = await supabase
         .from('pedidos_liberacao')
@@ -557,7 +570,9 @@ export function WMSProvider({ children }: { children: React.ReactNode }) {
 
       if (deleteError) throw deleteError;
 
-      console.log('🔄 Atualizando NF para "Solicitação Confirmada":', notaFiscal.numeroNF);
+      console.log('✅ Pedido liberação removido do banco');
+
+      console.log('🔄 ATUALIZANDO STATUS DA NF para "Solicitação Confirmada":', notaFiscal.numeroNF);
 
       // Update NF status - CRITICAL: This moves NF to "Confirmadas"
       const { error: updateError } = await supabase
@@ -566,20 +581,21 @@ export function WMSProvider({ children }: { children: React.ReactNode }) {
         .eq('id', notaFiscal.id);
 
       if (updateError) {
-        console.error('❌ Erro ao atualizar status da NF:', updateError);
+        console.error('❌ ERRO CRÍTICO ao atualizar status da NF para confirmada:', updateError);
         throw updateError;
       }
 
-      console.log('✅ NF confirmada com sucesso');
+      console.log('✅ STATUS DA NF ATUALIZADO COM SUCESSO para "Solicitação Confirmada"');
 
       // Force complete data reload for perfect sync between transporter and client
+      console.log('🔄 Recarregando todos os dados para sincronização completa...');
       await Promise.all([
         loadNotasFiscais(),
         loadPedidosLiberacao(),
         loadPedidosLiberados()
       ]);
 
-      console.log('🔄 Dados sincronizados após confirmação');
+      console.log('✅ FLUXO COMPLETO: NF movida de "Ordem Solicitada" para "Solicitação Confirmada"');
 
       // Enviar notificação de rastreabilidade
       if (cliente?.emailLiberacaoAutorizada) {
@@ -590,7 +606,7 @@ export function WMSProvider({ children }: { children: React.ReactNode }) {
         );
       }
     } catch (error) {
-      console.error('Error liberating pedido:', error);
+      console.error('❌ ERRO NO FLUXO DE CONFIRMAÇÃO:', error);
       throw error;
     }
   };
@@ -635,6 +651,8 @@ export function WMSProvider({ children }: { children: React.ReactNode }) {
     }
 
     try {
+      console.log('❌ INICIANDO RECUSA DE CARREGAMENTO:', { pedidoId, responsavel, motivo });
+      
       // Encontrar o pedido
       const pedido = pedidosLiberacao.find(p => p.id === pedidoId);
       if (!pedido) {
@@ -647,7 +665,9 @@ export function WMSProvider({ children }: { children: React.ReactNode }) {
         throw new Error('Nota fiscal não encontrada');
       }
 
-      console.log('Recusando pedido:', pedidoId, 'Responsável:', responsavel, 'Motivo:', motivo);
+      console.log('📊 Estado atual - Pedido:', pedido.numeroPedido, '| NF:', notaFiscal.numeroNF, '| Status atual:', notaFiscal.status);
+
+      console.log('✅ Validações passaram - Removendo pedido do banco...');
 
       // Deletar o pedido de liberação
       const { error: deleteError } = await supabase
@@ -657,7 +677,9 @@ export function WMSProvider({ children }: { children: React.ReactNode }) {
 
       if (deleteError) throw deleteError;
 
-      console.log('🔄 Voltando NF para "Armazenada" com observações da recusa:', notaFiscal.numeroNF);
+      console.log('✅ Pedido removido do banco');
+
+      console.log('🔄 VOLTANDO NF para "Armazenada" com observações da recusa:', notaFiscal.numeroNF);
 
       // Voltar NF para status "Armazenada" com observações da recusa - CRITICAL: Returns NF to "Armazenadas"
       const observacaoRecusa = `RECUSADO - Responsável: ${responsavel} | Motivo: ${motivo} | Data: ${new Date().toLocaleDateString('pt-BR')}`;
@@ -674,19 +696,20 @@ export function WMSProvider({ children }: { children: React.ReactNode }) {
         .eq('id', notaFiscal.id);
 
       if (updateError) {
-        console.error('❌ Erro ao recusar pedido:', updateError);
+        console.error('❌ ERRO CRÍTICO ao recusar pedido:', updateError);
         throw updateError;
       }
 
-      console.log('✅ NF voltou para armazenada com sucesso');
+      console.log('✅ STATUS DA NF ATUALIZADO COM SUCESSO para "Armazenada" com observações');
 
       // Force complete data reload for perfect sync
+      console.log('🔄 Recarregando dados para sincronização...');
       await Promise.all([
         loadNotasFiscais(),
         loadPedidosLiberacao()
       ]);
 
-      console.log('🔄 Dados sincronizados após recusa');
+      console.log('✅ FLUXO COMPLETO: NF voltou de "Ordem Solicitada" para "Armazenada" com observações da recusa');
 
       // Enviar notificação para o cliente
       const cliente = clientes.find(c => c.name === pedido.cliente);
@@ -698,7 +721,7 @@ export function WMSProvider({ children }: { children: React.ReactNode }) {
         );
       }
     } catch (error) {
-      console.error('Error rejecting pedido:', error);
+      console.error('❌ ERRO NO FLUXO DE RECUSA:', error);
       throw error;
     }
   };
