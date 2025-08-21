@@ -1,9 +1,17 @@
 import { supabase } from "@/integrations/supabase/client";
 import { QueryClient } from "@tanstack/react-query";
+import { logFlow } from "@/types/nf";
 
-export function subscribeNfChanges(qc: QueryClient) {
+/**
+ * Configuração de Realtime para NFs
+ * Garante que UI seja atualizada automaticamente sem F5
+ */
+
+export function subscribeNfChanges(queryClient: QueryClient): () => void {
+  logFlow('subscribeNfChanges - iniciando', 'realtime');
+  
   const channel = supabase
-    .channel("nfs-changes")
+    .channel("nfs-realtime-changes")
     .on(
       "postgres_changes", 
       { 
@@ -12,14 +20,34 @@ export function subscribeNfChanges(qc: QueryClient) {
         table: "notas_fiscais" 
       }, 
       (payload) => {
-        console.log('NF change detected:', payload);
-        // Invalidar todas as queries de NFs para atualizar as listas
-        qc.invalidateQueries({ queryKey: ["nfs", "Armazenada"] });
-        qc.invalidateQueries({ queryKey: ["nfs", "Ordem Solicitada"] });
-        qc.invalidateQueries({ queryKey: ["nfs", "Solicitação Confirmada"] });
+        logFlow('postgres_changes recebido', (payload.new as any)?.id || (payload.old as any)?.id || 'unknown', undefined, `Evento: ${payload.eventType}`);
+        
+        // Invalidar todas as queries de NF para garantir dados atuais
+        queryClient.invalidateQueries({ queryKey: ["nfs", "ARMAZENADA"] });
+        queryClient.invalidateQueries({ queryKey: ["nfs", "SOLICITADA"] });
+        queryClient.invalidateQueries({ queryKey: ["nfs", "CONFIRMADA"] });
+        
+        // Log detalhado do evento
+        if (payload.eventType === 'UPDATE' && payload.old && payload.new) {
+          const oldStatus = (payload.old as any).status;
+          const newStatus = (payload.new as any).status;
+          if (oldStatus !== newStatus) {
+            logFlow(
+              `Status change detected: ${oldStatus} → ${newStatus}`, 
+              (payload.new as any).id, 
+              newStatus
+            );
+          }
+        }
       }
     )
-    .subscribe();
+    .subscribe((status) => {
+      logFlow('Channel subscription status', 'realtime', undefined, status);
+    });
 
-  return () => supabase.removeChannel(channel);
+  // Retornar função de cleanup
+  return () => {
+    logFlow('subscribeNfChanges - cleanup', 'realtime');
+    supabase.removeChannel(channel);
+  };
 }

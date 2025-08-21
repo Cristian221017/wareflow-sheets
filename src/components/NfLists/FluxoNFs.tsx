@@ -1,9 +1,10 @@
 import { useNFs, useFluxoMutations } from "@/hooks/useNFs";
+import { NFStatus } from "@/types/nf";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle, Clock, Package } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { NFCard } from "../NfLists/NFCard";
+import { NFCard } from "./NFCard";
 
 /**
  * Componente principal do fluxo de NFs

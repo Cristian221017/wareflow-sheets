@@ -286,7 +286,7 @@ export type Database = {
           quantidade: number
           requested_at: string | null
           requested_by: string | null
-          status: string
+          status: Database["public"]["Enums"]["nf_status"]
           sync_status: string | null
           transportadora_id: string
           updated_at: string
@@ -315,7 +315,7 @@ export type Database = {
           quantidade: number
           requested_at?: string | null
           requested_by?: string | null
-          status?: string
+          status?: Database["public"]["Enums"]["nf_status"]
           sync_status?: string | null
           transportadora_id: string
           updated_at?: string
@@ -344,7 +344,7 @@ export type Database = {
           quantidade?: number
           requested_at?: string | null
           requested_by?: string | null
-          status?: string
+          status?: Database["public"]["Enums"]["nf_status"]
           sync_status?: string | null
           transportadora_id?: string
           updated_at?: string
@@ -773,7 +773,7 @@ export type Database = {
       }
     }
     Enums: {
-      nf_status: "Armazenada" | "Ordem Solicitada" | "Solicitação Confirmada"
+      nf_status: "ARMAZENADA" | "SOLICITADA" | "CONFIRMADA"
       user_role: "super_admin" | "admin_transportadora" | "operador" | "cliente"
     }
     CompositeTypes: {
@@ -902,7 +902,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      nf_status: ["Armazenada", "Ordem Solicitada", "Solicitação Confirmada"],
+      nf_status: ["ARMAZENADA", "SOLICITADA", "CONFIRMADA"],
       user_role: ["super_admin", "admin_transportadora", "operador", "cliente"],
     },
   },
