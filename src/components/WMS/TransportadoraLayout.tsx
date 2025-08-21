@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { FluxoNFs } from '../NfLists/FluxoNFs';
 import { Dashboard } from './Dashboard';
 import { FormNotaFiscal } from './FormNotaFiscal';
 import { FormPedidoLiberacao } from './FormPedidoLiberacao';
@@ -249,6 +250,7 @@ export function TransportadoraLayout() {
             <div className="lg:hidden w-full overflow-x-auto mb-6">
               <TabsList className="flex w-max min-w-full h-auto p-1 gap-1">
                 <TabsTrigger value="dashboard" className="text-xs px-2 py-2 whitespace-nowrap">Dashboard</TabsTrigger>
+                <TabsTrigger value="fluxo-nfs" className="text-xs px-2 py-2 whitespace-nowrap">Fluxo NFs</TabsTrigger>
                 <TabsTrigger value="financeiro" className="text-xs px-2 py-2 whitespace-nowrap">Financeiro</TabsTrigger>
                 <TabsTrigger value="relatorios" className="text-xs px-2 py-2 whitespace-nowrap">Relatórios</TabsTrigger>
               </TabsList>
@@ -256,8 +258,9 @@ export function TransportadoraLayout() {
             
             {/* Desktop: Grid layout */}
             <div className="hidden lg:block mb-6">
-              <TabsList className="grid w-full grid-cols-3 gap-1">
+              <TabsList className="grid w-full grid-cols-4 gap-1">
                 <TabsTrigger value="dashboard" className="text-sm">Dashboard</TabsTrigger>
+                <TabsTrigger value="fluxo-nfs" className="text-sm">Fluxo NFs</TabsTrigger>
                 <TabsTrigger value="financeiro" className="text-sm">Financeiro</TabsTrigger>
                 <TabsTrigger value="relatorios" className="text-sm">Relatórios</TabsTrigger>
               </TabsList>
@@ -265,6 +268,10 @@ export function TransportadoraLayout() {
             
             <TabsContent value="dashboard" className="space-y-4">
               <Dashboard />
+            </TabsContent>
+
+            <TabsContent value="fluxo-nfs" className="space-y-4">
+              <FluxoNFs />
             </TabsContent>
             
             <TabsContent value="financeiro" className="space-y-4">

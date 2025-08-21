@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
 import { useAuth } from '@/contexts/AuthContext';
 import { useWMS } from '@/contexts/WMSContext';
+import { FluxoNFs } from '../NfLists/FluxoNFs';
 import { ClienteDashboard } from './ClienteDashboard';
 import { ClienteMercadoriasTable } from './ClienteMercadoriasTable';
 import { ClienteSolicitacaoCarregamento } from './ClienteSolicitacaoCarregamento';
@@ -43,6 +44,7 @@ export function ClienteLayout() {
 
   const navigationItems = [
     { id: 'dashboard', label: 'Dashboard', icon: Home, shortLabel: 'Home' },
+    { id: 'fluxo-nfs', label: 'Fluxo de NFs', icon: Package, shortLabel: 'Fluxo' },
     { id: 'mercadorias', label: 'Notas Fiscais', icon: Package, shortLabel: 'Notas' },
     { id: 'pedidos', label: 'Pedidos de Liberação', icon: FileText, shortLabel: 'Pedidos' },
     { id: 'liberados', label: 'Pedidos Liberados', icon: CheckCircle, shortLabel: 'Liberados' },
@@ -102,6 +104,8 @@ export function ClienteLayout() {
     switch (activeTab) {
       case 'dashboard':
         return <ClienteDashboard />;
+      case 'fluxo-nfs':
+        return <FluxoNFs />;
       case 'mercadorias':
         return <ClienteMercadoriasTable />;
       case 'pedidos':
