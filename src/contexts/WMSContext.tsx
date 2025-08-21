@@ -402,8 +402,11 @@ export function WMSProvider({ children }: { children: React.ReactNode }) {
       // Update nota fiscal status
       await updateNotaFiscalStatus(notaFiscal.id, 'Ordem Solicitada');
       
-      // Reload data
-      await loadPedidosLiberacao();
+      // Reload data immediately to sync between client and transporter
+      await Promise.all([
+        loadPedidosLiberacao(),
+        loadNotasFiscais()
+      ]);
 
       // Enviar notificação de rastreabilidade
       if (cliente?.emailSolicitacaoLiberacao) {
@@ -469,10 +472,11 @@ export function WMSProvider({ children }: { children: React.ReactNode }) {
       // Update NF status
       await updateNotaFiscalStatus(notaFiscal.id, 'Solicitação Confirmada');
 
-      // Reload data
+      // Reload data to sync between transporter and client
       await Promise.all([
         loadPedidosLiberacao(),
-        loadPedidosLiberados()
+        loadPedidosLiberados(),
+        loadNotasFiscais()
       ]);
 
       // Enviar notificação de rastreabilidade
