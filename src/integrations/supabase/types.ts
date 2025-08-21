@@ -722,6 +722,10 @@ export type Database = {
         Args: { email1: string; email2: string }
         Returns: boolean
       }
+      get_cliente_transportadora: {
+        Args: { _user_id: string }
+        Returns: string
+      }
       get_user_transportadora: {
         Args: { _user_id: string }
         Returns: string
