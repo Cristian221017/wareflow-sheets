@@ -718,6 +718,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      email_matches: {
+        Args: { email1: string; email2: string }
+        Returns: boolean
+      }
       get_user_transportadora: {
         Args: { _user_id: string }
         Returns: string
