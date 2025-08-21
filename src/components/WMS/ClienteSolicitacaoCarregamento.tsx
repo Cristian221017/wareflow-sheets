@@ -1,3 +1,8 @@
+import { useMemo } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
+import { useWMS } from '@/contexts/WMSContext';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import {
   Table,
   TableBody,
@@ -6,36 +11,41 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { useWMS } from '@/contexts/WMSContext';
-import { useAuth } from '@/contexts/AuthContext';
-import { Truck } from 'lucide-react';
+import { Clock } from 'lucide-react';
 
 export function ClienteSolicitacaoCarregamento() {
-  const { notasFiscais } = useWMS();
   const { user } = useAuth();
-  
-  // Filter data for current client - APENAS ORDEM SOLICITADA
-  const nfsLiberadas = notasFiscais.filter(nf => {
-    const isClienteNF = nf.cnpjCliente === user?.cnpj; 
-    const isOrdemSolicitada = nf.status === 'Ordem Solicitada';
-    
-    console.log('🚚 [Cliente] NF Solicitação:', nf.numeroNF, 'Cliente match:', isClienteNF, 'Status:', nf.status);
-    return isClienteNF && isOrdemSolicitada;
-  });
+  const { notasFiscais, isLoading } = useWMS();
 
-  console.log('🚚 [Cliente] Total NFs com Ordem Solicitada:', nfsLiberadas.length);
+  // Filter NFs for current client with status "Ordem Solicitada"
+  const nfsSolicitadas = useMemo(() => {
+    const filtered = notasFiscais.filter(nf => 
+      nf.cnpjCliente === user?.cnpj && nf.status === 'Ordem Solicitada'
+    );
+    
+    console.log('🚚 [Cliente] Carregamentos Solicitados:', filtered.length, 'para CNPJ:', user?.cnpj);
+    return filtered;
+  }, [notasFiscais, user?.cnpj]);
+
+  if (isLoading) {
+    return (
+      <Card>
+        <CardContent className="flex items-center justify-center h-32">
+          <p>Carregando...</p>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Truck className="w-5 h-5 text-warning" />
-          Carregamento Solicitado
+          <Clock className="w-5 h-5 text-warning" />
+          Carregamentos Solicitados
         </CardTitle>
         <CardDescription>
-          Mercadorias com carregamento solicitado - aguardando confirmação da transportadora
+          Suas solicitações de carregamento aguardando aprovação da transportadora
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -43,7 +53,7 @@ export function ClienteSolicitacaoCarregamento() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Nº NF</TableHead>
+                <TableHead>Número NF</TableHead>
                 <TableHead>Nº Pedido</TableHead>
                 <TableHead>Ordem Compra</TableHead>
                 <TableHead>Data Recebimento</TableHead>
@@ -57,10 +67,10 @@ export function ClienteSolicitacaoCarregamento() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {nfsLiberadas.map((nf) => (
-                <TableRow key={nf.id}>
+              {nfsSolicitadas.map((nf) => (
+                <TableRow key={nf.id} className="bg-warning/10 hover:bg-warning/20">
                   <TableCell className="font-medium">{nf.numeroNF}</TableCell>
-                  <TableCell>{nf.numeroPedido}</TableCell>
+                  <TableCell className="text-primary font-medium">{nf.numeroPedido}</TableCell>
                   <TableCell>{nf.ordemCompra}</TableCell>
                   <TableCell>{new Date(nf.dataRecebimento).toLocaleDateString('pt-BR')}</TableCell>
                   <TableCell>{nf.fornecedor}</TableCell>
@@ -80,11 +90,11 @@ export function ClienteSolicitacaoCarregamento() {
           </Table>
         </div>
 
-        {nfsLiberadas.length === 0 && (
+        {nfsSolicitadas.length === 0 && (
           <div className="text-center py-8 text-muted-foreground">
-            <Truck className="w-12 h-12 mx-auto mb-4 opacity-50" />
-            <p>Nenhuma mercadoria com carregamento solicitado</p>
-            <p className="text-sm mt-1">As mercadorias aparecerão aqui quando você solicitar o carregamento</p>
+            <Clock className="w-12 h-12 mx-auto mb-4 opacity-50" />
+            <p>Nenhum carregamento solicitado</p>
+            <p className="text-sm mt-1">Suas solicitações aparecerão aqui após enviadas</p>
           </div>
         )}
       </CardContent>

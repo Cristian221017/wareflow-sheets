@@ -1,3 +1,8 @@
+import { useMemo } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
+import { useWMS } from '@/contexts/WMSContext';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import {
   Table,
   TableBody,
@@ -6,26 +11,31 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { useWMS } from '@/contexts/WMSContext';
-import { useAuth } from '@/contexts/AuthContext';
 import { CheckCircle } from 'lucide-react';
 
 export function PedidosConfirmadosTable() {
-  const { notasFiscais } = useWMS();
   const { user } = useAuth();
-  
-  // Filter data for current client - APENAS SOLICITAÇÃO CONFIRMADA
-  const nfsConfirmadas = notasFiscais.filter(nf => {
-    const isConfirmada = nf.status === 'Solicitação Confirmada';
-    const isClienteNF = nf.cnpjCliente === user?.cnpj;
-    
-    console.log('✅ [Cliente] NF Confirmada:', nf.numeroNF, 'Cliente match:', isClienteNF, 'Status:', nf.status);
-    return isClienteNF && isConfirmada;
-  });
+  const { notasFiscais, isLoading } = useWMS();
 
-  console.log('✅ [Cliente] Total NFs Confirmadas:', nfsConfirmadas.length);
+  // Filter NFs for current client with status "Solicitação Confirmada"
+  const nfsConfirmadas = useMemo(() => {
+    const filtered = notasFiscais.filter(nf => 
+      nf.cnpjCliente === user?.cnpj && nf.status === 'Solicitação Confirmada'
+    );
+    
+    console.log('✅ [Cliente] Carregamentos Confirmados:', filtered.length, 'para CNPJ:', user?.cnpj);
+    return filtered;
+  }, [notasFiscais, user?.cnpj]);
+
+  if (isLoading) {
+    return (
+      <Card>
+        <CardContent className="flex items-center justify-center h-32">
+          <p>Carregando...</p>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card>
@@ -35,7 +45,7 @@ export function PedidosConfirmadosTable() {
           Carregamentos Confirmados
         </CardTitle>
         <CardDescription>
-          Mercadorias com carregamento confirmado pela transportadora
+          Seus carregamentos aprovados pela transportadora
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -43,10 +53,9 @@ export function PedidosConfirmadosTable() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Nº NF</TableHead>
+                <TableHead>Número NF</TableHead>
                 <TableHead>Nº Pedido</TableHead>
                 <TableHead>Ordem Compra</TableHead>
-                {!user?.cnpj && <TableHead>Cliente</TableHead>}
                 <TableHead>Data Recebimento</TableHead>
                 <TableHead>Fornecedor</TableHead>
                 <TableHead>Produto</TableHead>
@@ -59,11 +68,10 @@ export function PedidosConfirmadosTable() {
             </TableHeader>
             <TableBody>
               {nfsConfirmadas.map((nf) => (
-                <TableRow key={nf.id}>
+                <TableRow key={nf.id} className="bg-success/10 hover:bg-success/20">
                   <TableCell className="font-medium">{nf.numeroNF}</TableCell>
-                  <TableCell>{nf.numeroPedido}</TableCell>
+                  <TableCell className="text-primary font-medium">{nf.numeroPedido}</TableCell>
                   <TableCell>{nf.ordemCompra}</TableCell>
-                  {!user?.cnpj && <TableCell className="font-medium text-primary">{nf.cliente}</TableCell>}
                   <TableCell>{new Date(nf.dataRecebimento).toLocaleDateString('pt-BR')}</TableCell>
                   <TableCell>{nf.fornecedor}</TableCell>
                   <TableCell>{nf.produto}</TableCell>
@@ -86,7 +94,7 @@ export function PedidosConfirmadosTable() {
           <div className="text-center py-8 text-muted-foreground">
             <CheckCircle className="w-12 h-12 mx-auto mb-4 opacity-50" />
             <p>Nenhum carregamento confirmado</p>
-            <p className="text-sm mt-1">As mercadorias aparecerão aqui após a confirmação da transportadora</p>
+            <p className="text-sm mt-1">Seus carregamentos aprovados aparecerão aqui</p>
           </div>
         )}
       </CardContent>

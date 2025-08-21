@@ -1,3 +1,7 @@
+import { useMemo } from 'react';
+import { useWMS } from '@/contexts/WMSContext';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import {
   Table,
   TableBody,
@@ -6,21 +10,27 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { useWMS } from '@/contexts/WMSContext';
-import { useMemo } from 'react';
-import { CheckCircle, TruckIcon } from 'lucide-react';
+import { CheckCircle } from 'lucide-react';
 
 export function NFsConfirmadasTable() {
-  const { notasFiscais } = useWMS();
+  const { notasFiscais, isLoading } = useWMS();
 
-  // Filtrar apenas NFs com status "Solicitação Confirmada"  
+  // Filter NFs with status "Solicitação Confirmada"
   const nfsConfirmadas = useMemo(() => {
     const filtered = notasFiscais.filter(nf => nf.status === 'Solicitação Confirmada');
-    console.log('✅ [Transportadora] Total NFs Confirmadas:', filtered.length);
+    console.log('✅ [Transportadora] Carregamentos Confirmados:', filtered.length);
     return filtered;
   }, [notasFiscais]);
+
+  if (isLoading) {
+    return (
+      <Card>
+        <CardContent className="flex items-center justify-center h-32">
+          <p>Carregando...</p>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card>
@@ -30,7 +40,7 @@ export function NFsConfirmadasTable() {
           Carregamentos Confirmados
         </CardTitle>
         <CardDescription>
-          Mercadorias com carregamento aprovado e confirmado
+          Carregamentos aprovados e confirmados
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -54,10 +64,7 @@ export function NFsConfirmadasTable() {
             </TableHeader>
             <TableBody>
               {nfsConfirmadas.map((nf) => (
-                <TableRow 
-                  key={nf.id}
-                  className="bg-success/10 hover:bg-success/20"
-                >
+                <TableRow key={nf.id} className="bg-success/10 hover:bg-success/20">
                   <TableCell className="font-medium">{nf.numeroNF}</TableCell>
                   <TableCell className="text-primary font-medium">{nf.numeroPedido}</TableCell>
                   <TableCell>{nf.ordemCompra}</TableCell>
@@ -71,7 +78,7 @@ export function NFsConfirmadasTable() {
                   <TableCell>{nf.localizacao}</TableCell>
                   <TableCell>
                     <Badge className="bg-success text-success-foreground">
-                      Solicitação Confirmada
+                      {nf.status}
                     </Badge>
                   </TableCell>
                 </TableRow>
@@ -82,9 +89,9 @@ export function NFsConfirmadasTable() {
 
         {nfsConfirmadas.length === 0 && (
           <div className="text-center py-8 text-muted-foreground">
-            <TruckIcon className="w-12 h-12 mx-auto mb-4 opacity-50" />
+            <CheckCircle className="w-12 h-12 mx-auto mb-4 opacity-50" />
             <p>Nenhum carregamento confirmado</p>
-            <p className="text-sm mt-1">As confirmações aparecerão aqui</p>
+            <p className="text-sm mt-1">Os carregamentos aprovados aparecerão aqui</p>
           </div>
         )}
       </CardContent>

@@ -1,3 +1,7 @@
+import { useMemo } from 'react';
+import { useWMS } from '@/contexts/WMSContext';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import {
   Table,
   TableBody,
@@ -6,43 +10,27 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { useWMS } from '@/contexts/WMSContext';
-import { NotaFiscal } from '@/types/wms';
-import { cn } from '@/lib/utils';
-import { useState, useMemo } from 'react';
-import { toast } from 'sonner';
-import { Trash2, Package } from 'lucide-react';
-
-const isOverdue = (dataRecebimento: string, prazoMaximo: number = 30) => {
-  const receiptDate = new Date(dataRecebimento);
-  const now = new Date();
-  const diffDays = Math.ceil((now.getTime() - receiptDate.getTime()) / (1000 * 60 * 60 * 24));
-  return diffDays > prazoMaximo;
-};
+import { Package } from 'lucide-react';
 
 export function NFsArmazenadasTable() {
-  const { notasFiscais, deleteNotaFiscal } = useWMS();
+  const { notasFiscais, isLoading } = useWMS();
 
-  // Filtrar apenas NFs com status "Armazenada"
+  // Filter NFs with status "Armazenada"
   const nfsArmazenadas = useMemo(() => {
     const filtered = notasFiscais.filter(nf => nf.status === 'Armazenada');
-    console.log('🏢 [Transportadora] Total NFs Armazenadas:', filtered.length);
+    console.log('🏢 [Transportadora] NFs Armazenadas:', filtered.length);
     return filtered;
   }, [notasFiscais]);
 
-  const handleDeleteNF = async (nf: NotaFiscal) => {
-    if (window.confirm(`Tem certeza que deseja excluir a NF ${nf.numeroNF}?`)) {
-      try {
-        await deleteNotaFiscal(nf.id);
-        toast.success('Nota fiscal excluída com sucesso');
-      } catch (error) {
-        toast.error('Erro ao excluir nota fiscal');
-      }
-    }
-  };
+  if (isLoading) {
+    return (
+      <Card>
+        <CardContent className="flex items-center justify-center h-32">
+          <p>Carregando...</p>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card>
@@ -52,7 +40,7 @@ export function NFsArmazenadasTable() {
           Notas Fiscais Armazenadas
         </CardTitle>
         <CardDescription>
-          Mercadorias disponíveis no armazém para solicitação de carregamento
+          Mercadorias disponíveis no armazém
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -72,19 +60,11 @@ export function NFsArmazenadasTable() {
                 <TableHead>Volume (m³)</TableHead>
                 <TableHead>Localização</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead>Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {nfsArmazenadas.map((nf) => (
-                <TableRow 
-                  key={nf.id}
-                  className={cn(
-                    isOverdue(nf.dataRecebimento) 
-                      ? 'bg-destructive/10 hover:bg-destructive/20' 
-                      : ''
-                  )}
-                >
+                <TableRow key={nf.id}>
                   <TableCell className="font-medium">{nf.numeroNF}</TableCell>
                   <TableCell className="text-primary font-medium">{nf.numeroPedido}</TableCell>
                   <TableCell>{nf.ordemCompra}</TableCell>
@@ -98,20 +78,8 @@ export function NFsArmazenadasTable() {
                   <TableCell>{nf.localizacao}</TableCell>
                   <TableCell>
                     <Badge className="bg-success text-success-foreground">
-                      Armazenada
+                      {nf.status}
                     </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex gap-1">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleDeleteNF(nf)}
-                        className="text-destructive hover:text-destructive"
-                      >
-                        <Trash2 className="w-3 h-3" />
-                      </Button>
-                    </div>
                   </TableCell>
                 </TableRow>
               ))}
@@ -122,8 +90,8 @@ export function NFsArmazenadasTable() {
         {nfsArmazenadas.length === 0 && (
           <div className="text-center py-8 text-muted-foreground">
             <Package className="w-12 h-12 mx-auto mb-4 opacity-50" />
-            <p>Nenhuma nota fiscal armazenada</p>
-            <p className="text-sm mt-1">As mercadorias aparecerão aqui após o cadastro</p>
+            <p>Nenhuma mercadoria armazenada</p>
+            <p className="text-sm mt-1">As mercadorias aparecerão aqui após cadastro</p>
           </div>
         )}
       </CardContent>

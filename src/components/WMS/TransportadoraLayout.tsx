@@ -14,13 +14,10 @@ import { FormCadastroUsuario } from './FormCadastroUsuario';
 import { ImpressaoPedidosLiberados } from './ImpressaoPedidosLiberados';
 import { RelatorioControleCargas } from './RelatorioControleCargas';
 import { ClientesTable } from './ClientesTable';
-import { SolicitacoesPendentesTable } from './SolicitacoesPendentesTable';
 import { FinanceiroTransportadora } from './FinanceiroTransportadora';
 import { FormDocumentoFinanceiro } from './FormDocumentoFinanceiro';
 import IntegrationConfig from './IntegrationConfig';
 import { ResetDataButton } from './ResetDataButton';
-import { TransportadoraSolicitacoesTable } from './TransportadoraSolicitacoesTable';
-import { PedidosConfirmadosTable } from './PedidosConfirmadosTable';
 import { 
   Plus,
   Warehouse,
@@ -281,10 +278,9 @@ export function TransportadoraLayout() {
               <NFsArmazenadasTable />
             </TabsContent>
             
-        <TabsContent value="solicitadas" className="space-y-4">
-          <NFsSolicitadasTable />
-          <SolicitacoesPendentesTable />
-        </TabsContent>
+            <TabsContent value="solicitadas" className="space-y-4">
+              <NFsSolicitadasTable />
+            </TabsContent>
             
             
             <TabsContent value="confirmadas" className="space-y-4">

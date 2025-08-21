@@ -5,11 +5,11 @@ import { useWMS } from '@/contexts/WMSContext';
 import { toast } from 'sonner';
 
 export function ResetDataButton() {
-  const { resetarDados } = useWMS();
+  const { resetData } = useWMS();
 
   const handleReset = async () => {
     try {
-      await resetarDados();
+      await resetData();
       toast.success('Dados resetados com sucesso! Sistema pronto para teste.');
     } catch (error) {
       toast.error('Erro ao resetar dados');

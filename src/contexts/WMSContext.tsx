@@ -1,160 +1,48 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { NotaFiscal, PedidoLiberacao, PedidoLiberado } from '@/types/wms';
-import { notificationService } from '@/utils/notificationService';
-import { useAuth } from '@/contexts/AuthContext';
+import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from './AuthContext';
+import { NotaFiscal, PedidoLiberacao, PedidoLiberado } from '@/types/wms';
 import { toast } from 'sonner';
 
 interface WMSContextType {
+  // Data
   notasFiscais: NotaFiscal[];
   pedidosLiberacao: PedidoLiberacao[];
   pedidosLiberados: PedidoLiberado[];
-  loading: boolean;
+  
+  // Loading states
+  isLoading: boolean;
+  
+  // Actions
   addNotaFiscal: (nf: Omit<NotaFiscal, 'id' | 'createdAt'>) => Promise<void>;
-  deleteNotaFiscal: (id: string) => Promise<void>;
-  deletePedidoLiberacao: (id: string) => Promise<void>;
-  deletePedidoLiberado: (id: string) => Promise<void>;
-  addPedidoLiberacao: (pedido: Omit<PedidoLiberacao, 'id' | 'createdAt' | 'status'>) => Promise<void>;
-  liberarPedido: (pedidoId: string, transportadora: string, dataExpedicao?: string) => Promise<void>;
-  recusarPedido: (pedidoId: string, responsavel: string, motivo: string) => Promise<void>;
-  updateNotaFiscalStatus: (nfId: string, status: NotaFiscal['status'], metadata?: any) => Promise<void>;
-  loadData: () => Promise<void>;
-  resetarDados: () => Promise<void>;
+  solicitarCarregamento: (numeroNF: string) => Promise<void>;
+  aprovarCarregamento: (numeroNF: string, transportadora: string) => Promise<void>;
+  rejeitarCarregamento: (numeroNF: string, motivo: string) => Promise<void>;
+  resetData: () => Promise<void>;
 }
 
 const WMSContext = createContext<WMSContextType | undefined>(undefined);
 
-export function WMSProvider({ children }: { children: React.ReactNode }) {
+export function WMSProvider({ children }: { children: ReactNode }) {
+  const { user } = useAuth();
   const [notasFiscais, setNotasFiscais] = useState<NotaFiscal[]>([]);
   const [pedidosLiberacao, setPedidosLiberacao] = useState<PedidoLiberacao[]>([]);
   const [pedidosLiberados, setPedidosLiberados] = useState<PedidoLiberado[]>([]);
-  const [loading, setLoading] = useState(true);
-  const { user, clientes } = useAuth();
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Load data when user changes or component mounts
-  useEffect(() => {
-    if (user?.transportadoraId) {
-      loadData();
-      
-      // Create separate channels without complex filters to avoid CHANNEL_ERROR
-      const notasChannel = supabase
-        .channel('notas_fiscais_changes')
-        .on(
-          'postgres_changes',
-          {
-            event: '*',
-            schema: 'public',
-            table: 'notas_fiscais'
-          },
-          (payload) => {
-            console.log('📦 NF Real-time update:', payload);
-            // Only reload if it affects our transportadora
-            if ((payload.new as any)?.transportadora_id === user.transportadoraId || 
-                (payload.old as any)?.transportadora_id === user.transportadoraId) {
-              setTimeout(() => loadNotasFiscais(), 300);
-            }
-          }
-        )
-        .subscribe((status) => {
-          console.log('🔄 Notas Fiscais Channel Status:', status);
-        });
-
-      const pedidosChannel = supabase
-        .channel('pedidos_liberacao_changes')
-        .on(
-          'postgres_changes',
-          {
-            event: '*',
-            schema: 'public',
-            table: 'pedidos_liberacao'
-          },
-          (payload) => {
-            console.log('🚛 Pedido liberacao Real-time update:', payload);
-            if ((payload.new as any)?.transportadora_id === user.transportadoraId || 
-                (payload.old as any)?.transportadora_id === user.transportadoraId) {
-              setTimeout(() => loadPedidosLiberacao(), 300);
-            }
-          }
-        )
-        .subscribe((status) => {
-          console.log('🔄 Pedidos Liberacao Channel Status:', status);
-        });
-
-      const liberadosChannel = supabase
-        .channel('pedidos_liberados_changes')
-        .on(
-          'postgres_changes',
-          {
-            event: '*',
-            schema: 'public',
-            table: 'pedidos_liberados'
-          },
-          (payload) => {
-            console.log('✅ Pedido liberado Real-time update:', payload);
-            if ((payload.new as any)?.transportadora_id === user.transportadoraId || 
-                (payload.old as any)?.transportadora_id === user.transportadoraId) {
-              setTimeout(() => loadPedidosLiberados(), 300);
-            }
-          }
-        )
-        .subscribe((status) => {
-          console.log('🔄 Pedidos Liberados Channel Status:', status);
-        });
-      
-      return () => {
-        console.log('🔌 Removing WMS real-time channels');
-        supabase.removeChannel(notasChannel);
-        supabase.removeChannel(pedidosChannel);
-        supabase.removeChannel(liberadosChannel);
-      };
-    }
-  }, [user?.transportadoraId]);
-
+  // Load data
   const loadData = async () => {
-    if (!user?.transportadoraId) return;
-    
-    setLoading(true);
     try {
-      await Promise.all([
-        loadNotasFiscais(),
-        loadPedidosLiberacao(),
-        loadPedidosLiberados()
-      ]);
-    } catch (error) {
-      console.error('Error loading WMS data:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const loadNotasFiscais = async () => {
-    if (!user?.transportadoraId) return;
-
-    try {
-      const { data, error } = await supabase
+      setIsLoading(true);
+      
+      // Load Notas Fiscais
+      const { data: nfs } = await supabase
         .from('notas_fiscais')
         .select('*')
-        .eq('transportadora_id', user.transportadoraId)
         .order('created_at', { ascending: false });
-
-      if (error) throw error;
-
-      // Get all unique cliente_ids
-      const clienteIds = [...new Set(data?.map(nf => nf.cliente_id).filter(Boolean))];
       
-      // Fetch clientes data
-      let clientesData: any[] = [];
-      if (clienteIds.length > 0) {
-        const { data: clientesResult } = await supabase
-          .from('clientes')
-          .select('id, razao_social, cnpj')
-          .in('id', clienteIds);
-        clientesData = clientesResult || [];
-      }
-
-      const formattedData: NotaFiscal[] = data?.map(nf => {
-        const cliente = clientesData.find(c => c.id === nf.cliente_id);
-        return {
+      if (nfs) {
+        const transformedNFs: NotaFiscal[] = nfs.map(nf => ({
           id: nf.id,
           numeroNF: nf.numero_nf,
           numeroPedido: nf.numero_pedido,
@@ -162,674 +50,421 @@ export function WMSProvider({ children }: { children: React.ReactNode }) {
           dataRecebimento: nf.data_recebimento,
           fornecedor: nf.fornecedor,
           cnpj: nf.cnpj_fornecedor,
-          cliente: cliente?.razao_social || '',
-          cnpjCliente: cliente?.cnpj || '',
+          clienteId: nf.cliente_id,
+          cliente: '', // Will be populated from clientes table
+          cnpjCliente: '', // Will be populated from clientes table
           produto: nf.produto,
           quantidade: nf.quantidade,
-          peso: Number(nf.peso),
-          volume: Number(nf.volume),
+          peso: parseFloat(nf.peso.toString()),
+          volume: parseFloat(nf.volume.toString()),
           localizacao: nf.localizacao,
-          status: nf.status as NotaFiscal['status'],
-          createdAt: nf.created_at
-        };
-      }) || [];
+          status: nf.status as 'Armazenada' | 'Ordem Solicitada' | 'Solicitação Confirmada',
+          createdAt: nf.created_at,
+          integration_metadata: (nf as any).integration_metadata || {}
+        }));
+        
+        // Load cliente info for each NF
+        for (const nf of transformedNFs) {
+          if (nf.clienteId) {
+            const { data: cliente } = await supabase
+              .from('clientes')
+              .select('razao_social, cnpj')
+              .eq('id', nf.clienteId)
+              .single();
+            
+            if (cliente) {
+              nf.cliente = cliente.razao_social;
+              nf.cnpjCliente = cliente.cnpj;
+            }
+          }
+        }
+        
+        setNotasFiscais(transformedNFs);
+      }
 
-      setNotasFiscais(formattedData);
-    } catch (error) {
-      console.error('Error loading notas fiscais:', error);
-    }
-  };
-
-  const loadPedidosLiberacao = async () => {
-    if (!user?.transportadoraId) return;
-
-    try {
-      const { data, error } = await supabase
+      // Load Pedidos Liberação
+      const { data: pedidos } = await supabase
         .from('pedidos_liberacao')
         .select('*')
-        .eq('transportadora_id', user.transportadoraId)
         .order('created_at', { ascending: false });
-
-      if (error) throw error;
-
-      // Get all unique cliente_ids and nota_fiscal_ids
-      const clienteIds = [...new Set(data?.map(pl => pl.cliente_id).filter(Boolean))];
-      const nfIds = [...new Set(data?.map(pl => pl.nota_fiscal_id).filter(Boolean))];
       
-      // Fetch related data
-      let clientesData: any[] = [];
-      let nfsData: any[] = [];
-      
-      if (clienteIds.length > 0) {
-        const { data: clientesResult } = await supabase
-          .from('clientes')
-          .select('id, razao_social, cnpj')
-          .in('id', clienteIds);
-        clientesData = clientesResult || [];
+      if (pedidos) {
+        const transformedPedidos: PedidoLiberacao[] = pedidos.map(p => ({
+          id: p.id,
+          numeroPedido: p.numero_pedido,
+          ordemCompra: p.ordem_compra,
+          dataSolicitacao: p.data_solicitacao,
+          cliente: '', // Will be populated
+          cnpjCliente: '', // Will be populated
+          nfVinculada: '', // Will be populated from NF
+          produto: p.produto,
+          quantidade: p.quantidade,
+          peso: parseFloat(p.peso.toString()),
+          volume: parseFloat(p.volume.toString()),
+          prioridade: p.prioridade as 'Alta' | 'Média' | 'Baixa',
+          responsavel: p.responsavel,
+          status: p.status as 'Em análise' | 'Confirmado',
+          createdAt: p.created_at
+        }));
+        
+        setPedidosLiberacao(transformedPedidos);
       }
 
-      if (nfIds.length > 0) {
-        const { data: nfsResult } = await supabase
-          .from('notas_fiscais')
-          .select('id, numero_nf')
-          .in('id', nfIds);
-        nfsData = nfsResult || [];
-      }
-
-      const formattedData: PedidoLiberacao[] = data?.map(pl => {
-        const cliente = clientesData.find(c => c.id === pl.cliente_id);
-        const nf = nfsData.find(n => n.id === pl.nota_fiscal_id);
-        return {
-          id: pl.id,
-          numeroPedido: pl.numero_pedido,
-          ordemCompra: pl.ordem_compra,
-          dataSolicitacao: pl.data_solicitacao,
-          cliente: cliente?.razao_social || '',
-          cnpjCliente: cliente?.cnpj || '',
-          nfVinculada: nf?.numero_nf || '',
-          produto: pl.produto,
-          quantidade: pl.quantidade,
-          peso: Number(pl.peso),
-          volume: Number(pl.volume),
-          prioridade: pl.prioridade as PedidoLiberacao['prioridade'],
-          responsavel: pl.responsavel,
-          status: pl.status as PedidoLiberacao['status'],
-          createdAt: pl.created_at
-        };
-      }) || [];
-
-      setPedidosLiberacao(formattedData);
-    } catch (error) {
-      console.error('Error loading pedidos liberacao:', error);
-    }
-  };
-
-  const loadPedidosLiberados = async () => {
-    if (!user?.transportadoraId) return;
-
-    try {
-      const { data, error } = await supabase
+      // Load Pedidos Liberados
+      const { data: liberados } = await supabase
         .from('pedidos_liberados')
         .select('*')
-        .eq('transportadora_id', user.transportadoraId)
         .order('created_at', { ascending: false });
-
-      if (error) throw error;
-
-      // Get all unique cliente_ids and nota_fiscal_ids
-      const clienteIds = [...new Set(data?.map(pl => pl.cliente_id).filter(Boolean))];
-      const nfIds = [...new Set(data?.map(pl => pl.nota_fiscal_id).filter(Boolean))];
       
-      // Fetch related data
-      let clientesData: any[] = [];
-      let nfsData: any[] = [];
-      
-      if (clienteIds.length > 0) {
-        const { data: clientesResult } = await supabase
-          .from('clientes')
-          .select('id, razao_social')
-          .in('id', clienteIds);
-        clientesData = clientesResult || [];
+      if (liberados) {
+        const transformedLiberados: PedidoLiberado[] = liberados.map(l => ({
+          id: l.id,
+          numeroPedido: l.numero_pedido,
+          ordemCompra: l.ordem_compra,
+          dataLiberacao: l.data_liberacao,
+          cliente: '', // Will be populated
+          nfVinculada: '', // Will be populated from NF number
+          quantidade: l.quantidade,
+          peso: parseFloat(l.peso.toString()),
+          volume: parseFloat(l.volume.toString()),
+          transportadora: l.transportadora_responsavel,
+          dataExpedicao: l.data_expedicao || undefined,
+          createdAt: l.created_at
+        }));
+        
+        setPedidosLiberados(transformedLiberados);
       }
 
-      if (nfIds.length > 0) {
-        const { data: nfsResult } = await supabase
-          .from('notas_fiscais')
-          .select('id, numero_nf')
-          .in('id', nfIds);
-        nfsData = nfsResult || [];
-      }
-
-      const formattedData: PedidoLiberado[] = data?.map(pl => {
-        const cliente = clientesData.find(c => c.id === pl.cliente_id);
-        const nf = nfsData.find(n => n.id === pl.nota_fiscal_id);
-        return {
-          id: pl.id,
-          numeroPedido: pl.numero_pedido,
-          ordemCompra: pl.ordem_compra,
-          dataLiberacao: pl.data_liberacao,
-          cliente: cliente?.razao_social || '',
-          nfVinculada: nf?.numero_nf || '',
-          quantidade: pl.quantidade,
-          peso: Number(pl.peso),
-          volume: Number(pl.volume),
-          transportadora: pl.transportadora_responsavel,
-          dataExpedicao: pl.data_expedicao,
-          createdAt: pl.created_at
-        };
-      }) || [];
-
-      setPedidosLiberados(formattedData);
     } catch (error) {
-      console.error('Error loading pedidos liberados:', error);
+      console.error('❌ Erro ao carregar dados WMS:', error);
+      toast.error('Erro ao carregar dados do sistema');
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const addNotaFiscal = async (nf: Omit<NotaFiscal, 'id' | 'createdAt'>) => {
-    console.log('addNotaFiscal - User:', user);
-    console.log('addNotaFiscal - Clientes disponíveis:', clientes);
-    console.log('addNotaFiscal - NF data:', nf);
-    
-    if (!user?.transportadoraId) {
-      console.error('Usuário não tem transportadoraId:', user);
-      throw new Error('Usuário não associado a uma transportadora');
-    }
-
+  // Add Nota Fiscal
+  const addNotaFiscal = async (nfData: Omit<NotaFiscal, 'id' | 'createdAt'>) => {
     try {
-      // Find cliente by ID directly
-      const cliente = clientes.find(c => c.id === nf.clienteId);
-      console.log('Cliente encontrado:', cliente);
+      console.log('📦 Adicionando nova NF:', nfData);
+
+      // Get cliente_id from cnpj
+      const { data: cliente } = await supabase
+        .from('clientes')
+        .select('id')
+        .eq('cnpj', nfData.cnpjCliente)
+        .single();
+
       if (!cliente) {
-        console.error('Cliente não encontrado. ID procurado:', nf.clienteId, 'Clientes disponíveis:', clientes.map(c => ({ id: c.id, name: c.name })));
         throw new Error('Cliente não encontrado');
       }
 
       const { error } = await supabase
         .from('notas_fiscais')
-        .insert([{
-          transportadora_id: user.transportadoraId,
+        .insert({
+          numero_nf: nfData.numeroNF,
+          numero_pedido: nfData.numeroPedido,
+          ordem_compra: nfData.ordemCompra,
+          data_recebimento: nfData.dataRecebimento,
+          fornecedor: nfData.fornecedor,
+          cnpj_fornecedor: nfData.cnpj,
           cliente_id: cliente.id,
-          numero_nf: nf.numeroNF,
+          produto: nfData.produto,
+          quantidade: nfData.quantidade,
+          peso: nfData.peso,
+          volume: nfData.volume,
+          localizacao: nfData.localizacao,
+          status: 'Armazenada',
+          transportadora_id: user?.transportadoraId
+        });
+
+      if (error) throw error;
+      
+      toast.success('✅ Nota Fiscal cadastrada com sucesso!');
+      await loadData();
+      
+    } catch (error: any) {
+      console.error('❌ Erro ao adicionar NF:', error);
+      toast.error(error.message || 'Erro ao cadastrar Nota Fiscal');
+      throw error;
+    }
+  };
+
+  // Solicitar carregamento (Cliente)
+  const solicitarCarregamento = async (numeroNF: string) => {
+    try {
+      console.log('🚚 Solicitando carregamento para NF:', numeroNF);
+
+      const nf = notasFiscais.find(n => n.numeroNF === numeroNF);
+      if (!nf) {
+        throw new Error('Nota Fiscal não encontrada');
+      }
+
+      if (nf.status !== 'Armazenada') {
+        throw new Error(`NF não pode ser solicitada. Status atual: ${nf.status}`);
+      }
+
+      // Update NF status to "Ordem Solicitada"
+      const { error: nfError } = await supabase
+        .from('notas_fiscais')
+        .update({ 
+          status: 'Ordem Solicitada',
+          updated_at: new Date().toISOString()
+        })
+        .eq('numero_nf', numeroNF);
+
+      if (nfError) throw nfError;
+
+      // Create pedido_liberacao entry
+      const { error: pedidoError } = await supabase
+        .from('pedidos_liberacao')
+        .insert({
           numero_pedido: nf.numeroPedido,
           ordem_compra: nf.ordemCompra,
-          data_recebimento: nf.dataRecebimento,
-          fornecedor: nf.fornecedor,
-          cnpj_fornecedor: nf.cnpj,
+          data_solicitacao: new Date().toISOString().split('T')[0],
+          cliente_id: nf.clienteId,
+          nota_fiscal_id: nf.id,
           produto: nf.produto,
           quantidade: nf.quantidade,
           peso: nf.peso,
           volume: nf.volume,
-          localizacao: nf.localizacao,
-          status: nf.status
-        }]);
+          prioridade: 'Média',
+          responsavel: user?.name || 'Cliente',
+          status: 'Em análise',
+          transportadora_id: user?.transportadoraId
+        });
 
-      if (error) {
-        console.error('Erro ao inserir NF no Supabase:', error);
-        throw error;
-      }
+      if (pedidoError) throw pedidoError;
 
-      console.log('NF inserida com sucesso, recarregando dados...');
-      // Reload data to get the new record
-      await loadNotasFiscais();
-
-      // Enviar notificação de rastreabilidade
-      if (cliente?.emailNotaFiscal) {
-        notificationService.enviarNotificacaoNFCadastrada(
-          cliente.emailNotaFiscal,
-          nf.numeroNF,
-          nf.cliente
-        );
-      }
-    } catch (error) {
-      console.error('Error adding nota fiscal:', error);
-      throw error;
-    }
-  };
-
-  const deleteNotaFiscal = async (id: string) => {
-    try {
-      const { error } = await supabase
-        .from('notas_fiscais')
-        .delete()
-        .eq('id', id);
-
-      if (error) {
-        console.error('Erro ao excluir nota fiscal:', error);
-        throw new Error('Erro ao excluir nota fiscal');
-      }
-
-      await loadNotasFiscais();
-      toast.success('Nota fiscal excluída com sucesso!');
-    } catch (error) {
-      console.error('Erro ao excluir nota fiscal:', error);
-      throw error;
-    }
-  };
-
-  const deletePedidoLiberacao = async (id: string) => {
-    try {
-      const { error } = await supabase
-        .from('pedidos_liberacao')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
-
+      toast.success(`✅ Carregamento solicitado para NF ${numeroNF}!`);
       await loadData();
-      toast.success('Pedido de liberação excluído com sucesso');
-    } catch (error) {
-      console.error('Error deleting pedido liberacao:', error);
-      toast.error('Erro ao excluir pedido de liberação');
+      
+    } catch (error: any) {
+      console.error('❌ Erro ao solicitar carregamento:', error);
+      toast.error(error.message || 'Erro ao solicitar carregamento');
       throw error;
     }
   };
 
-  const deletePedidoLiberado = async (id: string) => {
+  // Aprovar carregamento (Transportadora)
+  const aprovarCarregamento = async (numeroNF: string, transportadora: string) => {
     try {
-      const { error } = await supabase
-        .from('pedidos_liberados')
-        .delete()
-        .eq('id', id);
+      console.log('✅ Aprovando carregamento para NF:', numeroNF);
 
-      if (error) throw error;
-
-      await loadData();
-      toast.success('Pedido liberado excluído com sucesso');
-    } catch (error) {
-      console.error('Error deleting pedido liberado:', error);
-      toast.error('Erro ao excluir pedido liberado');
-      throw error;
-    }
-  };
-
-  const addPedidoLiberacao = async (pedido: Omit<PedidoLiberacao, 'id' | 'createdAt' | 'status'>) => {
-    if (!user?.transportadoraId) {
-      throw new Error('Usuário não associado a uma transportadora');
-    }
-
-    try {
-      console.log('🚀 INICIANDO SOLICITAÇÃO DE CARREGAMENTO:', pedido);
-      console.log('🔍 Total de NFs disponíveis:', notasFiscais.length);
-      console.log('🔍 Total de clientes disponíveis:', clientes.length);
-      
-      // Find cliente and nota fiscal
-      const cliente = clientes.find(c => c.name === pedido.cliente);
-      const notaFiscal = notasFiscais.find(nf => nf.numeroNF === pedido.nfVinculada);
-      
-      console.log('📊 Estado atual:');
-      console.log('  - Cliente encontrado:', cliente?.id, cliente?.name);
-      console.log('  - NF encontrada:', notaFiscal?.id, notaFiscal?.numeroNF);
-      console.log('  - Status atual da NF:', notaFiscal?.status);
-      console.log('  - Pedidos liberação existentes:', pedidosLiberacao.length);
-      
-      if (!cliente) {
-        console.error('❌ Cliente não encontrado. Nome procurado:', pedido.cliente);
-        console.error('❌ Clientes disponíveis:', clientes.map(c => c.name));
-        throw new Error('Cliente não encontrado');
-      }
-      if (!notaFiscal) {
-        console.error('❌ NF não encontrada. Número procurado:', pedido.nfVinculada);
-        console.error('❌ NFs disponíveis:', notasFiscais.map(nf => nf.numeroNF));
-        throw new Error('Nota fiscal não encontrada');
+      const nf = notasFiscais.find(n => n.numeroNF === numeroNF);
+      if (!nf) {
+        throw new Error('Nota Fiscal não encontrada');
       }
 
-      // Verificar se já existe pedido de liberação para esta NF
-      const existingSolicitation = pedidosLiberacao.find(p => p.nfVinculada === notaFiscal.numeroNF);
-      if (existingSolicitation) {
-        console.error('❌ Já existe solicitação para esta NF:', existingSolicitation.id);
-        throw new Error('Já existe uma solicitação de carregamento para esta NF');
+      if (nf.status !== 'Ordem Solicitada') {
+        throw new Error(`NF não pode ser aprovada. Status atual: ${nf.status}`);
       }
 
-      // Verificar se a NF já não está com status que impede nova solicitação
-      if (notaFiscal.status !== 'Armazenada') {
-        console.error('❌ Status da NF não permite solicitação. Status atual:', notaFiscal.status);
-        throw new Error(`Não é possível solicitar carregamento. Status atual: ${notaFiscal.status}`);
-      }
-
-      console.log('✅ Todas as validações passaram!');
-      console.log('📝 Dados para inserção no banco:', {
-        transportadora_id: user.transportadoraId,
-        cliente_id: cliente.id,
-        nota_fiscal_id: notaFiscal.id,
-        numero_pedido: pedido.numeroPedido,
-        status: 'Em análise'
-      });
-
-      // Insert pedido_liberacao
-      const { error } = await supabase
-        .from('pedidos_liberacao')
-        .insert([{
-          transportadora_id: user.transportadoraId,
-          cliente_id: cliente.id,
-          nota_fiscal_id: notaFiscal.id,
-          numero_pedido: pedido.numeroPedido,
-          ordem_compra: pedido.ordemCompra,
-          data_solicitacao: pedido.dataSolicitacao,
-          produto: pedido.produto,
-          quantidade: pedido.quantidade,
-          peso: pedido.peso,
-          volume: pedido.volume,
-          prioridade: pedido.prioridade,
-          responsavel: pedido.responsavel,
-          status: 'Em análise'
-        }]);
-
-      if (error) {
-        console.error('❌ ERRO ao inserir pedido:', error);
-        throw error;
-      }
-
-      console.log('✅ Pedido inserido no banco com sucesso');
-
-      // CRITICAL: Update nota fiscal status to "Ordem Solicitada" 
-      console.log('🔄 ATUALIZANDO STATUS DA NF de "' + notaFiscal.status + '" para "Ordem Solicitada"');
-      console.log('🔄 ID da NF a ser atualizada:', notaFiscal.id);
-      
-      const { error: updateError, data: updateData } = await supabase
+      // Update NF status to "Solicitação Confirmada"
+      const { error: nfError } = await supabase
         .from('notas_fiscais')
-        .update({ status: 'Ordem Solicitada' })
-        .eq('id', notaFiscal.id)
-        .select();
+        .update({ 
+          status: 'Solicitação Confirmada',
+          updated_at: new Date().toISOString()
+        })
+        .eq('numero_nf', numeroNF);
 
-      if (updateError) {
-        console.error('❌ ERRO CRÍTICO ao atualizar status da NF:', updateError);
-        throw updateError;
-      }
+      if (nfError) throw nfError;
 
-      console.log('✅ STATUS DA NF ATUALIZADO COM SUCESSO!');
-      console.log('📄 Dados da atualização:', updateData);
-      
-      // Force immediate state update
-      console.log('🔄 Forçando atualização imediata do estado local...');
-      setNotasFiscais(prev => prev.map(nf => 
-        nf.id === notaFiscal.id 
-          ? { ...nf, status: 'Ordem Solicitada' as NotaFiscal['status'] }
-          : nf
-      ));
-      
-      // Force complete data reload for perfect synchronization
-      console.log('🔄 Recarregando dados do servidor para sincronização...');
-      await Promise.all([
-        loadNotasFiscais(),
-        loadPedidosLiberacao()
-      ]);
+      // Update pedido_liberacao status to "Confirmado"
+      const { error: pedidoError } = await supabase
+        .from('pedidos_liberacao')
+        .update({ 
+          status: 'Confirmado',
+          updated_at: new Date().toISOString()
+        })
+        .eq('numero_pedido', nf.numeroPedido);
 
-      console.log('✅ FLUXO COMPLETO: NF movida de "Armazenada" para "Ordem Solicitada"');
+      if (pedidoError) throw pedidoError;
 
-      // Enviar notificação de rastreabilidade
-      if (cliente?.emailSolicitacaoLiberacao) {
-        notificationService.enviarNotificacaoSolicitacaoCarregamento(
-          cliente.emailSolicitacaoLiberacao,
-          pedido.numeroPedido,
-          pedido.cliente
-        );
-      }
-    } catch (error) {
-      console.error('❌ ERRO NO FLUXO DE SOLICITAÇÃO:', error);
-      throw error;
-    }
-  };
-
-  const liberarPedido = async (pedidoId: string, transportadora: string, dataExpedicao?: string) => {
-    if (!user?.transportadoraId) {
-      throw new Error('Usuário não associado a uma transportadora');
-    }
-
-    try {
-      console.log('🚛 INICIANDO CONFIRMAÇÃO DE CARREGAMENTO:', { pedidoId, transportadora });
-      
-      const pedido = pedidosLiberacao.find(p => p.id === pedidoId);
-      if (!pedido) {
-        throw new Error('Pedido não encontrado');
-      }
-
-      // Find related records
-      const cliente = clientes.find(c => c.name === pedido.cliente);
-      const notaFiscal = notasFiscais.find(nf => nf.numeroNF === pedido.nfVinculada);
-      
-      console.log('📊 Estado atual - Pedido:', pedido.numeroPedido, '| NF:', notaFiscal?.numeroNF, '| Status atual:', notaFiscal?.status);
-      
-      if (!cliente || !notaFiscal) {
-        throw new Error('Cliente ou nota fiscal não encontrado');
-      }
-
-      console.log('✅ Validações passaram - Criando pedido liberado...');
-
-      // Create liberado record
-      const { error: insertError } = await supabase
+      // Create pedido_liberado entry
+      const { error: liberadoError } = await supabase
         .from('pedidos_liberados')
-        .insert([{
-          transportadora_id: user.transportadoraId,
-          cliente_id: cliente.id,
-          nota_fiscal_id: notaFiscal.id,
-          pedido_liberacao_id: pedidoId,
-          numero_pedido: pedido.numeroPedido,
-          ordem_compra: pedido.ordemCompra,
+        .insert({
+          numero_pedido: nf.numeroPedido,
+          ordem_compra: nf.ordemCompra,
           data_liberacao: new Date().toISOString().split('T')[0],
-          quantidade: pedido.quantidade,
-          peso: pedido.peso,
-          volume: pedido.volume,
+          cliente_id: nf.clienteId,
+          nota_fiscal_id: nf.id,
+          pedido_liberacao_id: '', // Will be populated if needed
+          quantidade: nf.quantidade,
+          peso: nf.peso,
+          volume: nf.volume,
           transportadora_responsavel: transportadora,
-          data_expedicao: dataExpedicao
-        }]);
+          transportadora_id: user?.transportadoraId
+        });
 
-      if (insertError) throw insertError;
+      if (liberadoError) throw liberadoError;
 
-      console.log('✅ Pedido liberado criado no banco');
-
-      // Delete from pedidos_liberacao
-      const { error: deleteError } = await supabase
-        .from('pedidos_liberacao')
-        .delete()
-        .eq('id', pedidoId);
-
-      if (deleteError) throw deleteError;
-
-      console.log('✅ Pedido liberação removido do banco');
-
-      console.log('🔄 ATUALIZANDO STATUS DA NF para "Solicitação Confirmada":', notaFiscal.numeroNF);
-
-      // Update NF status - CRITICAL: This moves NF to "Confirmadas"
-      const { error: updateError } = await supabase
-        .from('notas_fiscais')
-        .update({ status: 'Solicitação Confirmada' })
-        .eq('id', notaFiscal.id);
-
-      if (updateError) {
-        console.error('❌ ERRO CRÍTICO ao atualizar status da NF para confirmada:', updateError);
-        throw updateError;
-      }
-
-      console.log('✅ STATUS DA NF ATUALIZADO COM SUCESSO para "Solicitação Confirmada"');
-
-      // Force complete data reload for perfect sync between transporter and client
-      console.log('🔄 Recarregando todos os dados para sincronização completa...');
-      await Promise.all([
-        loadNotasFiscais(),
-        loadPedidosLiberacao(),
-        loadPedidosLiberados()
-      ]);
-
-      console.log('✅ FLUXO COMPLETO: NF movida de "Ordem Solicitada" para "Solicitação Confirmada"');
-
-      // Enviar notificação de rastreabilidade
-      if (cliente?.emailLiberacaoAutorizada) {
-        notificationService.enviarNotificacaoConfirmacaoAutorizada(
-          cliente.emailLiberacaoAutorizada,
-          pedido.numeroPedido,
-          transportadora
-        );
-      }
-    } catch (error) {
-      console.error('❌ ERRO NO FLUXO DE CONFIRMAÇÃO:', error);
+      toast.success(`✅ Carregamento aprovado para NF ${numeroNF}!`);
+      await loadData();
+      
+    } catch (error: any) {
+      console.error('❌ Erro ao aprovar carregamento:', error);
+      toast.error(error.message || 'Erro ao aprovar carregamento');
       throw error;
     }
   };
 
-  const updateNotaFiscalStatus = async (nfId: string, status: NotaFiscal['status'], metadata?: any) => {
+  // Rejeitar carregamento (Transportadora)
+  const rejeitarCarregamento = async (numeroNF: string, motivo: string) => {
     try {
-      console.log('Atualizando status da NF:', { nfId, status, metadata });
-      
-      const updateData: any = { status };
-      if (metadata) {
-        updateData.integration_metadata = metadata;
-      }
-      
-      const { error } = await supabase
-        .from('notas_fiscais')
-        .update(updateData)
-        .eq('id', nfId);
+      console.log('❌ Rejeitando carregamento para NF:', numeroNF, 'Motivo:', motivo);
 
-      if (error) {
-        console.error('Erro no banco ao atualizar status:', error);
-        throw error;
+      const nf = notasFiscais.find(n => n.numeroNF === numeroNF);
+      if (!nf) {
+        throw new Error('Nota Fiscal não encontrada');
       }
 
-      console.log('Status atualizado no banco com sucesso');
-
-      // Update local state only
-      setNotasFiscais(prev => {
-        const updated = prev.map(nf => nf.id === nfId ? { ...nf, status, integration_metadata: metadata || nf.integration_metadata } : nf);
-        console.log('Estado local atualizado:', updated.find(nf => nf.id === nfId));
-        return updated;
-      });
-      
-    } catch (error) {
-      console.error('Error updating nota fiscal status:', error);
-      throw error;
-    }
-  };
-
-  const recusarPedido = async (pedidoId: string, responsavel: string, motivo: string) => {
-    if (!user?.transportadoraId) {
-      throw new Error('Usuário não associado a uma transportadora');
-    }
-
-    try {
-      console.log('❌ INICIANDO RECUSA DE CARREGAMENTO:', { pedidoId, responsavel, motivo });
-      
-      // Encontrar o pedido
-      const pedido = pedidosLiberacao.find(p => p.id === pedidoId);
-      if (!pedido) {
-        throw new Error('Pedido não encontrado');
+      if (nf.status !== 'Ordem Solicitada') {
+        throw new Error(`NF não pode ser rejeitada. Status atual: ${nf.status}`);
       }
 
-      // Encontrar a nota fiscal associada
-      const notaFiscal = notasFiscais.find(nf => nf.numeroNF === pedido.nfVinculada);
-      if (!notaFiscal) {
-        throw new Error('Nota fiscal não encontrada');
-      }
-
-      console.log('📊 Estado atual - Pedido:', pedido.numeroPedido, '| NF:', notaFiscal.numeroNF, '| Status atual:', notaFiscal.status);
-
-      console.log('✅ Validações passaram - Removendo pedido do banco...');
-
-      // Deletar o pedido de liberação
-      const { error: deleteError } = await supabase
-        .from('pedidos_liberacao')
-        .delete()
-        .eq('id', pedidoId);
-
-      if (deleteError) throw deleteError;
-
-      console.log('✅ Pedido removido do banco');
-
-      console.log('🔄 VOLTANDO NF para "Armazenada" com observações da recusa:', notaFiscal.numeroNF);
-
-      // Voltar NF para status "Armazenada" com observações da recusa - CRITICAL: Returns NF to "Armazenadas"
-      const observacaoRecusa = `RECUSADO - Responsável: ${responsavel} | Motivo: ${motivo} | Data: ${new Date().toLocaleDateString('pt-BR')}`;
-      
-      const { error: updateError } = await supabase
+      // Update NF status back to "Armazenada" with rejection reason
+      const { error: nfError } = await supabase
         .from('notas_fiscais')
         .update({ 
           status: 'Armazenada',
-          integration_metadata: { 
-            ...notaFiscal.integration_metadata || {}, 
-            observacao_recusa: observacaoRecusa 
-          }
+          integration_metadata: { ...nf.integration_metadata, rejection_reason: motivo },
+          updated_at: new Date().toISOString()
         })
-        .eq('id', notaFiscal.id);
+        .eq('numero_nf', numeroNF);
 
-      if (updateError) {
-        console.error('❌ ERRO CRÍTICO ao recusar pedido:', updateError);
-        throw updateError;
-      }
+      if (nfError) throw nfError;
 
-      console.log('✅ STATUS DA NF ATUALIZADO COM SUCESSO para "Armazenada" com observações');
+      // Delete the pedido_liberacao entry
+      const { error: pedidoError } = await supabase
+        .from('pedidos_liberacao')
+        .delete()
+        .eq('numero_pedido', nf.numeroPedido);
 
-      // Force complete data reload for perfect sync
-      console.log('🔄 Recarregando dados para sincronização...');
-      await Promise.all([
-        loadNotasFiscais(),
-        loadPedidosLiberacao()
-      ]);
+      if (pedidoError) throw pedidoError;
 
-      console.log('✅ FLUXO COMPLETO: NF voltou de "Ordem Solicitada" para "Armazenada" com observações da recusa');
-
-      // Enviar notificação para o cliente
-      const cliente = clientes.find(c => c.name === pedido.cliente);
-      if (cliente?.emailSolicitacaoLiberacao) {
-        notificationService.enviarNotificacaoSolicitacaoCarregamento(
-          cliente.emailSolicitacaoLiberacao,
-          `Solicitação RECUSADA - ${pedido.numeroPedido}`,
-          `Responsável: ${responsavel} | Motivo: ${motivo}`
-        );
-      }
-    } catch (error) {
-      console.error('❌ ERRO NO FLUXO DE RECUSA:', error);
+      toast.success(`❌ Carregamento rejeitado para NF ${numeroNF}!`);
+      await loadData();
+      
+    } catch (error: any) {
+      console.error('❌ Erro ao rejeitar carregamento:', error);
+      toast.error(error.message || 'Erro ao rejeitar carregamento');
       throw error;
     }
   };
 
-  const resetarDados = async () => {
-    if (!user?.transportadoraId) {
-      throw new Error('Usuário não associado a uma transportadora');
-    }
-
+  // Reset data (for testing)
+  const resetData = async () => {
     try {
-      console.log('Resetando todos os dados do sistema...');
+      console.log('🔄 Resetando dados de teste...');
 
-      // Deletar em ordem para respeitar foreign keys
-      const { error: deletePedidosLiberados } = await supabase
-        .from('pedidos_liberados')
-        .delete()
-        .eq('transportadora_id', user.transportadoraId);
-      
-      if (deletePedidosLiberados) throw deletePedidosLiberados;
+      // Delete in correct order due to foreign keys
+      await supabase.from('pedidos_liberados').delete().neq('id', '');
+      await supabase.from('pedidos_liberacao').delete().neq('id', '');
+      await supabase.from('notas_fiscais').delete().neq('id', '');
 
-      const { error: deletePedidosLiberacao } = await supabase
-        .from('pedidos_liberacao')
-        .delete()
-        .eq('transportadora_id', user.transportadoraId);
-      
-      if (deletePedidosLiberacao) throw deletePedidosLiberacao;
+      // Create demo data
+      const demoCliente = {
+        razao_social: 'Empresa Demo Ltda',
+        nome_fantasia: 'Demo Corp',
+        cnpj: '12.345.678/0001-90',
+        email: 'contato@demo.com',
+        telefone: '(11) 99999-9999',
+        endereco: 'Rua Demo, 123',
+        cidade: 'São Paulo',
+        estado: 'SP',
+        cep: '01234-567',
+        transportadora_id: user?.transportadoraId
+      };
 
-      const { error: deleteNotasFiscais } = await supabase
-        .from('notas_fiscais')
-        .delete()
-        .eq('transportadora_id', user.transportadoraId);
-      
-      if (deleteNotasFiscais) throw deleteNotasFiscais;
+      const { data: clienteData } = await supabase
+        .from('clientes')
+        .insert(demoCliente)
+        .select()
+        .single();
 
-      console.log('Dados resetados com sucesso!');
+      if (clienteData) {
+        // Create demo NFs
+        const demoNFs = [
+          {
+            numero_nf: 'NF-001',
+            numero_pedido: 'PED-001',
+            ordem_compra: 'OC-001',
+            data_recebimento: new Date().toISOString().split('T')[0],
+            fornecedor: 'Fornecedor A',
+            cnpj_fornecedor: '98.765.432/0001-10',
+            cliente_id: clienteData.id,
+            produto: 'Produto Demo A',
+            quantidade: 100,
+            peso: 150.5,
+            volume: 2.3,
+            localizacao: 'A1-B2-C3',
+            status: 'Armazenada',
+            transportadora_id: user?.transportadoraId
+          },
+          {
+            numero_nf: 'NF-002',
+            numero_pedido: 'PED-002',
+            ordem_compra: 'OC-002',
+            data_recebimento: new Date().toISOString().split('T')[0],
+            fornecedor: 'Fornecedor B',
+            cnpj_fornecedor: '11.222.333/0001-44',
+            cliente_id: clienteData.id,
+            produto: 'Produto Demo B',
+            quantidade: 50,
+            peso: 75.2,
+            volume: 1.8,
+            localizacao: 'B1-C2-D3',
+            status: 'Armazenada',
+            transportadora_id: user?.transportadoraId
+          }
+        ];
 
-      // Reload data
+        await supabase.from('notas_fiscais').insert(demoNFs);
+      }
+
+      toast.success('✅ Dados resetados com sucesso!');
       await loadData();
       
-      toast.success('Todos os dados foram resetados com sucesso!');
-    } catch (error) {
-      console.error('Erro ao resetar dados:', error);
-      toast.error('Erro ao resetar dados');
+    } catch (error: any) {
+      console.error('❌ Erro ao resetar dados:', error);
+      toast.error(error.message || 'Erro ao resetar dados');
       throw error;
     }
+  };
+
+  // Load data on mount and when user changes
+  useEffect(() => {
+    if (user) {
+      loadData();
+    }
+  }, [user]);
+
+  const value: WMSContextType = {
+    notasFiscais,
+    pedidosLiberacao,
+    pedidosLiberados,
+    isLoading,
+    addNotaFiscal,
+    solicitarCarregamento,
+    aprovarCarregamento,
+    rejeitarCarregamento,
+    resetData
   };
 
   return (
-    <WMSContext.Provider value={{
-      notasFiscais,
-      pedidosLiberacao,
-      pedidosLiberados,
-      loading,
-      addNotaFiscal,
-      deleteNotaFiscal,
-      deletePedidoLiberacao,
-      deletePedidoLiberado,
-      addPedidoLiberacao,
-      liberarPedido,
-      recusarPedido,
-      updateNotaFiscalStatus,
-      loadData,
-      resetarDados
-    }}>
+    <WMSContext.Provider value={value}>
       {children}
     </WMSContext.Provider>
   );
 }
 
-export function useWMS() {
+export const useWMS = () => {
   const context = useContext(WMSContext);
   if (context === undefined) {
     throw new Error('useWMS must be used within a WMSProvider');
   }
   return context;
-}
+};
