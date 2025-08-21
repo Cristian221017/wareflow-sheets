@@ -18,17 +18,19 @@ export function PedidosConfirmadosTable() {
   
   // Filter data for current user - APENAS SOLICITAÇÃO CONFIRMADA
   const nfsConfirmadas = notasFiscais.filter(nf => {
-    // Se for cliente, mostrar apenas suas NFs
+    // Se for transportador, mostrar todas as confirmadas
+    const isConfirmada = nf.status === 'Solicitação Confirmada';
+    
+    // Se for cliente (tem cnpj), mostrar apenas suas NFs
     if (user?.cnpj) {
       const isClienteNF = nf.cnpjCliente === user.cnpj;
-      const isConfirmada = nf.status === 'Solicitação Confirmada';
-      
-      console.log('NF Confirmada:', nf.numeroNF, 'Cliente match:', isClienteNF, 'Status:', nf.status, 'É confirmada:', isConfirmada);
+      console.log('NF Confirmada (Cliente):', nf.numeroNF, 'Cliente match:', isClienteNF, 'Status:', nf.status, 'É confirmada:', isConfirmada);
       return isClienteNF && isConfirmada;
     }
     
     // Se for transportador, mostrar todas as confirmadas
-    return nf.status === 'Solicitação Confirmada';
+    console.log('NF Confirmada (Transportador):', nf.numeroNF, 'Status:', nf.status, 'É confirmada:', isConfirmada);
+    return isConfirmada;
   });
 
   console.log('Total NFs confirmadas:', nfsConfirmadas.length);

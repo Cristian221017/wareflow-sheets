@@ -44,7 +44,7 @@ type AprovarFormData = z.infer<typeof aprovarFormSchema>;
 type RecusaFormData = z.infer<typeof recusaFormSchema>;
 
 function AprovarDialog({ nf }: { nf: any }) {
-  const { updateNotaFiscalStatus } = useWMS();
+  const { liberarPedido, pedidosLiberacao } = useWMS();
   const [open, setOpen] = useState(false);
   
   const form = useForm<AprovarFormData>({
@@ -57,13 +57,21 @@ function AprovarDialog({ nf }: { nf: any }) {
 
   const onSubmit = async (data: AprovarFormData) => {
     try {
-      await updateNotaFiscalStatus(nf.id, 'Solicitação Confirmada');
-      toast.success(`Carregamento confirmado para NF: ${nf.numeroNF}`);
+      // Find the corresponding pedido_liberacao by NF number
+      const pedido = pedidosLiberacao.find(p => p.nfVinculada === nf.numeroNF);
+      if (!pedido) {
+        throw new Error('Pedido de liberação não encontrado');
+      }
+
+      console.log('🚛 Confirmando carregamento:', { nf: nf.numeroNF, transportadora: data.transportadora });
+      
+      await liberarPedido(pedido.id, data.transportadora, data.dataExpedicao);
+      toast.success(`✅ Carregamento confirmado para NF: ${nf.numeroNF}`);
       setOpen(false);
       form.reset();
     } catch (error) {
-      console.error('Erro ao confirmar carregamento:', error);
-      toast.error('Erro ao confirmar carregamento');
+      console.error('❌ Erro ao confirmar carregamento:', error);
+      toast.error('Erro ao confirmar carregamento: ' + (error as Error).message);
     }
   };
 
@@ -135,7 +143,7 @@ function AprovarDialog({ nf }: { nf: any }) {
 }
 
 function RecusarDialog({ nf }: { nf: any }) {
-  const { updateNotaFiscalStatus } = useWMS();
+  const { recusarPedido, pedidosLiberacao } = useWMS();
   const [open, setOpen] = useState(false);
   
   const form = useForm<RecusaFormData>({
@@ -148,18 +156,21 @@ function RecusarDialog({ nf }: { nf: any }) {
 
   const onSubmit = async (data: RecusaFormData) => {
     try {
-      // Voltar para Armazenada com observações
-      await updateNotaFiscalStatus(nf.id, 'Armazenada', {
-        recusaResponsavel: data.responsavel,
-        recusaMotivo: data.motivo,
-        recusaData: new Date().toISOString()
-      });
-      toast.success(`Solicitação recusada. Mercadoria voltou para "Armazenadas" com observações.`);
+      // Find the corresponding pedido_liberacao by NF number
+      const pedido = pedidosLiberacao.find(p => p.nfVinculada === nf.numeroNF);
+      if (!pedido) {
+        throw new Error('Pedido de liberação não encontrado');
+      }
+
+      console.log('❌ Recusando solicitação:', { nf: nf.numeroNF, responsavel: data.responsavel });
+      
+      await recusarPedido(pedido.id, data.responsavel, data.motivo);
+      toast.success(`❌ Solicitação recusada. Mercadoria voltou para "Armazenadas" com observações.`);
       setOpen(false);
       form.reset();
     } catch (error) {
-      console.error('Erro ao recusar solicitação:', error);
-      toast.error('Erro ao recusar solicitação');
+      console.error('❌ Erro ao recusar solicitação:', error);
+      toast.error('Erro ao recusar solicitação: ' + (error as Error).message);
     }
   };
 

@@ -151,7 +151,7 @@ export function ClienteMercadoriasTable() {
 
   const handleSolicitarLiberacao = async (nf: NotaFiscal) => {
     try {
-      console.log('Solicitando carregamento para NF:', nf);
+      console.log('🚚 Solicitando carregamento para NF:', nf.numeroNF);
       
       // Verificar se já existe solicitação para esta NF
       const existingSolicitation = pedidosLiberacao.find(p => p.nfVinculada === nf.numeroNF);
@@ -184,10 +184,10 @@ export function ClienteMercadoriasTable() {
 
       await addPedidoLiberacao(pedidoData);
       
-      // Atualizar status da NF para 'Ordem Solicitada'
-      await updateNotaFiscalStatus(nf.id, 'Ordem Solicitada');
+      toast.success(`✅ Solicitação enviada! NF ${nf.numeroNF} movida para "Carregamento Solicitado"`);
       
-      toast.success(`Solicitação de carregamento enviada para NF: ${nf.numeroNF}`);
+      // Forçar atualização das NFs selecionadas removendo a que foi solicitada
+      setSelectedNFs(prev => prev.filter(id => id !== nf.id));
       
     } catch (error) {
       console.error('Erro ao solicitar carregamento:', error);

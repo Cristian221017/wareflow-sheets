@@ -25,7 +25,7 @@ export function ResetDataButton() {
           className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
         >
           <Trash2 className="w-4 h-4 mr-2" />
-          Resetar Dados
+          🔄 Resetar Dados (Teste)
         </Button>
       </AlertDialogTrigger>
       <AlertDialogContent>
