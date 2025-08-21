@@ -505,16 +505,12 @@ export function WMSProvider({ children }: { children: React.ReactNode }) {
 
       console.log('Status atualizado no banco com sucesso');
 
-      // Update local state
+      // Update local state only
       setNotasFiscais(prev => {
         const updated = prev.map(nf => nf.id === nfId ? { ...nf, status } : nf);
         console.log('Estado local atualizado:', updated.find(nf => nf.id === nfId));
         return updated;
       });
-      
-      // Recarregar dados para garantir sincronização
-      console.log('Recarregando dados após atualização...');
-      await loadNotasFiscais();
       
     } catch (error) {
       console.error('Error updating nota fiscal status:', error);
