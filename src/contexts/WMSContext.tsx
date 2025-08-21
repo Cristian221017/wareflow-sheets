@@ -365,6 +365,19 @@ export function WMSProvider({ children }: { children: React.ReactNode }) {
         throw new Error('Nota fiscal não encontrada');
       }
 
+      // Verificar se já existe pedido de liberação para esta NF
+      const existingSolicitation = pedidosLiberacao.find(p => p.nfVinculada === notaFiscal.numeroNF);
+      if (existingSolicitation) {
+        throw new Error('Já existe uma solicitação de carregamento para esta NF');
+      }
+
+      // Verificar se a NF já não está com status que impede nova solicitação
+      if (notaFiscal.status !== 'Armazenada') {
+        throw new Error(`Não é possível solicitar carregamento. Status atual: ${notaFiscal.status}`);
+      }
+
+      console.log('Criando pedido de liberação para NF:', notaFiscal.numeroNF);
+
       const { error } = await supabase
         .from('pedidos_liberacao')
         .insert([{

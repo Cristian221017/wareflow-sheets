@@ -54,7 +54,7 @@ const isOverdue = (dataRecebimento: string): boolean => {
 
 export function ClienteMercadoriasTable() {
   const { user } = useAuth();
-  const { notasFiscais, addPedidoLiberacao, updateNotaFiscalStatus } = useWMS();
+  const { notasFiscais, addPedidoLiberacao, updateNotaFiscalStatus, pedidosLiberacao } = useWMS();
   const [selectedNFs, setSelectedNFs] = useState<string[]>([]);
   const [isLiberacaoDialogOpen, setIsLiberacaoDialogOpen] = useState(false);
   const [isBulkLiberacaoDialogOpen, setIsBulkLiberacaoDialogOpen] = useState(false);
@@ -65,15 +65,20 @@ export function ClienteMercadoriasTable() {
   const [dateFilter, setDateFilter] = useState<string>('all');
   const [fornecedorFilter, setFornecedorFilter] = useState<string>('all');
 
-  // Filter data for current client - APENAS ARMAZENADAS
+  // Filter data for current client - APENAS ARMAZENADAS E SEM SOLICITAÇÃO EXISTENTE
   const clienteNFs = useMemo(() => {
     console.log('Filtrando NFs para cliente:', { user: user?.cnpj, totalNFs: notasFiscais.length });
     
     let filtered = notasFiscais.filter(nf => {
       const isClienteNF = nf.cnpjCliente === user?.cnpj;
       const isArmazenada = nf.status === 'Armazenada';
-      console.log('NF:', nf.numeroNF, 'Cliente match:', isClienteNF, 'Status:', nf.status, 'É armazenada:', isArmazenada);
-      return isClienteNF && isArmazenada;
+      
+      // Verificar se já existe solicitação para esta NF
+      const hasExistingSolicitation = pedidosLiberacao.some(p => p.nfVinculada === nf.numeroNF);
+      
+      console.log('NF:', nf.numeroNF, 'Cliente match:', isClienteNF, 'Status:', nf.status, 'É armazenada:', isArmazenada, 'Tem solicitação:', hasExistingSolicitation);
+      
+      return isClienteNF && isArmazenada && !hasExistingSolicitation;
     });
     
     console.log('NFs filtradas (apenas armazenadas):', filtered.length);
@@ -117,7 +122,7 @@ export function ClienteMercadoriasTable() {
     }
     
     return filtered;
-  }, [notasFiscais, user?.cnpj, searchTerm, dateFilter, fornecedorFilter]);
+  }, [notasFiscais, user?.cnpj, pedidosLiberacao, searchTerm, dateFilter, fornecedorFilter]);
 
   const fornecedores = useMemo(() => {
     const allFornecedores = notasFiscais
@@ -147,11 +152,42 @@ export function ClienteMercadoriasTable() {
   const handleSolicitarLiberacao = async (nf: NotaFiscal) => {
     try {
       console.log('Solicitando carregamento para NF:', nf);
-      await updateNotaFiscalStatus(nf.id, 'Ordem Solicitada');
+      
+      // Verificar se já existe solicitação para esta NF
+      const existingSolicitation = pedidosLiberacao.find(p => p.nfVinculada === nf.numeroNF);
+      if (existingSolicitation) {
+        toast.error('Já existe uma solicitação de carregamento para esta NF');
+        return;
+      }
+
+      // Verificar se o status permite nova solicitação
+      if (nf.status !== 'Armazenada') {
+        toast.error(`Não é possível solicitar carregamento. Status atual: ${nf.status}`);
+        return;
+      }
+
+      // Criar pedido de liberação automaticamente
+      const pedidoData = {
+        numeroPedido: nf.numeroPedido,
+        ordemCompra: nf.ordemCompra,
+        dataSolicitacao: new Date().toISOString().split('T')[0],
+        cliente: nf.cliente,
+        cnpjCliente: nf.cnpjCliente,
+        nfVinculada: nf.numeroNF,
+        produto: nf.produto,
+        quantidade: nf.quantidade,
+        peso: nf.peso,
+        volume: nf.volume,
+        prioridade: 'Média' as const,
+        responsavel: user?.name || 'Cliente'
+      };
+
+      await addPedidoLiberacao(pedidoData);
       toast.success(`Solicitação de carregamento enviada para NF: ${nf.numeroNF}`);
+      
     } catch (error) {
       console.error('Erro ao solicitar carregamento:', error);
-      toast.error('Erro ao enviar solicitação de carregamento');
+      toast.error(error instanceof Error ? error.message : 'Erro ao enviar solicitação de carregamento');
     }
   };
 
