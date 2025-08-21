@@ -34,6 +34,15 @@ export function WMSProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (user?.transportadoraId) {
       loadData();
+      
+      // Set up real-time updates for better sync between client and transporter
+      const interval = setInterval(() => {
+        if (user?.transportadoraId) {
+          loadData();
+        }
+      }, 30000); // Reload every 30 seconds
+      
+      return () => clearInterval(interval);
     }
   }, [user?.transportadoraId]);
 

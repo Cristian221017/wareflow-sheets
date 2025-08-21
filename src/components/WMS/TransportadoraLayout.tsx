@@ -247,7 +247,6 @@ export function TransportadoraLayout() {
                 <TabsTrigger value="financeiro" className="text-xs px-2 py-2 whitespace-nowrap">Financeiro</TabsTrigger>
                 <TabsTrigger value="notas-fiscais" className="text-xs px-2 py-2 whitespace-nowrap">Notas Fiscais</TabsTrigger>
                 <TabsTrigger value="pedidos-liberacao" className="text-xs px-2 py-2 whitespace-nowrap">Carregamento</TabsTrigger>
-                <TabsTrigger value="solicitacoes-pendentes" className="text-xs px-2 py-2 whitespace-nowrap">Pendentes</TabsTrigger>
                 <TabsTrigger value="pedidos-liberados" className="text-xs px-2 py-2 whitespace-nowrap">Confirmadas</TabsTrigger>
                 <TabsTrigger value="relatorios" className="text-xs px-2 py-2 whitespace-nowrap">Relatórios</TabsTrigger>
               </TabsList>
@@ -255,12 +254,11 @@ export function TransportadoraLayout() {
             
             {/* Desktop: Grid layout */}
             <div className="hidden lg:block mb-6">
-              <TabsList className="grid w-full grid-cols-7 gap-1">
+              <TabsList className="grid w-full grid-cols-6 gap-1">
                 <TabsTrigger value="dashboard" className="text-sm">Dashboard</TabsTrigger>
                 <TabsTrigger value="financeiro" className="text-sm">Financeiro</TabsTrigger>
                 <TabsTrigger value="notas-fiscais" className="text-sm">Notas Fiscais</TabsTrigger>
                 <TabsTrigger value="pedidos-liberacao" className="text-sm">Ordem de Carregamento</TabsTrigger>
-                <TabsTrigger value="solicitacoes-pendentes" className="text-sm">Solicitações Pendentes</TabsTrigger>
                 <TabsTrigger value="pedidos-liberados" className="text-sm">Solicitação Confirmada</TabsTrigger>
                 <TabsTrigger value="relatorios" className="text-sm">Relatórios</TabsTrigger>
               </TabsList>
@@ -274,12 +272,11 @@ export function TransportadoraLayout() {
               <NotasFiscaisTable />
             </TabsContent>
             
-            <TabsContent value="solicitacoes-pendentes" className="space-y-4">
-              <SolicitacoesPendentesTable />
-            </TabsContent>
-            
             <TabsContent value="pedidos-liberacao" className="space-y-4">
-              <PedidosLiberacaoTable />
+              <div className="space-y-6">
+                <PedidosLiberacaoTable />
+                <SolicitacoesPendentesTable />
+              </div>
             </TabsContent>
             
             <TabsContent value="pedidos-liberados" className="space-y-4">
