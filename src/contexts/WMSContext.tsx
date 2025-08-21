@@ -17,7 +17,7 @@ interface WMSContextType {
   addPedidoLiberacao: (pedido: Omit<PedidoLiberacao, 'id' | 'createdAt' | 'status'>) => Promise<void>;
   liberarPedido: (pedidoId: string, transportadora: string, dataExpedicao?: string) => Promise<void>;
   recusarPedido: (pedidoId: string, responsavel: string, motivo: string) => Promise<void>;
-  updateNotaFiscalStatus: (nfId: string, status: NotaFiscal['status']) => Promise<void>;
+  updateNotaFiscalStatus: (nfId: string, status: NotaFiscal['status'], metadata?: any) => Promise<void>;
   loadData: () => Promise<void>;
   resetarDados: () => Promise<void>;
 }
@@ -565,13 +565,18 @@ export function WMSProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const updateNotaFiscalStatus = async (nfId: string, status: NotaFiscal['status']) => {
+  const updateNotaFiscalStatus = async (nfId: string, status: NotaFiscal['status'], metadata?: any) => {
     try {
-      console.log('Atualizando status da NF:', { nfId, status });
+      console.log('Atualizando status da NF:', { nfId, status, metadata });
+      
+      const updateData: any = { status };
+      if (metadata) {
+        updateData.integration_metadata = metadata;
+      }
       
       const { error } = await supabase
         .from('notas_fiscais')
-        .update({ status })
+        .update(updateData)
         .eq('id', nfId);
 
       if (error) {
@@ -583,7 +588,7 @@ export function WMSProvider({ children }: { children: React.ReactNode }) {
 
       // Update local state only
       setNotasFiscais(prev => {
-        const updated = prev.map(nf => nf.id === nfId ? { ...nf, status } : nf);
+        const updated = prev.map(nf => nf.id === nfId ? { ...nf, status, integration_metadata: metadata || nf.integration_metadata } : nf);
         console.log('Estado local atualizado:', updated.find(nf => nf.id === nfId));
         return updated;
       });

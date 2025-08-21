@@ -19,6 +19,8 @@ import { FinanceiroTransportadora } from './FinanceiroTransportadora';
 import { FormDocumentoFinanceiro } from './FormDocumentoFinanceiro';
 import IntegrationConfig from './IntegrationConfig';
 import { ResetDataButton } from './ResetDataButton';
+import { TransportadoraSolicitacoesTable } from './TransportadoraSolicitacoesTable';
+import { PedidosConfirmadosTable } from './PedidosConfirmadosTable';
 import { 
   Plus,
   Warehouse,
@@ -281,14 +283,13 @@ export function TransportadoraLayout() {
             
             <TabsContent value="pedidos-liberacao" className="space-y-4">
               <div className="space-y-6">
-                <PedidosLiberacaoTable />
-                <SolicitacoesPendentesTable />
+                <TransportadoraSolicitacoesTable />
               </div>
             </TabsContent>
             
             <TabsContent value="pedidos-liberados" className="space-y-4">
               <div className="space-y-6">
-                <PedidosLiberadosTable />
+                <PedidosConfirmadosTable />
                 <ImpressaoPedidosLiberados />
               </div>
             </TabsContent>
