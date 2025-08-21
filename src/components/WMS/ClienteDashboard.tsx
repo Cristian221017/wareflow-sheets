@@ -18,7 +18,7 @@ export function ClienteDashboard() {
   // Calculate statistics
   const totalPeso = clienteNFs.reduce((sum, nf) => sum + nf.peso, 0);
   const totalVolume = clienteNFs.reduce((sum, nf) => sum + nf.volume, 0);
-  const nfsArmazenadas = clienteNFs.filter(nf => nf.status === 'Armazenada').length;
+  const nfsArmazenadas = clienteNFs.filter(nf => nf.status === 'ARMAZENADA').length;
   const pedidosAnalise = clientePedidos.filter(p => p.status === 'Em análise').length;
 
   const getStatusCount = (status: string) => {
@@ -104,21 +104,21 @@ export function ClienteDashboard() {
                   <div className="w-3 h-3 bg-success rounded-full"></div>
                   <span className="text-sm">Armazenadas</span>
                 </div>
-                <span className="text-sm font-medium">{getStatusCount('Armazenada')}</span>
+                <span className="text-sm font-medium">{getStatusCount('ARMAZENADA')}</span>
               </div>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <div className="w-3 h-3 bg-warning rounded-full"></div>
                   <span className="text-sm">Ordem Solicitada</span>
                 </div>
-                <span className="text-sm font-medium">{getStatusCount('Ordem Solicitada')}</span>
+                <span className="text-sm font-medium">{getStatusCount('SOLICITADA')}</span>
               </div>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <div className="w-3 h-3 bg-primary rounded-full"></div>
                   <span className="text-sm">Solicitação Confirmada</span>
                 </div>
-                <span className="text-sm font-medium">{getStatusCount('Solicitação Confirmada')}</span>
+                <span className="text-sm font-medium">{getStatusCount('CONFIRMADA')}</span>
               </div>
             </div>
           </CardContent>

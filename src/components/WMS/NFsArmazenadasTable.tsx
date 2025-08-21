@@ -17,7 +17,7 @@ export function NFsArmazenadasTable() {
 
   // Filter NFs with status "Armazenada"
   const nfsArmazenadas = useMemo(() => {
-    const filtered = notasFiscais.filter(nf => nf.status === 'Armazenada');
+    const filtered = notasFiscais.filter(nf => nf.status === 'ARMAZENADA');
     console.log('🏢 [Transportadora] NFs Armazenadas:', filtered.length);
     return filtered;
   }, [notasFiscais]);

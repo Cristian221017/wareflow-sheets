@@ -20,7 +20,7 @@ export function ClienteSolicitacaoCarregamento() {
   // Filter NFs for current client with status "Ordem Solicitada"
   const nfsSolicitadas = useMemo(() => {
     const filtered = notasFiscais.filter(nf => 
-      nf.cnpjCliente === user?.cnpj && nf.status === 'Ordem Solicitada'
+      nf.cnpjCliente === user?.cnpj && nf.status === 'SOLICITADA'
     );
     
     console.log('🚚 [Cliente] Carregamentos Solicitados:', filtered.length, 'para CNPJ:', user?.cnpj);

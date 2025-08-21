@@ -19,11 +19,11 @@ import { Trash2 } from 'lucide-react';
 
 const getStatusColor = (status: NotaFiscal['status']) => {
   switch (status) {
-    case 'Armazenada':
+    case 'ARMAZENADA':
       return 'bg-success text-success-foreground';
-    case 'Ordem Solicitada':
+    case 'SOLICITADA':
       return 'bg-warning text-warning-foreground';
-    case 'Solicitação Confirmada':
+    case 'CONFIRMADA':
       return 'bg-muted text-muted-foreground';
     default:
       return 'bg-muted text-muted-foreground';
@@ -52,7 +52,7 @@ export function NotasFiscaisTable() {
 
   // Filter notes by selected client - APENAS ARMAZENADAS
   const filteredNFs = useMemo(() => {
-    let filtered = notasFiscais.filter(nf => nf.status === 'Armazenada');
+    let filtered = notasFiscais.filter(nf => nf.status === 'ARMAZENADA');
     
     if (selectedCliente !== 'todos') {
       filtered = filtered.filter(nf => nf.cliente === selectedCliente);
@@ -118,12 +118,12 @@ export function NotasFiscaisTable() {
                 <TableRow 
                   key={nf.id}
                    className={cn(
-                      isOverdue(nf.dataRecebimento) && nf.status === 'Armazenada' 
-                        ? 'bg-destructive/10 hover:bg-destructive/20' 
-                        : '',
-                      nf.status === 'Ordem Solicitada' 
-                        ? 'bg-warning/10 hover:bg-warning/20' 
-                        : ''
+                       isOverdue(nf.dataRecebimento) && nf.status === 'ARMAZENADA' 
+                         ? 'bg-destructive/10 hover:bg-destructive/20' 
+                         : '',
+                       nf.status === 'SOLICITADA' 
+                         ? 'bg-warning/10 hover:bg-warning/20' 
+                         : ''
                    )}
                 >
                   <TableCell className="font-medium">{nf.numeroNF}</TableCell>

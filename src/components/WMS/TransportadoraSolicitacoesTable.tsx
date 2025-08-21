@@ -23,7 +23,7 @@ import { toast } from 'sonner';
 
 const getStatusColor = (status: string) => {
   switch (status) {
-    case 'Ordem Solicitada':
+    case 'SOLICITADA':
       return 'bg-warning text-warning-foreground';
     default:
       return 'bg-muted text-muted-foreground';
@@ -253,7 +253,7 @@ export function TransportadoraSolicitacoesTable() {
   const { notasFiscais } = useWMS();
   
   // Filtrar apenas NFs com solicitação de carregamento (status "Ordem Solicitada")
-  const nfsComSolicitacao = notasFiscais.filter(nf => nf.status === 'Ordem Solicitada');
+  const nfsComSolicitacao = notasFiscais.filter(nf => nf.status === 'SOLICITADA');
 
   return (
     <Card>

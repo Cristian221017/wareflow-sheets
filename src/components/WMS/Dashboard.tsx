@@ -160,17 +160,17 @@ export function Dashboard() {
     const statusData = [
       { 
         name: 'Armazenada', 
-        value: notasFiscais.filter(nf => nf.status === 'Armazenada').length,
+        value: notasFiscais.filter(nf => nf.status === 'ARMAZENADA').length,
         color: COLORS[0]
       },
       { 
         name: 'Ordem Solicitada',
-        value: notasFiscais.filter(nf => nf.status === 'Ordem Solicitada').length,
+        value: notasFiscais.filter(nf => nf.status === 'SOLICITADA').length,
         color: COLORS[1]
       },
       { 
         name: 'Solicitação Confirmada',
-        value: notasFiscais.filter(nf => nf.status === 'Solicitação Confirmada').length,
+        value: notasFiscais.filter(nf => nf.status === 'CONFIRMADA').length,
         color: COLORS[2]
       }
     ];
