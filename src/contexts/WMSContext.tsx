@@ -368,12 +368,38 @@ export function WMSProvider({ children }: { children: ReactNode }) {
     try {
       console.log('🔄 Resetando dados de teste...');
 
-      // Delete in correct order due to foreign keys
-      await supabase.from('pedidos_liberados').delete().neq('id', '');
-      await supabase.from('pedidos_liberacao').delete().neq('id', '');
-      await supabase.from('notas_fiscais').delete().neq('id', '');
+      if (!user?.transportadoraId) {
+        throw new Error('Transportadora não encontrada');
+      }
 
-      // Create demo data
+      // Delete in correct order due to foreign keys - ONLY for current transportadora
+      const { error: deleteLiberdosError } = await supabase
+        .from('pedidos_liberados')
+        .delete()
+        .eq('transportadora_id', user.transportadoraId);
+
+      const { error: deletePedidosError } = await supabase
+        .from('pedidos_liberacao')
+        .delete()
+        .eq('transportadora_id', user.transportadoraId);
+
+      const { error: deleteNFsError } = await supabase
+        .from('notas_fiscais')
+        .delete()
+        .eq('transportadora_id', user.transportadoraId);
+
+      // Delete demo cliente if exists
+      const { error: deleteClienteError } = await supabase
+        .from('clientes')
+        .delete()
+        .eq('cnpj', '12.345.678/0001-90')
+        .eq('transportadora_id', user.transportadoraId);
+
+      if (deleteLiberdosError || deletePedidosError || deleteNFsError || deleteClienteError) {
+        console.warn('Avisos ao deletar:', { deleteLiberdosError, deletePedidosError, deleteNFsError, deleteClienteError });
+      }
+
+      // Create demo cliente
       const demoCliente = {
         razao_social: 'Empresa Demo Ltda',
         nome_fantasia: 'Demo Corp',
@@ -384,22 +410,27 @@ export function WMSProvider({ children }: { children: ReactNode }) {
         cidade: 'São Paulo',
         estado: 'SP',
         cep: '01234-567',
-        transportadora_id: user?.transportadoraId
+        transportadora_id: user.transportadoraId
       };
 
-      const { data: clienteData } = await supabase
+      const { data: clienteData, error: clienteError } = await supabase
         .from('clientes')
         .insert(demoCliente)
         .select()
         .single();
 
+      if (clienteError) {
+        throw new Error(`Erro ao criar cliente demo: ${clienteError.message}`);
+      }
+
       if (clienteData) {
-        // Create demo NFs
+        // Create demo NFs with unique numbers
+        const timestamp = Date.now().toString().slice(-4); // Last 4 digits for uniqueness
         const demoNFs = [
           {
-            numero_nf: 'NF-001',
-            numero_pedido: 'PED-001',
-            ordem_compra: 'OC-001',
+            numero_nf: `NF-${timestamp}-001`,
+            numero_pedido: `PED-${timestamp}-001`,
+            ordem_compra: `OC-${timestamp}-001`,
             data_recebimento: new Date().toISOString().split('T')[0],
             fornecedor: 'Fornecedor A',
             cnpj_fornecedor: '98.765.432/0001-10',
@@ -410,12 +441,12 @@ export function WMSProvider({ children }: { children: ReactNode }) {
             volume: 2.3,
             localizacao: 'A1-B2-C3',
             status: 'Armazenada',
-            transportadora_id: user?.transportadoraId
+            transportadora_id: user.transportadoraId
           },
           {
-            numero_nf: 'NF-002',
-            numero_pedido: 'PED-002',
-            ordem_compra: 'OC-002',
+            numero_nf: `NF-${timestamp}-002`,
+            numero_pedido: `PED-${timestamp}-002`,
+            ordem_compra: `OC-${timestamp}-002`,
             data_recebimento: new Date().toISOString().split('T')[0],
             fornecedor: 'Fornecedor B',
             cnpj_fornecedor: '11.222.333/0001-44',
@@ -426,11 +457,17 @@ export function WMSProvider({ children }: { children: ReactNode }) {
             volume: 1.8,
             localizacao: 'B1-C2-D3',
             status: 'Armazenada',
-            transportadora_id: user?.transportadoraId
+            transportadora_id: user.transportadoraId
           }
         ];
 
-        await supabase.from('notas_fiscais').insert(demoNFs);
+        const { error: nfError } = await supabase
+          .from('notas_fiscais')
+          .insert(demoNFs);
+
+        if (nfError) {
+          throw new Error(`Erro ao criar NFs demo: ${nfError.message}`);
+        }
       }
 
       toast.success('✅ Dados resetados com sucesso!');
