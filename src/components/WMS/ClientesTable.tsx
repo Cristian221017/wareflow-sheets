@@ -132,26 +132,62 @@ export function ClientesTable() {
   };
 
   const handleDeleteCliente = async (clienteId: string, clienteName: string) => {
-    if (window.confirm(`Tem certeza que deseja excluir o cliente "${clienteName}"? Esta ação não pode ser desfeita.`)) {
+    if (window.confirm(`Tem certeza que deseja excluir o cliente "${clienteName}"? Esta ação excluirá todos os dados relacionados (notas fiscais, pedidos) e não pode ser desfeita.`)) {
       try {
+        // Primeiro, excluir dados relacionados em ordem para evitar conflitos de foreign key
+        
+        // 1. Excluir pedidos liberados
+        const { error: pedidosLiberadosError } = await supabase
+          .from('pedidos_liberados')
+          .delete()
+          .eq('cliente_id', clienteId);
+        
+        if (pedidosLiberadosError) {
+          console.error('Erro ao excluir pedidos liberados:', pedidosLiberadosError);
+        }
+
+        // 2. Excluir pedidos de liberação
+        const { error: pedidosLiberacaoError } = await supabase
+          .from('pedidos_liberacao')
+          .delete()
+          .eq('cliente_id', clienteId);
+        
+        if (pedidosLiberacaoError) {
+          console.error('Erro ao excluir pedidos de liberação:', pedidosLiberacaoError);
+        }
+
+        // 3. Excluir notas fiscais
+        const { error: notasError } = await supabase
+          .from('notas_fiscais')
+          .delete()
+          .eq('cliente_id', clienteId);
+        
+        if (notasError) {
+          console.error('Erro ao excluir notas fiscais:', notasError);
+        }
+
+        // 4. Finalmente, excluir o cliente
         const { error } = await supabase
           .from('clientes')
           .delete()
           .eq('id', clienteId);
 
-        if (error) throw error;
+        if (error) {
+          console.error('Erro ao excluir cliente:', error);
+          throw error;
+        }
 
         await loadClientes();
         showToast({
           title: 'Sucesso',
-          description: 'Cliente excluído com sucesso',
+          description: 'Cliente e todos os dados relacionados foram excluídos com sucesso',
           variant: 'default',
         });
       } catch (error) {
         console.error('Erro ao excluir cliente:', error);
         showToast({
           title: 'Erro',
-          description: 'Não foi possível excluir o cliente',
+          description: 'Não foi possível excluir o cliente. Verifique se você tem permissões adequadas.',
           variant: 'destructive',
         });
       }
