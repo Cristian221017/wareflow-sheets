@@ -12,7 +12,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Package, Truck } from 'lucide-react';
+import { Package } from 'lucide-react';
 import { toast } from 'sonner';
 
 export function ClienteMercadoriasTable() {
@@ -48,7 +48,7 @@ export function ClienteMercadoriasTable() {
           Notas Fiscais Armazenadas
         </CardTitle>
         <CardDescription>
-          Suas mercadorias disponíveis para solicitação de carregamento
+          Suas mercadorias armazenadas disponíveis
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -67,7 +67,6 @@ export function ClienteMercadoriasTable() {
                 <TableHead>Volume (m³)</TableHead>
                 <TableHead>Localização</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead>Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
