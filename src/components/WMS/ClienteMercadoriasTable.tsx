@@ -27,7 +27,8 @@ import {
   RotateCcw,
   Plus,
   CheckSquare,
-  Square
+  Square,
+  Truck
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -53,7 +54,7 @@ const isOverdue = (dataRecebimento: string): boolean => {
 
 export function ClienteMercadoriasTable() {
   const { user } = useAuth();
-  const { notasFiscais, addPedidoLiberacao } = useWMS();
+  const { notasFiscais, addPedidoLiberacao, updateNotaFiscalStatus } = useWMS();
   const [selectedNFs, setSelectedNFs] = useState<string[]>([]);
   const [isLiberacaoDialogOpen, setIsLiberacaoDialogOpen] = useState(false);
   const [isBulkLiberacaoDialogOpen, setIsBulkLiberacaoDialogOpen] = useState(false);
@@ -139,10 +140,13 @@ export function ClienteMercadoriasTable() {
     }
   };
 
-  const handleSolicitarLiberacao = (nf: NotaFiscal) => {
-    console.log('handleSolicitarLiberacao - NF selecionada:', nf);
-    setSelectedNF(nf);
-    setIsLiberacaoDialogOpen(true);
+  const handleSolicitarLiberacao = async (nf: NotaFiscal) => {
+    try {
+      await updateNotaFiscalStatus(nf.id, 'Ordem Solicitada');
+      toast.success(`Solicitação de carregamento enviada para NF: ${nf.numeroNF}`);
+    } catch (error) {
+      toast.error('Erro ao enviar solicitação de carregamento');
+    }
   };
 
   const handleBulkLiberacao = () => {
@@ -386,7 +390,7 @@ export function ClienteMercadoriasTable() {
                           onClick={() => handleSolicitarLiberacao(nf)}
                           className="w-full text-warning border-warning hover:bg-warning hover:text-warning-foreground"
                         >
-                          <Plus className="w-3 h-3 mr-1" />
+                          <Truck className="w-3 h-3 mr-1" />
                           Solicitar Carregamento
                         </Button>
                       )}
@@ -477,7 +481,7 @@ export function ClienteMercadoriasTable() {
                           onClick={() => handleSolicitarLiberacao(nf)}
                           className="text-warning border-warning hover:bg-warning hover:text-warning-foreground"
                         >
-                          <Plus className="w-3 h-3 mr-1" />
+                          <Truck className="w-3 h-3 mr-1" />
                           Solicitar
                         </Button>
                       )}
