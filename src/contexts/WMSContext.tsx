@@ -36,55 +36,76 @@ export function WMSProvider({ children }: { children: React.ReactNode }) {
     if (user?.transportadoraId) {
       loadData();
       
-      // Create a single comprehensive real-time channel for perfect synchronization
-      const wmsChannel = supabase
-        .channel('wms_synchronization')
+      // Create separate channels without complex filters to avoid CHANNEL_ERROR
+      const notasChannel = supabase
+        .channel('notas_fiscais_changes')
         .on(
           'postgres_changes',
           {
             event: '*',
             schema: 'public',
-            table: 'notas_fiscais',
-            filter: `transportadora_id=eq.${user.transportadoraId}`
+            table: 'notas_fiscais'
           },
           (payload) => {
             console.log('📦 NF Real-time update:', payload);
-            setTimeout(() => loadNotasFiscais(), 500); // Small delay for DB consistency
-          }
-        )
-        .on(
-          'postgres_changes',
-          {
-            event: '*',
-            schema: 'public',
-            table: 'pedidos_liberacao',
-            filter: `transportadora_id=eq.${user.transportadoraId}`
-          },
-          (payload) => {
-            console.log('🚛 Pedido liberacao Real-time update:', payload);
-            setTimeout(() => loadPedidosLiberacao(), 500);
-          }
-        )
-        .on(
-          'postgres_changes',
-          {
-            event: '*',
-            schema: 'public',
-            table: 'pedidos_liberados',
-            filter: `transportadora_id=eq.${user.transportadoraId}`
-          },
-          (payload) => {
-            console.log('✅ Pedido liberado Real-time update:', payload);
-            setTimeout(() => loadPedidosLiberados(), 500);
+            // Only reload if it affects our transportadora
+            if ((payload.new as any)?.transportadora_id === user.transportadoraId || 
+                (payload.old as any)?.transportadora_id === user.transportadoraId) {
+              setTimeout(() => loadNotasFiscais(), 300);
+            }
           }
         )
         .subscribe((status) => {
-          console.log('🔄 WMS Channel Status:', status);
+          console.log('🔄 Notas Fiscais Channel Status:', status);
+        });
+
+      const pedidosChannel = supabase
+        .channel('pedidos_liberacao_changes')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'pedidos_liberacao'
+          },
+          (payload) => {
+            console.log('🚛 Pedido liberacao Real-time update:', payload);
+            if ((payload.new as any)?.transportadora_id === user.transportadoraId || 
+                (payload.old as any)?.transportadora_id === user.transportadoraId) {
+              setTimeout(() => loadPedidosLiberacao(), 300);
+            }
+          }
+        )
+        .subscribe((status) => {
+          console.log('🔄 Pedidos Liberacao Channel Status:', status);
+        });
+
+      const liberadosChannel = supabase
+        .channel('pedidos_liberados_changes')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'pedidos_liberados'
+          },
+          (payload) => {
+            console.log('✅ Pedido liberado Real-time update:', payload);
+            if ((payload.new as any)?.transportadora_id === user.transportadoraId || 
+                (payload.old as any)?.transportadora_id === user.transportadoraId) {
+              setTimeout(() => loadPedidosLiberados(), 300);
+            }
+          }
+        )
+        .subscribe((status) => {
+          console.log('🔄 Pedidos Liberados Channel Status:', status);
         });
       
       return () => {
-        console.log('🔌 Removing WMS real-time channel');
-        supabase.removeChannel(wmsChannel);
+        console.log('🔌 Removing WMS real-time channels');
+        supabase.removeChannel(notasChannel);
+        supabase.removeChannel(pedidosChannel);
+        supabase.removeChannel(liberadosChannel);
       };
     }
   }, [user?.transportadoraId]);
