@@ -19,6 +19,7 @@ interface WMSContextType {
   recusarPedido: (pedidoId: string, responsavel: string, motivo: string) => Promise<void>;
   updateNotaFiscalStatus: (nfId: string, status: NotaFiscal['status']) => Promise<void>;
   loadData: () => Promise<void>;
+  resetarDados: () => Promise<void>;
 }
 
 const WMSContext = createContext<WMSContextType | undefined>(undefined);
@@ -35,14 +36,65 @@ export function WMSProvider({ children }: { children: React.ReactNode }) {
     if (user?.transportadoraId) {
       loadData();
       
-      // Set up real-time updates for better sync between client and transporter
-      const interval = setInterval(() => {
-        if (user?.transportadoraId) {
-          loadData();
-        }
-      }, 30000); // Reload every 30 seconds
+      // Set up real-time subscription for notas_fiscais
+      const notasChannel = supabase
+        .channel('notas_fiscais_changes')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'notas_fiscais',
+            filter: `transportadora_id=eq.${user.transportadoraId}`
+          },
+          () => {
+            console.log('NF changed, reloading data...');
+            loadNotasFiscais();
+          }
+        )
+        .subscribe();
+
+      // Set up real-time subscription for pedidos_liberacao
+      const pedidosChannel = supabase
+        .channel('pedidos_liberacao_changes')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'pedidos_liberacao',
+            filter: `transportadora_id=eq.${user.transportadoraId}`
+          },
+          () => {
+            console.log('Pedido liberacao changed, reloading data...');
+            loadPedidosLiberacao();
+          }
+        )
+        .subscribe();
+
+      // Set up real-time subscription for pedidos_liberados
+      const liberadosChannel = supabase
+        .channel('pedidos_liberados_changes')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'pedidos_liberados',
+            filter: `transportadora_id=eq.${user.transportadoraId}`
+          },
+          () => {
+            console.log('Pedido liberado changed, reloading data...');
+            loadPedidosLiberados();
+          }
+        )
+        .subscribe();
       
-      return () => clearInterval(interval);
+      return () => {
+        supabase.removeChannel(notasChannel);
+        supabase.removeChannel(pedidosChannel);
+        supabase.removeChannel(liberadosChannel);
+      };
     }
   }, [user?.transportadoraId]);
 
@@ -450,6 +502,8 @@ export function WMSProvider({ children }: { children: React.ReactNode }) {
         throw new Error('Cliente ou nota fiscal não encontrado');
       }
 
+      console.log('Liberando pedido:', pedidoId, 'Transportadora:', transportadora);
+
       // Create liberado record
       const { error: insertError } = await supabase
         .from('pedidos_liberados')
@@ -478,14 +532,23 @@ export function WMSProvider({ children }: { children: React.ReactNode }) {
 
       if (deleteError) throw deleteError;
 
-      // Update NF status
-      await updateNotaFiscalStatus(notaFiscal.id, 'Solicitação Confirmada');
+      console.log('Atualizando NF para "Solicitação Confirmada"');
 
-      // Reload data to sync between transporter and client
+      // Update NF status - CRITICAL: This moves NF to "Confirmadas"
+      const { error: updateError } = await supabase
+        .from('notas_fiscais')
+        .update({ status: 'Solicitação Confirmada' })
+        .eq('id', notaFiscal.id);
+
+      if (updateError) throw updateError;
+
+      console.log('NF atualizada com sucesso');
+
+      // Reload data for perfect sync between transporter and client
       await Promise.all([
+        loadNotasFiscais(),
         loadPedidosLiberacao(),
-        loadPedidosLiberados(),
-        loadNotasFiscais()
+        loadPedidosLiberados()
       ]);
 
       // Enviar notificação de rastreabilidade
@@ -559,39 +622,86 @@ export function WMSProvider({ children }: { children: React.ReactNode }) {
 
       if (deleteError) throw deleteError;
 
-      // Voltar NF para status "Armazenada" com observações da recusa
+      console.log('Voltando NF para "Armazenada" com observações da recusa');
+
+      // Voltar NF para status "Armazenada" com observações da recusa - CRITICAL: Returns NF to "Armazenadas"
       const observacaoRecusa = `RECUSADO - Responsável: ${responsavel} | Motivo: ${motivo} | Data: ${new Date().toLocaleDateString('pt-BR')}`;
       
-      // Atualizar a NF com as observações da recusa
-      await updateNotaFiscalStatus(notaFiscal.id, 'Armazenada');
+      const { error: updateError } = await supabase
+        .from('notas_fiscais')
+        .update({ 
+          status: 'Armazenada',
+          integration_metadata: { 
+            ...notaFiscal.integration_metadata || {}, 
+            observacao_recusa: observacaoRecusa 
+          }
+        })
+        .eq('id', notaFiscal.id);
 
-      // TODO: Adicionar campo de observações na tabela notas_fiscais se necessário
-      // Por enquanto, podemos mostrar no toast ou log
+      if (updateError) throw updateError;
 
-      // Remove from local state
-      setPedidosLiberacao(prev => prev.filter(p => p.id !== pedidoId));
+      console.log('NF voltou para armazenada com sucesso');
 
-      // Recarregar dados
-      await loadData();
+      // Reload data for perfect sync
+      await Promise.all([
+        loadNotasFiscais(),
+        loadPedidosLiberacao()
+      ]);
 
-      console.log('Pedido recusado com sucesso. Observação:', observacaoRecusa);
-      
-      // Notificar o cliente sobre a recusa
+      // Enviar notificação para o cliente
       const cliente = clientes.find(c => c.name === pedido.cliente);
       if (cliente?.emailSolicitacaoLiberacao) {
-        try {
-          notificationService.enviarNotificacaoSolicitacaoCarregamento(
-            cliente.emailSolicitacaoLiberacao,
-            `Solicitação de carregamento recusada - NF: ${pedido.nfVinculada}`,
-            `Responsável: ${responsavel} | Motivo: ${motivo}`
-          );
-        } catch (notifError) {
-          console.warn('Erro ao enviar notificação:', notifError);
-        }
+        notificationService.enviarNotificacaoSolicitacaoCarregamento(
+          cliente.emailSolicitacaoLiberacao,
+          `Solicitação RECUSADA - ${pedido.numeroPedido}`,
+          `Responsável: ${responsavel} | Motivo: ${motivo}`
+        );
       }
-
     } catch (error) {
-      console.error('Error refusing pedido:', error);
+      console.error('Error rejecting pedido:', error);
+      throw error;
+    }
+  };
+
+  const resetarDados = async () => {
+    if (!user?.transportadoraId) {
+      throw new Error('Usuário não associado a uma transportadora');
+    }
+
+    try {
+      console.log('Resetando todos os dados do sistema...');
+
+      // Deletar em ordem para respeitar foreign keys
+      const { error: deletePedidosLiberados } = await supabase
+        .from('pedidos_liberados')
+        .delete()
+        .eq('transportadora_id', user.transportadoraId);
+      
+      if (deletePedidosLiberados) throw deletePedidosLiberados;
+
+      const { error: deletePedidosLiberacao } = await supabase
+        .from('pedidos_liberacao')
+        .delete()
+        .eq('transportadora_id', user.transportadoraId);
+      
+      if (deletePedidosLiberacao) throw deletePedidosLiberacao;
+
+      const { error: deleteNotasFiscais } = await supabase
+        .from('notas_fiscais')
+        .delete()
+        .eq('transportadora_id', user.transportadoraId);
+      
+      if (deleteNotasFiscais) throw deleteNotasFiscais;
+
+      console.log('Dados resetados com sucesso!');
+
+      // Reload data
+      await loadData();
+      
+      toast.success('Todos os dados foram resetados com sucesso!');
+    } catch (error) {
+      console.error('Erro ao resetar dados:', error);
+      toast.error('Erro ao resetar dados');
       throw error;
     }
   };
@@ -610,7 +720,8 @@ export function WMSProvider({ children }: { children: React.ReactNode }) {
       liberarPedido,
       recusarPedido,
       updateNotaFiscalStatus,
-      loadData
+      loadData,
+      resetarDados
     }}>
       {children}
     </WMSContext.Provider>

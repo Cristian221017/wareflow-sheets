@@ -16,6 +16,7 @@ export interface NotaFiscal {
   localizacao: string;
   status: 'Armazenada' | 'Ordem Solicitada' | 'Solicitação Confirmada';
   createdAt: string;
+  integration_metadata?: any; // For storing additional metadata like rejection notes
 }
 
 export interface PedidoLiberacao {

@@ -18,6 +18,7 @@ import { SolicitacoesPendentesTable } from './SolicitacoesPendentesTable';
 import { FinanceiroTransportadora } from './FinanceiroTransportadora';
 import { FormDocumentoFinanceiro } from './FormDocumentoFinanceiro';
 import IntegrationConfig from './IntegrationConfig';
+import { ResetDataButton } from './ResetDataButton';
 import { 
   Plus,
   Warehouse,
@@ -152,6 +153,8 @@ export function TransportadoraLayout() {
                 </DialogContent>
               </Dialog>
 
+              <ResetDataButton />
+
               <Button onClick={logout} variant="outline">
                 <LogOut className="w-4 h-4 mr-2" />
                 Sair
@@ -229,6 +232,10 @@ export function TransportadoraLayout() {
                         />
                       </DialogContent>
                     </Dialog>
+
+                    <DropdownMenuItem className="text-destructive">
+                      <ResetDataButton />
+                    </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>
