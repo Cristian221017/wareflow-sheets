@@ -183,6 +183,10 @@ export function ClienteMercadoriasTable() {
       };
 
       await addPedidoLiberacao(pedidoData);
+      
+      // Atualizar status da NF para 'Ordem Solicitada'
+      await updateNotaFiscalStatus(nf.id, 'Ordem Solicitada');
+      
       toast.success(`Solicitação de carregamento enviada para NF: ${nf.numeroNF}`);
       
     } catch (error) {

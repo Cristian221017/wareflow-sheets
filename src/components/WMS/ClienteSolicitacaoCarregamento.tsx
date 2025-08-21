@@ -13,25 +13,19 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Truck } from 'lucide-react';
 
 export function ClienteSolicitacaoCarregamento() {
-  const { notasFiscais, pedidosLiberacao } = useWMS();
+  const { notasFiscais } = useWMS();
   const { user } = useAuth();
   
-  // Filter data for current client - NFs que têm pedidos de liberação pendentes
+  // Filter data for current client - APENAS ORDEM SOLICITADA
   const nfsLiberadas = notasFiscais.filter(nf => {
     const isClienteNF = nf.cnpjCliente === user?.cnpj; 
+    const isOrdemSolicitada = nf.status === 'Ordem Solicitada';
     
-    // Verificar se existe pedido de liberação pendente para esta NF
-    const hasPendingSolicitation = pedidosLiberacao.some(p => 
-      p.nfVinculada === nf.numeroNF && 
-      p.status === 'Em análise' &&
-      p.cnpjCliente === user?.cnpj
-    );
-    
-    console.log('NF Solicitação:', nf.numeroNF, 'Cliente match:', isClienteNF, 'Status NF:', nf.status, 'Tem solicitação pendente:', hasPendingSolicitation);
-    return isClienteNF && hasPendingSolicitation;
+    console.log('NF Solicitação:', nf.numeroNF, 'Cliente match:', isClienteNF, 'Status:', nf.status, 'É ordem solicitada:', isOrdemSolicitada);
+    return isClienteNF && isOrdemSolicitada;
   });
 
-  console.log('Total NFs com carregamento solicitado:', nfsLiberadas.length);
+  console.log('Total NFs com ordem solicitada:', nfsLiberadas.length);
 
   return (
     <Card>
