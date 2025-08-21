@@ -29,13 +29,6 @@ export function ClienteMercadoriasTable() {
     return filtered;
   }, [notasFiscais, user?.cnpj]);
 
-  const handleSolicitarCarregamento = async (numeroNF: string) => {
-    try {
-      await solicitarCarregamento(numeroNF);
-    } catch (error) {
-      console.error('Erro ao solicitar carregamento:', error);
-    }
-  };
 
   if (isLoading) {
     return (

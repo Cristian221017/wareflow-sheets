@@ -9,6 +9,7 @@ import { ClienteSolicitacaoCarregamento } from './ClienteSolicitacaoCarregamento
 import { ClienteFinanceiro } from './ClienteFinanceiro';
 import { PedidosConfirmadosTable } from './PedidosConfirmadosTable';
 import { FormCadastroUsuario } from './FormCadastroUsuario';
+import { AlterarSenhaDialog } from './AlterarSenhaDialog';
 
 import { 
   Package, 
@@ -19,26 +20,15 @@ import {
   BarChart3,
   Receipt,
   Menu,
-  UserPlus
+  UserPlus,
+  Home
 } from 'lucide-react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 
-import { ClienteDashboard } from './ClienteDashboard';
-import { ClienteMercadoriasTable } from './ClienteMercadoriasTable';
-import { ClienteSolicitacaoCarregamento } from './ClienteSolicitacaoCarregamento';
-import { ClienteFinanceiro } from './ClienteFinanceiro';
-import { AlterarSenhaDialog } from './AlterarSenhaDialog';
-
+export function ClienteLayout() {
+  const { user, logout } = useAuth();
+  const { notasFiscais, pedidosLiberacao, pedidosLiberados } = useWMS();
+  
   const [activeTab, setActiveTab] = useState('dashboard');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isUserDialogOpen, setIsUserDialogOpen] = useState(false);
@@ -52,8 +42,7 @@ import { AlterarSenhaDialog } from './AlterarSenhaDialog';
   });
 
   const navigationItems = [
-    { id: 'fluxo-nfs', label: 'Fluxo NFs', icon: Package, shortLabel: 'Fluxo' },
-    { id: 'dashboard', label: 'Dashboard', icon: BarChart3, shortLabel: 'Início' },
+    { id: 'dashboard', label: 'Dashboard', icon: Home, shortLabel: 'Home' },
     { id: 'mercadorias', label: 'Notas Fiscais', icon: Package, shortLabel: 'Notas' },
     { id: 'pedidos', label: 'Carregamento Solicitado', icon: FileText, shortLabel: 'Solicitadas' },
     { id: 'liberados', label: 'Confirmadas', icon: CheckCircle, shortLabel: 'Confirmadas' },
@@ -79,27 +68,6 @@ import { AlterarSenhaDialog } from './AlterarSenhaDialog';
         >
           <item.icon className="w-4 h-4" />
           {item.label}
-        </button>
-      ))}
-    </div>
-  );
-
-  const DesktopNavigation = () => (
-    <div className="hidden lg:flex items-center justify-center rounded-lg bg-muted p-1 text-muted-foreground">
-      {navigationItems.map((item) => (
-        <button
-          key={item.id}
-          onClick={() => setActiveTab(item.id)}
-          className={`
-            inline-flex items-center justify-center whitespace-nowrap rounded-sm px-4 py-2 text-sm font-medium 
-            ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 
-            focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50
-            ${activeTab === item.id ? 'bg-background text-foreground shadow-sm' : 'hover:bg-background/50'}
-            gap-2 min-w-[100px]
-          `}
-        >
-          <item.icon className="w-4 h-4" />
-          <span>{item.label}</span>
         </button>
       ))}
     </div>
