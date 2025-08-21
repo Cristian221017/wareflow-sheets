@@ -218,7 +218,7 @@ export function ClienteMercadoriasTable() {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Package className="w-5 h-5" />
-          Mercadorias Armazenadas
+          Notas Fiscais
         </CardTitle>
         <CardDescription>
           Consulte e gerencie suas mercadorias armazenadas

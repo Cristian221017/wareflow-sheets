@@ -73,7 +73,7 @@ export function NotasFiscaisTable() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Notas Fiscais Armazenadas</CardTitle>
+        <CardTitle>Notas Fiscais</CardTitle>
         <CardDescription>
           Controle de todas as notas fiscais no armazém
         </CardDescription>

@@ -260,7 +260,7 @@ export function TransportadoraSolicitacoesTable() {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Truck className="w-5 h-5 text-warning" />
-          Solicitações de Carregamento
+          Carregamento Solicitado
         </CardTitle>
         <CardDescription>
           Mercadorias com carregamento solicitado pelos clientes
