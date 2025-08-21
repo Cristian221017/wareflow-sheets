@@ -13,12 +13,20 @@ interface WMSContextType {
   // Loading states
   isLoading: boolean;
   
-  // Actions
+  // Actions - New API
   addNotaFiscal: (nf: Omit<NotaFiscal, 'id' | 'createdAt'>) => Promise<void>;
   solicitarCarregamento: (numeroNF: string) => Promise<void>;
   aprovarCarregamento: (numeroNF: string, transportadora: string) => Promise<void>;
   rejeitarCarregamento: (numeroNF: string, motivo: string) => Promise<void>;
   resetData: () => Promise<void>;
+  
+  // Legacy API for compatibility
+  addPedidoLiberacao: (data: any) => Promise<void>;
+  deleteNotaFiscal: (id: string) => Promise<void>;
+  liberarPedido: (numeroNF: string, transportadora: string, dataExpedicao?: string) => Promise<void>;
+  deletePedidoLiberacao: (id: string) => Promise<void>;
+  deletePedidoLiberado: (id: string) => Promise<void>;
+  recusarPedido: (numeroNF: string, motivo: string, responsavel?: string) => Promise<void>;
 }
 
 const WMSContext = createContext<WMSContextType | undefined>(undefined);
@@ -442,6 +450,79 @@ export function WMSProvider({ children }: { children: ReactNode }) {
     }
   }, [user]);
 
+  // Legacy API functions for compatibility
+  const addPedidoLiberacao = async (data: any) => {
+    // Convert to new API call
+    await solicitarCarregamento(data.nfVinculada || data.numeroNF);
+  };
+
+  const deleteNotaFiscal = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('notas_fiscais')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+      
+      toast.success('Nota Fiscal excluída com sucesso');
+      await loadData();
+      
+    } catch (error: any) {
+      console.error('❌ Erro ao excluir NF:', error);
+      toast.error(error.message || 'Erro ao excluir Nota Fiscal');
+      throw error;
+    }
+  };
+
+  const liberarPedido = async (numeroNF: string, transportadora: string, dataExpedicao?: string) => {
+    // Convert to new API call
+    await aprovarCarregamento(numeroNF, transportadora);
+  };
+
+  const deletePedidoLiberacao = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('pedidos_liberacao')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+      
+      toast.success('Pedido de liberação excluído com sucesso');
+      await loadData();
+      
+    } catch (error: any) {
+      console.error('❌ Erro ao excluir pedido:', error);
+      toast.error(error.message || 'Erro ao excluir pedido');
+      throw error;
+    }
+  };
+
+  const deletePedidoLiberado = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('pedidos_liberados')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+      
+      toast.success('Pedido liberado excluído com sucesso');
+      await loadData();
+      
+    } catch (error: any) {
+      console.error('❌ Erro ao excluir pedido liberado:', error);
+      toast.error(error.message || 'Erro ao excluir pedido liberado');
+      throw error;
+    }
+  };
+
+  const recusarPedido = async (numeroNF: string, motivo: string, responsavel?: string) => {
+    // Convert to new API call
+    await rejeitarCarregamento(numeroNF, motivo);
+  };
+
   const value: WMSContextType = {
     notasFiscais,
     pedidosLiberacao,
@@ -451,7 +532,14 @@ export function WMSProvider({ children }: { children: ReactNode }) {
     solicitarCarregamento,
     aprovarCarregamento,
     rejeitarCarregamento,
-    resetData
+    resetData,
+    // Legacy API
+    addPedidoLiberacao,
+    deleteNotaFiscal,
+    liberarPedido,
+    deletePedidoLiberacao,
+    deletePedidoLiberado,
+    recusarPedido
   };
 
   return (
