@@ -20,13 +20,20 @@ import { PedidoLiberacao } from '@/types/wms';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { Textarea } from '@/components/ui/textarea';
 
 const formSchema = z.object({
   transportadora: z.string().min(1, 'Transportadora é obrigatória'),
   dataExpedicao: z.string().optional()
 });
 
+const recusaFormSchema = z.object({
+  responsavel: z.string().min(1, 'Responsável é obrigatório'),
+  motivo: z.string().min(10, 'Motivo deve ter pelo menos 10 caracteres')
+});
+
 type FormData = z.infer<typeof formSchema>;
+type RecusaFormData = z.infer<typeof recusaFormSchema>;
 
 function AprovarDialog({ pedido }: { pedido: PedidoLiberacao }) {
   const { liberarPedido } = useWMS();
@@ -119,6 +126,105 @@ function AprovarDialog({ pedido }: { pedido: PedidoLiberacao }) {
   );
 }
 
+function RecusarDialog({ pedido }: { pedido: PedidoLiberacao }) {
+  const { recusarPedido } = useWMS();
+  const [open, setOpen] = useState(false);
+  
+  const form = useForm<RecusaFormData>({
+    resolver: zodResolver(recusaFormSchema),
+    defaultValues: {
+      responsavel: '',
+      motivo: ''
+    }
+  });
+
+  const onSubmit = async (data: RecusaFormData) => {
+    try {
+      await recusarPedido(pedido.id, data.responsavel, data.motivo);
+      toast.success(`Solicitação recusada. A mercadoria voltou para "Armazenadas" com observações.`);
+      setOpen(false);
+      form.reset();
+    } catch (error) {
+      console.error('Erro ao recusar pedido:', error);
+      toast.error('Erro ao recusar pedido');
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button
+          size="sm"
+          variant="outline"
+          className="text-destructive border-destructive hover:bg-destructive hover:text-destructive-foreground"
+        >
+          <X className="w-3 h-3 mr-1" />
+          Recusar
+        </Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <X className="w-5 h-5 text-destructive" />
+            Recusar Solicitação de Carregamento
+          </DialogTitle>
+          <DialogDescription>
+            Pedido: {pedido.numeroPedido} - NF: {pedido.nfVinculada}
+            <br />
+            <span className="text-destructive font-medium">
+              A mercadoria voltará para "Armazenadas" com as observações da recusa.
+            </span>
+          </DialogDescription>
+        </DialogHeader>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <FormField
+              control={form.control}
+              name="responsavel"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Responsável pela Recusa *</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Nome do responsável" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="motivo"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Motivo da Recusa *</FormLabel>
+                  <FormControl>
+                    <Textarea 
+                      placeholder="Descreva o motivo da recusa detalhadamente..."
+                      className="min-h-[100px]"
+                      {...field} 
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <div className="flex justify-end gap-2">
+              <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+                Cancelar
+              </Button>
+              <Button type="submit" variant="destructive">
+                Confirmar Recusa
+              </Button>
+            </div>
+          </form>
+        </Form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 export function SolicitacoesPendentesTable() {
   const { pedidosLiberacao } = useWMS();
 
@@ -135,10 +241,7 @@ export function SolicitacoesPendentesTable() {
     }
   };
 
-  const handleRejeitar = (pedido: PedidoLiberacao) => {
-    // TODO: Implementar lógica de rejeição (remover da lista ou marcar como rejeitado)
-    toast.error(`Solicitação de carregamento rejeitada para NF: ${pedido.nfVinculada}`);
-  };
+  // Função removida - agora usamos o RecusarDialog
 
   const pedidosPendentes = pedidosLiberacao.filter(p => p.status === 'Em análise');
 
@@ -191,15 +294,7 @@ export function SolicitacoesPendentesTable() {
                   <TableCell className="text-center">
                     <div className="flex gap-2 justify-center">
                       <AprovarDialog pedido={pedido} />
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleRejeitar(pedido)}
-                        className="text-destructive border-destructive hover:bg-destructive hover:text-destructive-foreground"
-                      >
-                        <X className="w-3 h-3 mr-1" />
-                        Rejeitar
-                      </Button>
+                      <RecusarDialog pedido={pedido} />
                     </div>
                   </TableCell>
                 </TableRow>

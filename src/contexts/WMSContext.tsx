@@ -16,6 +16,7 @@ interface WMSContextType {
   deletePedidoLiberado: (id: string) => Promise<void>;
   addPedidoLiberacao: (pedido: Omit<PedidoLiberacao, 'id' | 'createdAt' | 'status'>) => Promise<void>;
   liberarPedido: (pedidoId: string, transportadora: string, dataExpedicao?: string) => Promise<void>;
+  recusarPedido: (pedidoId: string, responsavel: string, motivo: string) => Promise<void>;
   updateNotaFiscalStatus: (nfId: string, status: NotaFiscal['status']) => Promise<void>;
   loadData: () => Promise<void>;
 }
@@ -521,6 +522,71 @@ export function WMSProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const recusarPedido = async (pedidoId: string, responsavel: string, motivo: string) => {
+    if (!user?.transportadoraId) {
+      throw new Error('Usuário não associado a uma transportadora');
+    }
+
+    try {
+      // Encontrar o pedido
+      const pedido = pedidosLiberacao.find(p => p.id === pedidoId);
+      if (!pedido) {
+        throw new Error('Pedido não encontrado');
+      }
+
+      // Encontrar a nota fiscal associada
+      const notaFiscal = notasFiscais.find(nf => nf.numeroNF === pedido.nfVinculada);
+      if (!notaFiscal) {
+        throw new Error('Nota fiscal não encontrada');
+      }
+
+      console.log('Recusando pedido:', pedidoId, 'Responsável:', responsavel, 'Motivo:', motivo);
+
+      // Deletar o pedido de liberação
+      const { error: deleteError } = await supabase
+        .from('pedidos_liberacao')
+        .delete()
+        .eq('id', pedidoId);
+
+      if (deleteError) throw deleteError;
+
+      // Voltar NF para status "Armazenada" com observações da recusa
+      const observacaoRecusa = `RECUSADO - Responsável: ${responsavel} | Motivo: ${motivo} | Data: ${new Date().toLocaleDateString('pt-BR')}`;
+      
+      // Atualizar a NF com as observações da recusa
+      await updateNotaFiscalStatus(notaFiscal.id, 'Armazenada');
+
+      // TODO: Adicionar campo de observações na tabela notas_fiscais se necessário
+      // Por enquanto, podemos mostrar no toast ou log
+
+      // Remove from local state
+      setPedidosLiberacao(prev => prev.filter(p => p.id !== pedidoId));
+
+      // Recarregar dados
+      await loadData();
+
+      console.log('Pedido recusado com sucesso. Observação:', observacaoRecusa);
+      
+      // Notificar o cliente sobre a recusa
+      const cliente = clientes.find(c => c.name === pedido.cliente);
+      if (cliente?.emailSolicitacaoLiberacao) {
+        try {
+          notificationService.enviarNotificacaoSolicitacaoCarregamento(
+            cliente.emailSolicitacaoLiberacao,
+            `Solicitação de carregamento recusada - NF: ${pedido.nfVinculada}`,
+            `Responsável: ${responsavel} | Motivo: ${motivo}`
+          );
+        } catch (notifError) {
+          console.warn('Erro ao enviar notificação:', notifError);
+        }
+      }
+
+    } catch (error) {
+      console.error('Error refusing pedido:', error);
+      throw error;
+    }
+  };
+
   return (
     <WMSContext.Provider value={{
       notasFiscais,
@@ -533,6 +599,7 @@ export function WMSProvider({ children }: { children: React.ReactNode }) {
       deletePedidoLiberado,
       addPedidoLiberacao,
       liberarPedido,
+      recusarPedido,
       updateNotaFiscalStatus,
       loadData
     }}>
