@@ -10,12 +10,65 @@ export default function ResetPassword() {
   const [password, setPassword] = useState('cliente123');
   const [confirmPassword, setConfirmPassword] = useState('cliente123');
   const [loading, setLoading] = useState(false);
+  const [sessionReady, setSessionReady] = useState(false);
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const handleAuthCallback = async () => {
+      try {
+        // Verificar se temos tokens na URL (vindos do link de email)
+        const accessToken = searchParams.get('access_token');
+        const refreshToken = searchParams.get('refresh_token');
+        const type = searchParams.get('type');
+
+        console.log('Reset page params:', { accessToken: !!accessToken, refreshToken: !!refreshToken, type });
+
+        if (accessToken && refreshToken && type === 'recovery') {
+          // Definir a sessão usando os tokens do email
+          const { data, error } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken,
+          });
+
+          if (error) {
+            console.error('Error setting session:', error);
+            toast.error('Link de redefinição inválido ou expirado');
+            navigate('/');
+            return;
+          }
+
+          console.log('Session set successfully:', data);
+          setSessionReady(true);
+          toast.success('Link válido! Você pode redefinir sua senha agora.');
+        } else {
+          // Verificar se já existe uma sessão válida
+          const { data: { session } } = await supabase.auth.getSession();
+          if (session) {
+            setSessionReady(true);
+          } else {
+            toast.error('Link de redefinição necessário');
+            navigate('/');
+          }
+        }
+      } catch (error) {
+        console.error('Auth callback error:', error);
+        toast.error('Erro ao processar link de redefinição');
+        navigate('/');
+      }
+    };
+
+    handleAuthCallback();
+  }, [searchParams, navigate]);
 
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    if (!sessionReady) {
+      toast.error('Sessão não está pronta. Use o link do email.');
+      return;
+    }
+
     if (password !== confirmPassword) {
       toast.error('As senhas não coincidem');
       return;
@@ -29,19 +82,31 @@ export default function ResetPassword() {
     setLoading(true);
 
     try {
+      // Verificar a sessão atual antes de tentar atualizar
+      const { data: { session } } = await supabase.auth.getSession();
+      console.log('Current session:', session);
+
+      if (!session) {
+        toast.error('Sessão inválida. Use o link do email.');
+        setLoading(false);
+        return;
+      }
+
       const { error } = await supabase.auth.updateUser({
         password: password
       });
 
       if (error) {
+        console.error('Update password error:', error);
         toast.error(`Erro ao redefinir senha: ${error.message}`);
         return;
       }
 
       toast.success('Senha redefinida com sucesso!');
+      console.log('Password updated successfully');
       
-      // Redirecionar baseado no tipo de usuário
-      // Como não temos acesso ao contexto aqui, vamos para a página inicial
+      // Fazer logout e redirecionar para login
+      await supabase.auth.signOut();
       setTimeout(() => {
         navigate('/', { replace: true });
       }, 2000);
@@ -53,6 +118,27 @@ export default function ResetPassword() {
       setLoading(false);
     }
   };
+
+  if (!sessionReady) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background p-4">
+        <Card className="w-full max-w-md">
+          <CardHeader className="text-center">
+            <CardTitle>Processando...</CardTitle>
+            <CardDescription>
+              Validando link de redefinição de senha
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="text-center">
+            <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
+            <p className="text-sm text-muted-foreground">
+              Por favor, aguarde...
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
