@@ -12,6 +12,7 @@ import { diagnoseClientAuth } from '@/utils/diagnoseClientAuth';
 import { fixSpecificUser } from '@/utils/fixSpecificUser';
 import { debugSpecificUser } from '@/utils/debugSpecificUser';
 import { forceCreateUser } from '@/utils/forceCreateUser';
+import { checkSupabaseUsers } from '@/utils/checkSupabaseUsers';
 import { toast } from 'sonner';
 
 const COLORS = ['hsl(var(--success))', 'hsl(var(--warning))', 'hsl(var(--error))'];
@@ -26,6 +27,7 @@ export function Dashboard() {
   const [isFixingSpecific, setIsFixingSpecific] = useState(false);
   const [isDebugging, setIsDebugging] = useState(false);
   const [isForcingCreation, setIsForcingCreation] = useState(false);
+  const [isCheckingSupabase, setIsCheckingSupabase] = useState(false);
 
   const handleCreateAccounts = async () => {
     setIsCreatingAccounts(true);
@@ -123,6 +125,18 @@ export function Dashboard() {
     }
   };
 
+  const handleCheckSupabase = async () => {
+    setIsCheckingSupabase(true);
+    try {
+      await checkSupabaseUsers();
+      toast.success('Verificação concluída! Siga as instruções no console.');
+    } catch (error) {
+      toast.error('Erro na verificação. Verifique o console.');
+    } finally {
+      setIsCheckingSupabase(false);
+    }
+  };
+
   const dashboardData = useMemo(() => {
     // Status distribution
     const statusData = [
@@ -204,14 +218,21 @@ export function Dashboard() {
             Setup Inicial - Criar Contas de Login
           </CardTitle>
           <CardDescription className="text-yellow-700 dark:text-yellow-300">
-            <strong>Para resolver o problema específico do Comercial@rodoveigatransportes.com.br:</strong><br/>
-            1. <strong>Corrigir Usuário Específico</strong> - Corrige o problema específico deste email<br/>
-            2. <strong>Diagnóstico Completo</strong> - Verifica situação de todos os clientes<br/>
-            3. <strong>Testar Login</strong> - Confirma se conseguem acessar com senha: <strong>cliente123</strong>
+            <strong>SOLUÇÃO DEFINITIVA para Comercial@rodoveigatransportes.com.br:</strong><br/>
+            1. <strong>Verificar Supabase</strong> - Instruções detalhadas para resolver no dashboard<br/>
+            2. <strong>Testar Login</strong> - Confirma se conseguem acessar após correção<br/>
+            3. Se ainda houver problemas, usar outros botões de diagnóstico/correção
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex gap-2 flex-wrap">
+            <Button 
+              onClick={handleCheckSupabase} 
+              disabled={isCheckingSupabase}
+              className="bg-blue-600 hover:bg-blue-700 text-white font-semibold"
+            >
+              {isCheckingSupabase ? 'Verificando...' : '🔍 VERIFICAR SUPABASE'}
+            </Button>
             <Button 
               onClick={handleForceCreate} 
               disabled={isForcingCreation}
