@@ -33,12 +33,13 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 
-import { FluxoSimples } from './FluxoSimples';
+import { ClienteDashboard } from './ClienteDashboard';
+import { ClienteMercadoriasTable } from './ClienteMercadoriasTable';
+import { ClienteSolicitacaoCarregamento } from './ClienteSolicitacaoCarregamento';
+import { ClienteFinanceiro } from './ClienteFinanceiro';
+import { AlterarSenhaDialog } from './AlterarSenhaDialog';
 
-export function ClienteLayout() {
-  const { user, logout } = useAuth();
-  const { notasFiscais, pedidosLiberacao, pedidosLiberados } = useWMS();
-  const [activeTab, setActiveTab] = useState('fluxo-nfs');
+  const [activeTab, setActiveTab] = useState('dashboard');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isUserDialogOpen, setIsUserDialogOpen] = useState(false);
 
@@ -131,8 +132,6 @@ export function ClienteLayout() {
 
   const renderContent = () => {
     switch (activeTab) {
-      case 'fluxo-nfs':
-        return <FluxoSimples />;
       case 'dashboard':
         return <ClienteDashboard />;
       case 'mercadorias':

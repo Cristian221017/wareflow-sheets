@@ -17,7 +17,7 @@ import { toast } from 'sonner';
 
 export function ClienteMercadoriasTable() {
   const { user } = useAuth();
-  const { notasFiscais, solicitarCarregamento, isLoading } = useWMS();
+  const { notasFiscais, isLoading } = useWMS();
 
   // Filter NFs for current client with status "Armazenada"
   const nfsArmazenadas = useMemo(() => {
@@ -98,7 +98,7 @@ export function ClienteMercadoriasTable() {
                   <TableCell>
                     <Button
                       size="sm"
-                      onClick={() => handleSolicitarCarregamento(nf.numeroNF)}
+                      disabled
                       className="bg-warning text-warning-foreground hover:bg-warning/80"
                     >
                       <Truck className="w-3 h-3 mr-1" />

@@ -17,9 +17,6 @@ interface WMSContextType {
   
   // Actions - New API
   addNotaFiscal: (nf: Omit<NotaFiscal, 'id' | 'createdAt'>) => Promise<void>;
-  solicitarCarregamento: (numeroNF: string) => Promise<void>;
-  aprovarCarregamento: (numeroNF: string, transportadora: string) => Promise<void>;
-  rejeitarCarregamento: (numeroNF: string, motivo: string) => Promise<void>;
   resetData: () => Promise<void>;
   
   // Legacy API for compatibility
@@ -493,7 +490,7 @@ export function WMSProvider({ children }: { children: ReactNode }) {
   // Legacy API functions for compatibility
   const addPedidoLiberacao = async (data: any) => {
     // Convert to new API call
-    await solicitarCarregamento(data.nfVinculada || data.numeroNF);
+    // Criar pedido de liberação sem alterar status da NF
   };
 
   const deleteNotaFiscal = async (id: string) => {
@@ -517,7 +514,7 @@ export function WMSProvider({ children }: { children: ReactNode }) {
 
   const liberarPedido = async (numeroNF: string, transportadora: string, dataExpedicao?: string) => {
     // Convert to new API call
-    await aprovarCarregamento(numeroNF, transportadora);
+    // Liberar pedido sem alterar status da NF
   };
 
   const deletePedidoLiberacao = async (id: string) => {
@@ -560,7 +557,7 @@ export function WMSProvider({ children }: { children: ReactNode }) {
 
   const recusarPedido = async (numeroNF: string, motivo: string, responsavel?: string) => {
     // Convert to new API call
-    await rejeitarCarregamento(numeroNF, motivo);
+    // Recusar pedido sem alterar status da NF
   };
 
   const value: WMSContextType = {
@@ -569,9 +566,6 @@ export function WMSProvider({ children }: { children: ReactNode }) {
     pedidosLiberados,
     isLoading,
     addNotaFiscal,
-    solicitarCarregamento,
-    aprovarCarregamento,
-    rejeitarCarregamento,
     resetData,
     // Legacy API
     addPedidoLiberacao,

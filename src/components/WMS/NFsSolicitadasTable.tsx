@@ -17,7 +17,7 @@ import {
 import { Clock, Check, X } from 'lucide-react';
 
 export function NFsSolicitadasTable() {
-  const { notasFiscais, aprovarCarregamento, rejeitarCarregamento, isLoading } = useWMS();
+  const { notasFiscais, isLoading } = useWMS();
   const [selectedNF, setSelectedNF] = useState<string>('');
   const [transportadora, setTransportadora] = useState('');
   const [motivoRejeicao, setMotivoRejeicao] = useState('');
@@ -35,7 +35,7 @@ export function NFsSolicitadasTable() {
     if (!selectedNF || !transportadora.trim()) return;
     
     try {
-      await aprovarCarregamento(selectedNF, transportadora);
+      // Funcionalidade removida
       setIsAprovarDialogOpen(false);
       setSelectedNF('');
       setTransportadora('');
@@ -48,7 +48,7 @@ export function NFsSolicitadasTable() {
     if (!selectedNF || !motivoRejeicao.trim()) return;
     
     try {
-      await rejeitarCarregamento(selectedNF, motivoRejeicao);
+      // Funcionalidade removida
       setIsRejeitarDialogOpen(false);
       setSelectedNF('');
       setMotivoRejeicao('');

@@ -28,7 +28,7 @@ import {
   Receipt,
   UserPlus
 } from 'lucide-react';
-import { FluxoSimples } from './FluxoSimples';
+
 import { useAuth } from '@/contexts/AuthContext';
 
 export function TransportadoraLayout() {
@@ -273,10 +273,6 @@ export function TransportadoraLayout() {
                 <TabsTrigger value="relatorios" className="text-sm">Relatórios</TabsTrigger>
               </TabsList>
             </div>
-            
-            <TabsContent value="fluxo-nfs" className="space-y-4">
-              <FluxoSimples />
-            </TabsContent>
             
             <TabsContent value="dashboard" className="space-y-4">
               <Dashboard />
