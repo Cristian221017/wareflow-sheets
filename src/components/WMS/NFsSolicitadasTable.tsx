@@ -17,7 +17,9 @@ export function NFsSolicitadasTable() {
 
   // Filtrar apenas NFs com status "Ordem Solicitada"
   const nfsSolicitadas = useMemo(() => {
-    return notasFiscais.filter(nf => nf.status === 'Ordem Solicitada');
+    const filtered = notasFiscais.filter(nf => nf.status === 'Ordem Solicitada');
+    console.log('🚚 [Transportadora] Total NFs com Ordem Solicitada:', filtered.length);
+    return filtered;
   }, [notasFiscais]);
 
   return (

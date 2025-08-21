@@ -65,23 +65,20 @@ export function ClienteMercadoriasTable() {
   const [dateFilter, setDateFilter] = useState<string>('all');
   const [fornecedorFilter, setFornecedorFilter] = useState<string>('all');
 
-  // Filter data for current client - APENAS ARMAZENADAS E SEM SOLICITAÇÃO EXISTENTE
+  // Filter data for current client - APENAS ARMAZENADAS
   const clienteNFs = useMemo(() => {
-    console.log('Filtrando NFs para cliente:', { user: user?.cnpj, totalNFs: notasFiscais.length });
+    console.log('📦 [Cliente] Filtrando NFs Armazenadas para:', { cnpj: user?.cnpj, totalNFs: notasFiscais.length });
     
     let filtered = notasFiscais.filter(nf => {
       const isClienteNF = nf.cnpjCliente === user?.cnpj;
       const isArmazenada = nf.status === 'Armazenada';
       
-      // Verificar se já existe solicitação para esta NF
-      const hasExistingSolicitation = pedidosLiberacao.some(p => p.nfVinculada === nf.numeroNF);
+      console.log('📦 NF:', nf.numeroNF, 'Cliente match:', isClienteNF, 'Status:', nf.status);
       
-      console.log('NF:', nf.numeroNF, 'Cliente match:', isClienteNF, 'Status:', nf.status, 'É armazenada:', isArmazenada, 'Tem solicitação:', hasExistingSolicitation);
-      
-      return isClienteNF && isArmazenada && !hasExistingSolicitation;
+      return isClienteNF && isArmazenada;
     });
     
-    console.log('NFs filtradas (apenas armazenadas):', filtered.length);
+    console.log('📦 Total NFs Armazenadas do cliente:', filtered.length);
     
     // Search filter
     if (searchTerm) {

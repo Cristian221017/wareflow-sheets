@@ -15,9 +15,11 @@ import { CheckCircle, TruckIcon } from 'lucide-react';
 export function NFsConfirmadasTable() {
   const { notasFiscais } = useWMS();
 
-  // Filtrar apenas NFs com status "Solicitação Confirmada"
+  // Filtrar apenas NFs com status "Solicitação Confirmada"  
   const nfsConfirmadas = useMemo(() => {
-    return notasFiscais.filter(nf => nf.status === 'Solicitação Confirmada');
+    const filtered = notasFiscais.filter(nf => nf.status === 'Solicitação Confirmada');
+    console.log('✅ [Transportadora] Total NFs Confirmadas:', filtered.length);
+    return filtered;
   }, [notasFiscais]);
 
   return (

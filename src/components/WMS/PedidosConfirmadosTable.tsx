@@ -16,24 +16,16 @@ export function PedidosConfirmadosTable() {
   const { notasFiscais } = useWMS();
   const { user } = useAuth();
   
-  // Filter data for current user - APENAS SOLICITAÇÃO CONFIRMADA
+  // Filter data for current client - APENAS SOLICITAÇÃO CONFIRMADA
   const nfsConfirmadas = notasFiscais.filter(nf => {
-    // Se for transportador, mostrar todas as confirmadas
     const isConfirmada = nf.status === 'Solicitação Confirmada';
+    const isClienteNF = nf.cnpjCliente === user?.cnpj;
     
-    // Se for cliente (tem cnpj), mostrar apenas suas NFs
-    if (user?.cnpj) {
-      const isClienteNF = nf.cnpjCliente === user.cnpj;
-      console.log('NF Confirmada (Cliente):', nf.numeroNF, 'Cliente match:', isClienteNF, 'Status:', nf.status, 'É confirmada:', isConfirmada);
-      return isClienteNF && isConfirmada;
-    }
-    
-    // Se for transportador, mostrar todas as confirmadas
-    console.log('NF Confirmada (Transportador):', nf.numeroNF, 'Status:', nf.status, 'É confirmada:', isConfirmada);
-    return isConfirmada;
+    console.log('✅ [Cliente] NF Confirmada:', nf.numeroNF, 'Cliente match:', isClienteNF, 'Status:', nf.status);
+    return isClienteNF && isConfirmada;
   });
 
-  console.log('Total NFs confirmadas:', nfsConfirmadas.length);
+  console.log('✅ [Cliente] Total NFs Confirmadas:', nfsConfirmadas.length);
 
   return (
     <Card>

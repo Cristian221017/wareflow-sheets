@@ -21,11 +21,11 @@ export function ClienteSolicitacaoCarregamento() {
     const isClienteNF = nf.cnpjCliente === user?.cnpj; 
     const isOrdemSolicitada = nf.status === 'Ordem Solicitada';
     
-    console.log('NF Solicitação:', nf.numeroNF, 'Cliente match:', isClienteNF, 'Status:', nf.status, 'É ordem solicitada:', isOrdemSolicitada);
+    console.log('🚚 [Cliente] NF Solicitação:', nf.numeroNF, 'Cliente match:', isClienteNF, 'Status:', nf.status);
     return isClienteNF && isOrdemSolicitada;
   });
 
-  console.log('Total NFs com ordem solicitada:', nfsLiberadas.length);
+  console.log('🚚 [Cliente] Total NFs com Ordem Solicitada:', nfsLiberadas.length);
 
   return (
     <Card>
