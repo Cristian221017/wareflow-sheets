@@ -5,10 +5,6 @@ import { Button } from '@/components/ui/button';
 import { useWMS } from '@/contexts/WMSContext';
 import { useMemo, useState } from 'react';
 import { createAccountsForExistingClients } from '@/utils/createClientAccounts';
-import { NFsArmazenadasTable } from './NFsArmazenadasTable';
-import { NFsSolicitadasTable } from './NFsSolicitadasTable';
-import { NFsConfirmadasTable } from './NFsConfirmadasTable';
-import { SolicitacoesPendentesTable } from './SolicitacoesPendentesTable';
 import { resetClientPasswords } from '@/utils/resetClientPasswords';
 import { testClientLogin } from '@/utils/testClientLogin';
 import { fixClientPasswords } from '@/utils/fixClientPasswords';
@@ -370,23 +366,6 @@ export function Dashboard() {
             <p className="text-xs text-muted-foreground">dias para liberação</p>
           </CardContent>
         </Card>
-      </div>
-
-      {/* Fluxo WMS - Tabelas por Status */}
-      <div className="space-y-6">
-        <h2 className="text-2xl font-semibold">Fluxo de Mercadorias</h2>
-        
-        {/* Etapa 1: Armazenadas */}
-        <NFsArmazenadasTable />
-        
-        {/* Etapa 2: Solicitadas (aguardando aprovação) */}
-        <NFsSolicitadasTable />
-        
-        {/* Etapa 3: Pendentes de Aprovação */}
-        <SolicitacoesPendentesTable />
-        
-        {/* Etapa 4: Confirmadas */}
-        <NFsConfirmadasTable />
       </div>
 
       {/* Charts */}

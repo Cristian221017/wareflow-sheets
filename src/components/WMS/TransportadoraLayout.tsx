@@ -4,9 +4,9 @@ import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dashboard } from './Dashboard';
-import { NotasFiscaisTable } from './NotasFiscaisTable';
-import { PedidosLiberacaoTable } from './PedidosLiberacaoTable';
-import { PedidosLiberadosTable } from './PedidosLiberadosTable';
+import { NFsArmazenadasTable } from './NFsArmazenadasTable';
+import { NFsSolicitadasTable } from './NFsSolicitadasTable';
+import { NFsConfirmadasTable } from './NFsConfirmadasTable';
 import { FormNotaFiscal } from './FormNotaFiscal';
 import { FormPedidoLiberacao } from './FormPedidoLiberacao';
 import { FormCadastroCliente } from './FormCadastroCliente';
@@ -253,22 +253,24 @@ export function TransportadoraLayout() {
             <div className="lg:hidden w-full overflow-x-auto mb-6">
               <TabsList className="flex w-max min-w-full h-auto p-1 gap-1">
                 <TabsTrigger value="dashboard" className="text-xs px-2 py-2 whitespace-nowrap">Dashboard</TabsTrigger>
+                <TabsTrigger value="armazenadas" className="text-xs px-2 py-2 whitespace-nowrap">Armazenadas</TabsTrigger>
+                <TabsTrigger value="solicitadas" className="text-xs px-2 py-2 whitespace-nowrap">Solicitadas</TabsTrigger>
+                <TabsTrigger value="pendentes" className="text-xs px-2 py-2 whitespace-nowrap">Pendentes Aprovação</TabsTrigger>
+                <TabsTrigger value="confirmadas" className="text-xs px-2 py-2 whitespace-nowrap">Confirmadas</TabsTrigger>
                 <TabsTrigger value="financeiro" className="text-xs px-2 py-2 whitespace-nowrap">Financeiro</TabsTrigger>
-                <TabsTrigger value="notas-fiscais" className="text-xs px-2 py-2 whitespace-nowrap">Notas Fiscais</TabsTrigger>
-                <TabsTrigger value="pedidos-liberacao" className="text-xs px-2 py-2 whitespace-nowrap">Carregamento Solicitado</TabsTrigger>
-                <TabsTrigger value="pedidos-liberados" className="text-xs px-2 py-2 whitespace-nowrap">Confirmadas</TabsTrigger>
                 <TabsTrigger value="relatorios" className="text-xs px-2 py-2 whitespace-nowrap">Relatórios</TabsTrigger>
               </TabsList>
             </div>
             
             {/* Desktop: Grid layout */}
             <div className="hidden lg:block mb-6">
-              <TabsList className="grid w-full grid-cols-6 gap-1">
+              <TabsList className="grid w-full grid-cols-7 gap-1">
                 <TabsTrigger value="dashboard" className="text-sm">Dashboard</TabsTrigger>
+                <TabsTrigger value="armazenadas" className="text-sm">Armazenadas</TabsTrigger>
+                <TabsTrigger value="solicitadas" className="text-sm">Solicitadas</TabsTrigger>
+                <TabsTrigger value="pendentes" className="text-sm">Pendentes</TabsTrigger>
+                <TabsTrigger value="confirmadas" className="text-sm">Confirmadas</TabsTrigger>
                 <TabsTrigger value="financeiro" className="text-sm">Financeiro</TabsTrigger>
-                <TabsTrigger value="notas-fiscais" className="text-sm">Notas Fiscais</TabsTrigger>
-                <TabsTrigger value="pedidos-liberacao" className="text-sm">Carregamento Solicitado</TabsTrigger>
-                <TabsTrigger value="pedidos-liberados" className="text-sm">Confirmadas</TabsTrigger>
                 <TabsTrigger value="relatorios" className="text-sm">Relatórios</TabsTrigger>
               </TabsList>
             </div>
@@ -277,19 +279,21 @@ export function TransportadoraLayout() {
               <Dashboard />
             </TabsContent>
             
-            <TabsContent value="notas-fiscais" className="space-y-4">
-              <NotasFiscaisTable />
+            <TabsContent value="armazenadas" className="space-y-4">
+              <NFsArmazenadasTable />
             </TabsContent>
             
-            <TabsContent value="pedidos-liberacao" className="space-y-4">
-              <div className="space-y-6">
-                <TransportadoraSolicitacoesTable />
-              </div>
+            <TabsContent value="solicitadas" className="space-y-4">
+              <NFsSolicitadasTable />
             </TabsContent>
             
-            <TabsContent value="pedidos-liberados" className="space-y-4">
+            <TabsContent value="pendentes" className="space-y-4">
+              <SolicitacoesPendentesTable />
+            </TabsContent>
+            
+            <TabsContent value="confirmadas" className="space-y-4">
               <div className="space-y-6">
-                <PedidosConfirmadosTable />
+                <NFsConfirmadasTable />
                 <ImpressaoPedidosLiberados />
               </div>
             </TabsContent>
