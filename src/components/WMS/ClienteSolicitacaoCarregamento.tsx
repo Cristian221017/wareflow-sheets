@@ -9,13 +9,22 @@ import {
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useWMS } from '@/contexts/WMSContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { Truck } from 'lucide-react';
 
 export function ClienteSolicitacaoCarregamento() {
   const { notasFiscais } = useWMS();
+  const { user } = useAuth();
   
-  // Filtrar NFs que estão "Ordem Solicitada"
-  const nfsLiberadas = notasFiscais.filter(nf => nf.status === 'Ordem Solicitada');
+  // Filter data for current client - APENAS ORDEM SOLICITADA  
+  const nfsLiberadas = notasFiscais.filter(nf => {
+    const isClienteNF = nf.cnpjCliente === user?.cnpj; 
+    const isOrdemSolicitada = nf.status === 'Ordem Solicitada';
+    console.log('NF Solicitação:', nf.numeroNF, 'Cliente match:', isClienteNF, 'Status:', nf.status, 'É ordem solicitada:', isOrdemSolicitada);
+    return isClienteNF && isOrdemSolicitada;
+  });
+
+  console.log('Total NFs com ordem solicitada:', nfsLiberadas.length);
 
   return (
     <Card>
@@ -43,9 +52,9 @@ export function ClienteSolicitacaoCarregamento() {
                 <TableHead>Peso (kg)</TableHead>
                 <TableHead>Volume (m³)</TableHead>
                 <TableHead>Localização</TableHead>
-                 <TableHead>Status</TableHead>
-               </TableRow>
-             </TableHeader>
+                <TableHead>Status</TableHead>
+              </TableRow>
+            </TableHeader>
             <TableBody>
               {nfsLiberadas.map((nf) => (
                 <TableRow key={nf.id}>
@@ -59,24 +68,24 @@ export function ClienteSolicitacaoCarregamento() {
                   <TableCell>{nf.peso.toFixed(1)}</TableCell>
                   <TableCell>{nf.volume.toFixed(2)}</TableCell>
                   <TableCell>{nf.localizacao}</TableCell>
-                   <TableCell>
-                     <Badge className="bg-warning text-warning-foreground">
-                       {nf.status}
-                     </Badge>
-                   </TableCell>
-                 </TableRow>
+                  <TableCell>
+                    <Badge className="bg-warning text-warning-foreground">
+                      {nf.status}
+                    </Badge>
+                  </TableCell>
+                </TableRow>
               ))}
             </TableBody>
           </Table>
         </div>
 
-         {nfsLiberadas.length === 0 && (
-           <div className="text-center py-8 text-muted-foreground">
-             <Truck className="w-12 h-12 mx-auto mb-4 opacity-50" />
-             <p>Nenhuma mercadoria com carregamento solicitado</p>
-             <p className="text-sm mt-1">As mercadorias aparecerão aqui quando você solicitar o carregamento</p>
-           </div>
-         )}
+        {nfsLiberadas.length === 0 && (
+          <div className="text-center py-8 text-muted-foreground">
+            <Truck className="w-12 h-12 mx-auto mb-4 opacity-50" />
+            <p>Nenhuma mercadoria com carregamento solicitado</p>
+            <p className="text-sm mt-1">As mercadorias aparecerão aqui quando você solicitar o carregamento</p>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

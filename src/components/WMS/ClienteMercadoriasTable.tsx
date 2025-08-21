@@ -60,15 +60,23 @@ export function ClienteMercadoriasTable() {
   const [isBulkLiberacaoDialogOpen, setIsBulkLiberacaoDialogOpen] = useState(false);
   const [selectedNF, setSelectedNF] = useState<NotaFiscal | null>(null);
   
-  // Filters
+  // Filters - removendo statusFilter pois sempre mostra armazenadas
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string>('all');
   const [dateFilter, setDateFilter] = useState<string>('all');
   const [fornecedorFilter, setFornecedorFilter] = useState<string>('all');
 
-  // Filter data for current client
+  // Filter data for current client - APENAS ARMAZENADAS
   const clienteNFs = useMemo(() => {
-    let filtered = notasFiscais.filter(nf => nf.cnpjCliente === user?.cnpj);
+    console.log('Filtrando NFs para cliente:', { user: user?.cnpj, totalNFs: notasFiscais.length });
+    
+    let filtered = notasFiscais.filter(nf => {
+      const isClienteNF = nf.cnpjCliente === user?.cnpj;
+      const isArmazenada = nf.status === 'Armazenada';
+      console.log('NF:', nf.numeroNF, 'Cliente match:', isClienteNF, 'Status:', nf.status, 'É armazenada:', isArmazenada);
+      return isClienteNF && isArmazenada;
+    });
+    
+    console.log('NFs filtradas (apenas armazenadas):', filtered.length);
     
     // Search filter
     if (searchTerm) {
@@ -79,11 +87,6 @@ export function ClienteMercadoriasTable() {
         nf.produto.toLowerCase().includes(searchTerm.toLowerCase()) ||
         nf.fornecedor.toLowerCase().includes(searchTerm.toLowerCase())
       );
-    }
-    
-    // Status filter
-    if (statusFilter !== 'all') {
-      filtered = filtered.filter(nf => nf.status === statusFilter);
     }
     
     // Date filter
@@ -114,11 +117,11 @@ export function ClienteMercadoriasTable() {
     }
     
     return filtered;
-  }, [notasFiscais, user?.cnpj, searchTerm, statusFilter, dateFilter, fornecedorFilter]);
+  }, [notasFiscais, user?.cnpj, searchTerm, dateFilter, fornecedorFilter]);
 
   const fornecedores = useMemo(() => {
     const allFornecedores = notasFiscais
-      .filter(nf => nf.cnpjCliente === user?.cnpj)
+      .filter(nf => nf.cnpjCliente === user?.cnpj && nf.status === 'Armazenada')
       .map(nf => nf.fornecedor);
     return [...new Set(allFornecedores)].sort();
   }, [notasFiscais, user?.cnpj]);
@@ -133,7 +136,8 @@ export function ClienteMercadoriasTable() {
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
-      const availableNFs = clienteNFs.filter(nf => nf.status === 'Armazenada').map(nf => nf.id);
+      // Selecionar apenas as NFs que estão armazenadas (que já estão filtradas)
+      const availableNFs = clienteNFs.map(nf => nf.id);
       setSelectedNFs(availableNFs);
     } else {
       setSelectedNFs([]);
@@ -142,9 +146,11 @@ export function ClienteMercadoriasTable() {
 
   const handleSolicitarLiberacao = async (nf: NotaFiscal) => {
     try {
+      console.log('Solicitando carregamento para NF:', nf);
       await updateNotaFiscalStatus(nf.id, 'Ordem Solicitada');
       toast.success(`Solicitação de carregamento enviada para NF: ${nf.numeroNF}`);
     } catch (error) {
+      console.error('Erro ao solicitar carregamento:', error);
       toast.error('Erro ao enviar solicitação de carregamento');
     }
   };
@@ -159,14 +165,13 @@ export function ClienteMercadoriasTable() {
 
   const clearFilters = () => {
     setSearchTerm('');
-    setStatusFilter('all');
     setDateFilter('all');
     setFornecedorFilter('all');
   };
 
   const selectedNFsForBulk = clienteNFs.filter(nf => selectedNFs.includes(nf.id));
-  const allAvailableSelected = clienteNFs.filter(nf => nf.status === 'Armazenada').length > 0 && 
-    clienteNFs.filter(nf => nf.status === 'Armazenada').every(nf => selectedNFs.includes(nf.id));
+  const allAvailableSelected = clienteNFs.length > 0 && 
+    clienteNFs.every(nf => selectedNFs.includes(nf.id));
 
   return (
     <Card>
@@ -198,22 +203,7 @@ export function ClienteMercadoriasTable() {
           </div>
 
           {/* Filters Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-            <div className="space-y-2">
-              <Label className="text-sm font-medium">Status</Label>
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Todos os status" />
-                </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todos os status</SelectItem>
-                    <SelectItem value="Armazenada">Armazenada</SelectItem>
-                    <SelectItem value="Ordem Solicitada">Ordem Solicitada</SelectItem>
-                    <SelectItem value="Solicitação Confirmada">Solicitação Confirmada</SelectItem>
-                  </SelectContent>
-              </Select>
-            </div>
-
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
             <div className="space-y-2">
               <Label className="text-sm font-medium">Período</Label>
               <Select value={dateFilter} onValueChange={setDateFilter}>
@@ -272,7 +262,7 @@ export function ClienteMercadoriasTable() {
         {/* Results count */}
         <div className="flex items-center justify-between">
           <p className="text-sm text-muted-foreground">
-            Mostrando {clienteNFs.length} de {notasFiscais.filter(nf => nf.cnpjCliente === user?.cnpj).length} mercadorias
+            Mostrando {clienteNFs.length} de {notasFiscais.filter(nf => nf.cnpjCliente === user?.cnpj && nf.status === 'Armazenada').length} mercadorias armazenadas
           </p>
           {selectedNFs.length > 0 && (
             <p className="text-sm text-primary font-medium">
@@ -307,11 +297,11 @@ export function ClienteMercadoriasTable() {
                 </Card>
               )}
               
-              {clienteNFs.map((nf) => {
-                const isNFOverdue = isOverdue(nf.dataRecebimento);
-                const canSelect = nf.status === 'Armazenada';
-                
-                return (
+               {clienteNFs.map((nf) => {
+                 const isNFOverdue = isOverdue(nf.dataRecebimento);
+                 const canSelect = true; // Todas as NFs na tela de armazenadas podem ser selecionadas
+                 
+                 return (
                   <Card key={nf.id} className={`p-4 ${
                     isNFOverdue && nf.status === 'Armazenada' ? 'border-destructive' : ''
                   } ${nf.status === 'Ordem Solicitada' ? 'border-warning' : ''}`}>
@@ -382,18 +372,16 @@ export function ClienteMercadoriasTable() {
                         </div>
                       </div>
 
-                      {/* Action button */}
-                      {nf.status === 'Armazenada' && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleSolicitarLiberacao(nf)}
-                          className="w-full text-warning border-warning hover:bg-warning hover:text-warning-foreground"
-                        >
-                          <Truck className="w-3 h-3 mr-1" />
-                          Solicitar Carregamento
-                        </Button>
-                      )}
+                       {/* Action button - sempre mostrar pois todas são armazenadas */}
+                       <Button
+                         size="sm"
+                         variant="outline"
+                         onClick={() => handleSolicitarLiberacao(nf)}
+                         className="w-full text-warning border-warning hover:bg-warning hover:text-warning-foreground"
+                       >
+                         <Truck className="w-3 h-3 mr-1" />
+                         Solicitar Carregamento
+                       </Button>
                     </div>
                   </Card>
                 );
@@ -430,11 +418,11 @@ export function ClienteMercadoriasTable() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {clienteNFs.map((nf) => {
-                const isNFOverdue = isOverdue(nf.dataRecebimento);
-                const canSelect = nf.status === 'Armazenada';
-                
-                return (
+               {clienteNFs.map((nf) => {
+                 const isNFOverdue = isOverdue(nf.dataRecebimento);
+                 const canSelect = true; // Todas as NFs na tela de armazenadas podem ser selecionadas
+                 
+                 return (
                   <TableRow 
                     key={nf.id}
                     className={`
@@ -473,19 +461,18 @@ export function ClienteMercadoriasTable() {
                         {nf.status}
                       </Badge>
                     </TableCell>
-                  <TableCell className="text-center">
-                    {nf.status === 'Armazenada' && (
-                      <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleSolicitarLiberacao(nf)}
-                          className="text-warning border-warning hover:bg-warning hover:text-warning-foreground"
-                        >
-                          <Truck className="w-3 h-3 mr-1" />
-                          Solicitar
-                        </Button>
-                      )}
-                    </TableCell>
+                   <TableCell className="text-center">
+                     {/* Sempre mostrar botão pois todas são armazenadas */}
+                     <Button
+                       size="sm"
+                       variant="outline"
+                       onClick={() => handleSolicitarLiberacao(nf)}
+                       className="text-warning border-warning hover:bg-warning hover:text-warning-foreground"
+                     >
+                       <Truck className="w-3 h-3 mr-1" />
+                       Solicitar
+                     </Button>
+                   </TableCell>
                   </TableRow>
                 );
               })}

@@ -477,17 +477,31 @@ export function WMSProvider({ children }: { children: React.ReactNode }) {
 
   const updateNotaFiscalStatus = async (nfId: string, status: NotaFiscal['status']) => {
     try {
+      console.log('Atualizando status da NF:', { nfId, status });
+      
       const { error } = await supabase
         .from('notas_fiscais')
         .update({ status })
         .eq('id', nfId);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Erro no banco ao atualizar status:', error);
+        throw error;
+      }
+
+      console.log('Status atualizado no banco com sucesso');
 
       // Update local state
-      setNotasFiscais(prev => 
-        prev.map(nf => nf.id === nfId ? { ...nf, status } : nf)
-      );
+      setNotasFiscais(prev => {
+        const updated = prev.map(nf => nf.id === nfId ? { ...nf, status } : nf);
+        console.log('Estado local atualizado:', updated.find(nf => nf.id === nfId));
+        return updated;
+      });
+      
+      // Recarregar dados para garantir sincronização
+      console.log('Recarregando dados após atualização...');
+      await loadNotasFiscais();
+      
     } catch (error) {
       console.error('Error updating nota fiscal status:', error);
       throw error;
