@@ -17,7 +17,7 @@ export function NFsConfirmadasTable() {
 
   // Filter NFs with status "Solicitação Confirmada"
   const nfsConfirmadas = useMemo(() => {
-    const filtered = notasFiscais.filter(nf => nf.status === 'CONFIRMADA');
+    const filtered = notasFiscais.filter(nf => nf.status === 'Solicitação Confirmada');
     console.log('✅ [Transportadora] Carregamentos Confirmados:', filtered.length);
     return filtered;
   }, [notasFiscais]);

@@ -76,7 +76,7 @@ export function FormNotaFiscal() {
         peso: data.peso,
         volume: data.volume,
         localizacao: data.localizacao,
-        status: data.status
+        status: 'Armazenada' as const
       };
 
       await addNotaFiscal(nfData as Omit<NotaFiscal, 'id' | 'createdAt'>);

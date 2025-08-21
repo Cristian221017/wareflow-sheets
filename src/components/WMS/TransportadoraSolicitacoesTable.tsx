@@ -253,7 +253,7 @@ export function TransportadoraSolicitacoesTable() {
   const { notasFiscais } = useWMS();
   
   // Filtrar apenas NFs com solicitação de carregamento (status "Ordem Solicitada")
-  const nfsComSolicitacao = notasFiscais.filter(nf => nf.status === 'SOLICITADA');
+  const nfsComSolicitacao = notasFiscais.filter(nf => nf.status === 'Ordem Solicitada');
 
   return (
     <Card>

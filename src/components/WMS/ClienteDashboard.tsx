@@ -18,7 +18,7 @@ export function ClienteDashboard() {
   // Calculate statistics
   const totalPeso = clienteNFs.reduce((sum, nf) => sum + nf.peso, 0);
   const totalVolume = clienteNFs.reduce((sum, nf) => sum + nf.volume, 0);
-  const nfsArmazenadas = clienteNFs.filter(nf => nf.status === 'ARMAZENADA').length;
+  const nfsArmazenadas = clienteNFs.filter(nf => nf.status === 'Armazenada').length;
   const pedidosAnalise = clientePedidos.filter(p => p.status === 'Em análise').length;
 
   const getStatusCount = (status: string) => {

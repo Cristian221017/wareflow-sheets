@@ -14,7 +14,7 @@ export interface NotaFiscal {
   peso: number;
   volume: number;
   localizacao: string;
-  status: 'ARMAZENADA' | 'SOLICITADA' | 'CONFIRMADA';
+  status: 'Armazenada' | 'Ordem Solicitada' | 'Solicitação Confirmada';
   createdAt: string;
   integration_metadata?: any; // For storing additional metadata like rejection notes
 }

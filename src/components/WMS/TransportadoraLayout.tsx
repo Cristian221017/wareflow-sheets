@@ -28,6 +28,7 @@ import {
   Receipt,
   UserPlus
 } from 'lucide-react';
+import { FluxoSimples } from './FluxoSimples';
 import { useAuth } from '@/contexts/AuthContext';
 
 export function TransportadoraLayout() {
@@ -246,10 +247,11 @@ export function TransportadoraLayout() {
 
       <main className="max-w-7xl mx-auto py-4 sm:py-6 px-2 sm:px-4 lg:px-8">
         <div className="w-full">
-          <Tabs defaultValue="dashboard" className="w-full">
+          <Tabs defaultValue="fluxo-nfs" className="w-full">
             {/* Mobile: Horizontal scroll tabs */}
             <div className="lg:hidden w-full overflow-x-auto mb-6">
               <TabsList className="flex w-max min-w-full h-auto p-1 gap-1">
+                <TabsTrigger value="fluxo-nfs" className="text-xs px-2 py-2 whitespace-nowrap">Fluxo NFs</TabsTrigger>
                 <TabsTrigger value="dashboard" className="text-xs px-2 py-2 whitespace-nowrap">Dashboard</TabsTrigger>
                 <TabsTrigger value="armazenadas" className="text-xs px-2 py-2 whitespace-nowrap">Armazenadas</TabsTrigger>
                 <TabsTrigger value="solicitadas" className="text-xs px-2 py-2 whitespace-nowrap">Carregamentos Solicitados</TabsTrigger>
@@ -261,7 +263,8 @@ export function TransportadoraLayout() {
             
             {/* Desktop: Grid layout */}
             <div className="hidden lg:block mb-6">
-              <TabsList className="grid w-full grid-cols-6 gap-1">
+              <TabsList className="grid w-full grid-cols-7 gap-1">
+                <TabsTrigger value="fluxo-nfs" className="text-sm">Fluxo NFs</TabsTrigger>
                 <TabsTrigger value="dashboard" className="text-sm">Dashboard</TabsTrigger>
                 <TabsTrigger value="armazenadas" className="text-sm">Armazenadas</TabsTrigger>
                 <TabsTrigger value="solicitadas" className="text-sm">Carregamentos Solicitados</TabsTrigger>
@@ -270,6 +273,10 @@ export function TransportadoraLayout() {
                 <TabsTrigger value="relatorios" className="text-sm">Relatórios</TabsTrigger>
               </TabsList>
             </div>
+            
+            <TabsContent value="fluxo-nfs" className="space-y-4">
+              <FluxoSimples />
+            </TabsContent>
             
             <TabsContent value="dashboard" className="space-y-4">
               <Dashboard />

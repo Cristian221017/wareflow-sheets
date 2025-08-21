@@ -22,7 +22,7 @@ export function ClienteMercadoriasTable() {
   // Filter NFs for current client with status "Armazenada"
   const nfsArmazenadas = useMemo(() => {
     const filtered = notasFiscais.filter(nf => 
-      nf.cnpjCliente === user?.cnpj && nf.status === 'ARMAZENADA'
+      nf.cnpjCliente === user?.cnpj && nf.status === 'Armazenada'
     );
     
     console.log('📦 [Cliente] NFs Armazenadas:', filtered.length, 'para CNPJ:', user?.cnpj);
