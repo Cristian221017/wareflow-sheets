@@ -68,8 +68,14 @@ export const clientPasswordManager = {
     try {
       console.log(`🔄 Enviando reset de senha para: ${email}`);
       
+      // Usar a URL atual do preview em vez de localhost
+      const currentOrigin = window.location.origin;
+      const redirectUrl = `${currentOrigin}/reset-password`;
+      
+      console.log(`🔗 URL de redirecionamento: ${redirectUrl}`);
+      
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/reset-password`
+        redirectTo: redirectUrl
       });
 
       if (error) {
@@ -79,7 +85,7 @@ export const clientPasswordManager = {
       console.log(`✅ Email de reset enviado para: ${email}`);
       return { 
         success: true, 
-        message: `Email de reset de senha enviado para ${email}. O cliente deve verificar sua caixa de entrada.` 
+        message: `Email de reset de senha enviado para ${email}. O cliente deve verificar sua caixa de entrada e clicar no link.` 
       };
 
     } catch (error) {
