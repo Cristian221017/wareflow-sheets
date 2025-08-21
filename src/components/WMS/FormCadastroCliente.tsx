@@ -16,6 +16,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { User, UserPlus } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import { clientPasswordManager } from '@/utils/clientPasswordManager';
 import { toast } from 'sonner';
 
 const formSchema = z.object({
@@ -129,16 +130,21 @@ export function FormCadastroCliente({ clienteToEdit, onSuccess }: FormCadastroCl
     // Se uma nova senha foi fornecida, criar/atualizar autenticação
     if (cliente.senha) {
       try {
-        await supabase.auth.signUp({
-          email: cliente.email,
-          password: cliente.senha,
-          options: {
-            emailRedirectTo: `${window.location.origin}/cliente`
-          }
-        });
+        const authResult = await clientPasswordManager.createClientAccount(
+          cliente.email, 
+          cliente.senha, 
+          cliente.name
+        );
+        
+        if (!authResult.success && 'error' in authResult) {
+          console.warn('Aviso na autenticação:', authResult.error);
+          toast.warning(`Cliente atualizado, mas houve um problema com a autenticação: ${authResult.error}`);
+        } else if (authResult.success && 'message' in authResult) {
+          toast.success(authResult.message);
+        }
       } catch (authError) {
-        console.error('Erro ao atualizar autenticação:', authError);
-        // Não falha a atualização se a auth falhar
+        console.error('Erro ao criar/atualizar autenticação:', authError);
+        toast.warning('Cliente atualizado, mas houve erro na autenticação');
       }
     }
   };

@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User as SupabaseUser, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
+import { clientPasswordManager } from '@/utils/clientPasswordManager';
 import { User, AuthContextType } from '@/types/auth';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -234,25 +235,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // 2. Se uma senha foi fornecida, criar conta de usuário
       if (clienteData.senha) {
         try {
-          const { error: authError } = await supabase.auth.signUp({
-            email: clienteData.email,
-            password: clienteData.senha,
-            options: {
-              emailRedirectTo: `${window.location.origin}/cliente`,
-              data: {
-                name: clienteData.name,
-                cnpj: clienteData.cnpj
-              }
-            }
-          });
-
-          if (authError && !authError.message.includes('User already registered')) {
-            console.error('Erro ao criar conta de usuário:', authError);
-            // Não falha o cadastro do cliente se a auth falhar
+          const authResult = await clientPasswordManager.createClientAccount(
+            clienteData.email,
+            clienteData.senha,
+            clienteData.name
+          );
+          
+          if (!authResult.success && 'error' in authResult) {
+            console.warn('Aviso ao criar autenticação:', authResult.error);
           }
         } catch (authError) {
           console.error('Erro ao criar autenticação:', authError);
-          // Não falha o cadastro do cliente se a auth falhar
         }
       }
 

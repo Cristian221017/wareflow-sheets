@@ -7,6 +7,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { FormCadastroCliente } from './FormCadastroCliente';
+import { clientPasswordManager } from '@/utils/clientPasswordManager';
 import {
   Table,
   TableBody,
@@ -20,7 +21,8 @@ import {
   UserX, 
   UserCheck, 
   Plus, 
-  Users 
+  Users,
+  KeyRound
 } from 'lucide-react';
 
 interface Cliente {
@@ -45,6 +47,7 @@ export function ClientesTable() {
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingCliente, setEditingCliente] = useState<Cliente | null>(null);
+  const [resettingPassword, setResettingPassword] = useState<string | null>(null);
 
   const loadClientes = async () => {
     if (!user?.transportadoraId) return;
@@ -94,6 +97,36 @@ export function ClientesTable() {
         description: 'Não foi possível alterar o status do cliente',
         variant: 'destructive',
       });
+    }
+  };
+
+  const handleResetClientPassword = async (cliente: Cliente) => {
+    setResettingPassword(cliente.id);
+    
+    try {
+      const result = await clientPasswordManager.resetPassword(cliente.email);
+      
+      if (result.success) {
+        showToast({
+          title: 'Reset enviado',
+          description: result.message,
+          variant: 'default',
+        });
+      } else {
+        showToast({
+          title: 'Erro no reset',
+          description: result.error,
+          variant: 'destructive',
+        });
+      }
+    } catch (error) {
+      showToast({
+        title: 'Erro',
+        description: 'Erro ao enviar reset de senha',
+        variant: 'destructive',
+      });
+    } finally {
+      setResettingPassword(null);
     }
   };
 
@@ -231,6 +264,20 @@ export function ClientesTable() {
                             <UserX className="w-4 h-4" />
                           ) : (
                             <UserCheck className="w-4 h-4" />
+                          )}
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleResetClientPassword(cliente)}
+                          disabled={resettingPassword === cliente.id}
+                          title="Resetar senha do cliente"
+                          className="text-orange-600 hover:text-orange-700"
+                        >
+                          {resettingPassword === cliente.id ? (
+                            <div className="animate-spin w-4 h-4 border-2 border-current border-t-transparent rounded-full" />
+                          ) : (
+                            <KeyRound className="w-4 h-4" />
                           )}
                         </Button>
                       </div>
