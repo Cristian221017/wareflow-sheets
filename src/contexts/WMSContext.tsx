@@ -429,33 +429,53 @@ export function WMSProvider({ children }: { children: React.ReactNode }) {
 
     try {
       console.log('🚀 INICIANDO SOLICITAÇÃO DE CARREGAMENTO:', pedido);
+      console.log('🔍 Total de NFs disponíveis:', notasFiscais.length);
+      console.log('🔍 Total de clientes disponíveis:', clientes.length);
       
       // Find cliente and nota fiscal
       const cliente = clientes.find(c => c.name === pedido.cliente);
       const notaFiscal = notasFiscais.find(nf => nf.numeroNF === pedido.nfVinculada);
       
-      console.log('📊 Estado atual - Cliente:', cliente?.id, '| NF:', notaFiscal?.id, '| Status atual:', notaFiscal?.status);
+      console.log('📊 Estado atual:');
+      console.log('  - Cliente encontrado:', cliente?.id, cliente?.name);
+      console.log('  - NF encontrada:', notaFiscal?.id, notaFiscal?.numeroNF);
+      console.log('  - Status atual da NF:', notaFiscal?.status);
+      console.log('  - Pedidos liberação existentes:', pedidosLiberacao.length);
       
       if (!cliente) {
+        console.error('❌ Cliente não encontrado. Nome procurado:', pedido.cliente);
+        console.error('❌ Clientes disponíveis:', clientes.map(c => c.name));
         throw new Error('Cliente não encontrado');
       }
       if (!notaFiscal) {
+        console.error('❌ NF não encontrada. Número procurado:', pedido.nfVinculada);
+        console.error('❌ NFs disponíveis:', notasFiscais.map(nf => nf.numeroNF));
         throw new Error('Nota fiscal não encontrada');
       }
 
       // Verificar se já existe pedido de liberação para esta NF
       const existingSolicitation = pedidosLiberacao.find(p => p.nfVinculada === notaFiscal.numeroNF);
       if (existingSolicitation) {
+        console.error('❌ Já existe solicitação para esta NF:', existingSolicitation.id);
         throw new Error('Já existe uma solicitação de carregamento para esta NF');
       }
 
       // Verificar se a NF já não está com status que impede nova solicitação
       if (notaFiscal.status !== 'Armazenada') {
+        console.error('❌ Status da NF não permite solicitação. Status atual:', notaFiscal.status);
         throw new Error(`Não é possível solicitar carregamento. Status atual: ${notaFiscal.status}`);
       }
 
-      console.log('✅ Validações passaram - Inserindo pedido no banco...');
+      console.log('✅ Todas as validações passaram!');
+      console.log('📝 Dados para inserção no banco:', {
+        transportadora_id: user.transportadoraId,
+        cliente_id: cliente.id,
+        nota_fiscal_id: notaFiscal.id,
+        numero_pedido: pedido.numeroPedido,
+        status: 'Em análise'
+      });
 
+      // Insert pedido_liberacao
       const { error } = await supabase
         .from('pedidos_liberacao')
         .insert([{
@@ -474,26 +494,41 @@ export function WMSProvider({ children }: { children: React.ReactNode }) {
           status: 'Em análise'
         }]);
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ ERRO ao inserir pedido:', error);
+        throw error;
+      }
 
       console.log('✅ Pedido inserido no banco com sucesso');
 
       // CRITICAL: Update nota fiscal status to "Ordem Solicitada" 
-      console.log('🔄 ATUALIZANDO STATUS DA NF para "Ordem Solicitada":', notaFiscal.numeroNF);
-      const { error: updateError } = await supabase
+      console.log('🔄 ATUALIZANDO STATUS DA NF de "' + notaFiscal.status + '" para "Ordem Solicitada"');
+      console.log('🔄 ID da NF a ser atualizada:', notaFiscal.id);
+      
+      const { error: updateError, data: updateData } = await supabase
         .from('notas_fiscais')
         .update({ status: 'Ordem Solicitada' })
-        .eq('id', notaFiscal.id);
+        .eq('id', notaFiscal.id)
+        .select();
 
       if (updateError) {
         console.error('❌ ERRO CRÍTICO ao atualizar status da NF:', updateError);
         throw updateError;
       }
 
-      console.log('✅ STATUS DA NF ATUALIZADO COM SUCESSO para "Ordem Solicitada"');
+      console.log('✅ STATUS DA NF ATUALIZADO COM SUCESSO!');
+      console.log('📄 Dados da atualização:', updateData);
+      
+      // Force immediate state update
+      console.log('🔄 Forçando atualização imediata do estado local...');
+      setNotasFiscais(prev => prev.map(nf => 
+        nf.id === notaFiscal.id 
+          ? { ...nf, status: 'Ordem Solicitada' }
+          : nf
+      ));
       
       // Force complete data reload for perfect synchronization
-      console.log('🔄 Recarregando dados para sincronização...');
+      console.log('🔄 Recarregando dados do servidor para sincronização...');
       await Promise.all([
         loadNotasFiscais(),
         loadPedidosLiberacao()
