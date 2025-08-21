@@ -13,6 +13,7 @@ import { fixSpecificUser } from '@/utils/fixSpecificUser';
 import { debugSpecificUser } from '@/utils/debugSpecificUser';
 import { forceCreateUser } from '@/utils/forceCreateUser';
 import { checkSupabaseUsers } from '@/utils/checkSupabaseUsers';
+import { resetSpecificPassword } from '@/utils/resetSpecificPassword';
 import { toast } from 'sonner';
 
 const COLORS = ['hsl(var(--success))', 'hsl(var(--warning))', 'hsl(var(--error))'];
@@ -28,6 +29,7 @@ export function Dashboard() {
   const [isDebugging, setIsDebugging] = useState(false);
   const [isForcingCreation, setIsForcingCreation] = useState(false);
   const [isCheckingSupabase, setIsCheckingSupabase] = useState(false);
+  const [isResettingSpecific, setIsResettingSpecific] = useState(false);
 
   const handleCreateAccounts = async () => {
     setIsCreatingAccounts(true);
@@ -137,6 +139,22 @@ export function Dashboard() {
     }
   };
 
+  const handleResetSpecific = async () => {
+    setIsResettingSpecific(true);
+    try {
+      const result = await resetSpecificPassword('Comercial@rodoveigatransportes.com.br', 'cliente123');
+      if (result.success) {
+        toast.success(result.message);
+      } else {
+        toast.error(result.error || 'Erro no reset de senha');
+      }
+    } catch (error) {
+      toast.error('Erro ao resetar senha. Verifique o console.');
+    } finally {
+      setIsResettingSpecific(false);
+    }
+  };
+
   const dashboardData = useMemo(() => {
     // Status distribution
     const statusData = [
@@ -226,6 +244,13 @@ export function Dashboard() {
         </CardHeader>
         <CardContent>
           <div className="flex gap-2 flex-wrap">
+            <Button 
+              onClick={handleResetSpecific} 
+              disabled={isResettingSpecific}
+              className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold"
+            >
+              {isResettingSpecific ? 'Resetando...' : '🔑 RESET DIRETO'}
+            </Button>
             <Button 
               onClick={handleCheckSupabase} 
               disabled={isCheckingSupabase}

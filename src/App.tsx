@@ -12,6 +12,7 @@ import SuperAdminPortal from "./pages/SuperAdminPortal";
 import TransportadoraPortal from "./pages/TransportadoraPortal";
 import ClientePortal from "./pages/ClientePortal";
 import SystemAdminLogin from "./pages/SystemAdminLogin";
+import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -54,6 +55,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/system-admin" element={<SystemAdminLogin />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
             <Route 
               path="/admin" 
               element={
