@@ -18,7 +18,8 @@ import {
   Calendar,
   Building2,
   KeyRound,
-  Edit
+  Edit,
+  Trash2
 } from 'lucide-react';
 
 interface Usuario {
@@ -189,6 +190,34 @@ export function SuperAdminUsuarios() {
     }
   };
 
+  const handleDeleteUser = async (usuarioId: string, userName: string) => {
+    if (window.confirm(`Tem certeza que deseja excluir o usuário "${userName}"? Esta ação excluirá o perfil e todas as associações do usuário.`)) {
+      try {
+        // Primeiro remove as associações transportadoras
+        const { error: userTranspError } = await supabase
+          .from('user_transportadoras')
+          .delete()
+          .eq('user_id', usuarioId);
+
+        if (userTranspError) throw userTranspError;
+
+        // Depois remove o perfil
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .delete()
+          .eq('user_id', usuarioId);
+
+        if (profileError) throw profileError;
+
+        await loadData();
+        toast.success('Usuário excluído com sucesso');
+      } catch (error) {
+        console.error('Erro ao excluir usuário:', error);
+        toast.error('Erro ao excluir usuário');
+      }
+    }
+  };
+
   const getRoleBadge = (role: string) => {
     const variants = {
       super_admin: { variant: 'destructive' as const, label: 'Super Admin' },
@@ -318,38 +347,48 @@ export function SuperAdminUsuarios() {
                           <span>{new Date(usuario.created_at).toLocaleDateString()}</span>
                         </div>
                       </TableCell>
-                      <TableCell>
-                        <div className="flex space-x-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => {
-                              setPasswordChangeUser(usuario);
-                              setIsPasswordDialogOpen(true);
-                            }}
-                            title="Alterar senha"
-                          >
-                            <KeyRound className="w-3 h-3" />
-                          </Button>
-                          
-                          {assignment ? (
-                            <Button 
-                              variant="outline" 
-                              size="sm"
-                              onClick={() => handleToggleUserStatus(
-                                usuario, 
-                                assignment.transportadora_id, 
-                                assignment.is_active
-                              )}
-                              title="Ativar/Desativar usuário"
-                            >
-                              {assignment.is_active ? (
-                                <UserX className="w-3 h-3" />
-                              ) : (
-                                <UserCheck className="w-3 h-3" />
-                              )}
-                            </Button>
-                          ) : null}
+                       <TableCell>
+                         <div className="flex space-x-2">
+                           <Button
+                             variant="outline"
+                             size="sm"
+                             onClick={() => {
+                               setPasswordChangeUser(usuario);
+                               setIsPasswordDialogOpen(true);
+                             }}
+                             title="Alterar senha"
+                           >
+                             <KeyRound className="w-3 h-3" />
+                           </Button>
+                           
+                           {assignment ? (
+                             <Button 
+                               variant="outline" 
+                               size="sm"
+                               onClick={() => handleToggleUserStatus(
+                                 usuario, 
+                                 assignment.transportadora_id, 
+                                 assignment.is_active
+                               )}
+                               title="Ativar/Desativar usuário"
+                             >
+                               {assignment.is_active ? (
+                                 <UserX className="w-3 h-3" />
+                               ) : (
+                                 <UserCheck className="w-3 h-3" />
+                               )}
+                             </Button>
+                           ) : null}
+                           
+                           <Button
+                             variant="outline"
+                             size="sm"
+                             onClick={() => handleDeleteUser(usuario.id, usuario.name)}
+                             className="text-destructive hover:text-destructive"
+                             title="Excluir usuário"
+                           >
+                             <Trash2 className="w-3 h-3" />
+                           </Button>
                           
                           <Dialog 
                             open={isModalOpen && selectedUser?.id === usuario.id} 

@@ -167,6 +167,25 @@ export function SuperAdminTransportadoras() {
     setIsModalOpen(true);
   };
 
+  const handleDelete = async (transportadoraId: string, razaoSocial: string) => {
+    if (window.confirm(`Tem certeza que deseja excluir a transportadora "${razaoSocial}"? Esta ação não pode ser desfeita.`)) {
+      try {
+        const { error } = await supabase
+          .from('transportadoras')
+          .delete()
+          .eq('id', transportadoraId);
+
+        if (error) throw error;
+
+        await loadTransportadoras();
+        toast.success('Transportadora excluída com sucesso');
+      } catch (error) {
+        console.error('Erro ao excluir transportadora:', error);
+        toast.error('Erro ao excluir transportadora');
+      }
+    }
+  };
+
   const getStatusBadge = (status: string) => {
     const variants = {
       ativo: { variant: 'default' as const, className: 'bg-green-500' },
@@ -437,17 +456,27 @@ export function SuperAdminTransportadoras() {
                         <span>{new Date(transportadora.created_at).toLocaleDateString()}</span>
                       </div>
                     </TableCell>
-                    <TableCell>
-                      <div className="flex space-x-2">
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          onClick={() => handleEdit(transportadora)}
-                        >
-                          <Edit className="w-3 h-3" />
-                        </Button>
-                      </div>
-                    </TableCell>
+                     <TableCell>
+                       <div className="flex space-x-2">
+                         <Button 
+                           variant="outline" 
+                           size="sm"
+                           onClick={() => handleEdit(transportadora)}
+                           title="Editar transportadora"
+                         >
+                           <Edit className="w-3 h-3" />
+                         </Button>
+                         <Button
+                           variant="outline"
+                           size="sm"
+                           onClick={() => handleDelete(transportadora.id, transportadora.razao_social)}
+                           className="text-destructive hover:text-destructive"
+                           title="Excluir transportadora"
+                         >
+                           <Trash2 className="w-3 h-3" />
+                         </Button>
+                       </div>
+                     </TableCell>
                   </TableRow>
                 ))}
               </TableBody>

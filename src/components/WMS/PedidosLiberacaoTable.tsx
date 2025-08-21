@@ -14,7 +14,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useWMS } from '@/contexts/WMSContext';
 import { PedidoLiberacao } from '@/types/wms';
-import { AlertTriangle, CheckCircle } from 'lucide-react';
+import { AlertTriangle, CheckCircle, Trash2 } from 'lucide-react';
+import { toast } from 'sonner';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
 
@@ -32,7 +33,7 @@ const getPriorityColor = (prioridade: PedidoLiberacao['prioridade']) => {
 };
 
 export function PedidosLiberacaoTable() {
-  const { pedidosLiberacao, liberarPedido } = useWMS();
+  const { pedidosLiberacao, liberarPedido, deletePedidoLiberacao } = useWMS();
   const [selectedPedido, setSelectedPedido] = useState<PedidoLiberacao | null>(null);
   const [solicitanteLiberacao, setSolicitanteLiberacao] = useState('');
   const [dataExpedicao, setDataExpedicao] = useState('');
@@ -45,6 +46,16 @@ export function PedidosLiberacaoTable() {
       setSelectedPedido(null);
       setSolicitanteLiberacao('');
       setDataExpedicao('');
+    }
+  };
+
+  const handleDelete = async (pedido: PedidoLiberacao) => {
+    if (window.confirm(`Tem certeza que deseja excluir o pedido ${pedido.numeroPedido}? Esta ação não pode ser desfeita.`)) {
+      try {
+        await deletePedidoLiberacao(pedido.id);
+      } catch (error) {
+        toast.error('Erro ao excluir pedido de liberação');
+      }
     }
   };
 
@@ -103,18 +114,19 @@ export function PedidosLiberacaoTable() {
                     </Badge>
                   </TableCell>
                   <TableCell>{pedido.responsavel}</TableCell>
-                  <TableCell>
-                    <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                      <DialogTrigger asChild>
-                        <Button 
-                          size="sm" 
-                          onClick={() => setSelectedPedido(pedido)}
-                          className="bg-success text-success-foreground hover:bg-success/80"
-                        >
-                          <CheckCircle className="w-4 h-4 mr-1" />
-                          Liberar
-                        </Button>
-                      </DialogTrigger>
+                   <TableCell>
+                     <div className="flex items-center gap-2">
+                       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                         <DialogTrigger asChild>
+                           <Button 
+                             size="sm" 
+                             onClick={() => setSelectedPedido(pedido)}
+                             className="bg-success text-success-foreground hover:bg-success/80"
+                           >
+                             <CheckCircle className="w-4 h-4 mr-1" />
+                             Liberar
+                           </Button>
+                         </DialogTrigger>
                       <DialogContent>
                         <DialogHeader>
                           <DialogTitle>Liberar Pedido</DialogTitle>
@@ -157,10 +169,20 @@ export function PedidosLiberacaoTable() {
                            >
                             Confirmar Liberação
                           </Button>
-                        </DialogFooter>
-                      </DialogContent>
-                    </Dialog>
-                  </TableCell>
+                         </DialogFooter>
+                       </DialogContent>
+                     </Dialog>
+                     <Button
+                       size="sm"
+                       variant="outline"
+                       onClick={() => handleDelete(pedido)}
+                       className="text-destructive hover:text-destructive"
+                       title="Excluir pedido"
+                     >
+                       <Trash2 className="w-3 h-3" />
+                     </Button>
+                     </div>
+                   </TableCell>
                 </TableRow>
               ))}
             </TableBody>

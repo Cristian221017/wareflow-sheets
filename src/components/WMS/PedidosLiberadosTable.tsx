@@ -9,10 +9,22 @@ import {
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useWMS } from '@/contexts/WMSContext';
 import { Badge } from '@/components/ui/badge';
-import { CheckCircle, Truck } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { CheckCircle, Truck, Trash2 } from 'lucide-react';
+import { toast } from 'sonner';
 
 export function PedidosLiberadosTable() {
-  const { pedidosLiberados } = useWMS();
+  const { pedidosLiberados, deletePedidoLiberado } = useWMS();
+
+  const handleDelete = async (pedidoId: string, numeroPedido: string) => {
+    if (window.confirm(`Tem certeza que deseja excluir o pedido liberado ${numeroPedido}? Esta ação não pode ser desfeita.`)) {
+      try {
+        await deletePedidoLiberado(pedidoId);
+      } catch (error) {
+        toast.error('Erro ao excluir pedido liberado');
+      }
+    }
+  };
 
   return (
     <Card>
@@ -39,8 +51,9 @@ export function PedidosLiberadosTable() {
                 <TableHead>Peso (kg)</TableHead>
                 <TableHead>Volume (m³)</TableHead>
                 <TableHead>Transportadora</TableHead>
-                <TableHead>Data Expedição</TableHead>
-                <TableHead>Status</TableHead>
+                 <TableHead>Data Expedição</TableHead>
+                 <TableHead>Status</TableHead>
+                 <TableHead>Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -64,12 +77,23 @@ export function PedidosLiberadosTable() {
                       : 'Não informado'
                     }
                   </TableCell>
-                  <TableCell>
-                    <Badge className="bg-success text-success-foreground">
-                      <CheckCircle className="w-3 h-3 mr-1" />
-                      Confirmado
-                    </Badge>
-                  </TableCell>
+                   <TableCell>
+                     <Badge className="bg-success text-success-foreground">
+                       <CheckCircle className="w-3 h-3 mr-1" />
+                       Confirmado
+                     </Badge>
+                   </TableCell>
+                   <TableCell>
+                     <Button
+                       size="sm"
+                       variant="outline"
+                       onClick={() => handleDelete(pedido.id, pedido.numeroPedido)}
+                       className="text-destructive hover:text-destructive"
+                       title="Excluir pedido liberado"
+                     >
+                       <Trash2 className="w-3 h-3" />
+                     </Button>
+                   </TableCell>
                 </TableRow>
               ))}
             </TableBody>

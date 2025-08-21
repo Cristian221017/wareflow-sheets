@@ -22,7 +22,8 @@ import {
   UserCheck, 
   Plus, 
   Users,
-  KeyRound
+  KeyRound,
+  Trash2
 } from 'lucide-react';
 
 interface Cliente {
@@ -127,6 +128,33 @@ export function ClientesTable() {
       });
     } finally {
       setResettingPassword(null);
+    }
+  };
+
+  const handleDeleteCliente = async (clienteId: string, clienteName: string) => {
+    if (window.confirm(`Tem certeza que deseja excluir o cliente "${clienteName}"? Esta ação não pode ser desfeita.`)) {
+      try {
+        const { error } = await supabase
+          .from('clientes')
+          .delete()
+          .eq('id', clienteId);
+
+        if (error) throw error;
+
+        await loadClientes();
+        showToast({
+          title: 'Sucesso',
+          description: 'Cliente excluído com sucesso',
+          variant: 'default',
+        });
+      } catch (error) {
+        console.error('Erro ao excluir cliente:', error);
+        showToast({
+          title: 'Erro',
+          description: 'Não foi possível excluir o cliente',
+          variant: 'destructive',
+        });
+      }
     }
   };
 
@@ -279,6 +307,15 @@ export function ClientesTable() {
                           ) : (
                             <KeyRound className="w-4 h-4" />
                           )}
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleDeleteCliente(cliente.id, cliente.razao_social)}
+                          title="Excluir cliente"
+                          className="text-destructive hover:text-destructive"
+                        >
+                          <Trash2 className="w-4 h-4" />
                         </Button>
                       </div>
                     </TableCell>

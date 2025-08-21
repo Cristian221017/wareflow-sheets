@@ -12,6 +12,8 @@ interface WMSContextType {
   loading: boolean;
   addNotaFiscal: (nf: Omit<NotaFiscal, 'id' | 'createdAt'>) => Promise<void>;
   deleteNotaFiscal: (id: string) => Promise<void>;
+  deletePedidoLiberacao: (id: string) => Promise<void>;
+  deletePedidoLiberado: (id: string) => Promise<void>;
   addPedidoLiberacao: (pedido: Omit<PedidoLiberacao, 'id' | 'createdAt' | 'status'>) => Promise<void>;
   liberarPedido: (pedidoId: string, transportadora: string, dataExpedicao?: string) => Promise<void>;
   updateNotaFiscalStatus: (nfId: string, status: NotaFiscal['status']) => Promise<void>;
@@ -310,6 +312,42 @@ export function WMSProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const deletePedidoLiberacao = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('pedidos_liberacao')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+
+      await loadData();
+      toast.success('Pedido de liberação excluído com sucesso');
+    } catch (error) {
+      console.error('Error deleting pedido liberacao:', error);
+      toast.error('Erro ao excluir pedido de liberação');
+      throw error;
+    }
+  };
+
+  const deletePedidoLiberado = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('pedidos_liberados')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+
+      await loadData();
+      toast.success('Pedido liberado excluído com sucesso');
+    } catch (error) {
+      console.error('Error deleting pedido liberado:', error);
+      toast.error('Erro ao excluir pedido liberado');
+      throw error;
+    }
+  };
+
   const addPedidoLiberacao = async (pedido: Omit<PedidoLiberacao, 'id' | 'createdAt' | 'status'>) => {
     if (!user?.transportadoraId) {
       throw new Error('Usuário não associado a uma transportadora');
@@ -464,6 +502,8 @@ export function WMSProvider({ children }: { children: React.ReactNode }) {
       loading,
       addNotaFiscal,
       deleteNotaFiscal,
+      deletePedidoLiberacao,
+      deletePedidoLiberado,
       addPedidoLiberacao,
       liberarPedido,
       updateNotaFiscalStatus,
