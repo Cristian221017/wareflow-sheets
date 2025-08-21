@@ -24,11 +24,16 @@ export const clientPasswordManager = {
       }
       
       // Se chegou aqui, precisa criar nova conta
+      const currentOrigin = window.location.origin;
+      const redirectUrl = `${currentOrigin}/cliente`;
+      
+      console.log(`🔗 URL de redirecionamento para novo usuário: ${redirectUrl}`);
+      
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          emailRedirectTo: `${window.location.origin}/cliente`,
+          emailRedirectTo: redirectUrl,
           data: {
             name: clientName,
             role: 'cliente'

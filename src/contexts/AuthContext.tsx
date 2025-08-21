@@ -177,7 +177,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signUp = async (email: string, password: string, name: string): Promise<{ error?: string }> => {
     try {
-      const redirectUrl = `${window.location.origin}/`;
+      const currentOrigin = window.location.origin;
+      const redirectUrl = `${currentOrigin}/`;
       
       const { error } = await supabase.auth.signUp({
         email,
@@ -235,11 +236,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // 2. Se uma senha foi fornecida, criar conta de usuário
       if (clienteData.senha) {
         try {
+          console.log(`🔧 Criando autenticação para novo cliente: ${clienteData.email}`);
           const authResult = await clientPasswordManager.createClientAccount(
             clienteData.email,
             clienteData.senha,
             clienteData.name
           );
+          
+          if (authResult.success) {
+            console.log('✅ Conta criada com sucesso no cadastro:', authResult.message);
+          } else if ('error' in authResult) {
+            console.warn('⚠️ Aviso na criação de conta:', authResult.error);
+          }
           
           if (!authResult.success && 'error' in authResult) {
             console.warn('Aviso ao criar autenticação:', authResult.error);

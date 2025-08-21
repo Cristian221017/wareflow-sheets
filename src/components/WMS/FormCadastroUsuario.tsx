@@ -16,6 +16,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { UserPlus } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { clientPasswordManager } from '@/utils/clientPasswordManager';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -98,20 +99,48 @@ export function FormCadastroUsuario({ userType = 'admin_transportadora', usuario
         // Criar usuário no Supabase Auth se senha foi fornecida
         let authUserId = null;
         if (values.senha) {
+          const currentOrigin = window.location.origin;
+          const redirectUrl = values.role === 'cliente' 
+            ? `${currentOrigin}/cliente`
+            : `${currentOrigin}/transportadora`;
+          
+          console.log(`🔗 URL de redirecionamento para ${values.role}: ${redirectUrl}`);
+          
           const { data: authData, error: authError } = await supabase.auth.signUp({
             email: values.email,
             password: values.senha,
             options: {
-              emailRedirectTo: `${window.location.origin}/${values.role === 'cliente' ? 'cliente' : 'transportadora'}`
+              emailRedirectTo: redirectUrl,
+              data: {
+                name: values.name,
+                role: values.role
+              }
             }
           });
 
           if (authError) {
             console.error('Erro ao criar usuário de autenticação:', authError);
+            
+            // Se usuário já existe, tentar enviar reset
+            if (authError.message.includes('User already registered')) {
+              console.log('Usuário já existe, enviando reset de senha...');
+              
+              const resetResult = await clientPasswordManager.resetPassword(values.email);
+              if (resetResult.success) {
+                toast.success(`Usuário já existia. ${resetResult.message}`);
+                authUserId = null; // Não temos o ID, mas o reset foi enviado
+              } else {
+                toast.error(resetResult.error || 'Erro ao enviar reset de senha');
+                throw new Error(resetResult.error || 'Erro ao enviar reset de senha');
+              }
+            } else {
+              throw authError;
+            }
           } else {
             authUserId = authData.user?.id;
+            console.log('✅ Usuário criado com sucesso na autenticação');
+          }
         }
-      }
 
       // Criar perfil do usuário
       if (authUserId) {
