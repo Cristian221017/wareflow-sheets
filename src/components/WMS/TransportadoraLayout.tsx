@@ -254,8 +254,7 @@ export function TransportadoraLayout() {
               <TabsList className="flex w-max min-w-full h-auto p-1 gap-1">
                 <TabsTrigger value="dashboard" className="text-xs px-2 py-2 whitespace-nowrap">Dashboard</TabsTrigger>
                 <TabsTrigger value="armazenadas" className="text-xs px-2 py-2 whitespace-nowrap">Armazenadas</TabsTrigger>
-                <TabsTrigger value="solicitadas" className="text-xs px-2 py-2 whitespace-nowrap">Solicitadas</TabsTrigger>
-                <TabsTrigger value="pendentes" className="text-xs px-2 py-2 whitespace-nowrap">Pendentes Aprovação</TabsTrigger>
+                <TabsTrigger value="solicitadas" className="text-xs px-2 py-2 whitespace-nowrap">Carregamentos Solicitados</TabsTrigger>
                 <TabsTrigger value="confirmadas" className="text-xs px-2 py-2 whitespace-nowrap">Confirmadas</TabsTrigger>
                 <TabsTrigger value="financeiro" className="text-xs px-2 py-2 whitespace-nowrap">Financeiro</TabsTrigger>
                 <TabsTrigger value="relatorios" className="text-xs px-2 py-2 whitespace-nowrap">Relatórios</TabsTrigger>
@@ -264,11 +263,10 @@ export function TransportadoraLayout() {
             
             {/* Desktop: Grid layout */}
             <div className="hidden lg:block mb-6">
-              <TabsList className="grid w-full grid-cols-7 gap-1">
+              <TabsList className="grid w-full grid-cols-6 gap-1">
                 <TabsTrigger value="dashboard" className="text-sm">Dashboard</TabsTrigger>
                 <TabsTrigger value="armazenadas" className="text-sm">Armazenadas</TabsTrigger>
-                <TabsTrigger value="solicitadas" className="text-sm">Solicitadas</TabsTrigger>
-                <TabsTrigger value="pendentes" className="text-sm">Pendentes</TabsTrigger>
+                <TabsTrigger value="solicitadas" className="text-sm">Carregamentos Solicitados</TabsTrigger>
                 <TabsTrigger value="confirmadas" className="text-sm">Confirmadas</TabsTrigger>
                 <TabsTrigger value="financeiro" className="text-sm">Financeiro</TabsTrigger>
                 <TabsTrigger value="relatorios" className="text-sm">Relatórios</TabsTrigger>
@@ -283,13 +281,11 @@ export function TransportadoraLayout() {
               <NFsArmazenadasTable />
             </TabsContent>
             
-            <TabsContent value="solicitadas" className="space-y-4">
-              <NFsSolicitadasTable />
-            </TabsContent>
+        <TabsContent value="solicitadas" className="space-y-4">
+          <NFsSolicitadasTable />
+          <SolicitacoesPendentesTable />
+        </TabsContent>
             
-            <TabsContent value="pendentes" className="space-y-4">
-              <SolicitacoesPendentesTable />
-            </TabsContent>
             
             <TabsContent value="confirmadas" className="space-y-4">
               <div className="space-y-6">
