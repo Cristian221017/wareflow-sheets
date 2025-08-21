@@ -15,12 +15,13 @@ export interface NotaFiscal {
   localizacao: string;
   data_recebimento: string;
   status: NFStatus;
+  created_at: string;
+  updated_at: string;
+  // Campos opcionais que podem não existir ainda
   requested_by?: string | null;
   requested_at?: string | null;
   approved_by?: string | null;
   approved_at?: string | null;
-  created_at: string;
-  updated_at: string;
 }
 
 export interface NFTransition {

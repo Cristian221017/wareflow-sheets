@@ -737,6 +737,18 @@ export type Database = {
         }
         Returns: boolean
       }
+      nf_confirmar: {
+        Args: { p_nf_id: string; p_user_id: string }
+        Returns: undefined
+      }
+      nf_recusar: {
+        Args: { p_nf_id: string; p_user_id: string }
+        Returns: undefined
+      }
+      nf_solicitar: {
+        Args: { p_nf_id: string; p_user_id: string }
+        Returns: undefined
+      }
       setup_demo_user: {
         Args: {
           transportadora_cnpj?: string

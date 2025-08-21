@@ -32,6 +32,8 @@ function ArmazenadasColumn({ canRequest }: { canRequest: boolean }) {
   if (isLoading) return <div className="p-4">Carregando...</div>;
   if (isError) return <div className="p-4 text-red-500">Erro ao carregar dados</div>;
 
+  const validNfs = Array.isArray(nfs) ? nfs : [];
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -39,12 +41,12 @@ function ArmazenadasColumn({ canRequest }: { canRequest: boolean }) {
           <Package className="w-5 h-5 text-blue-600" />
           NFs Armazenadas
         </h3>
-        <Badge variant="secondary">{nfs?.length || 0}</Badge>
+        <Badge variant="secondary">{validNfs.length}</Badge>
       </div>
 
-      {nfs && nfs.length > 0 ? (
+      {validNfs.length > 0 ? (
         <div className="space-y-3">
-          {nfs.map((nf) => (
+          {validNfs.map((nf) => (
             <NFCard
               key={nf.id}
               nf={nf}
@@ -83,6 +85,8 @@ function SolicitadasColumn({ canDecide }: { canDecide: boolean }) {
   if (isLoading) return <div className="p-4">Carregando...</div>;
   if (isError) return <div className="p-4 text-red-500">Erro ao carregar dados</div>;
 
+  const validNfs = Array.isArray(nfs) ? nfs : [];
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -90,12 +94,12 @@ function SolicitadasColumn({ canDecide }: { canDecide: boolean }) {
           <Clock className="w-5 h-5 text-orange-600" />
           Carregamentos Solicitados
         </h3>
-        <Badge variant="secondary">{nfs?.length || 0}</Badge>
+        <Badge variant="secondary">{validNfs.length}</Badge>
       </div>
 
-      {nfs && nfs.length > 0 ? (
+      {validNfs.length > 0 ? (
         <div className="space-y-3">
-          {nfs.map((nf) => (
+          {validNfs.map((nf) => (
             <NFCard
               key={nf.id}
               nf={nf}
@@ -146,6 +150,8 @@ function ConfirmadasColumn() {
   if (isLoading) return <div className="p-4">Carregando...</div>;
   if (isError) return <div className="p-4 text-red-500">Erro ao carregar dados</div>;
 
+  const validNfs = Array.isArray(nfs) ? nfs : [];
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -153,12 +159,12 @@ function ConfirmadasColumn() {
           <CheckCircle className="w-5 h-5 text-green-600" />
           Carregamentos Confirmados
         </h3>
-        <Badge variant="secondary">{nfs?.length || 0}</Badge>
+        <Badge variant="secondary">{validNfs.length}</Badge>
       </div>
 
-      {nfs && nfs.length > 0 ? (
+      {validNfs.length > 0 ? (
         <div className="space-y-3">
-          {nfs.map((nf) => (
+          {validNfs.map((nf) => (
             <NFCard
               key={nf.id}
               nf={nf}

@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { solicitarNF, confirmarNF, recusarNF, fetchNFsByStatus } from "@/lib/nfApi";
-import { toast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import type { NFStatus, NotaFiscal } from "@/types/nf";
 
 const NF_QUERY_KEY = "nfs";
@@ -44,18 +44,11 @@ export function useFluxoMutations() {
     mutationFn: solicitarNF,
     onSuccess: () => {
       invalidateAll();
-      toast({
-        title: "Sucesso",
-        description: "Carregamento solicitado com sucesso!",
-      });
+      toast.success("Carregamento solicitado com sucesso!");
     },
     onError: (error: Error) => {
       console.error('❌ Erro na solicitação:', error);
-      toast({
-        variant: "destructive",
-        title: "Erro",
-        description: error.message,
-      });
+      toast.error(error.message);
     },
   });
 
@@ -63,18 +56,11 @@ export function useFluxoMutations() {
     mutationFn: confirmarNF,
     onSuccess: () => {
       invalidateAll();
-      toast({
-        title: "Sucesso", 
-        description: "Carregamento confirmado com sucesso!",
-      });
+      toast.success("Carregamento confirmado com sucesso!");
     },
     onError: (error: Error) => {
       console.error('❌ Erro na confirmação:', error);
-      toast({
-        variant: "destructive",
-        title: "Erro",
-        description: error.message,
-      });
+      toast.error(error.message);
     },
   });
 
@@ -82,18 +68,11 @@ export function useFluxoMutations() {
     mutationFn: recusarNF,
     onSuccess: () => {
       invalidateAll();
-      toast({
-        title: "Sucesso",
-        description: "Carregamento recusado. NF retornada para armazenadas.",
-      });
+      toast.success("Carregamento recusado. NF retornada para armazenadas.");
     },
     onError: (error: Error) => {
       console.error('❌ Erro na recusa:', error);
-      toast({
-        variant: "destructive", 
-        title: "Erro",
-        description: error.message,
-      });
+      toast.error(error.message);
     },
   });
 

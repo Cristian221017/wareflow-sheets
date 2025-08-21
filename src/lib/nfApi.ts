@@ -15,7 +15,7 @@ export async function solicitarNF(nfId: string): Promise<void> {
   
   const { error } = await supabase.rpc("nf_solicitar", { 
     p_nf_id: nfId, 
-    p_user: userId 
+    p_user_id: userId 
   });
   
   if (error) {
@@ -32,7 +32,7 @@ export async function confirmarNF(nfId: string): Promise<void> {
   
   const { error } = await supabase.rpc("nf_confirmar", { 
     p_nf_id: nfId, 
-    p_user: userId 
+    p_user_id: userId 
   });
   
   if (error) {
@@ -49,7 +49,7 @@ export async function recusarNF(nfId: string): Promise<void> {
   
   const { error } = await supabase.rpc("nf_recusar", { 
     p_nf_id: nfId, 
-    p_user: userId 
+    p_user_id: userId 
   });
   
   if (error) {
@@ -80,10 +80,6 @@ export async function fetchNFsByStatus(status: NFStatus) {
       localizacao,
       data_recebimento,
       status,
-      requested_by,
-      requested_at,
-      approved_by,
-      approved_at,
       created_at,
       updated_at
     `)
@@ -96,5 +92,10 @@ export async function fetchNFsByStatus(status: NFStatus) {
   }
   
   console.log(`📊 Encontradas ${data?.length || 0} NFs com status ${status}`);
-  return data || [];
+  
+  // Cast explícito do status para NFStatus
+  return (data || []).map(item => ({
+    ...item,
+    status: item.status as NFStatus
+  }));
 }
