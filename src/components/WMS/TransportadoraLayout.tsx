@@ -4,9 +4,6 @@ import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dashboard } from './Dashboard';
-import { NFsArmazenadasTable } from './NFsArmazenadasTable';
-import { NFsSolicitadasTable } from './NFsSolicitadasTable';
-import { NFsConfirmadasTable } from './NFsConfirmadasTable';
 import { FormNotaFiscal } from './FormNotaFiscal';
 import { FormPedidoLiberacao } from './FormPedidoLiberacao';
 import { FormCadastroCliente } from './FormCadastroCliente';
@@ -252,9 +249,6 @@ export function TransportadoraLayout() {
             <div className="lg:hidden w-full overflow-x-auto mb-6">
               <TabsList className="flex w-max min-w-full h-auto p-1 gap-1">
                 <TabsTrigger value="dashboard" className="text-xs px-2 py-2 whitespace-nowrap">Dashboard</TabsTrigger>
-                <TabsTrigger value="armazenadas" className="text-xs px-2 py-2 whitespace-nowrap">Armazenadas</TabsTrigger>
-                <TabsTrigger value="solicitadas" className="text-xs px-2 py-2 whitespace-nowrap">Carregamentos Solicitados</TabsTrigger>
-                <TabsTrigger value="confirmadas" className="text-xs px-2 py-2 whitespace-nowrap">Confirmadas</TabsTrigger>
                 <TabsTrigger value="financeiro" className="text-xs px-2 py-2 whitespace-nowrap">Financeiro</TabsTrigger>
                 <TabsTrigger value="relatorios" className="text-xs px-2 py-2 whitespace-nowrap">Relatórios</TabsTrigger>
               </TabsList>
@@ -262,11 +256,8 @@ export function TransportadoraLayout() {
             
             {/* Desktop: Grid layout */}
             <div className="hidden lg:block mb-6">
-              <TabsList className="grid w-full grid-cols-6 gap-1">
+              <TabsList className="grid w-full grid-cols-3 gap-1">
                 <TabsTrigger value="dashboard" className="text-sm">Dashboard</TabsTrigger>
-                <TabsTrigger value="armazenadas" className="text-sm">Armazenadas</TabsTrigger>
-                <TabsTrigger value="solicitadas" className="text-sm">Carregamentos Solicitados</TabsTrigger>
-                <TabsTrigger value="confirmadas" className="text-sm">Confirmadas</TabsTrigger>
                 <TabsTrigger value="financeiro" className="text-sm">Financeiro</TabsTrigger>
                 <TabsTrigger value="relatorios" className="text-sm">Relatórios</TabsTrigger>
               </TabsList>
@@ -274,22 +265,6 @@ export function TransportadoraLayout() {
             
             <TabsContent value="dashboard" className="space-y-4">
               <Dashboard />
-            </TabsContent>
-            
-            <TabsContent value="armazenadas" className="space-y-4">
-              <NFsArmazenadasTable />
-            </TabsContent>
-            
-            <TabsContent value="solicitadas" className="space-y-4">
-              <NFsSolicitadasTable />
-            </TabsContent>
-            
-            
-            <TabsContent value="confirmadas" className="space-y-4">
-              <div className="space-y-6">
-                <NFsConfirmadasTable />
-                <ImpressaoPedidosLiberados />
-              </div>
             </TabsContent>
             
             <TabsContent value="financeiro" className="space-y-4">

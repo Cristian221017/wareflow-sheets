@@ -88,16 +88,6 @@ export function ClienteMercadoriasTable() {
                       {nf.status}
                     </Badge>
                   </TableCell>
-                  <TableCell>
-                    <Button
-                      size="sm"
-                      disabled
-                      className="bg-warning text-warning-foreground hover:bg-warning/80"
-                    >
-                      <Truck className="w-3 h-3 mr-1" />
-                      Solicitar
-                    </Button>
-                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
