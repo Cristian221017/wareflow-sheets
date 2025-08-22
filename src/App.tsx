@@ -37,7 +37,13 @@ function ProtectedRoute({ children, allowedRoles }: { children: React.ReactNode,
     return <Navigate to="/" replace />;
   }
 
-  if (user && !allowedRoles.includes(user.role || user.type)) {
+  // For client route, check if user has no role (meaning it's a client)
+  // For other routes, check if user has the required role
+  const hasAccess = allowedRoles.includes('cliente') 
+    ? (!user?.role || user?.role === 'cliente') 
+    : allowedRoles.includes(user?.role || '');
+    
+  if (user && !hasAccess) {
     return <Navigate to="/" replace />;
   }
 
