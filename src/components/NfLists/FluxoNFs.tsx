@@ -194,8 +194,8 @@ export function FluxoNFs() {
     return cleanup;
   }, [queryClient]);
 
-  // Determinar permissões baseado no role do usuário
-  const isCliente = user?.role === 'cliente';
+  // Determinar permissões baseado no tipo e role do usuário
+  const isCliente = user?.type === 'cliente';
   const isTransportadora = user?.role === 'admin_transportadora' || user?.role === 'operador';
   
   return (
