@@ -264,6 +264,8 @@ export type Database = {
       }
       notas_fiscais: {
         Row: {
+          approved_at: string | null
+          approved_by: string | null
           cliente_id: string
           cnpj_fornecedor: string
           created_at: string
@@ -282,6 +284,8 @@ export type Database = {
           peso: number
           produto: string
           quantidade: number
+          requested_at: string | null
+          requested_by: string | null
           status: string
           sync_status: string | null
           transportadora_id: string
@@ -289,6 +293,8 @@ export type Database = {
           volume: number
         }
         Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
           cliente_id: string
           cnpj_fornecedor: string
           created_at?: string
@@ -307,6 +313,8 @@ export type Database = {
           peso: number
           produto: string
           quantidade: number
+          requested_at?: string | null
+          requested_by?: string | null
           status?: string
           sync_status?: string | null
           transportadora_id: string
@@ -314,6 +322,8 @@ export type Database = {
           volume: number
         }
         Update: {
+          approved_at?: string | null
+          approved_by?: string | null
           cliente_id?: string
           cnpj_fornecedor?: string
           created_at?: string
@@ -332,6 +342,8 @@ export type Database = {
           peso?: number
           produto?: string
           quantidade?: number
+          requested_at?: string | null
+          requested_by?: string | null
           status?: string
           sync_status?: string | null
           transportadora_id?: string
