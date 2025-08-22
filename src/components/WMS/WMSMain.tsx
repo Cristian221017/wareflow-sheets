@@ -9,12 +9,20 @@ export function WMSLayout() {
 
   useEffect(() => {
     if (isAuthenticated && user) {
+      console.log('🚀 WMSMain - Redirecting user:', { role: user.role, type: user.type, email: user.email });
+      
       // Redirect based on user role/type
       if (user.role === 'super_admin') {
+        console.log('🔄 Redirecting to /admin');
         navigate('/admin', { replace: true });
-      } else if (user.type === 'cliente') {
+      } else if (user.role === 'admin_transportadora' || user.role === 'operador') {
+        console.log('🔄 Redirecting to /transportadora');
+        navigate('/transportadora', { replace: true });
+      } else if (user.type === 'cliente' || !user.role) {
+        console.log('🔄 Redirecting to /cliente');
         navigate('/cliente', { replace: true });
       } else {
+        console.log('🔄 Redirecting to /transportadora (fallback)');
         navigate('/transportadora', { replace: true });
       }
     }

@@ -135,16 +135,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const profile = profileResult.data;
       const userRole = roleResult.data;
 
-      return {
+      const userData: User = {
         id: supabaseUser.id,
         name: profile?.name || supabaseUser.email || 'Usuário',
         email: profile?.email || supabaseUser.email || '',
-        type: userRole?.role === 'super_admin' ? 'transportadora' : 
-              userRole?.role === 'admin_transportadora' ? 'transportadora' :
-              userRole?.role === 'operador' ? 'transportadora' : 'cliente',
+        type: (userRole?.role === 'super_admin' || userRole?.role === 'admin_transportadora' || userRole?.role === 'operador') 
+          ? 'transportadora' : 'cliente',
         role: userRole?.role,
         transportadoraId: userRole?.transportadora_id
       };
+
+      console.log('🔍 Debug getUserData - userRole:', userRole);
+      console.log('🔍 Debug getUserData - final userData:', userData);
+      
+      return userData;
 
     } catch (error) {
       console.log('System user query failed, using basic data...');
