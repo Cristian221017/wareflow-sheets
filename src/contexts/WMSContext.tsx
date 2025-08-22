@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './AuthContext';
 import { NotaFiscal, PedidoLiberacao, PedidoLiberado } from '@/types/wms';
 import { toast } from 'sonner';
-
+import { solicitarNF, confirmarNF, recusarNF } from "@/lib/nfApi";
 import { useQueryClient } from '@tanstack/react-query';
 
 interface WMSContextType {
@@ -33,6 +33,13 @@ const WMSContext = createContext<WMSContextType | undefined>(undefined);
 export function WMSProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  
+  const invalidateAll = () => {
+    const statuses = ["ARMAZENADA", "SOLICITADA", "CONFIRMADA"];
+    statuses.forEach(status => 
+      queryClient.invalidateQueries({ queryKey: ["nfs", status] })
+    );
+  };
   const [notasFiscais, setNotasFiscais] = useState<NotaFiscal[]>([]);
   const [pedidosLiberacao, setPedidosLiberacao] = useState<PedidoLiberacao[]>([]);
   const [pedidosLiberados, setPedidosLiberados] = useState<PedidoLiberado[]>([]);
@@ -212,38 +219,8 @@ export function WMSProvider({ children }: { children: ReactNode }) {
         throw new Error(`NF não pode ser solicitada. Status atual: ${nf.status}`);
       }
 
-      // Update NF status to "Ordem Solicitada"
-      const { error: nfError } = await supabase
-        .from('notas_fiscais')
-        .update({ 
-          status: 'SOLICITADA',
-          updated_at: new Date().toISOString()
-        })
-        .eq('numero_nf', numeroNF);
-
-      if (nfError) throw nfError;
-
-      // Create pedido_liberacao entry
-      const { error: pedidoError } = await supabase
-        .from('pedidos_liberacao')
-        .insert({
-          numero_pedido: nf.numeroPedido,
-          ordem_compra: nf.ordemCompra,
-          data_solicitacao: new Date().toISOString().split('T')[0],
-          cliente_id: nf.clienteId,
-          nota_fiscal_id: nf.id,
-          produto: nf.produto,
-          quantidade: nf.quantidade,
-          peso: nf.peso,
-          volume: nf.volume,
-          prioridade: 'Média',
-          responsavel: user?.name || 'Cliente',
-          status: 'Em análise',
-          transportadora_id: user?.transportadoraId
-        });
-
-      if (pedidoError) throw pedidoError;
-
+      await solicitarNF(nf.id);
+      invalidateAll();
       toast.success(`✅ Carregamento solicitado para NF ${numeroNF}!`);
       await loadData();
       
@@ -268,47 +245,8 @@ export function WMSProvider({ children }: { children: ReactNode }) {
         throw new Error(`NF não pode ser aprovada. Status atual: ${nf.status}`);
       }
 
-      // Update NF status to "Solicitação Confirmada"
-      const { error: nfError } = await supabase
-        .from('notas_fiscais')
-        .update({ 
-          status: 'CONFIRMADA',
-          updated_at: new Date().toISOString()
-        })
-        .eq('numero_nf', numeroNF);
-
-      if (nfError) throw nfError;
-
-      // Update pedido_liberacao status to "Confirmado"
-      const { error: pedidoError } = await supabase
-        .from('pedidos_liberacao')
-        .update({ 
-          status: 'Confirmado',
-          updated_at: new Date().toISOString()
-        })
-        .eq('numero_pedido', nf.numeroPedido);
-
-      if (pedidoError) throw pedidoError;
-
-      // Create pedido_liberado entry
-      const { error: liberadoError } = await supabase
-        .from('pedidos_liberados')
-        .insert({
-          numero_pedido: nf.numeroPedido,
-          ordem_compra: nf.ordemCompra,
-          data_liberacao: new Date().toISOString().split('T')[0],
-          cliente_id: nf.clienteId,
-          nota_fiscal_id: nf.id,
-          pedido_liberacao_id: '', // Will be populated if needed
-          quantidade: nf.quantidade,
-          peso: nf.peso,
-          volume: nf.volume,
-          transportadora_responsavel: transportadora,
-          transportadora_id: user?.transportadoraId
-        });
-
-      if (liberadoError) throw liberadoError;
-
+      await confirmarNF(nf.id);
+      invalidateAll();
       toast.success(`✅ Carregamento aprovado para NF ${numeroNF}!`);
       await loadData();
       
@@ -333,26 +271,8 @@ export function WMSProvider({ children }: { children: ReactNode }) {
         throw new Error(`NF não pode ser rejeitada. Status atual: ${nf.status}`);
       }
 
-      // Update NF status back to "Armazenada" with rejection reason
-      const { error: nfError } = await supabase
-        .from('notas_fiscais')
-        .update({ 
-          status: 'ARMAZENADA',
-          integration_metadata: { ...nf.integration_metadata, rejection_reason: motivo },
-          updated_at: new Date().toISOString()
-        })
-        .eq('numero_nf', numeroNF);
-
-      if (nfError) throw nfError;
-
-      // Delete the pedido_liberacao entry
-      const { error: pedidoError } = await supabase
-        .from('pedidos_liberacao')
-        .delete()
-        .eq('numero_pedido', nf.numeroPedido);
-
-      if (pedidoError) throw pedidoError;
-
+      await recusarNF(nf.id);
+      invalidateAll();
       toast.success(`❌ Carregamento rejeitado para NF ${numeroNF}!`);
       await loadData();
       
@@ -556,8 +476,7 @@ export function WMSProvider({ children }: { children: ReactNode }) {
   };
 
   const recusarPedido = async (numeroNF: string, motivo: string, responsavel?: string) => {
-    // Convert to new API call
-    // Recusar pedido sem alterar status da NF
+    await rejeitarCarregamento(numeroNF, motivo);
   };
 
   const value: WMSContextType = {

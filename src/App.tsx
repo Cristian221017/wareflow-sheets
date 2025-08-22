@@ -1,7 +1,6 @@
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { WMSProvider } from "@/contexts/WMSContext";
 import { AuthProvider } from "@/contexts/AuthContext";
@@ -16,7 +15,7 @@ import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
 import DebugFluxoNFs from "./pages/DebugFluxoNFs";
 
-const queryClient = new QueryClient();
+
 
 // Protected Route Component
 function ProtectedRoute({ children, allowedRoles }: { children: React.ReactNode, allowedRoles: string[] }) {
@@ -51,14 +50,13 @@ function ProtectedRoute({ children, allowedRoles }: { children: React.ReactNode,
 }
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <AuthProvider>
-      <WMSProvider>
-        <FinanceiroProvider>
-          <TooltipProvider>
-          <Toaster />
-          <Sonner />
-        <BrowserRouter>
+  <AuthProvider>
+    <WMSProvider>
+      <FinanceiroProvider>
+        <TooltipProvider>
+        <Toaster />
+        <Sonner />
+      <BrowserRouter>
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/system-admin" element={<SystemAdminLogin />} />
@@ -91,12 +89,11 @@ const App = () => (
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
-        </BrowserRouter>
-          </TooltipProvider>
-        </FinanceiroProvider>
-      </WMSProvider>
-    </AuthProvider>
-</QueryClientProvider>
+      </BrowserRouter>
+        </TooltipProvider>
+      </FinanceiroProvider>
+    </WMSProvider>
+  </AuthProvider>
 );
 
 export default App;

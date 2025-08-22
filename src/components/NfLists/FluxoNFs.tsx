@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -187,11 +187,13 @@ function ConfirmadasColumn() {
 export function FluxoNFs() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const once = useRef(false);
 
-  // Configurar realtime
+  // Configurar realtime com guard para StrictMode
   useEffect(() => {
-    const cleanup = subscribeNfChanges(queryClient);
-    return cleanup;
+    if (once.current) return;
+    once.current = true;
+    return subscribeNfChanges(queryClient);
   }, [queryClient]);
 
   // Determinar permissões baseado no tipo e role do usuário
