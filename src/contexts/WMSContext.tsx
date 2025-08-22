@@ -19,6 +19,11 @@ interface WMSContextType {
   addNotaFiscal: (nf: Omit<NotaFiscal, 'id' | 'createdAt'>) => Promise<void>;
   resetData: () => Promise<void>;
   
+  // Flow actions with RPCs
+  solicitarCarregamento: (numeroNF: string) => Promise<void>;
+  aprovarCarregamento: (numeroNF: string, transportadora: string) => Promise<void>;
+  rejeitarCarregamento: (numeroNF: string, motivo: string) => Promise<void>;
+  
   // Legacy API for compatibility
   addPedidoLiberacao: (data: any) => Promise<void>;
   deleteNotaFiscal: (id: string) => Promise<void>;
@@ -486,6 +491,10 @@ export function WMSProvider({ children }: { children: ReactNode }) {
     isLoading,
     addNotaFiscal,
     resetData,
+    // Flow actions with RPCs
+    solicitarCarregamento,
+    aprovarCarregamento,
+    rejeitarCarregamento,
     // Legacy API
     addPedidoLiberacao,
     deleteNotaFiscal,
