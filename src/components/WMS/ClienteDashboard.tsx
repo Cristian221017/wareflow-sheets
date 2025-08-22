@@ -1,29 +1,48 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { useWMS } from '@/contexts/WMSContext';
+import { useAllNFs } from '@/hooks/useNFs';
 import { useAuth } from '@/contexts/AuthContext';
 import { Package, FileText, Truck, BarChart3 } from 'lucide-react';
 
 export function ClienteDashboard() {
-  const { notasFiscais, pedidosLiberacao, pedidosLiberados } = useWMS();
+  const { armazenadas, solicitadas, confirmadas, isLoading } = useAllNFs();
   const { user } = useAuth();
 
-  // Filter data for current client
-  const clienteNFs = notasFiscais.filter(nf => nf.cnpjCliente === user?.cnpj);
-  const clientePedidos = pedidosLiberacao.filter(p => p.cnpjCliente === user?.cnpj);
-  const clienteLiberados = pedidosLiberados.filter(p => {
-    const pedido = pedidosLiberacao.find(pl => pl.numeroPedido === p.numeroPedido);
-    return pedido?.cnpjCliente === user?.cnpj;
-  });
+  // Combinando todas as NFs para estatísticas  
+  const allNFs = [...armazenadas, ...solicitadas, ...confirmadas];
+  
+  // Estatísticas básicas
+  const totalNFs = allNFs.length;
+  const nfsArmazenadas = armazenadas.length;
+  const nfsSolicitadas = solicitadas.length;
+  const nfsConfirmadas = confirmadas.length;
 
-  // Calculate statistics
-  const totalPeso = clienteNFs.reduce((sum, nf) => sum + nf.peso, 0);
-  const totalVolume = clienteNFs.reduce((sum, nf) => sum + nf.volume, 0);
-  const nfsArmazenadas = clienteNFs.filter(nf => nf.status === 'ARMAZENADA').length;
-  const pedidosAnalise = clientePedidos.filter(p => p.status === 'Em análise').length;
+  // Estatísticas calculadas
+  const totalPeso = allNFs.reduce((sum, nf) => sum + Number(nf.peso), 0);
+  const totalVolume = allNFs.reduce((sum, nf) => sum + Number(nf.volume), 0);
 
   const getStatusCount = (status: string) => {
-    return clienteNFs.filter(nf => nf.status === status).length;
+    switch (status) {
+      case 'ARMAZENADA': return armazenadas.length;
+      case 'SOLICITADA': return solicitadas.length;
+      case 'CONFIRMADA': return confirmadas.length;
+      default: return 0;
+    }
   };
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="bg-card rounded-lg p-6 animate-pulse">
+              <div className="h-4 bg-muted rounded w-3/4 mb-2"></div>
+              <div className="h-8 bg-muted rounded w-1/2"></div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -36,7 +55,7 @@ export function ClienteDashboard() {
             <Package className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{clienteNFs.length}</div>
+            <div className="text-2xl font-bold">{totalNFs}</div>
             <p className="text-xs text-muted-foreground">
               {nfsArmazenadas} disponíveis para liberação
             </p>
@@ -66,7 +85,7 @@ export function ClienteDashboard() {
             <FileText className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{pedidosAnalise}</div>
+            <div className="text-2xl font-bold">{nfsSolicitadas}</div>
             <p className="text-xs text-muted-foreground">
               Aguardando análise
             </p>
@@ -81,7 +100,7 @@ export function ClienteDashboard() {
             <Truck className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{clienteLiberados.length}</div>
+            <div className="text-2xl font-bold">{nfsConfirmadas}</div>
             <p className="text-xs text-muted-foreground">
               Prontos para retirada
             </p>
@@ -133,16 +152,16 @@ export function ClienteDashboard() {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {clienteNFs.slice(0, 5).map((nf) => (
+              {allNFs.slice(0, 5).map((nf) => (
                 <div key={nf.id} className="flex items-center justify-between py-2 border-b border-border/50 last:border-0">
                   <div>
-                    <p className="text-sm font-medium">{nf.numeroNF}</p>
+                    <p className="text-sm font-medium">{nf.numero_nf}</p>
                     <p className="text-xs text-muted-foreground">{nf.produto}</p>
                   </div>
                   <div className="text-right">
                     <p className="text-xs text-muted-foreground">{nf.status}</p>
                     <p className="text-xs text-muted-foreground">
-                      {new Date(nf.dataRecebimento).toLocaleDateString('pt-BR')}
+                      {new Date(nf.created_at).toLocaleDateString('pt-BR')}
                     </p>
                   </div>
                 </div>

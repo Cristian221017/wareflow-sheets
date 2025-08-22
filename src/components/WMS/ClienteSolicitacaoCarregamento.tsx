@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { useWMS } from '@/contexts/WMSContext';
+import { useNFs } from '@/hooks/useNFs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -15,17 +15,7 @@ import { Clock } from 'lucide-react';
 
 export function ClienteSolicitacaoCarregamento() {
   const { user } = useAuth();
-  const { notasFiscais, isLoading } = useWMS();
-
-  // Filter NFs for current client with status "Ordem Solicitada"
-  const nfsSolicitadas = useMemo(() => {
-    const filtered = notasFiscais.filter(nf => 
-      nf.cnpjCliente === user?.cnpj && nf.status === 'SOLICITADA'
-    );
-    
-    console.log('🚚 [Cliente] Carregamentos Solicitados:', filtered.length, 'para CNPJ:', user?.cnpj);
-    return filtered;
-  }, [notasFiscais, user?.cnpj]);
+  const { data: nfsSolicitadas, isLoading } = useNFs("SOLICITADA");
 
   if (isLoading) {
     return (
@@ -67,17 +57,17 @@ export function ClienteSolicitacaoCarregamento() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {nfsSolicitadas.map((nf) => (
+              {(nfsSolicitadas || []).map((nf) => (
                 <TableRow key={nf.id} className="bg-warning/10 hover:bg-warning/20">
-                  <TableCell className="font-medium">{nf.numeroNF}</TableCell>
-                  <TableCell className="text-primary font-medium">{nf.numeroPedido}</TableCell>
-                  <TableCell>{nf.ordemCompra}</TableCell>
-                  <TableCell>{new Date(nf.dataRecebimento).toLocaleDateString('pt-BR')}</TableCell>
+                  <TableCell className="font-medium">{nf.numero_nf}</TableCell>
+                  <TableCell className="text-primary font-medium">{nf.numero_pedido}</TableCell>
+                  <TableCell>{nf.ordem_compra}</TableCell>
+                  <TableCell>{new Date(nf.data_recebimento).toLocaleDateString('pt-BR')}</TableCell>
                   <TableCell>{nf.fornecedor}</TableCell>
                   <TableCell>{nf.produto}</TableCell>
                   <TableCell>{nf.quantidade}</TableCell>
-                  <TableCell>{nf.peso.toFixed(1)}</TableCell>
-                  <TableCell>{nf.volume.toFixed(2)}</TableCell>
+                  <TableCell>{Number(nf.peso).toFixed(1)}</TableCell>
+                  <TableCell>{Number(nf.volume).toFixed(2)}</TableCell>
                   <TableCell>{nf.localizacao}</TableCell>
                   <TableCell>
                     <Badge className="bg-warning text-warning-foreground">
@@ -90,7 +80,7 @@ export function ClienteSolicitacaoCarregamento() {
           </Table>
         </div>
 
-        {nfsSolicitadas.length === 0 && (
+        {(!nfsSolicitadas || nfsSolicitadas.length === 0) && (
           <div className="text-center py-8 text-muted-foreground">
             <Clock className="w-12 h-12 mx-auto mb-4 opacity-50" />
             <p>Nenhum carregamento solicitado</p>

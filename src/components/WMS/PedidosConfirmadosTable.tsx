@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { useWMS } from '@/contexts/WMSContext';
+import { useNFs } from '@/hooks/useNFs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -15,17 +15,7 @@ import { CheckCircle } from 'lucide-react';
 
 export function PedidosConfirmadosTable() {
   const { user } = useAuth();
-  const { notasFiscais, isLoading } = useWMS();
-
-  // Filter NFs for current client with status "Solicitação Confirmada"
-  const nfsConfirmadas = useMemo(() => {
-    const filtered = notasFiscais.filter(nf => 
-      nf.cnpjCliente === user?.cnpj && nf.status === 'CONFIRMADA'
-    );
-    
-    console.log('✅ [Cliente] Carregamentos Confirmados:', filtered.length, 'para CNPJ:', user?.cnpj);
-    return filtered;
-  }, [notasFiscais, user?.cnpj]);
+  const { data: nfsConfirmadas, isLoading } = useNFs("CONFIRMADA");
 
   if (isLoading) {
     return (
@@ -67,17 +57,17 @@ export function PedidosConfirmadosTable() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {nfsConfirmadas.map((nf) => (
+              {(nfsConfirmadas || []).map((nf) => (
                 <TableRow key={nf.id} className="bg-success/10 hover:bg-success/20">
-                  <TableCell className="font-medium">{nf.numeroNF}</TableCell>
-                  <TableCell className="text-primary font-medium">{nf.numeroPedido}</TableCell>
-                  <TableCell>{nf.ordemCompra}</TableCell>
-                  <TableCell>{new Date(nf.dataRecebimento).toLocaleDateString('pt-BR')}</TableCell>
+                  <TableCell className="font-medium">{nf.numero_nf}</TableCell>
+                  <TableCell className="text-primary font-medium">{nf.numero_pedido}</TableCell>
+                  <TableCell>{nf.ordem_compra}</TableCell>
+                  <TableCell>{new Date(nf.data_recebimento).toLocaleDateString('pt-BR')}</TableCell>
                   <TableCell>{nf.fornecedor}</TableCell>
                   <TableCell>{nf.produto}</TableCell>
                   <TableCell>{nf.quantidade}</TableCell>
-                  <TableCell>{nf.peso.toFixed(1)}</TableCell>
-                  <TableCell>{nf.volume.toFixed(2)}</TableCell>
+                  <TableCell>{Number(nf.peso).toFixed(1)}</TableCell>
+                  <TableCell>{Number(nf.volume).toFixed(2)}</TableCell>
                   <TableCell>{nf.localizacao}</TableCell>
                   <TableCell>
                     <Badge className="bg-success text-success-foreground">
@@ -90,7 +80,7 @@ export function PedidosConfirmadosTable() {
           </Table>
         </div>
 
-        {nfsConfirmadas.length === 0 && (
+        {(!nfsConfirmadas || nfsConfirmadas.length === 0) && (
           <div className="text-center py-8 text-muted-foreground">
             <CheckCircle className="w-12 h-12 mx-auto mb-4 opacity-50" />
             <p>Nenhum carregamento confirmado</p>

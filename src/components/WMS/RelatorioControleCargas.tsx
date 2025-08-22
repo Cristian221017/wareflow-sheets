@@ -11,7 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Combobox } from '@/components/ui/combobox';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { CalendarIcon, FileText, Download, BarChart3 } from 'lucide-react';
-import { useWMS } from '@/contexts/WMSContext';
+import { useAllNFs } from '@/hooks/useNFs';
 import { useAuth } from '@/contexts/AuthContext';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -44,10 +44,13 @@ interface RelatorioData {
 }
 
 export function RelatorioControleCargas() {
-  const { notasFiscais } = useWMS();
-  const { clientes } = useAuth();
+  const { user } = useAuth();
+  const { armazenadas, solicitadas, confirmadas } = useAllNFs();
   const [relatorioData, setRelatorioData] = useState<RelatorioData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+
+  // Combinar todas as NFs
+  const todasNFs = [...armazenadas, ...solicitadas, ...confirmadas];
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -63,21 +66,21 @@ export function RelatorioControleCargas() {
     
     try {
       // Filtrar NFs por período e cliente
-      let nfsFiltradas = notasFiscais.filter(nf => {
-        const dataRecebimento = new Date(nf.dataRecebimento);
+      let nfsFiltradas = todasNFs.filter(nf => {
+        const dataRecebimento = new Date(nf.data_recebimento);
         const dataInicio = new Date(values.dataInicio);
         const dataFim = new Date(values.dataFim);
         
         const dentroPerido = dataRecebimento >= dataInicio && dataRecebimento <= dataFim;
-        const clienteMatch = !values.cliente || nf.cliente === values.cliente;
+        const clienteMatch = !values.cliente || nf.cliente_id === values.cliente;
         
         return dentroPerido && clienteMatch;
       });
 
       // Calcular estatísticas
       const totalNFs = nfsFiltradas.length;
-      const totalPeso = nfsFiltradas.reduce((sum, nf) => sum + nf.peso, 0);
-      const totalVolume = nfsFiltradas.reduce((sum, nf) => sum + nf.volume, 0);
+      const totalPeso = nfsFiltradas.reduce((sum, nf) => sum + Number(nf.peso), 0);
+      const totalVolume = nfsFiltradas.reduce((sum, nf) => sum + Number(nf.volume), 0);
 
       // NFs por status
       const nfsPorStatus = nfsFiltradas.reduce((acc, nf) => {
@@ -87,25 +90,25 @@ export function RelatorioControleCargas() {
 
       // NFs por cliente
       const nfsPorCliente = nfsFiltradas.reduce((acc, nf) => {
-        if (!acc[nf.cliente]) {
-          acc[nf.cliente] = { quantidade: 0, peso: 0, volume: 0 };
+        if (!acc[nf.cliente_id]) {
+          acc[nf.cliente_id] = { quantidade: 0, peso: 0, volume: 0 };
         }
-        acc[nf.cliente].quantidade += 1;
-        acc[nf.cliente].peso += nf.peso;
-        acc[nf.cliente].volume += nf.volume;
+        acc[nf.cliente_id].quantidade += 1;
+        acc[nf.cliente_id].peso += Number(nf.peso);
+        acc[nf.cliente_id].volume += Number(nf.volume);
         return acc;
       }, {} as Record<string, { quantidade: number; peso: number; volume: number }>);
 
       // Detalhes das NFs
       const detalhes = nfsFiltradas.map(nf => ({
-        numeroNF: nf.numeroNF,
-        cliente: nf.cliente,
+        numeroNF: nf.numero_nf,
+        cliente: nf.cliente_id,
         produto: nf.produto,
         quantidade: nf.quantidade,
-        peso: nf.peso,
-        volume: nf.volume,
+        peso: Number(nf.peso),
+        volume: Number(nf.volume),
         status: nf.status,
-        dataRecebimento: nf.dataRecebimento,
+        dataRecebimento: nf.data_recebimento,
         localizacao: nf.localizacao,
       }));
 
@@ -167,10 +170,13 @@ export function RelatorioControleCargas() {
     document.body.removeChild(link);
   };
 
-  const clienteOptions = clientes.map(cliente => ({
-    value: cliente.name,
-    label: cliente.name,
-  }));
+  // Obter clientes únicos das NFs para o dropdown
+  const clienteOptions = Array.from(new Set(todasNFs.map(nf => nf.cliente_id)))
+    .filter(Boolean)
+    .map(clienteId => ({
+      value: clienteId as string,
+      label: clienteId as string,
+    }));
 
   const getStatusColor = (status: string) => {
     switch (status) {

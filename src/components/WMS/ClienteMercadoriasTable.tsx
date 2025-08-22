@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { useWMS } from '@/contexts/WMSContext';
+import { useNFs } from '@/hooks/useNFs';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -17,17 +17,7 @@ import { toast } from 'sonner';
 
 export function ClienteMercadoriasTable() {
   const { user } = useAuth();
-  const { notasFiscais, isLoading } = useWMS();
-
-  // Filter NFs for current client with status "Armazenada"
-  const nfsArmazenadas = useMemo(() => {
-    const filtered = notasFiscais.filter(nf => 
-      nf.cnpjCliente === user?.cnpj && nf.status === 'ARMAZENADA'
-    );
-    
-    console.log('📦 [Cliente] NFs Armazenadas:', filtered.length, 'para CNPJ:', user?.cnpj);
-    return filtered;
-  }, [notasFiscais, user?.cnpj]);
+  const { data: nfsArmazenadas, isLoading } = useNFs("ARMAZENADA");
 
 
   if (isLoading) {
@@ -70,17 +60,17 @@ export function ClienteMercadoriasTable() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {nfsArmazenadas.map((nf) => (
+              {(nfsArmazenadas || []).map((nf) => (
                 <TableRow key={nf.id}>
-                  <TableCell className="font-medium">{nf.numeroNF}</TableCell>
-                  <TableCell className="text-primary font-medium">{nf.numeroPedido}</TableCell>
-                  <TableCell>{nf.ordemCompra}</TableCell>
-                  <TableCell>{new Date(nf.dataRecebimento).toLocaleDateString('pt-BR')}</TableCell>
+                  <TableCell className="font-medium">{nf.numero_nf}</TableCell>
+                  <TableCell className="text-primary font-medium">{nf.numero_pedido}</TableCell>
+                  <TableCell>{nf.ordem_compra}</TableCell>
+                  <TableCell>{new Date(nf.data_recebimento).toLocaleDateString('pt-BR')}</TableCell>
                   <TableCell>{nf.fornecedor}</TableCell>
                   <TableCell>{nf.produto}</TableCell>
                   <TableCell>{nf.quantidade}</TableCell>
-                  <TableCell>{nf.peso.toFixed(1)}</TableCell>
-                  <TableCell>{nf.volume.toFixed(2)}</TableCell>
+                  <TableCell>{Number(nf.peso).toFixed(1)}</TableCell>
+                  <TableCell>{Number(nf.volume).toFixed(2)}</TableCell>
                   <TableCell>{nf.localizacao}</TableCell>
                   <TableCell>
                     <Badge className="bg-success text-success-foreground">
@@ -93,7 +83,7 @@ export function ClienteMercadoriasTable() {
           </Table>
         </div>
 
-        {nfsArmazenadas.length === 0 && (
+        {(!nfsArmazenadas || nfsArmazenadas.length === 0) && (
           <div className="text-center py-8 text-muted-foreground">
             <Package className="w-12 h-12 mx-auto mb-4 opacity-50" />
             <p>Nenhuma mercadoria armazenada</p>
