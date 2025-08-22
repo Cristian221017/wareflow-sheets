@@ -206,8 +206,8 @@ export function Dashboard() {
       return acc;
     }, [] as Array<{ semana: string; pedidos: number }>);
 
-    // SLA calculation - simplificado usando apenas created_at
-    const slaMedia = confirmadas.length > 0 ? 1 : 0; // SLA médio de 1 dia por enquanto
+    // SLA calculation - simplificado usando apenas dados disponíveis
+    const slaMedia = confirmadas.length > 0 ? 1 : 0; // SLA médio simplificado
 
     return {
       statusData,
