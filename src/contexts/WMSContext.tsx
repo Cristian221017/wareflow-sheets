@@ -66,7 +66,7 @@ export function WMSProvider({ children }: { children: ReactNode }) {
           peso: parseFloat(nf.peso.toString()),
           volume: parseFloat(nf.volume.toString()),
           localizacao: nf.localizacao,
-          status: nf.status as 'Armazenada' | 'Ordem Solicitada' | 'Solicitação Confirmada',
+          status: nf.status as 'ARMAZENADA' | 'SOLICITADA' | 'CONFIRMADA',
           createdAt: nf.created_at,
           integration_metadata: (nf as any).integration_metadata || {}
         }));
@@ -182,7 +182,7 @@ export function WMSProvider({ children }: { children: ReactNode }) {
           peso: nfData.peso,
           volume: nfData.volume,
           localizacao: nfData.localizacao,
-          status: 'Armazenada',
+          status: 'ARMAZENADA',
           transportadora_id: user?.transportadoraId
         });
 
@@ -208,7 +208,7 @@ export function WMSProvider({ children }: { children: ReactNode }) {
         throw new Error('Nota Fiscal não encontrada');
       }
 
-      if (nf.status !== 'Armazenada') {
+      if (nf.status !== 'ARMAZENADA') {
         throw new Error(`NF não pode ser solicitada. Status atual: ${nf.status}`);
       }
 
@@ -216,7 +216,7 @@ export function WMSProvider({ children }: { children: ReactNode }) {
       const { error: nfError } = await supabase
         .from('notas_fiscais')
         .update({ 
-          status: 'Ordem Solicitada',
+          status: 'SOLICITADA',
           updated_at: new Date().toISOString()
         })
         .eq('numero_nf', numeroNF);
@@ -264,7 +264,7 @@ export function WMSProvider({ children }: { children: ReactNode }) {
         throw new Error('Nota Fiscal não encontrada');
       }
 
-      if (nf.status !== 'Ordem Solicitada') {
+      if (nf.status !== 'SOLICITADA') {
         throw new Error(`NF não pode ser aprovada. Status atual: ${nf.status}`);
       }
 
@@ -272,7 +272,7 @@ export function WMSProvider({ children }: { children: ReactNode }) {
       const { error: nfError } = await supabase
         .from('notas_fiscais')
         .update({ 
-          status: 'Solicitação Confirmada',
+          status: 'CONFIRMADA',
           updated_at: new Date().toISOString()
         })
         .eq('numero_nf', numeroNF);
@@ -329,7 +329,7 @@ export function WMSProvider({ children }: { children: ReactNode }) {
         throw new Error('Nota Fiscal não encontrada');
       }
 
-      if (nf.status !== 'Ordem Solicitada') {
+      if (nf.status !== 'SOLICITADA') {
         throw new Error(`NF não pode ser rejeitada. Status atual: ${nf.status}`);
       }
 
@@ -337,7 +337,7 @@ export function WMSProvider({ children }: { children: ReactNode }) {
       const { error: nfError } = await supabase
         .from('notas_fiscais')
         .update({ 
-          status: 'Armazenada',
+          status: 'ARMAZENADA',
           integration_metadata: { ...nf.integration_metadata, rejection_reason: motivo },
           updated_at: new Date().toISOString()
         })
@@ -440,7 +440,7 @@ export function WMSProvider({ children }: { children: ReactNode }) {
             peso: 150.5,
             volume: 2.3,
             localizacao: 'A1-B2-C3',
-            status: 'Armazenada',
+            status: 'ARMAZENADA',
             transportadora_id: user.transportadoraId
           },
           {
@@ -456,7 +456,7 @@ export function WMSProvider({ children }: { children: ReactNode }) {
             peso: 75.2,
             volume: 1.8,
             localizacao: 'B1-C2-D3',
-            status: 'Armazenada',
+            status: 'ARMAZENADA',
             transportadora_id: user.transportadoraId
           }
         ];

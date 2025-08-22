@@ -159,18 +159,18 @@ export function Dashboard() {
     // Status distribution
     const statusData = [
       { 
-        name: 'Armazenada', 
-        value: notasFiscais.filter(nf => nf.status === 'Armazenada').length,
+        name: 'Armazenadas', 
+        value: notasFiscais.filter(nf => nf.status === 'ARMAZENADA').length,
         color: COLORS[0]
       },
       { 
-        name: 'Ordem Solicitada',
-        value: notasFiscais.filter(nf => nf.status === 'Ordem Solicitada').length,
+        name: 'Solicitadas',
+        value: notasFiscais.filter(nf => nf.status === 'SOLICITADA').length,
         color: COLORS[1]
       },
       { 
-        name: 'Solicitação Confirmada',
-        value: notasFiscais.filter(nf => nf.status === 'Solicitação Confirmada').length,
+        name: 'Confirmadas',
+        value: notasFiscais.filter(nf => nf.status === 'CONFIRMADA').length,
         color: COLORS[2]
       }
     ];
@@ -347,7 +347,7 @@ export function Dashboard() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Solicitação Confirmada</CardTitle>
+            <CardTitle className="text-sm font-medium">Confirmadas</CardTitle>
             <CheckCircle className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>

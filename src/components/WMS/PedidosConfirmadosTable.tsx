@@ -20,7 +20,7 @@ export function PedidosConfirmadosTable() {
   // Filter NFs for current client with status "Solicitação Confirmada"
   const nfsConfirmadas = useMemo(() => {
     const filtered = notasFiscais.filter(nf => 
-      nf.cnpjCliente === user?.cnpj && nf.status === 'Solicitação Confirmada'
+      nf.cnpjCliente === user?.cnpj && nf.status === 'CONFIRMADA'
     );
     
     console.log('✅ [Cliente] Carregamentos Confirmados:', filtered.length, 'para CNPJ:', user?.cnpj);
