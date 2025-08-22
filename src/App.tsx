@@ -14,6 +14,7 @@ import ClientePortal from "./pages/ClientePortal";
 import SystemAdminLogin from "./pages/SystemAdminLogin";
 import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
+import DebugFluxoNFs from "./pages/DebugFluxoNFs";
 
 const queryClient = new QueryClient();
 
@@ -80,6 +81,7 @@ const App = () => (
                 </ProtectedRoute>
               } 
             />
+            <Route path="/debug/fluxo-nfs" element={<DebugFluxoNFs />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
