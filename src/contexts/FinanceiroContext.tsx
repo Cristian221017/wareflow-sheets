@@ -39,7 +39,13 @@ export function FinanceiroProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   const fetchDocumentosFinanceiros = async () => {
+    console.log('🔍 FinanceiroContext - fetchDocumentosFinanceiros called', { 
+      isAuthenticated, 
+      user: user ? { id: user.id, email: user.email } : null 
+    });
+    
     if (!isAuthenticated || !user) {
+      console.log('🚫 FinanceiroContext - User not authenticated, clearing documents');
       setDocumentosFinanceiros([]);
       setLoading(false);
       return;
@@ -48,14 +54,21 @@ export function FinanceiroProvider({ children }: { children: ReactNode }) {
     try {
       setLoading(true);
       
+      console.log('📊 FinanceiroContext - Starting query for documentos_financeiros');
+      
       // Query direta para documentos financeiros 
       const { data, error } = await supabase
         .from('documentos_financeiros' as any)
         .select('*')
         .order('created_at', { ascending: false });
 
+      console.log('📊 FinanceiroContext - Query result:', { 
+        data: data?.length || 0, 
+        error: error?.message || null 
+      });
+
       if (error) {
-        console.error('Erro ao buscar documentos financeiros:', error);
+        console.error('❌ Erro ao buscar documentos financeiros:', error);
         toast.error('Erro ao carregar documentos financeiros');
         return;
       }

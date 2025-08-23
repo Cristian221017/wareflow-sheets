@@ -10,7 +10,7 @@ import { FluxoNFs } from '../NfLists/FluxoNFs';
 import { ClienteDashboard } from './ClienteDashboard';
 import { ClienteMercadoriasTable } from './ClienteMercadoriasTable';
 import { ClienteSolicitacaoCarregamento } from './ClienteSolicitacaoCarregamento';
-import { ClienteFinanceiro } from './ClienteFinanceiro';
+import { FinanceiroCliente } from './FinanceiroCliente';
 import { PedidosConfirmadosTable } from './PedidosConfirmadosTable';
 import { FormCadastroUsuario } from './FormCadastroUsuario';
 import { AlterarSenhaDialog } from './AlterarSenhaDialog';
@@ -138,7 +138,7 @@ export function ClienteLayout() {
       case 'liberados':
         return <PedidosConfirmadosTable />;
       case 'financeiro':
-        return <ClienteFinanceiro />;
+        return <FinanceiroCliente />;
       case 'cadastro-usuario':
         return <FormCadastroUsuario userType="cliente" />;
       default:
