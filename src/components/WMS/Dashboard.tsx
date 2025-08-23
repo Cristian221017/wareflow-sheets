@@ -214,7 +214,7 @@ export function Dashboard() {
       clientVolumeData,
       timelineData,
       kpis: {
-        totalNFsArmazenadas: allNFs.length,
+        totalNFsArmazenadas: armazenadas.length,
         totalPedidosPendentes: solicitadas.length,
         totalPedidosLiberados: confirmadas.length,
         slaMedia
