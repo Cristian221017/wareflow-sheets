@@ -276,13 +276,14 @@ export function TransportadoraLayout() {
                   <NotificationBadge count={notifications.solicitacoesPendentes} className="absolute -top-1 -right-1 scale-50" />
                 </TabsTrigger>
                 <TabsTrigger value="pedidos-liberados" className="text-xs px-2 py-2 whitespace-nowrap">Solicitações Confirmadas</TabsTrigger>
+                <TabsTrigger value="financeiro" className="text-xs px-2 py-2 whitespace-nowrap">Financeiro</TabsTrigger>
                 <TabsTrigger value="relatorios" className="text-xs px-2 py-2 whitespace-nowrap">Relatórios</TabsTrigger>
               </TabsList>
             </div>
             
             {/* Desktop: Grid layout */}
             <div className="hidden lg:block mb-6">
-              <TabsList className="grid w-full grid-cols-6 gap-1">
+              <TabsList className="grid w-full grid-cols-7 gap-1">
                 <TabsTrigger value="dashboard" className="text-sm">Dashboard</TabsTrigger>
                 <TabsTrigger value="fluxo-nfs" className="text-sm">Fluxo de NFs</TabsTrigger>
                 <TabsTrigger 
@@ -302,6 +303,7 @@ export function TransportadoraLayout() {
                   <NotificationBadge count={notifications.solicitacoesPendentes} className="absolute -top-2 -right-2 scale-75" />
                 </TabsTrigger>
                 <TabsTrigger value="pedidos-liberados" className="text-sm">Solicitações Confirmadas</TabsTrigger>
+                <TabsTrigger value="financeiro" className="text-sm">Financeiro</TabsTrigger>
                 <TabsTrigger value="relatorios" className="text-sm">Relatórios</TabsTrigger>
               </TabsList>
             </div>
@@ -324,6 +326,10 @@ export function TransportadoraLayout() {
 
             <TabsContent value="pedidos-liberados" className="space-y-4">
               <PedidosConfirmadosTransportadora />
+            </TabsContent>
+
+            <TabsContent value="financeiro" className="space-y-4">
+              <FinanceiroTransportadora />
             </TabsContent>
             
             <TabsContent value="relatorios" className="space-y-4">
