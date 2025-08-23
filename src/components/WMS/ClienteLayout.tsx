@@ -4,6 +4,7 @@ import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
 import { useAuth } from '@/contexts/AuthContext';
 import { useWMS } from '@/contexts/WMSContext';
 import { useNotifications } from '@/hooks/useNotifications';
+import { useLastVisit } from '@/hooks/useLastVisit';
 import { NotificationBadge } from '@/components/ui/notification-badge';
 import { FluxoNFs } from '../NfLists/FluxoNFs';
 import { ClienteDashboard } from './ClienteDashboard';
@@ -32,6 +33,7 @@ export function ClienteLayout() {
   const { user, logout } = useAuth();
   const { notasFiscais, pedidosLiberacao, pedidosLiberados } = useWMS();
   const notifications = useNotifications();
+  const { markAsVisited } = useLastVisit();
   
   const [activeTab, setActiveTab] = useState('dashboard');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -44,6 +46,20 @@ export function ClienteLayout() {
     const pedido = pedidosLiberacao.find(pl => pl.numeroPedido === p.numeroPedido);
     return pedido?.cnpjCliente === user?.cnpj;
   });
+
+  const handleTabChange = (tabId: string) => {
+    setActiveTab(tabId);
+    
+    // Marcar como visitado baseado na aba
+    switch (tabId) {
+      case 'mercadorias':
+        markAsVisited('nfs-confirmadas');
+        break;
+      case 'liberados':
+        markAsVisited('pedidos-liberados');
+        break;
+    }
+  };
 
   const navigationItems = [
     { id: 'dashboard', label: 'Dashboard', icon: Home, shortLabel: 'Home', notification: 0 },
@@ -61,7 +77,7 @@ export function ClienteLayout() {
         <button
           key={item.id}
           onClick={() => {
-            setActiveTab(item.id);
+            handleTabChange(item.id);
             setMobileMenuOpen(false);
           }}
           className={`
@@ -89,7 +105,7 @@ export function ClienteLayout() {
             {navigationItems.map((item) => (
               <button
                 key={item.id}
-                onClick={() => setActiveTab(item.id)}
+                onClick={() => handleTabChange(item.id)}
                 className={`
                   flex items-center gap-1.5 px-3 py-2 text-xs font-medium whitespace-nowrap rounded-md 
                   transition-colors hover:bg-muted
@@ -145,7 +161,7 @@ export function ClienteLayout() {
                 {navigationItems.map((item) => (
                   <button
                     key={item.id}
-                    onClick={() => setActiveTab(item.id)}
+                    onClick={() => handleTabChange(item.id)}
                     className={`
                       inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium 
                       ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 

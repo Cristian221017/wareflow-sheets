@@ -1,20 +1,22 @@
 import { useMemo } from 'react';
 import { useAllNFs } from './useNFs';
+import { useLastVisit } from './useLastVisit';
 
 export function useNotifications() {
   const { armazenadas, solicitadas, confirmadas } = useAllNFs();
+  const { hasNewItems } = useLastVisit();
 
   const notifications = useMemo(() => {
     return {
       // Para clientes
-      nfsConfirmadas: confirmadas?.length || 0,
-      pedidosLiberados: confirmadas?.length || 0,
+      nfsConfirmadas: hasNewItems('nfs-confirmadas', confirmadas || []) ? (confirmadas?.length || 0) : 0,
+      pedidosLiberados: hasNewItems('pedidos-liberados', confirmadas || []) ? (confirmadas?.length || 0) : 0,
       
       // Para transportadores
-      solicitacoesPendentes: solicitadas?.length || 0,
-      nfsArmazenadas: armazenadas?.length || 0,
+      solicitacoesPendentes: hasNewItems('solicitacoes-pendentes', solicitadas || []) ? (solicitadas?.length || 0) : 0,
+      nfsArmazenadas: hasNewItems('nfs-armazenadas', armazenadas || []) ? (armazenadas?.length || 0) : 0,
     };
-  }, [armazenadas, solicitadas, confirmadas]);
+  }, [armazenadas, solicitadas, confirmadas, hasNewItems]);
 
   return notifications;
 }
