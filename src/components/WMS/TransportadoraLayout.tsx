@@ -253,24 +253,22 @@ export function TransportadoraLayout() {
             <div className="lg:hidden w-full overflow-x-auto mb-6">
               <TabsList className="flex w-max min-w-full h-auto p-1 gap-1">
                 <TabsTrigger value="dashboard" className="text-xs px-2 py-2 whitespace-nowrap">Dashboard</TabsTrigger>
-                <TabsTrigger value="fluxo-nfs" className="text-xs px-2 py-2 whitespace-nowrap">Fluxo NFs</TabsTrigger>
-                <TabsTrigger value="nfs-armazenadas" className="text-xs px-2 py-2 whitespace-nowrap">Armazenadas</TabsTrigger>
-                <TabsTrigger value="solicitacoes" className="text-xs px-2 py-2 whitespace-nowrap">Solicitações</TabsTrigger>
-                <TabsTrigger value="confirmados" className="text-xs px-2 py-2 whitespace-nowrap">Confirmados</TabsTrigger>
-                <TabsTrigger value="financeiro" className="text-xs px-2 py-2 whitespace-nowrap">Financeiro</TabsTrigger>
+                <TabsTrigger value="fluxo-nfs" className="text-xs px-2 py-2 whitespace-nowrap">Fluxo de NFs</TabsTrigger>
+                <TabsTrigger value="notas-fiscais" className="text-xs px-2 py-2 whitespace-nowrap">Notas Fiscais</TabsTrigger>
+                <TabsTrigger value="pedidos-liberacao" className="text-xs px-2 py-2 whitespace-nowrap">Pedidos de Liberação</TabsTrigger>
+                <TabsTrigger value="pedidos-liberados" className="text-xs px-2 py-2 whitespace-nowrap">Pedidos Liberados</TabsTrigger>
                 <TabsTrigger value="relatorios" className="text-xs px-2 py-2 whitespace-nowrap">Relatórios</TabsTrigger>
               </TabsList>
             </div>
             
             {/* Desktop: Grid layout */}
             <div className="hidden lg:block mb-6">
-              <TabsList className="grid w-full grid-cols-7 gap-1">
+              <TabsList className="grid w-full grid-cols-6 gap-1">
                 <TabsTrigger value="dashboard" className="text-sm">Dashboard</TabsTrigger>
-                <TabsTrigger value="fluxo-nfs" className="text-sm">Fluxo NFs</TabsTrigger>
-                <TabsTrigger value="nfs-armazenadas" className="text-sm">NFs Armazenadas</TabsTrigger>
-                <TabsTrigger value="solicitacoes" className="text-sm">Solicitações</TabsTrigger>
-                <TabsTrigger value="confirmados" className="text-sm">Confirmados</TabsTrigger>
-                <TabsTrigger value="financeiro" className="text-sm">Financeiro</TabsTrigger>
+                <TabsTrigger value="fluxo-nfs" className="text-sm">Fluxo de NFs</TabsTrigger>
+                <TabsTrigger value="notas-fiscais" className="text-sm">Notas Fiscais</TabsTrigger>
+                <TabsTrigger value="pedidos-liberacao" className="text-sm">Pedidos de Liberação</TabsTrigger>
+                <TabsTrigger value="pedidos-liberados" className="text-sm">Pedidos Liberados</TabsTrigger>
                 <TabsTrigger value="relatorios" className="text-sm">Relatórios</TabsTrigger>
               </TabsList>
             </div>
@@ -283,20 +281,16 @@ export function TransportadoraLayout() {
               <FluxoNFs />
             </TabsContent>
 
-            <TabsContent value="nfs-armazenadas" className="space-y-4">
+            <TabsContent value="notas-fiscais" className="space-y-4">
               <NotasFiscaisTable />
             </TabsContent>
 
-            <TabsContent value="solicitacoes" className="space-y-4">
+            <TabsContent value="pedidos-liberacao" className="space-y-4">
               <SolicitacoesPendentesTable />
             </TabsContent>
 
-            <TabsContent value="confirmados" className="space-y-4">
+            <TabsContent value="pedidos-liberados" className="space-y-4">
               <PedidosConfirmadosTransportadora />
-            </TabsContent>
-            
-            <TabsContent value="financeiro" className="space-y-4">
-              <FinanceiroTransportadora />
             </TabsContent>
             
             <TabsContent value="relatorios" className="space-y-4">
