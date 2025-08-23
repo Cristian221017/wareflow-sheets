@@ -23,8 +23,8 @@ const mainItems = [
   { title: "Dashboard", path: "dashboard", icon: BarChart3 },
   { title: "Fluxo de NFs", path: "fluxo-nfs", icon: Package },
   { title: "Notas Fiscais", path: "notas-fiscais", icon: Package },
-  { title: "Pedidos de Liberação", path: "pedidos-liberacao", icon: FileText },
-  { title: "Pedidos Liberados", path: "pedidos-liberados", icon: CheckCircle },
+  { title: "Solicitações Pendentes", path: "pedidos-liberacao", icon: FileText },
+  { title: "Solicitações Confirmadas", path: "pedidos-liberados", icon: CheckCircle },
   { title: "Relatórios", path: "relatorios", icon: BarChart3 },
 ];
 

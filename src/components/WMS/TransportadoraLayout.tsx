@@ -255,8 +255,8 @@ export function TransportadoraLayout() {
                 <TabsTrigger value="dashboard" className="text-xs px-2 py-2 whitespace-nowrap">Dashboard</TabsTrigger>
                 <TabsTrigger value="fluxo-nfs" className="text-xs px-2 py-2 whitespace-nowrap">Fluxo de NFs</TabsTrigger>
                 <TabsTrigger value="notas-fiscais" className="text-xs px-2 py-2 whitespace-nowrap">Notas Fiscais</TabsTrigger>
-                <TabsTrigger value="pedidos-liberacao" className="text-xs px-2 py-2 whitespace-nowrap">Pedidos de Liberação</TabsTrigger>
-                <TabsTrigger value="pedidos-liberados" className="text-xs px-2 py-2 whitespace-nowrap">Pedidos Liberados</TabsTrigger>
+                <TabsTrigger value="pedidos-liberacao" className="text-xs px-2 py-2 whitespace-nowrap">Solicitações Pendentes</TabsTrigger>
+                <TabsTrigger value="pedidos-liberados" className="text-xs px-2 py-2 whitespace-nowrap">Solicitações Confirmadas</TabsTrigger>
                 <TabsTrigger value="relatorios" className="text-xs px-2 py-2 whitespace-nowrap">Relatórios</TabsTrigger>
               </TabsList>
             </div>
@@ -267,8 +267,8 @@ export function TransportadoraLayout() {
                 <TabsTrigger value="dashboard" className="text-sm">Dashboard</TabsTrigger>
                 <TabsTrigger value="fluxo-nfs" className="text-sm">Fluxo de NFs</TabsTrigger>
                 <TabsTrigger value="notas-fiscais" className="text-sm">Notas Fiscais</TabsTrigger>
-                <TabsTrigger value="pedidos-liberacao" className="text-sm">Pedidos de Liberação</TabsTrigger>
-                <TabsTrigger value="pedidos-liberados" className="text-sm">Pedidos Liberados</TabsTrigger>
+                <TabsTrigger value="pedidos-liberacao" className="text-sm">Solicitações Pendentes</TabsTrigger>
+                <TabsTrigger value="pedidos-liberados" className="text-sm">Solicitações Confirmadas</TabsTrigger>
                 <TabsTrigger value="relatorios" className="text-sm">Relatórios</TabsTrigger>
               </TabsList>
             </div>
