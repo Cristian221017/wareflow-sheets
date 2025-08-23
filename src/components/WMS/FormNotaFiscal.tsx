@@ -23,8 +23,8 @@ const formSchema = z.object({
   produto: z.string().min(1, 'Produto é obrigatório'),
   quantidade: z.coerce.number().min(1, 'Quantidade deve ser maior que 0'),
   peso: z.coerce.number().min(0.1, 'Peso deve ser maior que 0'),
-  volume: z.coerce.number().optional(),
-  localizacao: z.string().optional(),
+  volume: z.coerce.number().nullable().optional(),
+  localizacao: z.string().nullable().optional(),
   status: z.enum(['ARMAZENADA', 'SOLICITADA', 'CONFIRMADA']).default('ARMAZENADA')
 });
 
@@ -74,8 +74,8 @@ export function FormNotaFiscal() {
         produto: data.produto,
         quantidade: data.quantidade,
         peso: data.peso,
-        volume: data.volume,
-        localizacao: data.localizacao,
+        volume: data.volume && data.volume > 0 ? data.volume : null,
+        localizacao: data.localizacao && data.localizacao.trim() ? data.localizacao.trim() : null,
         status: 'ARMAZENADA' as const
       };
 
