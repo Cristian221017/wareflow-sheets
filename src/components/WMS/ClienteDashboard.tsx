@@ -7,6 +7,15 @@ export function ClienteDashboard() {
   const { armazenadas, solicitadas, confirmadas, isLoading } = useAllNFs();
   const { user } = useAuth();
 
+  // Debug: Log current NF data
+  console.log('🔍 ClienteDashboard Debug:', {
+    armazenadas: armazenadas.length,
+    solicitadas: solicitadas.length, 
+    confirmadas: confirmadas.length,
+    armazenadasData: armazenadas,
+    user: user?.email
+  });
+
   // Combinando todas as NFs para estatísticas  
   const allNFs = [...armazenadas, ...solicitadas, ...confirmadas];
   
