@@ -12,7 +12,7 @@ import { toast } from 'sonner';
 import { useDateUtils } from '@/hooks/useDateUtils';
 
 export function FinanceiroCliente() {
-  const { documentosFinanceiros, downloadArquivo } = useFinanceiro();
+  const { documentosFinanceiros, downloadArquivo, loading } = useFinanceiro();
   const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -51,6 +51,18 @@ export function FinanceiroCliente() {
   };
 
   const dateUtils = useDateUtils();
+  
+  // Show loading state
+  if (loading) {
+    return (
+      <Card>
+        <CardContent className="p-6 text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-2 text-muted-foreground">Carregando documentos financeiros...</p>
+        </CardContent>
+      </Card>
+    );
+  }
   
   const getStatusColor = (status: string, dataVencimento: string) => {
     const isVencido = dateUtils.isOverdue(dataVencimento, status);
