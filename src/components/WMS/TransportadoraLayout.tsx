@@ -3,6 +3,8 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useNotifications } from '@/hooks/useNotifications';
+import { NotificationBadge } from '@/components/ui/notification-badge';
 import { FluxoNFs } from '../NfLists/FluxoNFs';
 import { Dashboard } from './Dashboard';
 import { FormNotaFiscal } from './FormNotaFiscal';
@@ -34,6 +36,7 @@ import { useAuth } from '@/contexts/AuthContext';
 
 export function TransportadoraLayout() {
   const { user, logout } = useAuth();
+  const notifications = useNotifications();
   const [isNFDialogOpen, setIsNFDialogOpen] = useState(false);
   const [isPedidoDialogOpen, setIsPedidoDialogOpen] = useState(false);
   const [isDocumentoDialogOpen, setIsDocumentoDialogOpen] = useState(false);
@@ -254,8 +257,14 @@ export function TransportadoraLayout() {
               <TabsList className="flex w-max min-w-full h-auto p-1 gap-1">
                 <TabsTrigger value="dashboard" className="text-xs px-2 py-2 whitespace-nowrap">Dashboard</TabsTrigger>
                 <TabsTrigger value="fluxo-nfs" className="text-xs px-2 py-2 whitespace-nowrap">Fluxo de NFs</TabsTrigger>
-                <TabsTrigger value="notas-fiscais" className="text-xs px-2 py-2 whitespace-nowrap">Notas Fiscais</TabsTrigger>
-                <TabsTrigger value="pedidos-liberacao" className="text-xs px-2 py-2 whitespace-nowrap">Solicitações Pendentes</TabsTrigger>
+                <TabsTrigger value="notas-fiscais" className="text-xs px-2 py-2 whitespace-nowrap relative">
+                  Notas Fiscais
+                  <NotificationBadge count={notifications.nfsArmazenadas} className="absolute -top-1 -right-1 scale-50" />
+                </TabsTrigger>
+                <TabsTrigger value="pedidos-liberacao" className="text-xs px-2 py-2 whitespace-nowrap relative">
+                  Solicitações Pendentes
+                  <NotificationBadge count={notifications.solicitacoesPendentes} className="absolute -top-1 -right-1 scale-50" />
+                </TabsTrigger>
                 <TabsTrigger value="pedidos-liberados" className="text-xs px-2 py-2 whitespace-nowrap">Solicitações Confirmadas</TabsTrigger>
                 <TabsTrigger value="relatorios" className="text-xs px-2 py-2 whitespace-nowrap">Relatórios</TabsTrigger>
               </TabsList>
@@ -266,8 +275,14 @@ export function TransportadoraLayout() {
               <TabsList className="grid w-full grid-cols-6 gap-1">
                 <TabsTrigger value="dashboard" className="text-sm">Dashboard</TabsTrigger>
                 <TabsTrigger value="fluxo-nfs" className="text-sm">Fluxo de NFs</TabsTrigger>
-                <TabsTrigger value="notas-fiscais" className="text-sm">Notas Fiscais</TabsTrigger>
-                <TabsTrigger value="pedidos-liberacao" className="text-sm">Solicitações Pendentes</TabsTrigger>
+                <TabsTrigger value="notas-fiscais" className="text-sm relative">
+                  Notas Fiscais
+                  <NotificationBadge count={notifications.nfsArmazenadas} className="absolute -top-2 -right-2 scale-75" />
+                </TabsTrigger>
+                <TabsTrigger value="pedidos-liberacao" className="text-sm relative">
+                  Solicitações Pendentes
+                  <NotificationBadge count={notifications.solicitacoesPendentes} className="absolute -top-2 -right-2 scale-75" />
+                </TabsTrigger>
                 <TabsTrigger value="pedidos-liberados" className="text-sm">Solicitações Confirmadas</TabsTrigger>
                 <TabsTrigger value="relatorios" className="text-sm">Relatórios</TabsTrigger>
               </TabsList>

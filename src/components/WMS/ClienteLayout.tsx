@@ -3,6 +3,8 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
 import { useAuth } from '@/contexts/AuthContext';
 import { useWMS } from '@/contexts/WMSContext';
+import { useNotifications } from '@/hooks/useNotifications';
+import { NotificationBadge } from '@/components/ui/notification-badge';
 import { FluxoNFs } from '../NfLists/FluxoNFs';
 import { ClienteDashboard } from './ClienteDashboard';
 import { ClienteMercadoriasTable } from './ClienteMercadoriasTable';
@@ -29,6 +31,7 @@ import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 export function ClienteLayout() {
   const { user, logout } = useAuth();
   const { notasFiscais, pedidosLiberacao, pedidosLiberados } = useWMS();
+  const notifications = useNotifications();
   
   const [activeTab, setActiveTab] = useState('dashboard');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -43,13 +46,13 @@ export function ClienteLayout() {
   });
 
   const navigationItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: Home, shortLabel: 'Home' },
-    { id: 'fluxo-nfs', label: 'Fluxo de NFs', icon: Package, shortLabel: 'Fluxo' },
-    { id: 'mercadorias', label: 'Notas Fiscais', icon: Package, shortLabel: 'Notas' },
-    { id: 'pedidos', label: 'Pedidos de Liberação', icon: FileText, shortLabel: 'Pedidos' },
-    { id: 'liberados', label: 'Pedidos Liberados', icon: CheckCircle, shortLabel: 'Liberados' },
-    { id: 'financeiro', label: 'Financeiro', icon: Receipt, shortLabel: 'Fin' },
-    { id: 'cadastro-usuario', label: 'Cadastro de Usuários', icon: UserPlus, shortLabel: 'Users' }
+    { id: 'dashboard', label: 'Dashboard', icon: Home, shortLabel: 'Home', notification: 0 },
+    { id: 'fluxo-nfs', label: 'Fluxo de NFs', icon: Package, shortLabel: 'Fluxo', notification: 0 },
+    { id: 'mercadorias', label: 'Notas Fiscais', icon: Package, shortLabel: 'Notas', notification: notifications.nfsConfirmadas },
+    { id: 'pedidos', label: 'Pedidos de Liberação', icon: FileText, shortLabel: 'Pedidos', notification: 0 },
+    { id: 'liberados', label: 'Pedidos Liberados', icon: CheckCircle, shortLabel: 'Liberados', notification: notifications.pedidosLiberados },
+    { id: 'financeiro', label: 'Financeiro', icon: Receipt, shortLabel: 'Fin', notification: 0 },
+    { id: 'cadastro-usuario', label: 'Cadastro de Usuários', icon: UserPlus, shortLabel: 'Users', notification: 0 }
   ];
 
   const MobileNavigation = () => (
@@ -68,8 +71,11 @@ export function ClienteLayout() {
             flex items-center gap-2
           `}
         >
-          <item.icon className="w-4 h-4" />
-          {item.label}
+          <div className="flex items-center gap-2 w-full">
+            <item.icon className="w-4 h-4" />
+            <span className="flex-1">{item.label}</span>
+            <NotificationBadge count={item.notification} />
+          </div>
         </button>
       ))}
     </div>
@@ -90,8 +96,11 @@ export function ClienteLayout() {
                   ${activeTab === item.id ? 'bg-muted text-foreground' : 'text-muted-foreground'}
                 `}
               >
-                <item.icon className="w-3.5 h-3.5" />
-                {item.shortLabel}
+                <div className="flex items-center gap-1.5">
+                  <item.icon className="w-3.5 h-3.5" />
+                  <span>{item.shortLabel}</span>
+                  <NotificationBadge count={item.notification} className="scale-75" />
+                </div>
               </button>
             ))}
           </div>
@@ -145,9 +154,12 @@ export function ClienteLayout() {
                       gap-1.5
                     `}
                   >
-                    <item.icon className="w-4 h-4" />
-                    <span className="hidden xl:inline">{item.label}</span>
-                    <span className="xl:hidden">{item.shortLabel}</span>
+                    <div className="flex items-center gap-1.5">
+                      <item.icon className="w-4 h-4" />
+                      <span className="hidden xl:inline">{item.label}</span>
+                      <span className="xl:hidden">{item.shortLabel}</span>
+                      <NotificationBadge count={item.notification} className="scale-75" />
+                    </div>
                   </button>
                 ))}
               </div>
