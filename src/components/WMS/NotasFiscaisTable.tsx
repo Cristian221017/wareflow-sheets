@@ -9,15 +9,15 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Combobox } from '@/components/ui/combobox';
-import { Button } from '@/components/ui/button';
-import { useWMS } from '@/contexts/WMSContext';
-import { NotaFiscal } from '@/types/wms';
+import { Package } from 'lucide-react';
+import { useNFs } from '@/hooks/useNFs';
 import { cn } from '@/lib/utils';
 import { useState, useMemo } from 'react';
 import { toast } from 'sonner';
 import { Trash2 } from 'lucide-react';
+import type { NotaFiscal } from '@/types/nf';
 
-const getStatusColor = (status: NotaFiscal['status']) => {
+const getStatusColor = (status: string) => {
   switch (status) {
     case 'ARMAZENADA':
       return 'bg-success text-success-foreground';
@@ -38,37 +38,37 @@ const isOverdue = (dataRecebimento: string, prazoMaximo: number = 30) => {
 };
 
 export function NotasFiscaisTable() {
-  const { notasFiscais, deleteNotaFiscal } = useWMS();
+  const { data: notasFiscais, isLoading } = useNFs("ARMAZENADA");
   const [selectedCliente, setSelectedCliente] = useState<string>('todos');
+
+  const validNfs = notasFiscais || [];
 
   // Get unique clients for filter
   const clienteOptions = useMemo(() => {
-    const uniqueClientes = Array.from(new Set(notasFiscais.map(nf => nf.cliente)));
+    const uniqueClientes = Array.from(new Set(validNfs.map(nf => nf.fornecedor)));
     return [
-      { value: 'todos', label: 'Todos os clientes' },
-      ...uniqueClientes.map(cliente => ({ value: cliente, label: cliente }))
+      { value: 'todos', label: 'Todos os fornecedores' },
+      ...uniqueClientes.map(fornecedor => ({ value: fornecedor, label: fornecedor }))
     ];
-  }, [notasFiscais]);
+  }, [validNfs]);
 
-  // Filter notes by selected client - APENAS ARMAZENADAS
+  // Filter notes by selected client
   const filteredNFs = useMemo(() => {
-    let filtered = notasFiscais.filter(nf => nf.status === 'ARMAZENADA');
-    
-    if (selectedCliente !== 'todos') {
-      filtered = filtered.filter(nf => nf.cliente === selectedCliente);
+    if (selectedCliente === 'todos') {
+      return validNfs;
     }
-    return filtered;
-  }, [notasFiscais, selectedCliente]);
+    return validNfs.filter(nf => nf.fornecedor === selectedCliente);
+  }, [validNfs, selectedCliente]);
 
-  const handleDeleteNF = async (nf: NotaFiscal) => {
-    if (window.confirm(`Tem certeza que deseja excluir a NF ${nf.numeroNF}?`)) {
-      try {
-        await deleteNotaFiscal(nf.id);
-      } catch (error) {
-        toast.error('Erro ao excluir nota fiscal');
-      }
-    }
-  };
+  if (isLoading) {
+    return (
+      <Card>
+        <CardContent className="flex items-center justify-center h-32">
+          <p>Carregando notas fiscais...</p>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card>
@@ -79,13 +79,13 @@ export function NotasFiscaisTable() {
         </CardDescription>
         <div className="flex gap-4 items-center">
           <div className="flex items-center gap-2">
-            <span className="text-sm font-medium">Filtrar por cliente:</span>
+            <span className="text-sm font-medium">Filtrar por fornecedor:</span>
             <Combobox
               options={clienteOptions}
               value={selectedCliente}
               onValueChange={setSelectedCliente}
-              placeholder="Selecione um cliente"
-              searchPlaceholder="Buscar cliente..."
+              placeholder="Selecione um fornecedor"
+              searchPlaceholder="Buscar fornecedor..."
               className="w-48"
             />
           </div>
@@ -95,22 +95,18 @@ export function NotasFiscaisTable() {
         <div className="overflow-auto">
           <Table>
             <TableHeader>
-                <TableRow>
+                 <TableRow>
                   <TableHead>Número NF</TableHead>
                   <TableHead>Nº Pedido</TableHead>
                   <TableHead>Ordem Compra</TableHead>
                   <TableHead>Data Recebimento</TableHead>
                   <TableHead>Fornecedor</TableHead>
-                  <TableHead>CNPJ Fornecedor</TableHead>
-                  <TableHead>Cliente</TableHead>
-                  <TableHead>CNPJ Cliente</TableHead>
                   <TableHead>Produto</TableHead>
                   <TableHead>Quantidade</TableHead>
                   <TableHead>Peso (kg)</TableHead>
                   <TableHead>Volume (m³)</TableHead>
                   <TableHead>Localização</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead>Ações</TableHead>
                 </TableRow>
             </TableHeader>
             <TableBody>
@@ -118,49 +114,39 @@ export function NotasFiscaisTable() {
                 <TableRow 
                   key={nf.id}
                    className={cn(
-                       isOverdue(nf.dataRecebimento) && nf.status === 'ARMAZENADA' 
+                       isOverdue(nf.data_recebimento) && nf.status === 'ARMAZENADA' 
                          ? 'bg-destructive/10 hover:bg-destructive/20' 
-                         : '',
-                       nf.status === 'SOLICITADA'
-                         ? 'bg-warning/10 hover:bg-warning/20' 
                          : ''
                    )}
                 >
-                  <TableCell className="font-medium">{nf.numeroNF}</TableCell>
-                  <TableCell className="text-primary font-medium">{nf.numeroPedido}</TableCell>
-                  <TableCell>{nf.ordemCompra}</TableCell>
-                  <TableCell>{new Date(nf.dataRecebimento).toLocaleDateString('pt-BR')}</TableCell>
+                  <TableCell className="font-medium">{nf.numero_nf}</TableCell>
+                  <TableCell className="text-primary font-medium">{nf.numero_pedido}</TableCell>
+                  <TableCell>{nf.ordem_compra}</TableCell>
+                  <TableCell>{new Date(nf.data_recebimento).toLocaleDateString('pt-BR')}</TableCell>
                   <TableCell>{nf.fornecedor}</TableCell>
-                  <TableCell>{nf.cnpj}</TableCell>
-                  <TableCell className="font-medium text-primary">{nf.cliente}</TableCell>
-                  <TableCell>{nf.cnpjCliente}</TableCell>
                   <TableCell>{nf.produto}</TableCell>
                   <TableCell>{nf.quantidade}</TableCell>
-                  <TableCell>{nf.peso.toFixed(1)}</TableCell>
-                  <TableCell>{nf.volume.toFixed(2)}</TableCell>
+                  <TableCell>{Number(nf.peso).toFixed(1)}</TableCell>
+                  <TableCell>{Number(nf.volume).toFixed(2)}</TableCell>
                   <TableCell>{nf.localizacao}</TableCell>
                   <TableCell>
                     <Badge className={getStatusColor(nf.status)}>
                       {nf.status}
                     </Badge>
                   </TableCell>
-                  <TableCell>
-                    <div className="flex gap-1">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleDeleteNF(nf)}
-                        className="text-destructive hover:text-destructive"
-                      >
-                        <Trash2 className="w-3 h-3" />
-                      </Button>
-                    </div>
-                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
           </Table>
         </div>
+
+        {filteredNFs.length === 0 && (
+          <div className="text-center py-8 text-muted-foreground">
+            <Package className="w-12 h-12 mx-auto mb-4 opacity-50" />
+            <p>Nenhuma nota fiscal armazenada</p>
+            <p className="text-sm mt-1">As notas fiscais armazenadas aparecerão aqui</p>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

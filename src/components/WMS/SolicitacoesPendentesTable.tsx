@@ -15,8 +15,7 @@ import { Input } from '@/components/ui/input';
 import { Clock, CheckCircle, X, Truck } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { useWMS } from '@/contexts/WMSContext';
-import { PedidoLiberacao } from '@/types/wms';
+import { useNFs, useFluxoMutations } from '@/hooks/useNFs';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -35,8 +34,8 @@ const recusaFormSchema = z.object({
 type FormData = z.infer<typeof formSchema>;
 type RecusaFormData = z.infer<typeof recusaFormSchema>;
 
-function AprovarDialog({ pedido }: { pedido: PedidoLiberacao }) {
-  const { liberarPedido } = useWMS();
+function AprovarDialog({ nfId, numeroNf, numeroPedido }: { nfId: string, numeroNf: string, numeroPedido: string }) {
+  const { confirmar } = useFluxoMutations();
   const [open, setOpen] = useState(false);
   
   const form = useForm<FormData>({
@@ -49,13 +48,11 @@ function AprovarDialog({ pedido }: { pedido: PedidoLiberacao }) {
 
   const onSubmit = async (data: FormData) => {
     try {
-      await liberarPedido(pedido.id, data.transportadora, data.dataExpedicao);
-      toast.success(`Pedido aprovado e liberado para a transportadora: ${data.transportadora}`);
+      await confirmar.mutateAsync(nfId);
       setOpen(false);
       form.reset();
     } catch (error) {
-      console.error('Erro ao aprovar pedido:', error);
-      toast.error('Erro ao aprovar pedido');
+      console.error('Erro ao aprovar solicitação:', error);
     }
   };
 
@@ -78,7 +75,7 @@ function AprovarDialog({ pedido }: { pedido: PedidoLiberacao }) {
             Aprovar Pedido de Liberação
           </DialogTitle>
           <DialogDescription>
-            Pedido: {pedido.numeroPedido} - NF: {pedido.nfVinculada}
+            Pedido: {numeroPedido} - NF: {numeroNf}
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -126,8 +123,8 @@ function AprovarDialog({ pedido }: { pedido: PedidoLiberacao }) {
   );
 }
 
-function RecusarDialog({ pedido }: { pedido: PedidoLiberacao }) {
-  const { recusarPedido } = useWMS();
+function RecusarDialog({ nfId, numeroNf, numeroPedido }: { nfId: string, numeroNf: string, numeroPedido: string }) {
+  const { recusar } = useFluxoMutations();
   const [open, setOpen] = useState(false);
   
   const form = useForm<RecusaFormData>({
@@ -140,13 +137,11 @@ function RecusarDialog({ pedido }: { pedido: PedidoLiberacao }) {
 
   const onSubmit = async (data: RecusaFormData) => {
     try {
-      await recusarPedido(pedido.id, data.responsavel, data.motivo);
-      toast.success(`Solicitação recusada. A mercadoria voltou para "Armazenadas" com observações.`);
+      await recusar.mutateAsync(nfId);
       setOpen(false);
       form.reset();
     } catch (error) {
-      console.error('Erro ao recusar pedido:', error);
-      toast.error('Erro ao recusar pedido');
+      console.error('Erro ao recusar solicitação:', error);
     }
   };
 
@@ -169,7 +164,7 @@ function RecusarDialog({ pedido }: { pedido: PedidoLiberacao }) {
             Recusar Solicitação de Carregamento
           </DialogTitle>
           <DialogDescription>
-            Pedido: {pedido.numeroPedido} - NF: {pedido.nfVinculada}
+            Pedido: {numeroPedido} - NF: {numeroNf}
             <br />
             <span className="text-destructive font-medium">
               A mercadoria voltará para "Armazenadas" com as observações da recusa.
@@ -226,24 +221,19 @@ function RecusarDialog({ pedido }: { pedido: PedidoLiberacao }) {
 }
 
 export function SolicitacoesPendentesTable() {
-  const { pedidosLiberacao } = useWMS();
+  const { data: solicitadas, isLoading } = useNFs("SOLICITADA");
 
-  const getPriorityColor = (prioridade: string) => {
-    switch (prioridade) {
-      case 'Alta':
-        return 'bg-destructive text-destructive-foreground';
-      case 'Média':
-        return 'bg-warning text-warning-foreground';
-      case 'Baixa':
-        return 'bg-muted text-muted-foreground';
-      default:
-        return 'bg-muted text-muted-foreground';
-    }
-  };
+  if (isLoading) {
+    return (
+      <Card>
+        <CardContent className="flex items-center justify-center h-32">
+          <p>Carregando solicitações...</p>
+        </CardContent>
+      </Card>
+    );
+  }
 
-  // Função removida - agora usamos o RecusarDialog
-
-  const pedidosPendentes = pedidosLiberacao.filter(p => p.status === 'Em análise');
+  const validSolicitadas = solicitadas || [];
 
   return (
     <Card>
@@ -261,40 +251,42 @@ export function SolicitacoesPendentesTable() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>NF Vinculada</TableHead>
+                <TableHead>Número NF</TableHead>
                 <TableHead>Nº Pedido</TableHead>
                 <TableHead>Ordem Compra</TableHead>
-                <TableHead>Cliente</TableHead>
+                <TableHead>Fornecedor</TableHead>
                 <TableHead>Produto</TableHead>
                 <TableHead>Quantidade</TableHead>
                 <TableHead>Peso (kg)</TableHead>
                 <TableHead>Volume (m³)</TableHead>
                 <TableHead>Data Solicitação</TableHead>
-                <TableHead>Prioridade</TableHead>
                 <TableHead className="text-center">Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {pedidosPendentes.map((pedido) => (
-                <TableRow key={pedido.id}>
-                  <TableCell className="font-medium">{pedido.nfVinculada}</TableCell>
-                  <TableCell>{pedido.numeroPedido}</TableCell>
-                  <TableCell>{pedido.ordemCompra}</TableCell>
-                  <TableCell>{pedido.cliente}</TableCell>
-                  <TableCell>{pedido.produto}</TableCell>
-                  <TableCell>{pedido.quantidade}</TableCell>
-                  <TableCell>{pedido.peso.toFixed(1)}</TableCell>
-                  <TableCell>{pedido.volume.toFixed(2)}</TableCell>
-                  <TableCell>{new Date(pedido.dataSolicitacao).toLocaleDateString('pt-BR')}</TableCell>
-                  <TableCell>
-                    <Badge className={getPriorityColor(pedido.prioridade)}>
-                      {pedido.prioridade}
-                    </Badge>
-                  </TableCell>
+              {validSolicitadas.map((nf) => (
+                <TableRow key={nf.id}>
+                  <TableCell className="font-medium">{nf.numero_nf}</TableCell>
+                  <TableCell>{nf.numero_pedido}</TableCell>
+                  <TableCell>{nf.ordem_compra}</TableCell>
+                  <TableCell>{nf.fornecedor}</TableCell>
+                  <TableCell>{nf.produto}</TableCell>
+                  <TableCell>{nf.quantidade}</TableCell>
+                  <TableCell>{Number(nf.peso).toFixed(1)}</TableCell>
+                  <TableCell>{Number(nf.volume).toFixed(2)}</TableCell>
+                  <TableCell>{new Date(nf.created_at).toLocaleDateString('pt-BR')}</TableCell>
                   <TableCell className="text-center">
                     <div className="flex gap-2 justify-center">
-                      <AprovarDialog pedido={pedido} />
-                      <RecusarDialog pedido={pedido} />
+                      <AprovarDialog 
+                        nfId={nf.id} 
+                        numeroNf={nf.numero_nf} 
+                        numeroPedido={nf.numero_pedido} 
+                      />
+                      <RecusarDialog 
+                        nfId={nf.id} 
+                        numeroNf={nf.numero_nf} 
+                        numeroPedido={nf.numero_pedido} 
+                      />
                     </div>
                   </TableCell>
                 </TableRow>
@@ -303,7 +295,7 @@ export function SolicitacoesPendentesTable() {
           </Table>
         </div>
 
-        {pedidosPendentes.length === 0 && (
+        {validSolicitadas.length === 0 && (
           <div className="text-center py-8 text-muted-foreground">
             <Clock className="w-12 h-12 mx-auto mb-4 opacity-50" />
             <p>Nenhuma solicitação de carregamento pendente</p>

@@ -16,6 +16,9 @@ import { FinanceiroTransportadora } from './FinanceiroTransportadora';
 import { FormDocumentoFinanceiro } from './FormDocumentoFinanceiro';
 import IntegrationConfig from './IntegrationConfig';
 import { ResetDataButton } from './ResetDataButton';
+import { NotasFiscaisTable } from './NotasFiscaisTable';
+import { SolicitacoesPendentesTable } from './SolicitacoesPendentesTable';
+import { PedidosConfirmadosTransportadora } from './PedidosConfirmadosTransportadora';
 
 import { 
   Plus,
@@ -251,6 +254,9 @@ export function TransportadoraLayout() {
               <TabsList className="flex w-max min-w-full h-auto p-1 gap-1">
                 <TabsTrigger value="dashboard" className="text-xs px-2 py-2 whitespace-nowrap">Dashboard</TabsTrigger>
                 <TabsTrigger value="fluxo-nfs" className="text-xs px-2 py-2 whitespace-nowrap">Fluxo NFs</TabsTrigger>
+                <TabsTrigger value="nfs-armazenadas" className="text-xs px-2 py-2 whitespace-nowrap">Armazenadas</TabsTrigger>
+                <TabsTrigger value="solicitacoes" className="text-xs px-2 py-2 whitespace-nowrap">Solicitações</TabsTrigger>
+                <TabsTrigger value="confirmados" className="text-xs px-2 py-2 whitespace-nowrap">Confirmados</TabsTrigger>
                 <TabsTrigger value="financeiro" className="text-xs px-2 py-2 whitespace-nowrap">Financeiro</TabsTrigger>
                 <TabsTrigger value="relatorios" className="text-xs px-2 py-2 whitespace-nowrap">Relatórios</TabsTrigger>
               </TabsList>
@@ -258,9 +264,12 @@ export function TransportadoraLayout() {
             
             {/* Desktop: Grid layout */}
             <div className="hidden lg:block mb-6">
-              <TabsList className="grid w-full grid-cols-4 gap-1">
+              <TabsList className="grid w-full grid-cols-7 gap-1">
                 <TabsTrigger value="dashboard" className="text-sm">Dashboard</TabsTrigger>
                 <TabsTrigger value="fluxo-nfs" className="text-sm">Fluxo NFs</TabsTrigger>
+                <TabsTrigger value="nfs-armazenadas" className="text-sm">NFs Armazenadas</TabsTrigger>
+                <TabsTrigger value="solicitacoes" className="text-sm">Solicitações</TabsTrigger>
+                <TabsTrigger value="confirmados" className="text-sm">Confirmados</TabsTrigger>
                 <TabsTrigger value="financeiro" className="text-sm">Financeiro</TabsTrigger>
                 <TabsTrigger value="relatorios" className="text-sm">Relatórios</TabsTrigger>
               </TabsList>
@@ -272,6 +281,18 @@ export function TransportadoraLayout() {
 
             <TabsContent value="fluxo-nfs" className="space-y-4">
               <FluxoNFs />
+            </TabsContent>
+
+            <TabsContent value="nfs-armazenadas" className="space-y-4">
+              <NotasFiscaisTable />
+            </TabsContent>
+
+            <TabsContent value="solicitacoes" className="space-y-4">
+              <SolicitacoesPendentesTable />
+            </TabsContent>
+
+            <TabsContent value="confirmados" className="space-y-4">
+              <PedidosConfirmadosTransportadora />
             </TabsContent>
             
             <TabsContent value="financeiro" className="space-y-4">
