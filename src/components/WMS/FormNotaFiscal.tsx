@@ -23,8 +23,8 @@ const formSchema = z.object({
   produto: z.string().min(1, 'Produto é obrigatório'),
   quantidade: z.coerce.number().min(1, 'Quantidade deve ser maior que 0'),
   peso: z.coerce.number().min(0.1, 'Peso deve ser maior que 0'),
-  volume: z.coerce.number().min(0.01, 'Volume deve ser maior que 0'),
-  localizacao: z.string().min(1, 'Localização é obrigatória'),
+  volume: z.coerce.number().optional(),
+  localizacao: z.string().optional(),
   status: z.enum(['ARMAZENADA', 'SOLICITADA', 'CONFIRMADA']).default('ARMAZENADA')
 });
 
@@ -269,7 +269,7 @@ export function FormNotaFiscal() {
                 name="volume"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Volume (m³) *</FormLabel>
+                    <FormLabel>Volume (m³)</FormLabel>
                     <FormControl>
                       <Input type="number" step="0.01" placeholder="1.25" {...field} />
                     </FormControl>
@@ -283,7 +283,7 @@ export function FormNotaFiscal() {
                 name="localizacao"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Localização no Armazém *</FormLabel>
+                    <FormLabel>Localização no Armazém</FormLabel>
                     <FormControl>
                       <Input placeholder="A1-B2-C3" {...field} />
                     </FormControl>

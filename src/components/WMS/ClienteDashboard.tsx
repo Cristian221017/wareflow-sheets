@@ -20,14 +20,14 @@ export function ClienteDashboard() {
   const allNFs = [...armazenadas, ...solicitadas, ...confirmadas];
   
   // Estatísticas básicas
-  const totalNFs = allNFs.length;
+  const totalNFs = armazenadas.length; // Apenas disponíveis para liberação
   const nfsArmazenadas = armazenadas.length;
   const nfsSolicitadas = solicitadas.length;
   const nfsConfirmadas = confirmadas.length;
 
-  // Estatísticas calculadas
-  const totalPeso = allNFs.reduce((sum, nf) => sum + Number(nf.peso), 0);
-  const totalVolume = allNFs.reduce((sum, nf) => sum + Number(nf.volume), 0);
+  // Estatísticas calculadas - apenas das disponíveis para liberação
+  const totalPeso = armazenadas.reduce((sum, nf) => sum + Number(nf.peso), 0);
+  const totalVolume = armazenadas.reduce((sum, nf) => sum + Number(nf.volume), 0);
 
   const getStatusCount = (status: string) => {
     switch (status) {
