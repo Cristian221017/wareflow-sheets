@@ -19,14 +19,12 @@ export function FinanceiroCliente() {
 
   // Filtrar documentos do cliente logado
   const documentosCliente = useMemo(() => {
-    if (!user?.cnpj) return [];
+    if (!user?.email) return [];
     
-    return documentosFinanceiros.filter(doc => {
-      // Aqui assumimos que temos uma relação entre documento e cliente
-      // Na implementação real, você precisaria ajustar conforme sua estrutura
-      return true; // Placeholder - ajustar conforme necessário
-    });
-  }, [documentosFinanceiros, user?.cnpj]);
+    // Os documentos já são filtrados pelo RLS baseado no email do cliente
+    // A política RLS garante que só vejam documentos onde o cliente.email = profiles.email
+    return documentosFinanceiros;
+  }, [documentosFinanceiros, user?.email]);
 
   const documentosFiltrados = useMemo(() => {
     let filtered = documentosCliente;
