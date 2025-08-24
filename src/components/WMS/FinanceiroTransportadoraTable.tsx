@@ -92,9 +92,7 @@ export function FinanceiroTransportadoraTable() {
     // Status filter
     if (statusFilter !== 'all') {
       if (statusFilter === 'vencidos') {
-        filtered = filtered.filter(doc => 
-          doc.status === 'Vencido' || isVencido(doc.dataVencimento, doc.status)
-        );
+        filtered = filtered.filter(doc => doc.status === 'Vencido');
       } else {
         filtered = filtered.filter(doc => doc.status === statusFilter);
       }
@@ -182,15 +180,9 @@ export function FinanceiroTransportadoraTable() {
   // Estatísticas rápidas
   const stats = useMemo(() => {
     const total = documentosFinanceiros.length;
-    // Documentos em aberto que não estão vencidos por data
-    const emAberto = documentosFinanceiros.filter(d => 
-      d.status === 'Em aberto' && !isVencido(d.dataVencimento, d.status)
-    ).length;
+    const emAberto = documentosFinanceiros.filter(d => d.status === 'Em aberto').length;
     const pagos = documentosFinanceiros.filter(d => d.status === 'Pago').length;
-    // Documentos vencidos: com status 'Vencido' OU 'Em aberto' com data passada
-    const vencidos = documentosFinanceiros.filter(d => 
-      d.status === 'Vencido' || isVencido(d.dataVencimento, d.status)
-    ).length;
+    const vencidos = documentosFinanceiros.filter(d => d.status === 'Vencido').length;
     // Valor total dos documentos em aberto e vencidos
     const valorTotal = documentosFinanceiros
       .filter(d => d.valor && (d.status === 'Em aberto' || d.status === 'Vencido'))
