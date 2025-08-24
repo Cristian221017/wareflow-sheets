@@ -262,7 +262,7 @@ export function TransportadoraLayout() {
                 <TabsTrigger 
                   value="notas-fiscais" 
                   className="text-xs px-2 py-2 whitespace-nowrap relative"
-                  onClick={() => markAsVisited('nfs-armazenadas')}
+                  onClick={() => setTimeout(() => markAsVisited('nfs-armazenadas'), 100)}
                 >
                   Notas Fiscais
                   <NotificationBadge count={notifications.nfsArmazenadas} className="absolute -top-1 -right-1 scale-50" />
@@ -270,13 +270,20 @@ export function TransportadoraLayout() {
                 <TabsTrigger 
                   value="pedidos-liberacao" 
                   className="text-xs px-2 py-2 whitespace-nowrap relative"
-                  onClick={() => markAsVisited('solicitacoes-pendentes')}
+                  onClick={() => setTimeout(() => markAsVisited('solicitacoes-pendentes'), 100)}
                 >
                   Solicitações Pendentes
                   <NotificationBadge count={notifications.solicitacoesPendentes} className="absolute -top-1 -right-1 scale-50" />
                 </TabsTrigger>
                 <TabsTrigger value="pedidos-liberados" className="text-xs px-2 py-2 whitespace-nowrap">Solicitações Confirmadas</TabsTrigger>
-                <TabsTrigger value="financeiro" className="text-xs px-2 py-2 whitespace-nowrap">Financeiro</TabsTrigger>
+                <TabsTrigger 
+                  value="financeiro" 
+                  className="text-xs px-2 py-2 whitespace-nowrap relative"
+                  onClick={() => setTimeout(() => markAsVisited('documentos-financeiros'), 100)}
+                >
+                  Financeiro
+                  <NotificationBadge count={notifications.documentosFinanceiros} className="absolute -top-1 -right-1 scale-50" />
+                </TabsTrigger>
                 <TabsTrigger value="relatorios" className="text-xs px-2 py-2 whitespace-nowrap">Relatórios</TabsTrigger>
               </TabsList>
             </div>
@@ -289,7 +296,7 @@ export function TransportadoraLayout() {
                 <TabsTrigger 
                   value="notas-fiscais" 
                   className="text-sm relative"
-                  onClick={() => markAsVisited('nfs-armazenadas')}
+                  onClick={() => setTimeout(() => markAsVisited('nfs-armazenadas'), 100)}
                 >
                   Notas Fiscais
                   <NotificationBadge count={notifications.nfsArmazenadas} className="absolute -top-2 -right-2 scale-75" />
@@ -297,13 +304,20 @@ export function TransportadoraLayout() {
                 <TabsTrigger 
                   value="pedidos-liberacao" 
                   className="text-sm relative"
-                  onClick={() => markAsVisited('solicitacoes-pendentes')}
+                  onClick={() => setTimeout(() => markAsVisited('solicitacoes-pendentes'), 100)}
                 >
                   Solicitações Pendentes
                   <NotificationBadge count={notifications.solicitacoesPendentes} className="absolute -top-2 -right-2 scale-75" />
                 </TabsTrigger>
                 <TabsTrigger value="pedidos-liberados" className="text-sm">Solicitações Confirmadas</TabsTrigger>
-                <TabsTrigger value="financeiro" className="text-sm">Financeiro</TabsTrigger>
+                <TabsTrigger 
+                  value="financeiro" 
+                  className="text-sm relative"
+                  onClick={() => setTimeout(() => markAsVisited('documentos-financeiros'), 100)}
+                >
+                  Financeiro
+                  <NotificationBadge count={notifications.documentosFinanceiros} className="absolute -top-2 -right-2 scale-75" />
+                </TabsTrigger>
                 <TabsTrigger value="relatorios" className="text-sm">Relatórios</TabsTrigger>
               </TabsList>
             </div>

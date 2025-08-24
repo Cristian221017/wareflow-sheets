@@ -34,10 +34,17 @@ export function useLastVisit() {
       return itemDate > lastVisit;
     });
   }, [user, getLastVisit]);
+
+  const clearNotification = useCallback((key: VisitKey) => {
+    markAsVisited(key);
+    // Force re-evaluation by returning current timestamp
+    return new Date().getTime();
+  }, [markAsVisited]);
   
   return {
     getLastVisit,
     markAsVisited,
-    hasNewItems
+    hasNewItems,
+    clearNotification
   };
 }

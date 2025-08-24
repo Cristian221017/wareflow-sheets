@@ -50,18 +50,20 @@ export function ClienteLayout() {
   const handleTabChange = (tabId: string) => {
     setActiveTab(tabId);
     
-    // Marcar como visitado baseado na aba
-    switch (tabId) {
-      case 'mercadorias':
-        markAsVisited('nfs-confirmadas');
-        break;
-      case 'liberados':
-        markAsVisited('pedidos-liberados');
-        break;
-      case 'financeiro':
-        markAsVisited('documentos-financeiros');
-        break;
-    }
+    // Marcar como visitado baseado na aba - força re-render das notificações
+    setTimeout(() => {
+      switch (tabId) {
+        case 'mercadorias':
+          markAsVisited('nfs-confirmadas');
+          break;
+        case 'liberados':
+          markAsVisited('pedidos-liberados');
+          break;
+        case 'financeiro':
+          markAsVisited('documentos-financeiros');
+          break;
+      }
+    }, 100);
   };
 
   const navigationItems = [
