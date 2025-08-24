@@ -50,13 +50,9 @@ const getStatusColor = (status: string, dataVencimento: string) => {
 };
 
 const isVencido = (dataVencimento: string, status: string): boolean => {
-  // Se o status já é 'Vencido', retorna true
-  if (status === 'Vencido') return true;
-  
-  // Se não é 'Em aberto' ou não tem data de vencimento, retorna false
+  // Só verifica vencimento por data para documentos 'Em aberto'
   if (!dataVencimento || status !== 'Em aberto') return false;
   
-  // Verifica se a data de vencimento já passou
   const date = new Date(dataVencimento + 'T00:00:00');
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -96,7 +92,9 @@ export function FinanceiroTransportadoraTable() {
     // Status filter
     if (statusFilter !== 'all') {
       if (statusFilter === 'vencidos') {
-        filtered = filtered.filter(doc => isVencido(doc.dataVencimento, doc.status));
+        filtered = filtered.filter(doc => 
+          doc.status === 'Vencido' || isVencido(doc.dataVencimento, doc.status)
+        );
       } else {
         filtered = filtered.filter(doc => doc.status === statusFilter);
       }
@@ -184,16 +182,18 @@ export function FinanceiroTransportadoraTable() {
   // Estatísticas rápidas
   const stats = useMemo(() => {
     const total = documentosFinanceiros.length;
-    // Documentos em aberto que não estão vencidos
+    // Documentos em aberto que não estão vencidos por data
     const emAberto = documentosFinanceiros.filter(d => 
       d.status === 'Em aberto' && !isVencido(d.dataVencimento, d.status)
     ).length;
     const pagos = documentosFinanceiros.filter(d => d.status === 'Pago').length;
-    // Documentos que estão vencidos (status Em aberto + data passada)
-    const vencidos = documentosFinanceiros.filter(d => isVencido(d.dataVencimento, d.status)).length;
-    // Valor total apenas dos documentos em aberto (incluindo vencidos)
+    // Documentos vencidos: com status 'Vencido' OU 'Em aberto' com data passada
+    const vencidos = documentosFinanceiros.filter(d => 
+      d.status === 'Vencido' || isVencido(d.dataVencimento, d.status)
+    ).length;
+    // Valor total dos documentos em aberto e vencidos
     const valorTotal = documentosFinanceiros
-      .filter(d => d.valor && d.status === 'Em aberto')
+      .filter(d => d.valor && (d.status === 'Em aberto' || d.status === 'Vencido'))
       .reduce((sum, d) => sum + (d.valor || 0), 0);
 
     return { total, emAberto, pagos, vencidos, valorTotal };
