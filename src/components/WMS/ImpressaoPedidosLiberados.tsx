@@ -15,6 +15,8 @@ export function ImpressaoPedidosLiberados() {
   const [filtroCliente, setFiltroCliente] = useState<string>('');
   const [dataInicio, setDataInicio] = useState('');
   const [dataFim, setDataFim] = useState('');
+  const [filtroTransportadora, setFiltroTransportadora] = useState<string>('');
+  const [filtroNumeroPedido, setFiltroNumeroPedido] = useState<string>('');
 
   const clientesOptions = [
     { value: '', label: 'Todos os clientes' },
@@ -28,8 +30,10 @@ export function ImpressaoPedidosLiberados() {
     const matchCliente = !filtroCliente || pedido.cliente === filtroCliente;
     const matchDataInicio = !dataInicio || new Date(pedido.dataLiberacao) >= new Date(dataInicio);
     const matchDataFim = !dataFim || new Date(pedido.dataLiberacao) <= new Date(dataFim);
+    const matchTransportadora = !filtroTransportadora || pedido.transportadora.toLowerCase().includes(filtroTransportadora.toLowerCase());
+    const matchNumeroPedido = !filtroNumeroPedido || pedido.numeroPedido.toLowerCase().includes(filtroNumeroPedido.toLowerCase());
     
-    return matchCliente && matchDataInicio && matchDataFim;
+    return matchCliente && matchDataInicio && matchDataFim && matchTransportadora && matchNumeroPedido;
   });
 
   const handleImprimir = () => {
@@ -59,11 +63,13 @@ export function ImpressaoPedidosLiberados() {
             <p><strong>Data do Relatório:</strong> ${new Date().toLocaleDateString('pt-BR')}</p>
           </div>
           
-          <div class="filters">
-            <h3>Filtros Aplicados:</h3>
-            <p><strong>Cliente:</strong> ${filtroCliente || 'Todos os clientes'}</p>
-            <p><strong>Período:</strong> ${dataInicio ? new Date(dataInicio).toLocaleDateString('pt-BR') : 'Início'} até ${dataFim ? new Date(dataFim).toLocaleDateString('pt-BR') : 'Fim'}</p>
-          </div>
+           <div class="filters">
+             <h3>Filtros Aplicados:</h3>
+             <p><strong>Cliente:</strong> ${filtroCliente || 'Todos os clientes'}</p>
+             <p><strong>Período:</strong> ${dataInicio ? new Date(dataInicio).toLocaleDateString('pt-BR') : 'Início'} até ${dataFim ? new Date(dataFim).toLocaleDateString('pt-BR') : 'Fim'}</p>
+             ${filtroNumeroPedido ? `<p><strong>Número do Pedido:</strong> ${filtroNumeroPedido}</p>` : ''}
+             ${filtroTransportadora ? `<p><strong>Transportadora:</strong> ${filtroTransportadora}</p>` : ''}
+           </div>
 
           <table>
             <thead>
@@ -153,12 +159,27 @@ export function ImpressaoPedidosLiberados() {
       <CardContent className="space-y-6">
         {/* Filtros */}
         <div className="space-y-4">
-          <div className="flex items-center gap-2 mb-4">
-            <Filter className="w-4 h-4" />
-            <span className="font-medium">Filtros</span>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <Filter className="w-4 h-4" />
+              <span className="font-medium">Filtros Avançados</span>
+            </div>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => {
+                setFiltroCliente('');
+                setDataInicio('');
+                setDataFim('');
+                setFiltroTransportadora('');
+                setFiltroNumeroPedido('');
+              }}
+            >
+              Limpar Filtros
+            </Button>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <div className="space-y-2">
               <Label>Cliente</Label>
               <Combobox
@@ -187,6 +208,28 @@ export function ImpressaoPedidosLiberados() {
                 onChange={(e) => setDataFim(e.target.value)}
               />
             </div>
+
+            <div className="space-y-2">
+              <Label>Número do Pedido</Label>
+              <Input
+                placeholder="Digite o número do pedido..."
+                value={filtroNumeroPedido}
+                onChange={(e) => setFiltroNumeroPedido(e.target.value)}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Transportadora</Label>
+              <Input
+                placeholder="Digite o nome da transportadora..."
+                value={filtroTransportadora}
+                onChange={(e) => setFiltroTransportadora(e.target.value)}
+              />
+            </div>
+          </div>
+
+          <div className="text-sm text-muted-foreground">
+            Mostrando {pedidosFiltrados.length} de {pedidosLiberados.length} pedidos liberados
           </div>
         </div>
 

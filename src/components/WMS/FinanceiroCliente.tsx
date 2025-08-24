@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Download, Search, FileText, Receipt } from 'lucide-react';
+import { Download, Search, FileText, Receipt, RotateCcw } from 'lucide-react';
 import { toast } from 'sonner';
 import { useDateUtils } from '@/hooks/useDateUtils';
 
@@ -16,6 +16,10 @@ export function FinanceiroCliente() {
   const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [dataInicio, setDataInicio] = useState('');
+  const [dataFim, setDataFim] = useState('');
+  const [valorMin, setValorMin] = useState('');
+  const [valorMax, setValorMax] = useState('');
 
   // Filtrar documentos do cliente logado
   const documentosCliente = useMemo(() => {
@@ -38,9 +42,33 @@ export function FinanceiroCliente() {
     if (statusFilter !== 'all') {
       filtered = filtered.filter(doc => doc.status === statusFilter);
     }
+
+    if (dataInicio) {
+      filtered = filtered.filter(doc => 
+        new Date(doc.dataVencimento) >= new Date(dataInicio)
+      );
+    }
+
+    if (dataFim) {
+      filtered = filtered.filter(doc => 
+        new Date(doc.dataVencimento) <= new Date(dataFim)
+      );
+    }
+
+    if (valorMin) {
+      filtered = filtered.filter(doc => 
+        doc.valor && doc.valor >= parseFloat(valorMin)
+      );
+    }
+
+    if (valorMax) {
+      filtered = filtered.filter(doc => 
+        doc.valor && doc.valor <= parseFloat(valorMax)
+      );
+    }
     
     return filtered;
-  }, [documentosCliente, searchTerm, statusFilter]);
+  }, [documentosCliente, searchTerm, statusFilter, dataInicio, dataFim, valorMin, valorMax]);
 
   const handleDownload = async (documentoId: string, type: 'boleto' | 'cte') => {
     try {
@@ -94,34 +122,103 @@ export function FinanceiroCliente() {
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Filters */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-3 bg-muted/50 rounded-lg">
-          <div className="space-y-2">
-            <Label htmlFor="search">Buscar CTE</Label>
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+        <div className="space-y-4 p-3 bg-muted/50 rounded-lg">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Search className="w-4 h-4" />
+              <span className="font-medium">Filtros Avançados</span>
+            </div>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => {
+                setSearchTerm('');
+                setStatusFilter('all');
+                setDataInicio('');
+                setDataFim('');
+                setValorMin('');
+                setValorMax('');
+              }}
+            >
+              Limpar Filtros
+            </Button>
+          </div>
+          
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="search">Buscar CTE</Label>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                <Input
+                  id="search"
+                  placeholder="Número do CTE..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-9"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Status</Label>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Todos os status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos os status</SelectItem>
+                  <SelectItem value="Em aberto">Em aberto</SelectItem>
+                  <SelectItem value="Pago">Pago</SelectItem>
+                  <SelectItem value="Vencido">Vencido</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="space-y-2">
+              <Label>Data Vencimento (Início)</Label>
               <Input
-                id="search"
-                placeholder="Número do CTE..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-9"
+                type="date"
+                value={dataInicio}
+                onChange={(e) => setDataInicio(e.target.value)}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Data Vencimento (Fim)</Label>
+              <Input
+                type="date"
+                value={dataFim}
+                onChange={(e) => setDataFim(e.target.value)}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Valor Mínimo (R$)</Label>
+              <Input
+                type="number"
+                step="0.01"
+                placeholder="0,00"
+                value={valorMin}
+                onChange={(e) => setValorMin(e.target.value)}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Valor Máximo (R$)</Label>
+              <Input
+                type="number"
+                step="0.01"
+                placeholder="0,00"
+                value={valorMax}
+                onChange={(e) => setValorMax(e.target.value)}
               />
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Label>Status</Label>
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger>
-                <SelectValue placeholder="Todos os status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos os status</SelectItem>
-                <SelectItem value="Em aberto">Em aberto</SelectItem>
-                <SelectItem value="Pago">Pago</SelectItem>
-                <SelectItem value="Vencido">Vencido</SelectItem>
-              </SelectContent>
-            </Select>
+          <div className="text-sm text-muted-foreground">
+            Mostrando {documentosFiltrados.length} de {documentosCliente.length} documentos
           </div>
         </div>
 

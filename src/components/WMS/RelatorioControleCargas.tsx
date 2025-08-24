@@ -20,6 +20,9 @@ const formSchema = z.object({
   dataInicio: z.string().min(1, 'Data de início é obrigatória'),
   dataFim: z.string().min(1, 'Data de fim é obrigatória'),
   cliente: z.string().optional(),
+  status: z.string().optional(),
+  produto: z.string().optional(),
+  fornecedor: z.string().optional(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -58,6 +61,9 @@ export function RelatorioControleCargas() {
       dataInicio: '',
       dataFim: '',
       cliente: '',
+      status: '',
+      produto: '',
+      fornecedor: '',
     },
   });
 
@@ -65,7 +71,7 @@ export function RelatorioControleCargas() {
     setIsLoading(true);
     
     try {
-      // Filtrar NFs por período e cliente
+      // Filtrar NFs por período e outros critérios
       let nfsFiltradas = todasNFs.filter(nf => {
         const dataRecebimento = new Date(nf.data_recebimento);
         const dataInicio = new Date(values.dataInicio);
@@ -73,8 +79,11 @@ export function RelatorioControleCargas() {
         
         const dentroPerido = dataRecebimento >= dataInicio && dataRecebimento <= dataFim;
         const clienteMatch = !values.cliente || nf.cliente_id === values.cliente;
+        const statusMatch = !values.status || nf.status === values.status;
+        const produtoMatch = !values.produto || nf.produto.toLowerCase().includes(values.produto.toLowerCase());
+        const fornecedorMatch = !values.fornecedor || nf.fornecedor.toLowerCase().includes(values.fornecedor.toLowerCase());
         
-        return dentroPerido && clienteMatch;
+        return dentroPerido && clienteMatch && statusMatch && produtoMatch && fornecedorMatch;
       });
 
       // Calcular estatísticas
@@ -256,10 +265,91 @@ export function RelatorioControleCargas() {
                 />
               </div>
 
-              <Button type="submit" disabled={isLoading}>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <FormField
+                  control={form.control}
+                  name="status"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Status (Opcional)</FormLabel>
+                      <FormControl>
+                        <Combobox
+                          options={[
+                            { value: '', label: 'Todos os status' },
+                            { value: 'ARMAZENADA', label: 'Armazenada' },
+                            { value: 'SOLICITADA', label: 'Solicitada' },
+                            { value: 'CONFIRMADA', label: 'Confirmada' }
+                          ]}
+                          value={field.value}
+                          onValueChange={field.onChange}
+                          placeholder="Selecione um status"
+                          searchPlaceholder="Buscar status..."
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="produto"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Produto (Opcional)</FormLabel>
+                      <FormControl>
+                        <Input 
+                          placeholder="Digite o nome do produto..." 
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="fornecedor"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Fornecedor (Opcional)</FormLabel>
+                      <FormControl>
+                        <Input 
+                          placeholder="Digite o nome do fornecedor..." 
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <div className="flex gap-3">
+              <Button type="submit" disabled={isLoading} className="w-full sm:w-auto">
                 <FileText className="w-4 h-4 mr-2" />
                 {isLoading ? 'Gerando...' : 'Gerar Relatório'}
               </Button>
+              
+              <Button 
+                type="button"
+                variant="outline" 
+                onClick={() => {
+                  form.reset({
+                    dataInicio: '',
+                    dataFim: '',
+                    cliente: '',
+                    status: '',
+                    produto: '',
+                    fornecedor: '',
+                  });
+                }}
+                className="w-full sm:w-auto"
+              >
+                Limpar Filtros
+              </Button>
+              </div>
             </form>
           </Form>
         </CardContent>
