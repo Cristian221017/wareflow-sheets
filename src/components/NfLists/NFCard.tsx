@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Clock, Package, CheckCircle, Truck, User } from "lucide-react";
 import type { NotaFiscal } from "@/types/nf";
 
@@ -9,9 +10,20 @@ interface NFCardProps {
   actions?: React.ReactNode;
   showRequestInfo?: boolean;
   showApprovalInfo?: boolean;
+  isSelected?: boolean;
+  onSelect?: (id: string, selected: boolean) => void;
+  showSelection?: boolean;
 }
 
-export function NFCard({ nf, actions, showRequestInfo, showApprovalInfo }: NFCardProps) {
+export function NFCard({ 
+  nf, 
+  actions, 
+  showRequestInfo, 
+  showApprovalInfo, 
+  isSelected = false,
+  onSelect,
+  showSelection = false 
+}: NFCardProps) {
   const formatDate = (dateString?: string | null) => {
     if (!dateString) return "-";
     return new Date(dateString).toLocaleString('pt-BR', {
@@ -40,13 +52,22 @@ export function NFCard({ nf, actions, showRequestInfo, showApprovalInfo }: NFCar
   };
 
   return (
-    <Card className="hover:shadow-md transition-shadow">
+    <Card className={`hover:shadow-md transition-shadow ${isSelected ? 'ring-2 ring-primary' : ''}`}>
       <CardContent className="p-4 space-y-3">
-        {/* Header com NF e Status */}
+        {/* Header com seleção, NF e Status */}
         <div className="flex justify-between items-start">
-          <div>
-            <h4 className="font-semibold text-lg">NF {nf.numero_nf}</h4>
-            <p className="text-sm text-muted-foreground">Pedido: {nf.numero_pedido}</p>
+          <div className="flex items-start gap-3">
+            {showSelection && onSelect && (
+              <Checkbox
+                checked={isSelected}
+                onCheckedChange={(checked) => onSelect(nf.id, !!checked)}
+                className="mt-1"
+              />
+            )}
+            <div>
+              <h4 className="font-semibold text-lg">NF {nf.numero_nf}</h4>
+              <p className="text-sm text-muted-foreground">Pedido: {nf.numero_pedido}</p>
+            </div>
           </div>
           <Badge className={`${getStatusColor()} flex items-center gap-1`}>
             {getStatusIcon()}

@@ -1,13 +1,16 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Package, Clock, CheckCircle, Truck, X } from "lucide-react";
 import { NFCard } from "./NFCard";
+import { NFFilters, type NFFilterState } from "./NFFilters";
+import { NFBulkActions } from "./NFBulkActions";
 import { useNFs, useFluxoMutations } from "@/hooks/useNFs";
 import { subscribeNfChanges } from "@/lib/realtimeNfs";
 import { useAuth } from "@/contexts/AuthContext";
+import type { NotaFiscal } from "@/types/nf";
 
 // Componente para mostrar estado vazio
 function EmptyState({ icon: Icon, title, description }: { 
@@ -25,7 +28,19 @@ function EmptyState({ icon: Icon, title, description }: {
 }
 
 // Coluna de NFs Armazenadas
-function ArmazenadasColumn({ canRequest }: { canRequest: boolean }) {
+function ArmazenadasColumn({ 
+  canRequest, 
+  filters, 
+  selectedIds, 
+  onSelect,
+  applyFilters 
+}: { 
+  canRequest: boolean;
+  filters: NFFilterState;
+  selectedIds: string[];
+  onSelect: (id: string, selected: boolean) => void;
+  applyFilters: (nfs: NotaFiscal[]) => NotaFiscal[];
+}) {
   const { data: nfs, isLoading, isError } = useNFs("ARMAZENADA");
   const { solicitar } = useFluxoMutations();
 
@@ -33,6 +48,7 @@ function ArmazenadasColumn({ canRequest }: { canRequest: boolean }) {
   if (isError) return <div className="p-4 text-red-500">Erro ao carregar dados</div>;
 
   const validNfs = Array.isArray(nfs) ? nfs : [];
+  const filteredNfs = applyFilters(validNfs);
 
   return (
     <div className="space-y-4">
@@ -41,15 +57,34 @@ function ArmazenadasColumn({ canRequest }: { canRequest: boolean }) {
           <Package className="w-5 h-5 text-blue-600" />
           NFs Armazenadas
         </h3>
-        <Badge variant="secondary">{validNfs.length}</Badge>
+        <Badge variant="secondary">
+          {filteredNfs.length}{validNfs.length !== filteredNfs.length && ` de ${validNfs.length}`}
+        </Badge>
       </div>
 
-      {validNfs.length > 0 ? (
+      {/* Ações em massa */}
+      {filteredNfs.length > 0 && (
+        <NFBulkActions
+          nfs={filteredNfs}
+          selectedIds={selectedIds.filter(id => filteredNfs.some(nf => nf.id === id))}
+          onSelectionChange={ids => {
+            // Manter apenas IDs válidos para esta coluna
+            const validIds = ids.filter(id => filteredNfs.some(nf => nf.id === id));
+            validIds.forEach(id => onSelect(id, true));
+          }}
+          canRequest={canRequest}
+        />
+      )}
+
+      {filteredNfs.length > 0 ? (
         <div className="space-y-3">
-          {validNfs.map((nf) => (
+          {filteredNfs.map((nf) => (
             <NFCard
               key={nf.id}
               nf={nf}
+              showSelection={filteredNfs.length > 1}
+              isSelected={selectedIds.includes(nf.id)}
+              onSelect={onSelect}
               actions={
                 canRequest ? (
                   <Button
@@ -66,6 +101,11 @@ function ArmazenadasColumn({ canRequest }: { canRequest: boolean }) {
             />
           ))}
         </div>
+      ) : validNfs.length > 0 ? (
+        <div className="text-center py-8 text-muted-foreground">
+          <Package className="w-12 h-12 mx-auto mb-2 opacity-50" />
+          <p>Nenhuma NF encontrada com os filtros aplicados</p>
+        </div>
       ) : (
         <EmptyState
           icon={Package}
@@ -78,7 +118,19 @@ function ArmazenadasColumn({ canRequest }: { canRequest: boolean }) {
 }
 
 // Coluna de Carregamentos Solicitados
-function SolicitadasColumn({ canDecide }: { canDecide: boolean }) {
+function SolicitadasColumn({ 
+  canDecide, 
+  filters, 
+  selectedIds, 
+  onSelect,
+  applyFilters 
+}: { 
+  canDecide: boolean;
+  filters: NFFilterState;
+  selectedIds: string[];
+  onSelect: (id: string, selected: boolean) => void;
+  applyFilters: (nfs: NotaFiscal[]) => NotaFiscal[];
+}) {
   const { data: nfs, isLoading, isError } = useNFs("SOLICITADA");
   const { confirmar, recusar } = useFluxoMutations();
 
@@ -86,6 +138,7 @@ function SolicitadasColumn({ canDecide }: { canDecide: boolean }) {
   if (isError) return <div className="p-4 text-red-500">Erro ao carregar dados</div>;
 
   const validNfs = Array.isArray(nfs) ? nfs : [];
+  const filteredNfs = applyFilters(validNfs);
 
   return (
     <div className="space-y-4">
@@ -94,16 +147,34 @@ function SolicitadasColumn({ canDecide }: { canDecide: boolean }) {
           <Clock className="w-5 h-5 text-orange-600" />
           Carregamentos Solicitados
         </h3>
-        <Badge variant="secondary">{validNfs.length}</Badge>
+        <Badge variant="secondary">
+          {filteredNfs.length}{validNfs.length !== filteredNfs.length && ` de ${validNfs.length}`}
+        </Badge>
       </div>
 
-      {validNfs.length > 0 ? (
+      {/* Ações em massa */}
+      {filteredNfs.length > 0 && (
+        <NFBulkActions
+          nfs={filteredNfs}
+          selectedIds={selectedIds.filter(id => filteredNfs.some(nf => nf.id === id))}
+          onSelectionChange={ids => {
+            const validIds = ids.filter(id => filteredNfs.some(nf => nf.id === id));
+            validIds.forEach(id => onSelect(id, true));
+          }}
+          canDecide={canDecide}
+        />
+      )}
+
+      {filteredNfs.length > 0 ? (
         <div className="space-y-3">
-          {validNfs.map((nf) => (
+          {filteredNfs.map((nf) => (
             <NFCard
               key={nf.id}
               nf={nf}
               showRequestInfo
+              showSelection={filteredNfs.length > 1}
+              isSelected={selectedIds.includes(nf.id)}
+              onSelect={onSelect}
               actions={
                 canDecide ? (
                   <div className="flex gap-2">
@@ -132,6 +203,11 @@ function SolicitadasColumn({ canDecide }: { canDecide: boolean }) {
             />
           ))}
         </div>
+      ) : validNfs.length > 0 ? (
+        <div className="text-center py-8 text-muted-foreground">
+          <Clock className="w-12 h-12 mx-auto mb-2 opacity-50" />
+          <p>Nenhuma solicitação encontrada com os filtros aplicados</p>
+        </div>
       ) : (
         <EmptyState
           icon={Clock}
@@ -144,13 +220,24 @@ function SolicitadasColumn({ canDecide }: { canDecide: boolean }) {
 }
 
 // Coluna de Confirmadas
-function ConfirmadasColumn() {
+function ConfirmadasColumn({ 
+  filters, 
+  selectedIds, 
+  onSelect,
+  applyFilters 
+}: { 
+  filters: NFFilterState;
+  selectedIds: string[];
+  onSelect: (id: string, selected: boolean) => void;
+  applyFilters: (nfs: NotaFiscal[]) => NotaFiscal[];
+}) {
   const { data: nfs, isLoading, isError } = useNFs("CONFIRMADA");
 
   if (isLoading) return <div className="p-4">Carregando...</div>;
   if (isError) return <div className="p-4 text-red-500">Erro ao carregar dados</div>;
 
   const validNfs = Array.isArray(nfs) ? nfs : [];
+  const filteredNfs = applyFilters(validNfs);
 
   return (
     <div className="space-y-4">
@@ -159,18 +246,26 @@ function ConfirmadasColumn() {
           <CheckCircle className="w-5 h-5 text-green-600" />
           Carregamentos Confirmados
         </h3>
-        <Badge variant="secondary">{validNfs.length}</Badge>
+        <Badge variant="secondary">
+          {filteredNfs.length}{validNfs.length !== filteredNfs.length && ` de ${validNfs.length}`}
+        </Badge>
       </div>
 
-      {validNfs.length > 0 ? (
+      {filteredNfs.length > 0 ? (
         <div className="space-y-3">
-          {validNfs.map((nf) => (
+          {filteredNfs.map((nf) => (
             <NFCard
               key={nf.id}
               nf={nf}
               showApprovalInfo
+              showSelection={false} // Confirmadas não precisam de seleção
             />
           ))}
+        </div>
+      ) : validNfs.length > 0 ? (
+        <div className="text-center py-8 text-muted-foreground">
+          <CheckCircle className="w-12 h-12 mx-auto mb-2 opacity-50" />
+          <p>Nenhum carregamento confirmado encontrado com os filtros aplicados</p>
         </div>
       ) : (
         <EmptyState
@@ -183,11 +278,23 @@ function ConfirmadasColumn() {
   );
 }
 
-// Componente principal do fluxo
 export function FluxoNFs() {
-  const { user } = useAuth();
+  const { user, clientes } = useAuth();
   const queryClient = useQueryClient();
   const once = useRef(false);
+  
+  // Estados para filtros e seleção múltipla
+  const [filters, setFilters] = useState<NFFilterState>({
+    searchNF: '',
+    searchPedido: '',
+    cliente: '',
+    produto: '',
+    fornecedor: '',
+    dataInicio: '',
+    dataFim: '',
+    localizacao: '',
+  });
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
   // Configurar realtime com guard para StrictMode
   useEffect(() => {
@@ -200,6 +307,69 @@ export function FluxoNFs() {
   const isCliente = user?.type === 'cliente';
   const isTransportadora = user?.role === 'admin_transportadora' || user?.role === 'operador';
   
+  // Função para filtrar NFs
+  const applyFilters = (nfs: NotaFiscal[]) => {
+    return nfs.filter(nf => {
+      // Filtro por número da NF
+      if (filters.searchNF && !nf.numero_nf.toLowerCase().includes(filters.searchNF.toLowerCase())) {
+        return false;
+      }
+      
+      // Filtro por número do pedido
+      if (filters.searchPedido && !nf.numero_pedido.toLowerCase().includes(filters.searchPedido.toLowerCase())) {
+        return false;
+      }
+      
+      // Filtro por cliente (apenas para transportadora)
+      if (filters.cliente && nf.cliente_id !== filters.cliente) {
+        return false;
+      }
+      
+      // Filtro por produto
+      if (filters.produto && !nf.produto.toLowerCase().includes(filters.produto.toLowerCase())) {
+        return false;
+      }
+      
+      // Filtro por fornecedor
+      if (filters.fornecedor && !nf.fornecedor.toLowerCase().includes(filters.fornecedor.toLowerCase())) {
+        return false;
+      }
+      
+      // Filtro por localização
+      if (filters.localizacao && !nf.localizacao?.toLowerCase().includes(filters.localizacao.toLowerCase())) {
+        return false;
+      }
+      
+      // Filtro por data
+      if (filters.dataInicio || filters.dataFim) {
+        const nfDate = new Date(nf.data_recebimento);
+        
+        if (filters.dataInicio) {
+          const startDate = new Date(filters.dataInicio);
+          if (nfDate < startDate) return false;
+        }
+        
+        if (filters.dataFim) {
+          const endDate = new Date(filters.dataFim);
+          endDate.setHours(23, 59, 59, 999); // Incluir o dia inteiro
+          if (nfDate > endDate) return false;
+        }
+      }
+      
+      return true;
+    });
+  };
+
+  const handleSelection = (id: string, selected: boolean) => {
+    setSelectedIds(prev => 
+      selected 
+        ? [...prev, id]
+        : prev.filter(selectedId => selectedId !== id)
+    );
+  };
+
+  const clearSelection = () => setSelectedIds([]);
+  
   return (
     <div className="space-y-6">
       <div className="text-center">
@@ -209,22 +379,46 @@ export function FluxoNFs() {
         </p>
       </div>
 
+      {/* Filtros */}
+      <NFFilters
+        filters={filters}
+        onFiltersChange={setFilters}
+        showClientFilter={isTransportadora} // Apenas transportadora vê filtro de cliente
+      />
+
       {/* Layout em abas para mobile, colunas para desktop */}
       <div className="block lg:hidden">
-        <Tabs defaultValue="armazenadas" className="w-full">
+        <Tabs defaultValue="armazenadas" className="w-full" onValueChange={clearSelection}>
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="armazenadas">Armazenadas</TabsTrigger>
             <TabsTrigger value="solicitadas">Solicitadas</TabsTrigger>
             <TabsTrigger value="confirmadas">Confirmadas</TabsTrigger>
           </TabsList>
           <TabsContent value="armazenadas" className="mt-6">
-            <ArmazenadasColumn canRequest={isCliente} />
+            <ArmazenadasColumn 
+              canRequest={isCliente} 
+              filters={filters}
+              selectedIds={selectedIds}
+              onSelect={handleSelection}
+              applyFilters={applyFilters}
+            />
           </TabsContent>
           <TabsContent value="solicitadas" className="mt-6">
-            <SolicitadasColumn canDecide={isTransportadora} />
+            <SolicitadasColumn 
+              canDecide={isTransportadora} 
+              filters={filters}
+              selectedIds={selectedIds}
+              onSelect={handleSelection}
+              applyFilters={applyFilters}
+            />
           </TabsContent>
           <TabsContent value="confirmadas" className="mt-6">
-            <ConfirmadasColumn />
+            <ConfirmadasColumn 
+              filters={filters}
+              selectedIds={selectedIds}
+              onSelect={handleSelection}
+              applyFilters={applyFilters}
+            />
           </TabsContent>
         </Tabs>
       </div>
@@ -232,13 +426,30 @@ export function FluxoNFs() {
       {/* Layout em colunas para desktop */}
       <div className="hidden lg:grid lg:grid-cols-3 gap-6">
         <div>
-          <ArmazenadasColumn canRequest={isCliente} />
+          <ArmazenadasColumn 
+            canRequest={isCliente} 
+            filters={filters}
+            selectedIds={selectedIds}
+            onSelect={handleSelection}
+            applyFilters={applyFilters}
+          />
         </div>
         <div>
-          <SolicitadasColumn canDecide={isTransportadora} />
+          <SolicitadasColumn 
+            canDecide={isTransportadora} 
+            filters={filters}
+            selectedIds={selectedIds}
+            onSelect={handleSelection}
+            applyFilters={applyFilters}
+          />
         </div>
         <div>
-          <ConfirmadasColumn />
+          <ConfirmadasColumn 
+            filters={filters}
+            selectedIds={selectedIds}
+            onSelect={handleSelection}
+            applyFilters={applyFilters}
+          />
         </div>
       </div>
 
