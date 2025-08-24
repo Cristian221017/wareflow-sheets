@@ -39,13 +39,7 @@ export function FinanceiroProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   const fetchDocumentosFinanceiros = async () => {
-    console.log('🔍 FinanceiroContext - fetchDocumentosFinanceiros called', { 
-      isAuthenticated, 
-      user: user ? { id: user.id, email: user.email, type: user.type } : null 
-    });
-    
     if (!isAuthenticated || !user) {
-      console.log('🚫 FinanceiroContext - User not authenticated, clearing documents');
       setDocumentosFinanceiros([]);
       setLoading(false);
       return;
@@ -54,43 +48,11 @@ export function FinanceiroProvider({ children }: { children: ReactNode }) {
     try {
       setLoading(true);
       
-      console.log('📊 FinanceiroContext - Starting query for documentos_financeiros');
-      
-      // Verificar se existe perfil do usuário
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('user_id', user.id)
-        .single();
-        
-      console.log('👤 FinanceiroContext - User profile:', { 
-        profile: profile ? { email: profile.email, name: profile.name } : null,
-        profileError: profileError?.message || null 
-      });
-      
-      // Verificar se existe cliente com esse email
-      const { data: cliente, error: clienteError } = await supabase
-        .from('clientes')
-        .select('*')
-        .eq('email', user.email)
-        .single();
-        
-      console.log('🏢 FinanceiroContext - Cliente found:', { 
-        cliente: cliente ? { id: cliente.id, email: cliente.email, razaoSocial: cliente.razao_social } : null,
-        clienteError: clienteError?.message || null 
-      });
-      
       // Query direta para documentos financeiros 
       const { data, error } = await supabase
         .from('documentos_financeiros' as any)
         .select('*')
         .order('created_at', { ascending: false });
-
-      console.log('📊 FinanceiroContext - Query result:', { 
-        data: data?.length || 0, 
-        error: error?.message || null,
-        rawData: data?.slice(0, 2) // mostrar apenas os 2 primeiros para debug
-      });
 
       if (error) {
         console.error('❌ Erro ao buscar documentos financeiros:', error);

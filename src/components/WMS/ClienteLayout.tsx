@@ -58,6 +58,9 @@ export function ClienteLayout() {
       case 'liberados':
         markAsVisited('pedidos-liberados');
         break;
+      case 'financeiro':
+        markAsVisited('documentos-financeiros');
+        break;
     }
   };
 
@@ -67,7 +70,7 @@ export function ClienteLayout() {
     { id: 'mercadorias', label: 'Notas Fiscais', icon: Package, shortLabel: 'Notas', notification: notifications.nfsConfirmadas },
     { id: 'pedidos', label: 'Pedidos de Liberação', icon: FileText, shortLabel: 'Pedidos', notification: 0 },
     { id: 'liberados', label: 'Pedidos Liberados', icon: CheckCircle, shortLabel: 'Liberados', notification: notifications.pedidosLiberados },
-    { id: 'financeiro', label: 'Financeiro', icon: Receipt, shortLabel: 'Fin', notification: 0 },
+    { id: 'financeiro', label: 'Financeiro', icon: Receipt, shortLabel: 'Fin', notification: notifications.documentosFinanceiros },
     { id: 'cadastro-usuario', label: 'Cadastro de Usuários', icon: UserPlus, shortLabel: 'Users', notification: 0 }
   ];
 

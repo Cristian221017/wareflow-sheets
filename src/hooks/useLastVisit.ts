@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 
-type VisitKey = 'nfs-confirmadas' | 'pedidos-liberados' | 'solicitacoes-pendentes' | 'nfs-armazenadas';
+type VisitKey = 'nfs-confirmadas' | 'pedidos-liberados' | 'solicitacoes-pendentes' | 'nfs-armazenadas' | 'documentos-financeiros';
 
 export function useLastVisit() {
   const { user } = useAuth();
