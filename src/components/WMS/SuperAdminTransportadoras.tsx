@@ -16,7 +16,10 @@ import {
   Edit,
   Eye,
   Trash2,
-  Calendar
+  Calendar,
+  Power,
+  PowerOff,
+  AlertTriangle
 } from 'lucide-react';
 
 interface Transportadora {
@@ -41,6 +44,10 @@ export function SuperAdminTransportadoras() {
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingTransportadora, setEditingTransportadora] = useState<Transportadora | null>(null);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isStatusDialogOpen, setIsStatusDialogOpen] = useState(false);
+  const [transportadoraToDelete, setTransportadoraToDelete] = useState<Transportadora | null>(null);
+  const [transportadoraToToggle, setTransportadoraToToggle] = useState<Transportadora | null>(null);
   const [formData, setFormData] = useState({
     razao_social: '',
     nome_fantasia: '',
@@ -167,22 +174,59 @@ export function SuperAdminTransportadoras() {
     setIsModalOpen(true);
   };
 
-  const handleDelete = async (transportadoraId: string, razaoSocial: string) => {
-    if (window.confirm(`Tem certeza que deseja excluir a transportadora "${razaoSocial}"? Esta ação não pode ser desfeita.`)) {
-      try {
-        const { error } = await supabase
-          .from('transportadoras')
-          .delete()
-          .eq('id', transportadoraId);
+  const openDeleteDialog = (transportadora: Transportadora) => {
+    setTransportadoraToDelete(transportadora);
+    setIsDeleteDialogOpen(true);
+  };
 
-        if (error) throw error;
+  const confirmDelete = async () => {
+    if (!transportadoraToDelete) return;
 
-        await loadTransportadoras();
-        toast.success('Transportadora excluída com sucesso');
-      } catch (error) {
-        console.error('Erro ao excluir transportadora:', error);
-        toast.error('Erro ao excluir transportadora');
-      }
+    try {
+      const { error } = await supabase
+        .from('transportadoras')
+        .delete()
+        .eq('id', transportadoraToDelete.id);
+
+      if (error) throw error;
+
+      await loadTransportadoras();
+      toast.success('Transportadora excluída com sucesso');
+      setIsDeleteDialogOpen(false);
+      setTransportadoraToDelete(null);
+    } catch (error) {
+      console.error('Erro ao excluir transportadora:', error);
+      toast.error('Erro ao excluir transportadora');
+    }
+  };
+
+  const openStatusDialog = (transportadora: Transportadora) => {
+    setTransportadoraToToggle(transportadora);
+    setIsStatusDialogOpen(true);
+  };
+
+  const confirmToggleStatus = async () => {
+    if (!transportadoraToToggle) return;
+
+    const newStatus = transportadoraToToggle.status === 'ativo' ? 'inativo' : 'ativo';
+    
+    try {
+      const { error } = await supabase
+        .from('transportadoras')
+        .update({ status: newStatus })
+        .eq('id', transportadoraToToggle.id);
+
+      if (error) throw error;
+
+      await loadTransportadoras();
+      toast.success(
+        `Transportadora ${newStatus === 'ativo' ? 'ativada' : 'desativada'} com sucesso`
+      );
+      setIsStatusDialogOpen(false);
+      setTransportadoraToToggle(null);
+    } catch (error) {
+      console.error('Erro ao alterar status da transportadora:', error);
+      toast.error('Erro ao alterar status da transportadora');
     }
   };
 
@@ -457,7 +501,7 @@ export function SuperAdminTransportadoras() {
                       </div>
                     </TableCell>
                      <TableCell>
-                       <div className="flex space-x-2">
+                       <div className="flex space-x-1">
                          <Button 
                            variant="outline" 
                            size="sm"
@@ -466,10 +510,27 @@ export function SuperAdminTransportadoras() {
                          >
                            <Edit className="w-3 h-3" />
                          </Button>
+                         
                          <Button
                            variant="outline"
                            size="sm"
-                           onClick={() => handleDelete(transportadora.id, transportadora.razao_social)}
+                           onClick={() => openStatusDialog(transportadora)}
+                           className={transportadora.status === 'ativo' 
+                             ? "text-orange-600 hover:text-orange-700" 
+                             : "text-green-600 hover:text-green-700"
+                           }
+                           title={transportadora.status === 'ativo' ? 'Desativar transportadora' : 'Ativar transportadora'}
+                         >
+                           {transportadora.status === 'ativo' ? 
+                             <PowerOff className="w-3 h-3" /> : 
+                             <Power className="w-3 h-3" />
+                           }
+                         </Button>
+                         
+                         <Button
+                           variant="outline"
+                           size="sm"
+                           onClick={() => openDeleteDialog(transportadora)}
                            className="text-destructive hover:text-destructive"
                            title="Excluir transportadora"
                          >
@@ -483,7 +544,96 @@ export function SuperAdminTransportadoras() {
             </Table>
           )}
         </CardContent>
-      </Card>
-    </div>
-  );
-}
+        </Card>
+
+        {/* Delete Confirmation Dialog */}
+        <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex items-center space-x-2 text-destructive">
+                <AlertTriangle className="w-5 h-5" />
+                <span>Excluir Transportadora</span>
+              </DialogTitle>
+              <DialogDescription>
+                Tem certeza que deseja excluir a transportadora <strong>"{transportadoraToDelete?.razao_social}"</strong>?
+                <br /><br />
+                <span className="text-destructive font-medium">
+                  Esta ação não pode ser desfeita e todos os dados relacionados serão permanentemente removidos.
+                </span>
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
+                Cancelar
+              </Button>
+              <Button variant="destructive" onClick={confirmDelete}>
+                <Trash2 className="w-4 h-4 mr-2" />
+                Excluir Permanentemente
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Status Toggle Confirmation Dialog */}
+        <Dialog open={isStatusDialogOpen} onOpenChange={setIsStatusDialogOpen}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex items-center space-x-2">
+                {transportadoraToToggle?.status === 'ativo' ? (
+                  <>
+                    <PowerOff className="w-5 h-5 text-orange-600" />
+                    <span>Desativar Transportadora</span>
+                  </>
+                ) : (
+                  <>
+                    <Power className="w-5 h-5 text-green-600" />
+                    <span>Ativar Transportadora</span>
+                  </>
+                )}
+              </DialogTitle>
+              <DialogDescription>
+                {transportadoraToToggle?.status === 'ativo' ? (
+                  <>
+                    Deseja desativar a transportadora <strong>"{transportadoraToToggle?.razao_social}"</strong>?
+                    <br /><br />
+                    <span className="text-orange-600 font-medium">
+                      A transportadora ficará inativa e não poderá acessar o sistema até ser reativada.
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    Deseja ativar a transportadora <strong>"{transportadoraToToggle?.razao_social}"</strong>?
+                    <br /><br />
+                    <span className="text-green-600 font-medium">
+                      A transportadora voltará a ter acesso completo ao sistema.
+                    </span>
+                  </>
+                )}
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsStatusDialogOpen(false)}>
+                Cancelar
+              </Button>
+              <Button 
+                variant={transportadoraToToggle?.status === 'ativo' ? 'destructive' : 'default'}
+                onClick={confirmToggleStatus}
+              >
+                {transportadoraToToggle?.status === 'ativo' ? (
+                  <>
+                    <PowerOff className="w-4 h-4 mr-2" />
+                    Desativar
+                  </>
+                ) : (
+                  <>
+                    <Power className="w-4 h-4 mr-2" />
+                    Ativar
+                  </>
+                )}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </div>
+    );
+  }
