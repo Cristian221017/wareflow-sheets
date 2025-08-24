@@ -50,7 +50,13 @@ const getStatusColor = (status: string, dataVencimento: string) => {
 };
 
 const isVencido = (dataVencimento: string, status: string): boolean => {
+  // Se o status já é 'Vencido', retorna true
+  if (status === 'Vencido') return true;
+  
+  // Se não é 'Em aberto' ou não tem data de vencimento, retorna false
   if (!dataVencimento || status !== 'Em aberto') return false;
+  
+  // Verifica se a data de vencimento já passou
   const date = new Date(dataVencimento + 'T00:00:00');
   const today = new Date();
   today.setHours(0, 0, 0, 0);
