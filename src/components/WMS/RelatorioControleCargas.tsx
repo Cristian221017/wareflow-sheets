@@ -47,7 +47,7 @@ interface RelatorioData {
 }
 
 export function RelatorioControleCargas() {
-  const { user } = useAuth();
+  const { user, clientes } = useAuth();
   const { armazenadas, solicitadas, confirmadas } = useAllNFs();
   const [relatorioData, setRelatorioData] = useState<RelatorioData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -78,7 +78,10 @@ export function RelatorioControleCargas() {
         const dataFim = new Date(values.dataFim);
         
         const dentroPerido = dataRecebimento >= dataInicio && dataRecebimento <= dataFim;
-        const clienteMatch = !values.cliente || nf.cliente_id === values.cliente;
+        const cliente = clientes.find(c => c.id === nf.cliente_id);
+        const clienteMatch = !values.cliente || 
+          nf.cliente_id === values.cliente || 
+          (cliente && cliente.name.toLowerCase().includes(values.cliente.toLowerCase()));
         const statusMatch = !values.status || nf.status === values.status;
         const produtoMatch = !values.produto || nf.produto.toLowerCase().includes(values.produto.toLowerCase());
         const fornecedorMatch = !values.fornecedor || nf.fornecedor.toLowerCase().includes(values.fornecedor.toLowerCase());
@@ -99,27 +102,32 @@ export function RelatorioControleCargas() {
 
       // NFs por cliente
       const nfsPorCliente = nfsFiltradas.reduce((acc, nf) => {
-        if (!acc[nf.cliente_id]) {
-          acc[nf.cliente_id] = { quantidade: 0, peso: 0, volume: 0 };
+        const cliente = clientes.find(c => c.id === nf.cliente_id);
+        const clienteKey = cliente ? cliente.name : nf.cliente_id;
+        if (!acc[clienteKey]) {
+          acc[clienteKey] = { quantidade: 0, peso: 0, volume: 0 };
         }
-        acc[nf.cliente_id].quantidade += 1;
-        acc[nf.cliente_id].peso += Number(nf.peso);
-        acc[nf.cliente_id].volume += Number(nf.volume);
+        acc[clienteKey].quantidade += 1;
+        acc[clienteKey].peso += Number(nf.peso);
+        acc[clienteKey].volume += Number(nf.volume);
         return acc;
       }, {} as Record<string, { quantidade: number; peso: number; volume: number }>);
 
       // Detalhes das NFs
-      const detalhes = nfsFiltradas.map(nf => ({
-        numeroNF: nf.numero_nf,
-        cliente: nf.cliente_id,
-        produto: nf.produto,
-        quantidade: nf.quantidade,
-        peso: Number(nf.peso),
-        volume: Number(nf.volume),
-        status: nf.status,
-        dataRecebimento: nf.data_recebimento,
-        localizacao: nf.localizacao,
-      }));
+      const detalhes = nfsFiltradas.map(nf => {
+        const cliente = clientes.find(c => c.id === nf.cliente_id);
+        return {
+          numeroNF: nf.numero_nf,
+          cliente: cliente ? cliente.name : nf.cliente_id,
+          produto: nf.produto,
+          quantidade: nf.quantidade,
+          peso: Number(nf.peso),
+          volume: Number(nf.volume),
+          status: nf.status,
+          dataRecebimento: nf.data_recebimento,
+          localizacao: nf.localizacao,
+        };
+      });
 
       setRelatorioData({
         totalNFs,
@@ -182,10 +190,13 @@ export function RelatorioControleCargas() {
   // Obter clientes únicos das NFs para o dropdown
   const clienteOptions = Array.from(new Set(todasNFs.map(nf => nf.cliente_id)))
     .filter(Boolean)
-    .map(clienteId => ({
-      value: clienteId as string,
-      label: clienteId as string,
-    }));
+    .map(clienteId => {
+      const cliente = clientes.find(c => c.id === clienteId);
+      return {
+        value: clienteId as string,
+        label: cliente ? cliente.name : clienteId as string,
+      };
+    });
 
   const getStatusColor = (status: string) => {
     switch (status) {
