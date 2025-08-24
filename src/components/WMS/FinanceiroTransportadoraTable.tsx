@@ -178,11 +178,16 @@ export function FinanceiroTransportadoraTable() {
   // Estatísticas rápidas
   const stats = useMemo(() => {
     const total = documentosFinanceiros.length;
-    const emAberto = documentosFinanceiros.filter(d => d.status === 'Em aberto').length;
+    // Documentos em aberto que não estão vencidos
+    const emAberto = documentosFinanceiros.filter(d => 
+      d.status === 'Em aberto' && !isVencido(d.dataVencimento, d.status)
+    ).length;
     const pagos = documentosFinanceiros.filter(d => d.status === 'Pago').length;
+    // Documentos que estão vencidos (status Em aberto + data passada)
     const vencidos = documentosFinanceiros.filter(d => isVencido(d.dataVencimento, d.status)).length;
+    // Valor total apenas dos documentos em aberto (incluindo vencidos)
     const valorTotal = documentosFinanceiros
-      .filter(d => d.valor && d.status !== 'Pago')
+      .filter(d => d.valor && d.status === 'Em aberto')
       .reduce((sum, d) => sum + (d.valor || 0), 0);
 
     return { total, emAberto, pagos, vencidos, valorTotal };
