@@ -1,354 +1,309 @@
-import { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { UserPlus } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { clientPasswordManager } from '@/utils/clientPasswordManager';
 import { toast } from 'sonner';
-import { useAuth } from '@/contexts/AuthContext';
+import { UserPlus, Building2 } from 'lucide-react';
 
-const formSchema = z.object({
-  name: z.string().min(1, 'Nome é obrigatório'),
-  email: z.string().email('Email inválido'),
-  role: z.enum(['admin_transportadora', 'operador', 'cliente'], {
-    required_error: 'Selecione um tipo de usuário',
-  }),
-  senha: z.string().min(6, 'Senha deve ter pelo menos 6 caracteres').optional().or(z.literal('')),
-  transportadoraId: z.string().optional(),
-});
-
-type FormValues = z.infer<typeof formSchema>;
-
-interface Usuario {
+interface Transportadora {
   id: string;
-  name: string;
-  email: string;
-  role: 'admin_transportadora' | 'operador' | 'cliente';
-  transportadoraId?: string;
+  razao_social: string;
 }
 
 interface FormCadastroUsuarioProps {
   userType?: 'super_admin' | 'admin_transportadora' | 'cliente';
-  usuarioToEdit?: Usuario;
   onSuccess?: () => void;
 }
 
-export function FormCadastroUsuario({ userType = 'admin_transportadora', usuarioToEdit, onSuccess }: FormCadastroUsuarioProps) {
-  const [isLoading, setIsLoading] = useState(false);
-  const { user } = useAuth();
-
-  const form = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      name: usuarioToEdit?.name || '',
-      email: usuarioToEdit?.email || '',
-      role: usuarioToEdit?.role || (userType === 'cliente' ? 'cliente' : 'operador'),
-      senha: '',
-      transportadoraId: usuarioToEdit?.transportadoraId || user?.transportadoraId || '',
-    },
+export function FormCadastroUsuario({ userType = 'super_admin', onSuccess }: FormCadastroUsuarioProps) {
+  const [transportadoras, setTransportadoras] = useState<Transportadora[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
+    role: 'operador' as 'super_admin' | 'admin_transportadora' | 'operador' | 'cliente',
+    transportadora_id: ''
   });
 
-  const onSubmit = async (values: FormValues) => {
-    setIsLoading(true);
+  useEffect(() => {
+    loadTransportadoras();
+  }, []);
+
+  const loadTransportadoras = async () => {
     try {
-      if (usuarioToEdit) {
-        // Editar usuário existente
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .update({
-            name: values.name,
-            email: values.email,
-          })
-          .eq('user_id', usuarioToEdit.id);
+      const { data, error } = await supabase
+        .from('transportadoras')
+        .select('id, razao_social')
+        .eq('status', 'ativo')
+        .order('razao_social');
 
-        if (profileError) {
-          console.error('Erro ao atualizar perfil:', profileError);
-          toast.error('Erro ao atualizar usuário');
-          return;
-        }
+      if (error) {
+        console.error('Error loading transportadoras:', error);
+        return;
+      }
 
-        // Atualizar role se não for cliente
-        if (values.role !== 'cliente') {
-          const { error: roleError } = await supabase
-            .from('user_transportadoras')
-            .update({
-              role: values.role as 'admin_transportadora' | 'operador',
-            })
-            .eq('user_id', usuarioToEdit.id);
+      setTransportadoras(data || []);
+    } catch (error) {
+      console.error('Error in loadTransportadoras:', error);
+    }
+  };
 
-          if (roleError) {
-            console.error('Erro ao atualizar role:', roleError);
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (formData.password !== formData.confirmPassword) {
+      toast.error('As senhas não coincidem');
+      return;
+    }
+
+    if (formData.password.length < 6) {
+      toast.error('A senha deve ter pelo menos 6 caracteres');
+      return;
+    }
+
+    if (!formData.transportadora_id && formData.role !== 'super_admin') {
+      toast.error('Selecione uma transportadora');
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      // 1. Create auth user
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email: formData.email,
+        password: formData.password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/`,
+          data: {
+            name: formData.name
           }
         }
+      });
 
-        toast.success('Usuário atualizado com sucesso!');
-      } else {
-        // Criar usuário no Supabase Auth se senha foi fornecida
-        let authUserId = null;
-        if (values.senha) {
-          const currentOrigin = window.location.origin;
-          const redirectUrl = values.role === 'cliente' 
-            ? `${currentOrigin}/cliente`
-            : `${currentOrigin}/transportadora`;
-          
-          console.log(`🔗 URL de redirecionamento para ${values.role}: ${redirectUrl}`);
-          
-          const { data: authData, error: authError } = await supabase.auth.signUp({
-            email: values.email,
-            password: values.senha,
-            options: {
-              emailRedirectTo: redirectUrl,
-              data: {
-                name: values.name,
-                role: values.role
-              }
-            }
-          });
+      if (authError) {
+        console.error('Error creating auth user:', authError);
+        toast.error('Erro ao criar usuário: ' + authError.message);
+        return;
+      }
 
-          if (authError) {
-            console.error('Erro ao criar usuário de autenticação:', authError);
-            
-            // Se usuário já existe, tentar enviar reset
-            if (authError.message.includes('User already registered')) {
-              console.log('Usuário já existe, enviando reset de senha...');
-              
-              const resetResult = await clientPasswordManager.resetPassword(values.email);
-              if (resetResult.success) {
-                toast.success(`Usuário já existia. ${resetResult.message}`);
-                authUserId = null; // Não temos o ID, mas o reset foi enviado
-              } else {
-                toast.error(resetResult.error || 'Erro ao enviar reset de senha');
-                throw new Error(resetResult.error || 'Erro ao enviar reset de senha');
-              }
-            } else {
-              throw authError;
-            }
-          } else {
-            authUserId = authData.user?.id;
-            console.log('✅ Usuário criado com sucesso na autenticação');
-          }
-        }
+      if (!authData.user) {
+        toast.error('Erro ao criar usuário');
+        return;
+      }
 
-      // Criar perfil do usuário
-      if (authUserId) {
-        const { error: profileError } = await supabase
-          .from('profiles')
+      // 2. Create profile (will be handled by trigger, but we can also ensure it exists)
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .upsert([{
+          user_id: authData.user.id,
+          name: formData.name,
+          email: formData.email
+        }]);
+
+      if (profileError) {
+        console.warn('Profile creation warning:', profileError);
+      }
+
+      // 3. Create user-transportadora relationship (if not super_admin and not cliente)
+      if (formData.role !== 'super_admin' && formData.role !== 'cliente' && formData.transportadora_id) {
+        const { error: relationError } = await supabase
+          .from('user_transportadoras')
           .insert([{
-            user_id: authUserId,
-            name: values.name,
-            email: values.email,
+            user_id: authData.user.id,
+            transportadora_id: formData.transportadora_id,
+            role: formData.role as 'admin_transportadora' | 'operador',
+            is_active: true
           }]);
 
-        if (profileError) {
-          console.error('Erro ao criar perfil:', profileError);
+        if (relationError) {
+          console.error('Error creating user-transportadora relation:', relationError);
+          toast.error('Erro ao associar usuário à transportadora');
+          return;
         }
-
-        // Associar usuário à transportadora (se não for super admin e não for cliente)
-        if (userType !== 'super_admin' && values.role !== 'cliente' && (user?.transportadoraId || values.transportadoraId)) {
-          const transportadoraId = values.transportadoraId || user?.transportadoraId;
-          
-          const { error: userTransportadoraError } = await supabase
+      } else if (formData.role === 'super_admin') {
+        // For super admin, associate with the first transportadora
+        const firstTransportadora = transportadoras[0];
+        if (firstTransportadora) {
+          const { error: relationError } = await supabase
             .from('user_transportadoras')
             .insert([{
-              user_id: authUserId,
-              transportadora_id: transportadoraId,
-              role: values.role as 'admin_transportadora' | 'operador',
+              user_id: authData.user.id,
+              transportadora_id: firstTransportadora.id,
+              role: 'super_admin',
               is_active: true
             }]);
 
-          if (userTransportadoraError) {
-            console.error('Erro ao associar usuário à transportadora:', userTransportadoraError);
+          if (relationError) {
+            console.warn('Warning creating super admin relation:', relationError);
           }
         }
+      } else if (formData.role === 'cliente' && formData.transportadora_id) {
+        // For clients, create entry in clientes table
+        const { error: clienteError } = await supabase
+          .from('clientes')
+          .insert([{
+            transportadora_id: formData.transportadora_id,
+            razao_social: formData.name,
+            cnpj: '', // Will be filled later
+            email: formData.email,
+            status: 'ativo'
+          }]);
 
-        // Para clientes, usar a tabela clientes diretamente
-        if (values.role === 'cliente' && (user?.transportadoraId || values.transportadoraId)) {
-          const transportadoraId = values.transportadoraId || user?.transportadoraId;
-          
-          const { error: clienteError } = await supabase
-            .from('clientes')
-            .insert([{
-              razao_social: values.name,
-              cnpj: '', // Será preenchido depois
-              email: values.email,
-              transportadora_id: transportadoraId,
-            }]);
-
-          if (clienteError) {
-            console.error('Erro ao criar cliente:', clienteError);
-          }
+        if (clienteError) {
+          console.error('Error creating cliente:', clienteError);
+          toast.error('Erro ao criar cliente');
+          return;
         }
       }
 
-      // Enviar email de notificação de forma assíncrona (não bloqueante)
-      supabase.functions.invoke('send-notification-email', {
-        body: {
-          to: values.email,
-          subject: 'Bem-vindo ao Sistema WMS - Conta Criada',
-          type: 'usuario_cadastrado',  
-          data: {
-            nome: values.name,
-            email: values.email,
-            senha: values.senha,
-            role: values.role
-          }
-        }
-      }).catch(emailError => {
-        console.error('Erro ao enviar email de notificação:', emailError);
-      });
+      toast.success('Usuário criado com sucesso!');
       
-      toast.success('Usuário cadastrado com sucesso!');
-    }
-    
-    form.reset();
-    onSuccess?.();
-  } catch (error) {
-    console.error('Erro ao cadastrar usuário:', error);
-    toast.error('Erro ao cadastrar usuário');
-  } finally {
-    setIsLoading(false);
-  }
-};
+      // Reset form
+      setFormData({
+        name: '',
+        email: '',
+        password: '',
+        confirmPassword: '',
+        role: 'operador',
+        transportadora_id: ''
+      });
 
-  const getRoleOptions = () => {
-    switch (userType) {
-      case 'super_admin':
-        return [
-          { value: 'admin_transportadora', label: 'Admin Transportadora' },
-          { value: 'operador', label: 'Operador' },
-          { value: 'cliente', label: 'Cliente' },
-        ];
-      case 'admin_transportadora':
-        return [
-          { value: 'operador', label: 'Operador' },
-          { value: 'cliente', label: 'Cliente' },
-        ];
-      case 'cliente':
-        return [
-          { value: 'cliente', label: 'Usuário Cliente' },
-        ];
-      default:
-        return [];
+      onSuccess?.();
+
+    } catch (error) {
+      console.error('Error in handleSubmit:', error);
+      toast.error('Erro inesperado ao criar usuário');
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <UserPlus className="w-5 h-5 text-primary" />
-          {usuarioToEdit ? 'Editar Usuário' : 'Cadastro de Usuário'}
+        <CardTitle className="flex items-center space-x-2">
+          <UserPlus className="w-5 h-5" />
+          <span>Cadastrar Novo Usuário</span>
         </CardTitle>
         <CardDescription>
-          {usuarioToEdit ? 'Atualize os dados do usuário' : 'Cadastre um novo usuário para acessar o sistema'}
+          Crie uma nova conta de usuário para o sistema
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <div className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="name"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Nome Completo</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Nome do usuário" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="name">Nome Completo *</Label>
+              <Input
+                id="name"
+                value={formData.name}
+                onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                required
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="email">Email *</Label>
+              <Input
+                id="email"
+                type="email"
+                value={formData.email}
+                onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                required
+              />
+            </div>
+          </div>
 
-                <FormField
-                  control={form.control}
-                  name="email"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Email</FormLabel>
-                      <FormControl>
-                        <Input type="email" placeholder="usuario@email.com" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="password">Senha *</Label>
+              <Input
+                id="password"
+                type="password"
+                value={formData.password}
+                onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
+                required
+                minLength={6}
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="confirmPassword">Confirmar Senha *</Label>
+              <Input
+                id="confirmPassword"
+                type="password"
+                value={formData.confirmPassword}
+                onChange={(e) => setFormData(prev => ({ ...prev, confirmPassword: e.target.value }))}
+                required
+                minLength={6}
+              />
+            </div>
+          </div>
 
-                <FormField
-                  control={form.control}
-                  name="role"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Tipo de Usuário</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Selecione o tipo" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {getRoleOptions().map((option) => (
-                            <SelectItem key={option.value} value={option.value}>
-                              {option.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="role">Perfil de Acesso *</Label>
+              <Select 
+                value={formData.role} 
+                onValueChange={(value) => setFormData(prev => ({ ...prev, role: value as any }))}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {userType === 'super_admin' && (
+                    <SelectItem value="super_admin">Super Administrador</SelectItem>
                   )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="senha"
-                  render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{usuarioToEdit ? 'Nova Senha (Opcional)' : 'Senha Temporária (Opcional)'}</FormLabel>
-                    <FormControl>
-                      <Input 
-                        type="password" 
-                        placeholder={usuarioToEdit ? "Nova senha para o usuário" : "Senha para o usuário"} 
-                        {...field} 
-                      />
-                    </FormControl>
-                    <FormMessage />
-                    <p className="text-xs text-muted-foreground">
-                      {usuarioToEdit 
-                        ? 'Deixe em branco para manter a senha atual'
-                        : 'Se não informada, o usuário poderá usar "Esqueci minha senha"'
-                      }
-                    </p>
-                  </FormItem>
+                  <SelectItem value="admin_transportadora">Administrador</SelectItem>
+                  <SelectItem value="operador">Operador</SelectItem>
+                  {userType === 'cliente' && (
+                    <SelectItem value="cliente">Cliente</SelectItem>
                   )}
-                />
-              </div>
+                </SelectContent>
+              </Select>
             </div>
 
-            <Button type="submit" disabled={isLoading} className="w-full">
-              <UserPlus className="w-4 h-4 mr-2" />
-              {isLoading 
-                ? (usuarioToEdit ? 'Atualizando...' : 'Cadastrando...') 
-                : (usuarioToEdit ? 'Atualizar Usuário' : 'Cadastrar Usuário')
-              }
+            {formData.role !== 'super_admin' && (
+              <div className="space-y-2">
+                <Label htmlFor="transportadora">Transportadora *</Label>
+                <Select 
+                  value={formData.transportadora_id}
+                  onValueChange={(value) => setFormData(prev => ({ ...prev, transportadora_id: value }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione uma transportadora" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {transportadoras.map((transportadora) => (
+                      <SelectItem key={transportadora.id} value={transportadora.id}>
+                        <div className="flex items-center space-x-2">
+                          <Building2 className="w-4 h-4" />
+                          <span>{transportadora.razao_social}</span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+          </div>
+
+          <div className="pt-4">
+            <Button 
+              type="submit" 
+              className="w-full"
+              disabled={loading}
+            >
+              {loading ? 'Criando usuário...' : 'Criar Usuário'}
             </Button>
-          </form>
-        </Form>
+          </div>
+        </form>
       </CardContent>
     </Card>
   );

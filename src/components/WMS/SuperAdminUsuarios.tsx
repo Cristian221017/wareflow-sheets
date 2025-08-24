@@ -62,33 +62,62 @@ export function SuperAdminUsuarios() {
 
   const loadData = async () => {
     try {
-      // Load users
+      // Load users 
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
-        .select(`
-          *,
-          user_transportadoras(
-            role,
-            is_active,
-            transportadora_id,
-            transportadoras(razao_social)
-          )
-        `)
+        .select('*')
         .order('created_at', { ascending: false });
 
       if (profilesError) {
         console.error('Error loading profiles:', profilesError);
         toast.error('Erro ao carregar usuários');
-      } else {
-        const formattedUsers = profiles?.map(profile => ({
-          id: profile.id,
+      }
+
+      // Load user transportadora relationships 
+      const { data: userTransportadoras, error: utError } = await supabase
+        .from('user_transportadoras')
+        .select('*');
+
+      if (utError) {
+        console.error('Error loading user transportadora relations:', utError);
+      }
+
+      // Load transportadoras for names
+      const { data: allTransportadoras, error: allTranspError } = await supabase
+        .from('transportadoras')
+        .select('id, razao_social');
+
+      if (allTranspError) {
+        console.error('Error loading all transportadoras:', allTranspError);
+      }
+
+      // Combine the data safely
+      const formattedUsers: Usuario[] = (profiles || []).map(profile => {
+        const userTransportadora = (userTransportadoras || []).find(
+          ut => ut.user_id === profile.user_id
+        );
+        
+        const transportadora = userTransportadora 
+          ? (allTransportadoras || []).find(t => t.id === userTransportadora.transportadora_id)
+          : null;
+        
+        return {
+          id: profile.user_id,
           name: profile.name,
           email: profile.email,
           created_at: profile.created_at,
-          user_transportadoras: []
-        })) || [];
-        setUsuarios(formattedUsers);
-      }
+          user_transportadoras: userTransportadora && transportadora ? [{
+            role: userTransportadora.role,
+            is_active: userTransportadora.is_active,
+            transportadora_id: userTransportadora.transportadora_id,
+            transportadoras: {
+              razao_social: transportadora.razao_social
+            }
+          }] : []
+        };
+      });
+      
+      setUsuarios(formattedUsers);
 
       // Load transportadoras
       const { data: transportadorasData, error: transpError } = await supabase
@@ -140,7 +169,7 @@ export function SuperAdminUsuarios() {
           return;
         }
       } else {
-        // Create new assignment
+      // Create new assignment
         const { error } = await supabase
           .from('user_transportadoras')
           .insert([{
