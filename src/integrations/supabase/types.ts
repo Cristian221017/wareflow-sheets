@@ -395,6 +395,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "notas_fiscais_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "mv_cliente_dashboard"
+            referencedColumns: ["cliente_id"]
+          },
+          {
             foreignKeyName: "notas_fiscais_transportadora_id_fkey"
             columns: ["transportadora_id"]
             isOneToOne: false
@@ -480,6 +487,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "clientes"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pedidos_liberacao_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "mv_cliente_dashboard"
+            referencedColumns: ["cliente_id"]
           },
           {
             foreignKeyName: "pedidos_liberacao_nota_fiscal_id_fkey"
@@ -571,6 +585,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "clientes"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pedidos_liberados_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "mv_cliente_dashboard"
+            referencedColumns: ["cliente_id"]
           },
           {
             foreignKeyName: "pedidos_liberados_nota_fiscal_id_fkey"
@@ -736,6 +757,13 @@ export type Database = {
             referencedRelation: "clientes"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "user_clientes_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "mv_cliente_dashboard"
+            referencedColumns: ["cliente_id"]
+          },
         ]
       }
       user_transportadoras: {
@@ -785,7 +813,51 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      mv_cliente_dashboard: {
+        Row: {
+          boletos_pendentes: number | null
+          boletos_vencidos: number | null
+          carregamentos_confirmados: number | null
+          cliente_id: string | null
+          nfs_armazenadas: number | null
+          solicitacoes_enviadas: number | null
+          transportadora_id: string | null
+          ultima_atualizacao_df: string | null
+          ultima_atualizacao_nf: string | null
+          valor_pendente: number | null
+          valor_vencido: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "clientes_transportadora_id_fkey"
+            columns: ["transportadora_id"]
+            isOneToOne: false
+            referencedRelation: "transportadoras"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mv_transportadora_dashboard: {
+        Row: {
+          docs_vencendo: number | null
+          docs_vencidos: number | null
+          nfs_armazenadas: number | null
+          nfs_confirmadas: number | null
+          solicitacoes_pendentes: number | null
+          transportadora_id: string | null
+          ultima_atualizacao_df: string | null
+          ultima_atualizacao_nf: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_transportadoras_transportadora_id_fkey"
+            columns: ["transportadora_id"]
+            isOneToOne: false
+            referencedRelation: "transportadoras"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       atualizar_status_vencidos: {
@@ -803,6 +875,27 @@ export type Database = {
       email_matches: {
         Args: { email1: string; email2: string }
         Returns: boolean
+      }
+      financeiro_create_documento: {
+        Args: {
+          p_cliente_id: string
+          p_data_vencimento: string
+          p_numero_cte: string
+          p_observacoes?: string
+          p_status?: string
+          p_valor: number
+        }
+        Returns: string
+      }
+      financeiro_update_documento: {
+        Args: {
+          p_data_pagamento?: string
+          p_documento_id: string
+          p_observacoes?: string
+          p_status?: string
+          p_valor?: number
+        }
+        Returns: undefined
       }
       get_cliente_transportadora: {
         Args: { _user_id: string }
@@ -834,12 +927,33 @@ export type Database = {
         Args: { p_nf_id: string; p_user_id: string }
         Returns: undefined
       }
+      nf_create: {
+        Args: {
+          p_cliente_cnpj: string
+          p_cnpj_fornecedor: string
+          p_data_recebimento: string
+          p_fornecedor: string
+          p_localizacao: string
+          p_numero_nf: string
+          p_numero_pedido: string
+          p_ordem_compra: string
+          p_peso: number
+          p_produto: string
+          p_quantidade: number
+          p_volume: number
+        }
+        Returns: string
+      }
       nf_recusar: {
         Args: { p_nf_id: string; p_user_id: string }
         Returns: undefined
       }
       nf_solicitar: {
         Args: { p_nf_id: string; p_user_id: string }
+        Returns: undefined
+      }
+      refresh_dashboard_views: {
+        Args: Record<PropertyKey, never>
         Returns: undefined
       }
       setup_demo_user: {
