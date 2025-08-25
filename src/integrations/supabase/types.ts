@@ -756,6 +756,14 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      create_transportadora_with_admin: {
+        Args: {
+          p_admin_email: string
+          p_admin_password: string
+          p_transportadora_data: Json
+        }
+        Returns: string
+      }
       email_matches: {
         Args: { email1: string; email2: string }
         Returns: boolean
