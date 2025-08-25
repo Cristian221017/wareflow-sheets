@@ -1008,6 +1008,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      create_safety_backup: {
+        Args: { p_backup_name: string }
+        Returns: string
+      }
       create_transportadora_with_admin: {
         Args: {
           p_admin_email: string
@@ -1059,6 +1063,10 @@ export type Database = {
           valor_pendente: number
           valor_vencido: number
         }[]
+      }
+      get_deployment_config: {
+        Args: { p_key: string }
+        Returns: Json
       }
       get_realtime_stats: {
         Args: Record<PropertyKey, never>
@@ -1166,6 +1174,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      run_system_health_check: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       set_financeiro_file_path: {
         Args: { p_doc_id: string; p_kind: string; p_path: string }
         Returns: {
@@ -1221,6 +1233,15 @@ export type Database = {
           user_role: Database["public"]["Enums"]["user_role"]
         }
         Returns: undefined
+      }
+      validate_data_integrity: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          details: Json
+          issues_found: number
+          status: string
+          validation_id: string
+        }[]
       }
     }
     Enums: {
