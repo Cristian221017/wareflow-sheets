@@ -18,7 +18,6 @@ import { ClientesTable } from './ClientesTable';
 import { FinanceiroTransportadora } from './FinanceiroTransportadora';
 import { FormDocumentoFinanceiro } from './FormDocumentoFinanceiro';
 import IntegrationConfig from './IntegrationConfig';
-import { ResetDataButton } from './ResetDataButton';
 import { NotasFiscaisTable } from './NotasFiscaisTable';
 import { SolicitacoesPendentesTable } from './SolicitacoesPendentesTable';
 import { PedidosConfirmadosTransportadora } from './PedidosConfirmadosTransportadora';
@@ -160,8 +159,6 @@ export function TransportadoraLayout() {
                 </DialogContent>
               </Dialog>
 
-              <ResetDataButton />
-
               <Button onClick={logout} variant="outline">
                 <LogOut className="w-4 h-4 mr-2" />
                 Sair
@@ -239,10 +236,6 @@ export function TransportadoraLayout() {
                         />
                       </DialogContent>
                     </Dialog>
-
-                    <DropdownMenuItem className="text-destructive">
-                      <ResetDataButton />
-                    </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>

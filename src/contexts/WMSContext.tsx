@@ -17,7 +17,6 @@ interface WMSContextType {
   
   // Actions - New API
   addNotaFiscal: (nf: Omit<NotaFiscal, 'id' | 'createdAt'>) => Promise<void>;
-  resetData: () => Promise<void>;
   
   // Flow actions with RPCs
   solicitarCarregamento: (numeroNF: string) => Promise<void>;
@@ -288,123 +287,6 @@ export function WMSProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  // Reset data (for testing)
-  const resetData = async () => {
-    try {
-      console.log('🔄 Resetando dados de teste...');
-
-      if (!user?.transportadoraId) {
-        throw new Error('Transportadora não encontrada');
-      }
-
-      // Delete in correct order due to foreign keys - ONLY for current transportadora
-      const { error: deleteLiberdosError } = await supabase
-        .from('pedidos_liberados')
-        .delete()
-        .eq('transportadora_id', user.transportadoraId);
-
-      const { error: deletePedidosError } = await supabase
-        .from('pedidos_liberacao')
-        .delete()
-        .eq('transportadora_id', user.transportadoraId);
-
-      const { error: deleteNFsError } = await supabase
-        .from('notas_fiscais')
-        .delete()
-        .eq('transportadora_id', user.transportadoraId);
-
-      // Delete demo cliente if exists
-      const { error: deleteClienteError } = await supabase
-        .from('clientes')
-        .delete()
-        .eq('cnpj', '12.345.678/0001-90')
-        .eq('transportadora_id', user.transportadoraId);
-
-      if (deleteLiberdosError || deletePedidosError || deleteNFsError || deleteClienteError) {
-        console.warn('Avisos ao deletar:', { deleteLiberdosError, deletePedidosError, deleteNFsError, deleteClienteError });
-      }
-
-      // Create demo cliente
-      const demoCliente = {
-        razao_social: 'Empresa Demo Ltda',
-        nome_fantasia: 'Demo Corp',
-        cnpj: '12.345.678/0001-90',
-        email: 'contato@demo.com',
-        telefone: '(11) 99999-9999',
-        endereco: 'Rua Demo, 123',
-        cidade: 'São Paulo',
-        estado: 'SP',
-        cep: '01234-567',
-        transportadora_id: user.transportadoraId
-      };
-
-      const { data: clienteData, error: clienteError } = await supabase
-        .from('clientes')
-        .insert(demoCliente)
-        .select()
-        .single();
-
-      if (clienteError) {
-        throw new Error(`Erro ao criar cliente demo: ${clienteError.message}`);
-      }
-
-      if (clienteData) {
-        // Create demo NFs with unique numbers
-        const timestamp = Date.now().toString().slice(-4); // Last 4 digits for uniqueness
-        const demoNFs = [
-          {
-            numero_nf: `NF-${timestamp}-001`,
-            numero_pedido: `PED-${timestamp}-001`,
-            ordem_compra: `OC-${timestamp}-001`,
-            data_recebimento: new Date().toISOString().split('T')[0],
-            fornecedor: 'Fornecedor A',
-            cnpj_fornecedor: '98.765.432/0001-10',
-            cliente_id: clienteData.id,
-            produto: 'Produto Demo A',
-            quantidade: 100,
-            peso: 150.5,
-            volume: 2.3,
-            localizacao: 'A1-B2-C3',
-            status: 'ARMAZENADA',
-            transportadora_id: user.transportadoraId
-          },
-          {
-            numero_nf: `NF-${timestamp}-002`,
-            numero_pedido: `PED-${timestamp}-002`,
-            ordem_compra: `OC-${timestamp}-002`,
-            data_recebimento: new Date().toISOString().split('T')[0],
-            fornecedor: 'Fornecedor B',
-            cnpj_fornecedor: '11.222.333/0001-44',
-            cliente_id: clienteData.id,
-            produto: 'Produto Demo B',
-            quantidade: 50,
-            peso: 75.2,
-            volume: 1.8,
-            localizacao: 'B1-C2-D3',
-            status: 'ARMAZENADA',
-            transportadora_id: user.transportadoraId
-          }
-        ];
-
-        const { error: nfError } = await supabase
-          .from('notas_fiscais')
-          .insert(demoNFs);
-
-        if (nfError) {
-          throw new Error(`Erro ao criar NFs demo: ${nfError.message}`);
-        }
-      }
-
-      toast.success('✅ Dados resetados com sucesso!');
-      await loadData();
-      
-    } catch (error: any) {
-      console.error('❌ Erro ao resetar dados:', error);
-      toast.error(error.message || 'Erro ao resetar dados');
-      throw error;
-    }
-  };
-
   // Load data on mount and when user changes
   useEffect(() => {
     if (user) {
@@ -490,7 +372,6 @@ export function WMSProvider({ children }: { children: ReactNode }) {
     pedidosLiberados,
     isLoading,
     addNotaFiscal,
-    resetData,
     // Flow actions with RPCs
     solicitarCarregamento,
     aprovarCarregamento,
