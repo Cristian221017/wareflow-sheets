@@ -6,8 +6,9 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
-import { Warehouse, UserPlus, LogIn, Truck, User } from 'lucide-react';
+import { Warehouse, UserPlus, LogIn, Truck, User, Shield } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
 
 export function LoginPage() {
   const { login, signUp } = useAuth();
@@ -72,6 +73,49 @@ export function LoginPage() {
       ...demoCredentials[userType] 
     }));
     setActiveTab('login');
+  };
+
+  const createSuperAdmin = async () => {
+    setIsLoading(true);
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email: 'Crisrd2608@gmail.com',
+        password: 'Crisrd2608',
+        options: {
+          emailRedirectTo: `${window.location.origin}/`,
+          data: {
+            name: 'Super Administrador'
+          }
+        }
+      });
+
+      if (error) {
+        if (error.message.includes('User already registered')) {
+          toast.success('Usuário super admin já existe! Faça login normalmente.');
+          setFormData(prev => ({ 
+            ...prev, 
+            email: 'Crisrd2608@gmail.com',
+            password: 'Crisrd2608'
+          }));
+          setActiveTab('login');
+        } else {
+          toast.error(`Erro: ${error.message}`);
+        }
+      } else {
+        toast.success('Super admin criado com sucesso! Faça login agora.');
+        setFormData(prev => ({ 
+          ...prev, 
+          email: 'Crisrd2608@gmail.com',
+          password: 'Crisrd2608'
+        }));
+        setActiveTab('login');
+      }
+    } catch (err) {
+      toast.error('Erro inesperado ao criar super admin');
+      console.error(err);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -283,12 +327,22 @@ export function LoginPage() {
         {/* Admin Access Link */}
         <Card className="border-red-200 bg-red-50">
           <CardContent className="pt-6">
-            <div className="text-center">
+            <div className="text-center space-y-3">
               <p className="text-sm text-red-800 mb-3">
                 Administrador do sistema?
               </p>
+              
+              <Button 
+                onClick={createSuperAdmin}
+                disabled={isLoading}
+                className="w-full bg-red-600 hover:bg-red-700 text-white"
+              >
+                <Shield className="w-4 h-4 mr-2" />
+                {isLoading ? 'Criando...' : 'Criar Super Admin'}
+              </Button>
+              
               <Link to="/system-admin">
-                <Button variant="outline" className="text-red-700 border-red-200 hover:bg-red-100">
+                <Button variant="outline" className="w-full text-red-700 border-red-200 hover:bg-red-100">
                   <User className="w-4 h-4 mr-2" />
                   Acessar Painel de Administração
                 </Button>
