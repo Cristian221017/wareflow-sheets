@@ -199,6 +199,30 @@ export type Database = {
         }
         Relationships: []
       }
+      feature_flags: {
+        Row: {
+          created_at: string
+          description: string | null
+          enabled: boolean
+          key: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          enabled?: boolean
+          key: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          enabled?: boolean
+          key?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       integration_configs: {
         Row: {
           api_key: string | null
@@ -920,14 +944,25 @@ export type Database = {
         Returns: boolean
       }
       log_event: {
-        Args: {
-          p_actor_id: string
-          p_actor_role: string
-          p_entity_id: string
-          p_entity_type: string
-          p_event_type: string
-          p_payload?: Json
-        }
+        Args:
+          | {
+              p_action: string
+              p_cliente_id?: string
+              p_entity_id?: string
+              p_entity_type: string
+              p_message?: string
+              p_meta?: Json
+              p_status?: Database["public"]["Enums"]["log_level"]
+              p_transportadora_id?: string
+            }
+          | {
+              p_actor_id: string
+              p_actor_role: string
+              p_entity_id: string
+              p_entity_type: string
+              p_event_type: string
+              p_payload?: Json
+            }
         Returns: string
       }
       log_system_event: {
@@ -994,6 +1029,29 @@ export type Database = {
         Returns: undefined
       }
       set_financeiro_file_path: {
+        Args: { p_doc_id: string; p_kind: string; p_path: string }
+        Returns: {
+          arquivo_boleto_path: string | null
+          arquivo_cte_path: string | null
+          cliente_id: string
+          created_at: string
+          data_pagamento: string | null
+          data_vencimento: string
+          edi_id: string | null
+          external_id: string | null
+          id: string
+          integration_metadata: Json | null
+          last_sync: string | null
+          numero_cte: string
+          observacoes: string | null
+          status: string
+          sync_status: string | null
+          transportadora_id: string
+          updated_at: string
+          valor: number | null
+        }
+      }
+      set_financeiro_file_path_v2: {
         Args: { p_doc_id: string; p_kind: string; p_path: string }
         Returns: {
           arquivo_boleto_path: string | null

@@ -5,6 +5,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
 import { saveFinanceFilePathRPC } from '@/lib/financeiro/saveFinanceFilePathRPC';
+import { saveFinanceFilePathV2 } from '@/lib/financeiro/saveFinanceFilePathV2';
+import { useFeatureFlags } from '@/hooks/useFeatureFlags';
 
 // Utilitários para padronizar datas
 const formatDateForDatabase = (dateString: string): string => {
@@ -38,8 +40,9 @@ const FinanceiroContext = createContext<FinanceiroContextType | undefined>(undef
 export function FinanceiroProvider({ children }: { children: ReactNode }) {
   const { user, isAuthenticated } = useAuth();
   const queryClient = useQueryClient();
+  const { isEnabled } = useFeatureFlags();
   const [documentosFinanceiros, setDocumentosFinanceiros] = useState<DocumentoFinanceiro[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   const fetchDocumentosFinanceiros = async () => {
     if (!isAuthenticated || !user) {
@@ -206,11 +209,18 @@ export function FinanceiroProvider({ children }: { children: ReactNode }) {
       
       console.log('✅ Upload para storage concluído');
 
-      // 2) Salvar path no registro usando RPC segura
+      // 2) Salvar path no registro usando RPC segura (com versionamento)
       try {
         console.log('📝 Salvando path no banco de dados via RPC:', { documentoId, type: fileData.type, uploadPath });
         
-        await saveFinanceFilePathRPC(documentoId, fileData.type as "boleto" | "cte", uploadPath);
+        // Use v2 RPC if feature flag is enabled, fallback to v1
+        if (isEnabled('enable_new_financeiro_v2', false)) {
+          console.log('🆕 Usando RPC v2 para salvar path');
+          await saveFinanceFilePathV2(documentoId, fileData.type as "boleto" | "cte", uploadPath);
+        } else {
+          console.log('📝 Usando RPC v1 para salvar path');
+          await saveFinanceFilePathRPC(documentoId, fileData.type as "boleto" | "cte", uploadPath);
+        }
         
         console.log('✅ Path salvo no banco de dados via RPC');
       } catch (pathError) {

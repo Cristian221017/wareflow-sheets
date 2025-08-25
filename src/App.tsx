@@ -6,6 +6,7 @@ import { WMSProvider } from "@/contexts/WMSContext";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { FinanceiroProvider } from "@/contexts/FinanceiroContext";
 import { useAuth } from "@/contexts/AuthContext";
+import EnvBanner from "@/components/system/EnvBanner";
 import Index from "./pages/Index";
 import SuperAdminPortal from "./pages/SuperAdminPortal";
 import TransportadoraPortal from "./pages/TransportadoraPortal";
@@ -14,6 +15,8 @@ import SystemAdminLogin from "./pages/SystemAdminLogin";
 import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
 import DebugFluxoNFs from "./pages/DebugFluxoNFs";
+import HealthPage from "./pages/HealthPage";
+import DiagnosticPage from "@/components/system/DiagnosticPage";
 
 
 
@@ -54,42 +57,60 @@ const App = () => (
     <WMSProvider>
       <FinanceiroProvider>
         <TooltipProvider>
-        <Toaster />
-        <Sonner />
-      <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/system-admin" element={<SystemAdminLogin />} />
-            <Route path="/reset-password" element={<ResetPassword />} />
-            <Route 
-              path="/admin" 
-              element={
-                <ProtectedRoute allowedRoles={['super_admin']}>
-                  <SuperAdminPortal />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/transportadora" 
-              element={
-                <ProtectedRoute allowedRoles={['admin_transportadora', 'operador']}>
-                  <TransportadoraPortal />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/cliente" 
-              element={
-                <ProtectedRoute allowedRoles={['cliente']}>
-                  <ClientePortal />
-                </ProtectedRoute>
-              } 
-            />
-            <Route path="/debug/fluxo-nfs" element={<DebugFluxoNFs />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-      </BrowserRouter>
+          <EnvBanner />
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/health" element={<HealthPage />} />
+              <Route path="/system-admin" element={<SystemAdminLogin />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
+              <Route 
+                path="/admin" 
+                element={
+                  <ProtectedRoute allowedRoles={['super_admin']}>
+                    <SuperAdminPortal />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/admin/diagnostic" 
+                element={
+                  <ProtectedRoute allowedRoles={['super_admin']}>
+                    <DiagnosticPage />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/transportadora" 
+                element={
+                  <ProtectedRoute allowedRoles={['admin_transportadora', 'operador']}>
+                    <TransportadoraPortal />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/transportadora/diagnostic" 
+                element={
+                  <ProtectedRoute allowedRoles={['admin_transportadora', 'operador']}>
+                    <DiagnosticPage />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/cliente" 
+                element={
+                  <ProtectedRoute allowedRoles={['cliente']}>
+                    <ClientePortal />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route path="/debug/fluxo-nfs" element={<DebugFluxoNFs />} />
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
         </TooltipProvider>
       </FinanceiroProvider>
     </WMSProvider>
