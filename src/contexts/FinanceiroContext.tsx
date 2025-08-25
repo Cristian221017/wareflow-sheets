@@ -4,6 +4,7 @@ import { DocumentoFinanceiro, DocumentoFinanceiroFormData, FileUploadData } from
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
+import { saveFinanceFilePathRPC } from '@/lib/financeiro/saveFinanceFilePathRPC';
 
 // Utilitários para padronizar datas
 const formatDateForDatabase = (dateString: string): string => {
@@ -190,6 +191,7 @@ export function FinanceiroProvider({ children }: { children: ReactNode }) {
       const uploadPath = `${user.id}/${fileData.numeroCte}/${fileData.type}-${fileData.file.name}`;
       console.log('📤 Iniciando upload:', { uploadPath, documentoId, fileType: fileData.type });
       
+      // 1) Upload do arquivo
       const { error: uploadError } = await supabase.storage
         .from('financeiro-docs')
         .upload(uploadPath, fileData.file, { 
@@ -204,29 +206,24 @@ export function FinanceiroProvider({ children }: { children: ReactNode }) {
       
       console.log('✅ Upload para storage concluído');
 
-      // Atualizar o registro com o path do arquivo
-      const updateField = fileData.type === 'boleto' ? 'arquivo_boleto_path' : 'arquivo_cte_path';
-      console.log('📝 Atualizando banco de dados:', { updateField, uploadPath, documentoId });
-      
-      const { data: updateResult, error: updErr } = await supabase
-        .from('documentos_financeiros' as any)
-        .update({ [updateField]: uploadPath })
-        .eq('id', documentoId)
-        .select();
-
-      if (updErr) {
-        console.error('❌ Erro ao atualizar path no banco:', updErr);
-        throw updErr;
+      // 2) Salvar path no registro usando RPC segura
+      try {
+        console.log('📝 Salvando path no banco de dados via RPC:', { documentoId, type: fileData.type, uploadPath });
+        
+        await saveFinanceFilePathRPC(documentoId, fileData.type as "boleto" | "cte", uploadPath);
+        
+        console.log('✅ Path salvo no banco de dados via RPC');
+      } catch (pathError) {
+        console.error('❌ Erro ao salvar path no banco:', pathError);
+        
+        // Rollback defensivo: remover arquivo órfão
+        await supabase.storage.from('financeiro-docs').remove([uploadPath]);
+        console.log('🗑️ Arquivo órfão removido devido ao erro de path');
+        
+        throw pathError;
       }
 
-      if (!updateResult || updateResult.length === 0) {
-        console.error('❌ Nenhum documento foi atualizado - documento não encontrado');
-        throw new Error('Documento não encontrado para atualização');
-      }
-
-      console.log('✅ Path atualizado no banco de dados:', updateResult[0]);
-
-      // Invalidar listas de financeiro (cliente e transportadora)
+      // 3) Invalidar listas de financeiro (cliente e transportadora)
       queryClient.invalidateQueries({ queryKey: ['documentos_financeiros'] });
       queryClient.invalidateQueries({ queryKey: ['financeiro'] });
       

@@ -993,6 +993,29 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      set_financeiro_file_path: {
+        Args: { p_doc_id: string; p_kind: string; p_path: string }
+        Returns: {
+          arquivo_boleto_path: string | null
+          arquivo_cte_path: string | null
+          cliente_id: string
+          created_at: string
+          data_pagamento: string | null
+          data_vencimento: string
+          edi_id: string | null
+          external_id: string | null
+          id: string
+          integration_metadata: Json | null
+          last_sync: string | null
+          numero_cte: string
+          observacoes: string | null
+          status: string
+          sync_status: string | null
+          transportadora_id: string
+          updated_at: string
+          valor: number | null
+        }
+      }
       setup_demo_user: {
         Args: {
           transportadora_cnpj?: string

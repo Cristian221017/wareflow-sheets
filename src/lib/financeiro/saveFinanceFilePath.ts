@@ -15,14 +15,14 @@ export async function saveFinanceFilePath(docId: string, kind: FileKind, uploadP
   const payload: Record<string, string> = { [field]: uploadPath };
 
   const { data, error, count } = await supabase
-    .from("documentos_financeiros")
+    .from("documentos_financeiros" as any)
     .update(payload)
     .eq("id", docId)
-    .select("id, numero_cte, arquivo_boleto_path, arquivo_cte_path", { count: "exact" })
+    .select("id, numero_cte, arquivo_boleto_path, arquivo_cte_path")
     .single();
 
   if (error) throw error;
-  if (!count || !data) throw new Error("Nenhuma linha atualizada. Verifique docId/RLS.");
+  if (!data) throw new Error("Nenhuma linha atualizada. Verifique docId/RLS.");
 
   return data;
 }
