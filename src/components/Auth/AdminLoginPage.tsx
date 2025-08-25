@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
-import { Shield, LogIn, ArrowLeft } from 'lucide-react';
+import { LogIn, ArrowLeft, Lock } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 export function AdminLoginPage() {
@@ -35,19 +35,6 @@ export function AdminLoginPage() {
     }
   };
 
-  const handleDemoLogin = async () => {
-    try {
-      const success = await login('superadmin@sistema.com', 'admin123');
-      if (success) {
-        toast.success('Login de administrador realizado com sucesso!');
-        // Don't manually navigate - let WMSLayout handle it
-      } else {
-        toast.error('Credenciais inválidas ou acesso negado!');
-      }
-    } catch (error) {
-      toast.error('Erro inesperado');
-    }
-  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-red-900/20 to-purple-900/20 p-4">
@@ -55,7 +42,7 @@ export function AdminLoginPage() {
         {/* Header */}
         <div className="text-center space-y-2">
           <div className="flex justify-center mb-4">
-            <Shield className="w-12 h-12 text-red-600" />
+            <Lock className="w-12 h-12 text-red-600" />
           </div>
           <h1 className="text-3xl font-bold text-foreground">Administração Sistema</h1>
           <p className="text-muted-foreground">Painel de Gestão WMS</p>
@@ -113,33 +100,6 @@ export function AdminLoginPage() {
           </CardContent>
         </Card>
 
-        {/* Demo Account */}
-        <Card className="border-purple-200 bg-purple-50">
-          <CardHeader>
-            <CardTitle className="text-sm text-purple-800">Conta Demo</CardTitle>
-            <CardDescription className="text-xs text-purple-700">
-              Para demonstração do sistema
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button 
-              variant="outline" 
-              className="w-full justify-start text-purple-700 border-purple-200 hover:bg-purple-100"
-              onClick={handleDemoLogin}
-            >
-              <Shield className="w-4 h-4 mr-2" />
-              Usar Conta Demo (Super Admin)
-            </Button>
-            
-            <div className="mt-3 p-2 bg-purple-100 rounded-md">
-              <p className="text-xs text-purple-800 font-medium">Credenciais Demo:</p>
-              <p className="text-xs text-purple-700 mt-1">
-                Email: superadmin@sistema.com<br />
-                Senha: admin123
-              </p>
-            </div>
-          </CardContent>
-        </Card>
 
         {/* Back to Client Login */}
         <Card className="border-blue-200 bg-blue-50">
