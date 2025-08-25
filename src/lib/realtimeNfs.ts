@@ -5,7 +5,16 @@ import type { RealtimeChannel } from "@supabase/supabase-js";
 const NF_CHANNEL_NAME = "nfs-realtime";
 const NF_QUERY_KEY = "nfs";
 
+// D) Guard para evitar múltiplas subscriptions
+let activeChannel: RealtimeChannel | null = null;
+
 export function subscribeNfChanges(queryClient: QueryClient): () => void {
+  // Guard: se já existe uma subscription ativa, retorna cleanup vazio
+  if (activeChannel) {
+    console.log('🔒 Subscription NFs já ativa, ignorando nova tentativa');
+    return () => {}; 
+  }
+
   console.log('🔄 Iniciando subscription realtime para NFs');
   
   const channel: RealtimeChannel = supabase
@@ -40,8 +49,10 @@ export function subscribeNfChanges(queryClient: QueryClient): () => void {
       console.log('📡 Status da subscription:', status);
       if (status === 'SUBSCRIBED') {
         console.log('✅ Subscription realtime ativa para NFs');
+        activeChannel = channel;
       } else if (status === 'CHANNEL_ERROR') {
         console.error('❌ Erro na subscription realtime para NFs');
+        activeChannel = null;
       }
     });
 
@@ -49,6 +60,7 @@ export function subscribeNfChanges(queryClient: QueryClient): () => void {
   return () => {
     console.log('🔌 Desconectando subscription realtime para NFs');
     supabase.removeChannel(channel);
+    activeChannel = null;
   };
 }
 

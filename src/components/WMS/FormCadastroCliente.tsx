@@ -94,6 +94,7 @@ export function FormCadastroCliente({ clienteToEdit, onSuccess }: FormCadastroCl
           emailNotificacaoBoleto: values.emailNotificacaoBoleto || undefined,
           senha: values.senha || undefined,
         });
+
         toast.success('Cliente cadastrado com sucesso!');
       }
       

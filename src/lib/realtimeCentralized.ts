@@ -4,7 +4,15 @@ import type { RealtimeChannel } from "@supabase/supabase-js";
 
 const CENTRAL_CHANNEL_NAME = "wms-central-realtime";
 
+// D) Guard para evitar múltiplas subscriptions centralizadas
+let activeCentralChannel: RealtimeChannel | null = null;
+
 export function subscribeCentralizedChanges(queryClient: QueryClient): () => void {
+  // Guard: se já existe uma subscription ativa, retorna cleanup vazio
+  if (activeCentralChannel) {
+    console.log('🔒 Subscription centralizada já ativa, ignorando nova tentativa');
+    return () => {}; 
+  }
   console.log('🔄 Iniciando subscription realtime centralizada');
   
   const channel: RealtimeChannel = supabase
@@ -49,8 +57,10 @@ export function subscribeCentralizedChanges(queryClient: QueryClient): () => voi
       console.log('📡 Status da subscription centralizada:', status);
       if (status === 'SUBSCRIBED') {
         console.log('✅ Subscription realtime centralizada ativa');
+        activeCentralChannel = channel;
       } else if (status === 'CHANNEL_ERROR') {
         console.error('❌ Erro na subscription realtime centralizada');
+        activeCentralChannel = null;
       }
     });
 
@@ -58,6 +68,7 @@ export function subscribeCentralizedChanges(queryClient: QueryClient): () => voi
   return () => {
     console.log('🔌 Desconectando subscription realtime centralizada');
     supabase.removeChannel(channel);
+    activeCentralChannel = null;
   };
 }
 

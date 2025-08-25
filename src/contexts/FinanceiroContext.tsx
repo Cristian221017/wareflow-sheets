@@ -3,6 +3,7 @@ import { useAuth } from './AuthContext';
 import { DocumentoFinanceiro, DocumentoFinanceiroFormData, FileUploadData } from '@/types/financeiro';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useQueryClient } from '@tanstack/react-query';
 
 // Utilitários para padronizar datas
 const formatDateForDatabase = (dateString: string): string => {
@@ -35,6 +36,7 @@ const FinanceiroContext = createContext<FinanceiroContextType | undefined>(undef
 
 export function FinanceiroProvider({ children }: { children: ReactNode }) {
   const { user, isAuthenticated } = useAuth();
+  const queryClient = useQueryClient();
   const [documentosFinanceiros, setDocumentosFinanceiros] = useState<DocumentoFinanceiro[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -184,34 +186,25 @@ export function FinanceiroProvider({ children }: { children: ReactNode }) {
     }
 
     try {
-      // Gerar nome único para o arquivo
-      const fileExt = fileData.file.name.split('.').pop();
-      const fileName = `${user.id}/${fileData.numeroCte}/${fileData.type}.${fileExt}`;
-      
-      // Upload do arquivo para o storage
-      const { error: uploadError } = await supabase.storage
+      // C) Upload financeiro garantindo path único + invalidate  
+      const uploadPath = `${user.id}/${fileData.numeroCte}/${fileData.type}-${fileData.file.name}`;
+      const up = await supabase.storage
         .from('financeiro-docs')
-        .upload(fileName, fileData.file, {
-          upsert: true
-        });
+        .upload(uploadPath, fileData.file, { upsert: true });
+      
+      if (up.error) throw up.error;
 
-      if (uploadError) {
-        console.error('Erro no upload:', uploadError);
-        throw new Error('Erro ao fazer upload do arquivo');
-      }
-
-      // Atualizar o registro no banco
+      // Atualizar o registro no banco com o path correto
       const updateField = fileData.type === 'boleto' ? 'arquivo_boleto_path' : 'arquivo_cte_path';
-      const { error: updateError } = await supabase
+      await supabase
         .from('documentos_financeiros' as any)
-        .update({ [updateField]: fileName })
+        .update({ [updateField]: uploadPath })
         .eq('id', documentoId);
 
-      if (updateError) {
-        console.error('Erro ao atualizar path do arquivo:', updateError);
-        throw new Error('Erro ao salvar referência do arquivo');
-      }
-
+      // Invalidate queries para atualização em tempo real
+      queryClient.invalidateQueries({ queryKey: ['documentos_financeiros'] });
+      queryClient.invalidateQueries({ queryKey: ['financeiro'] });
+      
       await fetchDocumentosFinanceiros();
       toast.success(`${fileData.type === 'boleto' ? 'Boleto' : 'CTE'} anexado com sucesso!`);
     } catch (error) {
