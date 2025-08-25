@@ -56,6 +56,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       console.log('Loading user profile for:', supabaseUser.id);
       
+      // Force a fresh query by adding a timestamp
+      const timestamp = Date.now();
+      console.log('🔄 Query timestamp:', timestamp);
+      
       // Create a timeout promise
       const timeoutPromise = new Promise((_, reject) => {
         setTimeout(() => reject(new Error('Database query timeout')), 3000);
@@ -90,33 +94,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const getUserData = async (supabaseUser: SupabaseUser): Promise<User> => {
-    // First try to find cliente data
-    try {
-      const { data: clienteData, error: clienteError } = await supabase
-        .from('clientes')
-        .select('*')
-        .eq('email', supabaseUser.email)
-        .eq('status', 'ativo')
-        .maybeSingle();
-
-      if (clienteData && !clienteError) {
-        return {
-          id: clienteData.id,
-          name: clienteData.razao_social,
-          email: clienteData.email,
-          type: 'cliente',
-          cnpj: clienteData.cnpj,
-          emailNotaFiscal: clienteData.email_nota_fiscal,
-          emailSolicitacaoLiberacao: clienteData.email_solicitacao_liberacao,
-          emailLiberacaoAutorizada: clienteData.email_liberacao_autorizada,
-          transportadoraId: clienteData.transportadora_id
-        };
-      }
-    } catch (error) {
-      console.log('Cliente query failed, trying system user...');
-    }
-
-    // If not a cliente, try system user
+    console.log('🔍 Starting getUserData for:', supabaseUser.email);
+    
+    // First check system user (admin/transportadora roles)
     try {
       const [profileResult, roleResult] = await Promise.all([
         supabase
@@ -135,25 +115,61 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const profile = profileResult.data;
       const userRole = roleResult.data;
 
-      const userData: User = {
-        id: supabaseUser.id,
-        name: profile?.name || supabaseUser.email || 'Usuário',
-        email: profile?.email || supabaseUser.email || '',
-        type: (userRole?.role === 'super_admin' || userRole?.role === 'admin_transportadora' || userRole?.role === 'operador') 
-          ? 'transportadora' : 'cliente',
-        role: userRole?.role,
-        transportadoraId: userRole?.transportadora_id
-      };
+      console.log('🔍 Profile result:', profile);
+      console.log('🔍 Role result:', userRole);
 
-      console.log('🔍 Debug getUserData - userRole:', userRole);
-      console.log('🔍 Debug getUserData - final userData:', userData);
-      
-      return userData;
+      // If user has a system role (admin/transportadora)
+      if (userRole && userRole.role) {
+        const userData: User = {
+          id: supabaseUser.id,
+          name: profile?.name || supabaseUser.email || 'Usuário',
+          email: profile?.email || supabaseUser.email || '',
+          type: 'transportadora', // Always transportadora for system users
+          role: userRole.role,
+          transportadoraId: userRole.transportadora_id
+        };
 
+        console.log('🔍 System user detected:', userData);
+        return userData;
+      }
     } catch (error) {
-      console.log('System user query failed, using basic data...');
-      throw error;
+      console.error('Error checking system user:', error);
     }
+
+    // If not a system user, try cliente
+    try {
+      const { data: clienteData, error: clienteError } = await supabase
+        .from('clientes')
+        .select('*')
+        .eq('email', supabaseUser.email)
+        .eq('status', 'ativo')
+        .maybeSingle();
+
+      console.log('🔍 Cliente query result:', clienteData);
+
+      if (clienteData && !clienteError) {
+        const userData: User = {
+          id: clienteData.id,
+          name: clienteData.razao_social,
+          email: clienteData.email,
+          type: 'cliente',
+          cnpj: clienteData.cnpj,
+          emailNotaFiscal: clienteData.email_nota_fiscal,
+          emailSolicitacaoLiberacao: clienteData.email_solicitacao_liberacao,
+          emailLiberacaoAutorizada: clienteData.email_liberacao_autorizada,
+          transportadoraId: clienteData.transportadora_id
+        };
+
+        console.log('🔍 Cliente user detected:', userData);
+        return userData;
+      }
+    } catch (error) {
+      console.error('Error checking cliente:', error);
+    }
+
+    // Fallback - create basic user
+    console.log('🔍 Using fallback user data');
+    throw new Error('User not found in any table');
   };
 
   const login = async (email: string, password: string): Promise<boolean> => {

@@ -9,21 +9,26 @@ export function WMSLayout() {
 
   useEffect(() => {
     if (isAuthenticated && user) {
-      console.log('🚀 WMSMain - Redirecting user:', { role: user.role, type: user.type, email: user.email });
+      console.log('🚀 WMSMain - User data:', { 
+        role: user.role, 
+        type: user.type, 
+        email: user.email,
+        id: user.id 
+      });
       
-      // Redirect based on user role/type
+      // Priority order: role first, then type
       if (user.role === 'super_admin') {
-        console.log('🔄 Redirecting to /admin');
+        console.log('🔄 Redirecting to /admin (super_admin role)');
         navigate('/admin', { replace: true });
       } else if (user.role === 'admin_transportadora' || user.role === 'operador') {
-        console.log('🔄 Redirecting to /transportadora');
+        console.log('🔄 Redirecting to /transportadora (transportadora role)');
         navigate('/transportadora', { replace: true });
-      } else if (user.type === 'cliente' || !user.role) {
-        console.log('🔄 Redirecting to /cliente');
+      } else if (user.type === 'cliente') {
+        console.log('🔄 Redirecting to /cliente (cliente type)');
         navigate('/cliente', { replace: true });
       } else {
-        console.log('🔄 Redirecting to /transportadora (fallback)');
-        navigate('/transportadora', { replace: true });
+        console.log('🔄 Redirecting to /cliente (fallback)');
+        navigate('/cliente', { replace: true });
       }
     }
   }, [isAuthenticated, user, navigate]);

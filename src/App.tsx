@@ -17,6 +17,7 @@ import NotFound from "./pages/NotFound";
 import DebugFluxoNFs from "./pages/DebugFluxoNFs";
 import HealthPage from "./pages/HealthPage";
 import DiagnosticPage from "@/components/system/DiagnosticPage";
+import { AuthRefreshButton } from "@/components/system/AuthRefreshButton";
 
 
 
@@ -39,13 +40,29 @@ function ProtectedRoute({ children, allowedRoles }: { children: React.ReactNode,
     return <Navigate to="/" replace />;
   }
 
-  // For client route, check if user has no role (meaning it's a client)
-  // For other routes, check if user has the required role
-  const hasAccess = allowedRoles.includes('cliente') 
-    ? (!user?.role || user?.role === 'cliente') 
-    : allowedRoles.includes(user?.role || '');
+  // Check access based on user role/type
+  const hasAccess = (() => {
+    if (!user) return false;
     
-  if (user && !hasAccess) {
+    // For cliente route - check if user is a client
+    if (allowedRoles.includes('cliente')) {
+      return user.type === 'cliente';
+    }
+    
+    // For admin/transportadora routes - check if user has the required role
+    return user.role && allowedRoles.includes(user.role);
+  })();
+
+  console.log('🔒 ProtectedRoute Check:', {
+    user: user?.email,
+    userRole: user?.role,
+    userType: user?.type,
+    allowedRoles,
+    hasAccess
+  });
+
+  if (!hasAccess) {
+    console.log('❌ Access denied, redirecting to /');
     return <Navigate to="/" replace />;
   }
 
@@ -58,6 +75,7 @@ const App = () => (
       <FinanceiroProvider>
         <TooltipProvider>
           <EnvBanner />
+          <AuthRefreshButton />
           <Toaster />
           <Sonner />
           <BrowserRouter>
