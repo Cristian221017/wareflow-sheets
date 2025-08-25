@@ -61,7 +61,7 @@ export function FormCadastroTransportadora() {
         return;
       }
 
-      // 2. Create admin user for the transportadora
+      // 2. Create admin user - the trigger will handle the association automatically
       const { data: userData, error: userError } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.senha_admin,
@@ -78,24 +78,6 @@ export function FormCadastroTransportadora() {
         console.error('Error creating admin user:', userError);
         toast.error('Transportadora criada, mas erro ao criar usuário admin: ' + userError.message);
         return;
-      }
-
-      // 3. Create user_transportadora association
-      if (userData.user) {
-        const { error: associationError } = await supabase
-          .from('user_transportadoras')
-          .insert([{
-            user_id: userData.user.id,
-            transportadora_id: transportadoraData.id,
-            role: 'admin_transportadora',
-            is_active: true
-          }]);
-
-        if (associationError) {
-          console.error('Error creating user association:', associationError);
-          toast.error('Usuário criado, mas erro ao associar à transportadora: ' + associationError.message);
-          return;
-        }
       }
 
       toast.success('Transportadora e usuário admin criados com sucesso!');
