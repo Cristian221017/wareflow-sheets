@@ -186,38 +186,38 @@ export function FinanceiroProvider({ children }: { children: ReactNode }) {
     }
 
     try {
-      // C) Upload financeiro garantindo path único + invalidate  
+      // B) Salvar caminho do arquivo após upload + invalidar listas
       const uploadPath = `${user.id}/${fileData.numeroCte}/${fileData.type}-${fileData.file.name}`;
       console.log('📤 Iniciando upload:', { uploadPath, documentoId, fileType: fileData.type });
       
-      const up = await supabase.storage
+      const { error: uploadError } = await supabase.storage
         .from('financeiro-docs')
         .upload(uploadPath, fileData.file, { upsert: true });
       
-      if (up.error) {
-        console.error('❌ Erro no upload para storage:', up.error);
-        throw up.error;
+      if (uploadError) {
+        console.error('❌ Erro no upload para storage:', uploadError);
+        throw uploadError;
       }
       
-      console.log('✅ Upload para storage concluído:', up.data);
+      console.log('✅ Upload para storage concluído');
 
-      // Atualizar o registro no banco com o path correto
+      // Atualizar o registro com o path do arquivo
       const updateField = fileData.type === 'boleto' ? 'arquivo_boleto_path' : 'arquivo_cte_path';
       console.log('📝 Atualizando banco de dados:', { updateField, uploadPath, documentoId });
       
-      const { error: updateError } = await supabase
+      const { error: updErr } = await supabase
         .from('documentos_financeiros' as any)
         .update({ [updateField]: uploadPath })
         .eq('id', documentoId);
 
-      if (updateError) {
-        console.error('❌ Erro ao atualizar path no banco:', updateError);
-        throw new Error(`Erro ao salvar referência do arquivo: ${updateError.message}`);
+      if (updErr) {
+        console.error('❌ Erro ao atualizar path no banco:', updErr);
+        throw updErr;
       }
 
       console.log('✅ Path atualizado no banco de dados');
 
-      // Invalidate queries para atualização em tempo real
+      // Invalidar listas de financeiro (cliente e transportadora)
       queryClient.invalidateQueries({ queryKey: ['documentos_financeiros'] });
       queryClient.invalidateQueries({ queryKey: ['financeiro'] });
       

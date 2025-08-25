@@ -23,5 +23,5 @@ export interface AuthContextType {
   isAuthenticated: boolean;
   loading: boolean;
   clientes: User[];
-  addCliente: (cliente: Omit<User, 'id' | 'type'>) => Promise<void>;
+  addCliente: (cliente: Omit<User, 'id' | 'type'>) => Promise<{ id: string }>;
 }

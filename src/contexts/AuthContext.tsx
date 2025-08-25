@@ -213,14 +213,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setLoading(false);
   };
 
-  const addCliente = async (clienteData: Omit<User, 'id' | 'type'>): Promise<void> => {
+  const addCliente = async (clienteData: Omit<User, 'id' | 'type'>): Promise<{ id: string }> => {
     if (!user?.transportadoraId) {
       throw new Error('Usuário não associado a uma transportadora');
     }
 
     try {
       // 1. Inserir cliente na tabela clientes
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('clientes')
         .insert([{
           transportadora_id: user.transportadoraId,
@@ -231,7 +231,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           email_solicitacao_liberacao: clienteData.emailSolicitacaoLiberacao,
           email_liberacao_autorizada: clienteData.emailLiberacaoAutorizada,
           email_notificacao_boleto: clienteData.emailNotificacaoBoleto,
-        }]);
+        }])
+        .select()
+        .single();
 
       if (error) {
         throw error;
@@ -252,16 +254,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           } else if ('error' in authResult) {
             console.warn('⚠️ Aviso na criação de conta:', authResult.error);
           }
-          
-          if (!authResult.success && 'error' in authResult) {
-            console.warn('Aviso ao criar autenticação:', authResult.error);
-          }
         } catch (authError) {
           console.error('Erro ao criar autenticação:', authError);
         }
       }
 
+      // 3. Recarregar lista de clientes
       await loadClientes();
+      
+      return { id: data.id };
     } catch (error) {
       console.error('Error adding cliente:', error);
       throw error;

@@ -83,8 +83,8 @@ export function FormCadastroCliente({ clienteToEdit, onSuccess }: FormCadastroCl
         });
         toast.success('Cliente atualizado com sucesso!');
       } else {
-        // Criar novo cliente
-        await addCliente({
+        // Criar novo cliente e capturar o ID retornado
+        const novoCliente = await addCliente({
           name: values.name,
           email: values.email,
           cnpj: values.cnpj,
@@ -94,6 +94,26 @@ export function FormCadastroCliente({ clienteToEdit, onSuccess }: FormCadastroCl
           emailNotificacaoBoleto: values.emailNotificacaoBoleto || undefined,
           senha: values.senha || undefined,
         });
+
+        // A) Vincular user_clientes no fluxo do formulário
+        if (novoCliente?.id) {
+          const { data: prof, error: profErr } = await supabase
+            .from('profiles')
+            .select('user_id')
+            .eq('email', values.email)
+            .maybeSingle();
+
+          if (!profErr && prof?.user_id) {
+            const { error: linkErr } = await supabase
+              .from('user_clientes' as any)
+              .insert({ user_id: prof.user_id, cliente_id: novoCliente.id });
+            if (linkErr && !linkErr.message?.includes('duplicate key')) {
+              console.warn('Falha ao vincular user↔cliente', linkErr);
+            } else {
+              console.log('✅ Vínculo user↔cliente criado com sucesso');
+            }
+          }
+        }
 
         toast.success('Cliente cadastrado com sucesso!');
       }
@@ -146,6 +166,24 @@ export function FormCadastroCliente({ clienteToEdit, onSuccess }: FormCadastroCl
       } catch (authError) {
         console.error('Erro ao criar/atualizar autenticação:', authError);
         toast.warning('Cliente atualizado, mas houve erro na autenticação');
+      }
+    }
+
+    // A) Vincular user_clientes no fluxo de edição após atualização
+    const { data: prof, error: profErr } = await supabase
+      .from('profiles')
+      .select('user_id')
+      .eq('email', cliente.email)
+      .maybeSingle();
+
+    if (!profErr && prof?.user_id) {
+      const { error: linkErr } = await supabase
+        .from('user_clientes' as any)
+        .insert({ user_id: prof.user_id, cliente_id: id });
+      if (linkErr && !linkErr.message?.includes('duplicate key')) {
+        console.warn('Falha ao vincular user↔cliente', linkErr);
+      } else {
+        console.log('✅ Vínculo user↔cliente atualizado com sucesso');
       }
     }
   };
