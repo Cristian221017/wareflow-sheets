@@ -65,12 +65,20 @@ export function FormDocumentoFinanceiro({ onSuccess }: FormDocumentoFinanceiroPr
       // Upload files if they exist and we have a document ID
       if (newDocumento?.id && (boletoFile || cteFile)) {
         const numeroCte = data.numeroCte;
+        console.log('📄 Documento criado, iniciando uploads:', { 
+          documentoId: newDocumento.id, 
+          hasBoletoFile: !!boletoFile, 
+          hasCteFile: !!cteFile,
+          numeroCte 
+        });
         
         if (boletoFile) {
+          console.log('📤 Fazendo upload do boleto...');
           await uploadArquivo(newDocumento.id, { file: boletoFile, type: 'boleto', numeroCte });
         }
         
         if (cteFile) {
+          console.log('📤 Fazendo upload do CTE...');
           await uploadArquivo(newDocumento.id, { file: cteFile, type: 'cte', numeroCte });
         }
       }

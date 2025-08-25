@@ -188,18 +188,34 @@ export function FinanceiroProvider({ children }: { children: ReactNode }) {
     try {
       // C) Upload financeiro garantindo path único + invalidate  
       const uploadPath = `${user.id}/${fileData.numeroCte}/${fileData.type}-${fileData.file.name}`;
+      console.log('📤 Iniciando upload:', { uploadPath, documentoId, fileType: fileData.type });
+      
       const up = await supabase.storage
         .from('financeiro-docs')
         .upload(uploadPath, fileData.file, { upsert: true });
       
-      if (up.error) throw up.error;
+      if (up.error) {
+        console.error('❌ Erro no upload para storage:', up.error);
+        throw up.error;
+      }
+      
+      console.log('✅ Upload para storage concluído:', up.data);
 
       // Atualizar o registro no banco com o path correto
       const updateField = fileData.type === 'boleto' ? 'arquivo_boleto_path' : 'arquivo_cte_path';
-      await supabase
+      console.log('📝 Atualizando banco de dados:', { updateField, uploadPath, documentoId });
+      
+      const { error: updateError } = await supabase
         .from('documentos_financeiros' as any)
         .update({ [updateField]: uploadPath })
         .eq('id', documentoId);
+
+      if (updateError) {
+        console.error('❌ Erro ao atualizar path no banco:', updateError);
+        throw new Error(`Erro ao salvar referência do arquivo: ${updateError.message}`);
+      }
+
+      console.log('✅ Path atualizado no banco de dados');
 
       // Invalidate queries para atualização em tempo real
       queryClient.invalidateQueries({ queryKey: ['documentos_financeiros'] });
@@ -208,32 +224,39 @@ export function FinanceiroProvider({ children }: { children: ReactNode }) {
       await fetchDocumentosFinanceiros();
       toast.success(`${fileData.type === 'boleto' ? 'Boleto' : 'CTE'} anexado com sucesso!`);
     } catch (error) {
-      console.error('Erro no upload de arquivo:', error);
+      console.error('❌ Erro completo no upload de arquivo:', error);
       throw error;
     }
   };
 
   const downloadArquivo = async (documentoId: string, type: 'boleto' | 'cte') => {
     try {
+      console.log('📥 Iniciando download:', { documentoId, type });
+      
       const documento = documentosFinanceiros.find(d => d.id === documentoId);
       if (!documento) {
         throw new Error('Documento não encontrado');
       }
 
       const filePath = type === 'boleto' ? documento.arquivoBoletoPath : documento.arquivoCtePath;
+      console.log('📂 Path do arquivo:', filePath);
+      
       if (!filePath) {
         throw new Error(`${type === 'boleto' ? 'Boleto' : 'CTE'} não encontrado`);
       }
 
+      console.log('📥 Baixando arquivo do storage:', filePath);
       const { data, error } = await supabase.storage
         .from('financeiro-docs')
         .download(filePath);
 
       if (error) {
-        console.error('Erro no download:', error);
+        console.error('❌ Erro no download:', error);
         throw new Error('Erro ao baixar arquivo');
       }
 
+      console.log('✅ Arquivo baixado com sucesso');
+      
       // Criar URL de download e disparar download
       const url = URL.createObjectURL(data);
       const link = document.createElement('a');
@@ -246,7 +269,7 @@ export function FinanceiroProvider({ children }: { children: ReactNode }) {
 
       toast.success(`${type === 'boleto' ? 'Boleto' : 'CTE'} baixado com sucesso!`);
     } catch (error) {
-      console.error('Erro no download:', error);
+      console.error('❌ Erro completo no download:', error);
       toast.error(error instanceof Error ? error.message : 'Erro ao baixar arquivo');
     }
   };

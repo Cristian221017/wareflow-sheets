@@ -148,13 +148,17 @@ export function FinanceiroTransportadoraTable() {
     if (!selectedDoc) return;
 
     try {
+      console.log('📤 Upload iniciado via edição:', { file: file.name, type, docId: selectedDoc.id });
+      
       await uploadArquivo(selectedDoc.id, { 
         file, 
         type, 
         numeroCte: selectedDoc.numeroCte 
       });
+      console.log('✅ Upload concluído via edição');
       toast.success(`${type === 'boleto' ? 'Boleto' : 'CTE'} anexado com sucesso!`);
     } catch (error) {
+      console.error('❌ Erro no upload via edição:', error);
       toast.error('Erro ao anexar arquivo');
     }
   };
