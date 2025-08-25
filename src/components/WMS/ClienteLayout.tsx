@@ -14,6 +14,7 @@ import { FinanceiroCliente } from './FinanceiroCliente';
 import { PedidosConfirmadosTable } from './PedidosConfirmadosTable';
 import { FormCadastroUsuario } from './FormCadastroUsuario';
 import { AlterarSenhaDialog } from './AlterarSenhaDialog';
+import { EnvironmentBadge, EnvironmentIndicator } from '@/components/system/EnvironmentBadge';
 
 import { 
   Package, 
@@ -264,9 +265,11 @@ export function ClienteLayout() {
         </div>
       </header>
 
+      <EnvironmentIndicator />
       <MobileTabBar />
 
       <main className="container mx-auto px-4 lg:px-6 py-6 space-y-6 max-w-7xl">
+        <EnvironmentBadge />
         {renderContent()}
       </main>
     </div>

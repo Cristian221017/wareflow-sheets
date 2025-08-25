@@ -14,6 +14,7 @@ import { DeploymentSafetyDashboard } from './DeploymentSafetyDashboard';
 import { FormCadastroUsuario } from './FormCadastroUsuario';
 import { FormCadastroTransportadora } from './FormCadastroTransportadora';
 import { LogsPage } from './LogsPage';
+import { EnvironmentBadge, EnvironmentIndicator } from '@/components/system/EnvironmentBadge';
 import { 
   Building2, 
   Users, 
@@ -197,8 +198,11 @@ export function SuperAdminLayout() {
         </div>
       </header>
 
+      <EnvironmentIndicator />
+
       {/* Main Content */}
       <div className="flex-1 p-4 md:p-6">
+        <EnvironmentBadge />
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           {/* Desktop Navigation */}
           <div className="hidden md:block">
