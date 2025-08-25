@@ -46,9 +46,10 @@ interface Cliente {
 interface FormCadastroClienteProps {
   clienteToEdit?: Cliente;
   onSuccess?: () => void;
+  isClientPortal?: boolean; // Para identificar se está sendo usado no portal do cliente
 }
 
-export function FormCadastroCliente({ clienteToEdit, onSuccess }: FormCadastroClienteProps) {
+export function FormCadastroCliente({ clienteToEdit, onSuccess, isClientPortal = false }: FormCadastroClienteProps) {
   const { addCliente } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
 
@@ -204,7 +205,12 @@ export function FormCadastroCliente({ clienteToEdit, onSuccess }: FormCadastroCl
           {clienteToEdit ? 'Editar Cliente' : 'Cadastro de Cliente'}
         </CardTitle>
         <CardDescription>
-          {clienteToEdit ? 'Atualize os dados do cliente' : 'Cadastre um novo cliente no sistema'}
+          {clienteToEdit 
+            ? 'Atualize os dados do cliente' 
+            : isClientPortal 
+              ? 'Cadastre um novo cliente para acessar o sistema'
+              : 'Cadastre um novo cliente para ser controlado pela transportadora'
+          }
         </CardDescription>
       </CardHeader>
       <CardContent>

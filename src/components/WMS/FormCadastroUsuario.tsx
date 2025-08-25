@@ -192,7 +192,7 @@ export function FormCadastroUsuario({ userType = 'super_admin', onSuccess }: For
           <span>Cadastrar Novo Usuário</span>
         </CardTitle>
         <CardDescription>
-          Crie uma nova conta de usuário para o sistema
+          Crie uma nova conta de usuário para operar o sistema da transportadora
         </CardDescription>
       </CardHeader>
       <CardContent>
