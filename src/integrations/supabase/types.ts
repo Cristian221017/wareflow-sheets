@@ -100,6 +100,63 @@ export type Database = {
           },
         ]
       }
+      deployment_config: {
+        Row: {
+          description: string | null
+          id: string
+          key: string
+          updated_at: string
+          updated_by: string | null
+          value: Json
+        }
+        Insert: {
+          description?: string | null
+          id?: string
+          key: string
+          updated_at?: string
+          updated_by?: string | null
+          value: Json
+        }
+        Update: {
+          description?: string | null
+          id?: string
+          key?: string
+          updated_at?: string
+          updated_by?: string | null
+          value?: Json
+        }
+        Relationships: []
+      }
+      deployment_validations: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          error_message: string | null
+          id: string
+          result: Json | null
+          status: string
+          validation_type: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          result?: Json | null
+          status?: string
+          validation_type: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          result?: Json | null
+          status?: string
+          validation_type?: string
+        }
+        Relationships: []
+      }
       documentos_financeiros: {
         Row: {
           arquivo_boleto_path: string | null
@@ -202,23 +259,38 @@ export type Database = {
       feature_flags: {
         Row: {
           created_at: string
+          created_by: string | null
           description: string | null
           enabled: boolean
+          environment: string
+          id: string
           key: string
+          percentage: number | null
+          target_users: Json | null
           updated_at: string
         }
         Insert: {
           created_at?: string
+          created_by?: string | null
           description?: string | null
           enabled?: boolean
+          environment?: string
+          id?: string
           key: string
+          percentage?: number | null
+          target_users?: Json | null
           updated_at?: string
         }
         Update: {
           created_at?: string
+          created_by?: string | null
           description?: string | null
           enabled?: boolean
+          environment?: string
+          id?: string
           key?: string
+          percentage?: number | null
+          target_users?: Json | null
           updated_at?: string
         }
         Relationships: []
@@ -673,6 +745,72 @@ export type Database = {
           integration_type?: string
           internal_status?: string
           table_name?: string
+        }
+        Relationships: []
+      }
+      system_backups: {
+        Row: {
+          backup_path: string | null
+          backup_size_bytes: number | null
+          completed_at: string | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          name: string
+          status: string
+          tables_backed_up: string[]
+        }
+        Insert: {
+          backup_path?: string | null
+          backup_size_bytes?: number | null
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          name: string
+          status?: string
+          tables_backed_up: string[]
+        }
+        Update: {
+          backup_path?: string | null
+          backup_size_bytes?: number | null
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+          status?: string
+          tables_backed_up?: string[]
+        }
+        Relationships: []
+      }
+      system_health_checks: {
+        Row: {
+          check_type: string
+          created_at: string
+          id: string
+          message: string | null
+          metrics: Json | null
+          status: string
+        }
+        Insert: {
+          check_type: string
+          created_at?: string
+          id?: string
+          message?: string | null
+          metrics?: Json | null
+          status: string
+        }
+        Update: {
+          check_type?: string
+          created_at?: string
+          id?: string
+          message?: string | null
+          metrics?: Json | null
+          status?: string
         }
         Relationships: []
       }
