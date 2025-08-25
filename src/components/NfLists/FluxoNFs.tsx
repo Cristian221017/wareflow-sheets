@@ -8,7 +8,7 @@ import { NFCard } from "./NFCard";
 import { NFFilters, type NFFilterState } from "./NFFilters";
 import { NFBulkActions } from "./NFBulkActions";
 import { useNFs, useFluxoMutations } from "@/hooks/useNFs";
-import { subscribeNfChanges } from "@/lib/realtimeNfs";
+import { subscribeCentralizedChanges } from "@/lib/realtimeCentralized";
 import { useAuth } from "@/contexts/AuthContext";
 import type { NotaFiscal } from "@/types/nf";
 
@@ -296,11 +296,12 @@ export function FluxoNFs() {
   });
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
-  // Configurar realtime com guard para StrictMode
+  // Configurar realtime centralizado com guard para StrictMode
   useEffect(() => {
     if (once.current) return;
     once.current = true;
-    return subscribeNfChanges(queryClient);
+    console.log('🔄 Configurando realtime centralizado para FluxoNFs');
+    return subscribeCentralizedChanges(queryClient);
   }, [queryClient]);
 
   // Determinar permissões baseado no tipo e role do usuário
