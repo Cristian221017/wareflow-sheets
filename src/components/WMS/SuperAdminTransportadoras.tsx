@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { AlterarSenhaDialog } from './AlterarSenhaDialog';
 import { 
   Plus, 
   Building2, 
@@ -19,7 +20,8 @@ import {
   Calendar,
   Power,
   PowerOff,
-  AlertTriangle
+  AlertTriangle,
+  KeyRound
 } from 'lucide-react';
 
 interface Transportadora {
@@ -48,6 +50,7 @@ export function SuperAdminTransportadoras() {
   const [isStatusDialogOpen, setIsStatusDialogOpen] = useState(false);
   const [transportadoraToDelete, setTransportadoraToDelete] = useState<Transportadora | null>(null);
   const [transportadoraToToggle, setTransportadoraToToggle] = useState<Transportadora | null>(null);
+  const [passwordChangeTransportadora, setPasswordChangeTransportadora] = useState<Transportadora | null>(null);
   const [formData, setFormData] = useState({
     razao_social: '',
     nome_fantasia: '',
@@ -500,44 +503,53 @@ export function SuperAdminTransportadoras() {
                         <span>{new Date(transportadora.created_at).toLocaleDateString()}</span>
                       </div>
                     </TableCell>
-                     <TableCell>
+                      <TableCell>
                        <div className="flex space-x-1">
-                         <Button 
-                           variant="outline" 
-                           size="sm"
-                           onClick={() => handleEdit(transportadora)}
-                           title="Editar transportadora"
-                         >
-                           <Edit className="w-3 h-3" />
-                         </Button>
-                         
-                         <Button
-                           variant="outline"
-                           size="sm"
-                           onClick={() => openStatusDialog(transportadora)}
-                           className={transportadora.status === 'ativo' 
-                             ? "text-orange-600 hover:text-orange-700" 
-                             : "text-green-600 hover:text-green-700"
-                           }
-                           title={transportadora.status === 'ativo' ? 'Desativar transportadora' : 'Ativar transportadora'}
-                         >
-                           {transportadora.status === 'ativo' ? 
-                             <PowerOff className="w-3 h-3" /> : 
-                             <Power className="w-3 h-3" />
-                           }
-                         </Button>
-                         
-                         <Button
-                           variant="outline"
-                           size="sm"
-                           onClick={() => openDeleteDialog(transportadora)}
-                           className="text-destructive hover:text-destructive"
-                           title="Excluir transportadora"
-                         >
-                           <Trash2 className="w-3 h-3" />
-                         </Button>
-                       </div>
-                     </TableCell>
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => handleEdit(transportadora)}
+                            title="Editar transportadora"
+                          >
+                            <Edit className="w-3 h-3" />
+                          </Button>
+                          
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setPasswordChangeTransportadora(transportadora)}
+                            title="Alterar senha de acesso"
+                          >
+                            <KeyRound className="w-3 h-3" />
+                          </Button>
+                          
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => openStatusDialog(transportadora)}
+                            className={transportadora.status === 'ativo' 
+                              ? "text-orange-600 hover:text-orange-700" 
+                              : "text-green-600 hover:text-green-700"
+                            }
+                            title={transportadora.status === 'ativo' ? 'Desativar transportadora' : 'Ativar transportadora'}
+                          >
+                            {transportadora.status === 'ativo' ? 
+                              <PowerOff className="w-3 h-3" /> : 
+                              <Power className="w-3 h-3" />
+                            }
+                          </Button>
+                          
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => openDeleteDialog(transportadora)}
+                            className="text-destructive hover:text-destructive"
+                            title="Excluir transportadora"
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </Button>
+                        </div>
+                      </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -634,6 +646,16 @@ export function SuperAdminTransportadoras() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
+        {/* Alterar Senha Dialog */}
+        {passwordChangeTransportadora && (
+          <AlterarSenhaDialog
+            isOpen={!!passwordChangeTransportadora}
+            onClose={() => setPasswordChangeTransportadora(null)}
+            userEmail={passwordChangeTransportadora.email}
+            userName={passwordChangeTransportadora.razao_social}
+          />
+        )}
       </div>
     );
   }
