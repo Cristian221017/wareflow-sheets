@@ -15,6 +15,7 @@ export function FormCadastroTransportadora() {
     nome_fantasia: '',
     cnpj: '',
     email: '',
+    senha_admin: '',
     telefone: '',
     endereco: '',
     cidade: '',
@@ -32,20 +33,72 @@ export function FormCadastroTransportadora() {
     setLoading(true);
 
     try {
-      const { error } = await supabase
+      // 1. First create the transportadora
+      const { data: transportadoraData, error: transportadoraError } = await supabase
         .from('transportadoras')
         .insert([{
-          ...formData,
+          razao_social: formData.razao_social,
+          nome_fantasia: formData.nome_fantasia,
+          cnpj: formData.cnpj,
+          email: formData.email,
+          telefone: formData.telefone,
+          endereco: formData.endereco,
+          cidade: formData.cidade,
+          estado: formData.estado,
+          cep: formData.cep,
+          status: formData.status,
+          plano: formData.plano,
+          limite_usuarios: formData.limite_usuarios,
+          limite_clientes: formData.limite_clientes,
           data_contrato: formData.data_contrato || null
-        }]);
+        }])
+        .select()
+        .single();
 
-      if (error) {
-        console.error('Error creating transportadora:', error);
-        toast.error('Erro ao criar transportadora: ' + error.message);
+      if (transportadoraError) {
+        console.error('Error creating transportadora:', transportadoraError);
+        toast.error('Erro ao criar transportadora: ' + transportadoraError.message);
         return;
       }
 
-      toast.success('Transportadora criada com sucesso!');
+      // 2. Create admin user for the transportadora
+      const { data: userData, error: userError } = await supabase.auth.signUp({
+        email: formData.email,
+        password: formData.senha_admin,
+        options: {
+          emailRedirectTo: `${window.location.origin}/`,
+          data: {
+            name: `Admin - ${formData.razao_social}`,
+            role: 'admin_transportadora'
+          }
+        }
+      });
+
+      if (userError) {
+        console.error('Error creating admin user:', userError);
+        toast.error('Transportadora criada, mas erro ao criar usuário admin: ' + userError.message);
+        return;
+      }
+
+      // 3. Create user_transportadora association
+      if (userData.user) {
+        const { error: associationError } = await supabase
+          .from('user_transportadoras')
+          .insert([{
+            user_id: userData.user.id,
+            transportadora_id: transportadoraData.id,
+            role: 'admin_transportadora',
+            is_active: true
+          }]);
+
+        if (associationError) {
+          console.error('Error creating user association:', associationError);
+          toast.error('Usuário criado, mas erro ao associar à transportadora: ' + associationError.message);
+          return;
+        }
+      }
+
+      toast.success('Transportadora e usuário admin criados com sucesso!');
       
       // Reset form
       setFormData({
@@ -53,6 +106,7 @@ export function FormCadastroTransportadora() {
         nome_fantasia: '',
         cnpj: '',
         email: '',
+        senha_admin: '',
         telefone: '',
         endereco: '',
         cidade: '',
@@ -119,7 +173,7 @@ export function FormCadastroTransportadora() {
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="email">Email *</Label>
+              <Label htmlFor="email">Email (Admin) *</Label>
               <Input
                 id="email"
                 type="email"
@@ -128,6 +182,19 @@ export function FormCadastroTransportadora() {
                 required
               />
             </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="senha_admin">Senha do Admin *</Label>
+            <Input
+              id="senha_admin"
+              type="password"
+              value={formData.senha_admin}
+              onChange={(e) => setFormData(prev => ({ ...prev, senha_admin: e.target.value }))}
+              required
+              minLength={6}
+              placeholder="Mínimo 6 caracteres"
+            />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
