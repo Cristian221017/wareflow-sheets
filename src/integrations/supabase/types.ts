@@ -652,6 +652,60 @@ export type Database = {
         }
         Relationships: []
       }
+      system_logs: {
+        Row: {
+          action: string
+          actor_role: string | null
+          actor_user_id: string | null
+          cliente_id: string | null
+          correlation_id: string | null
+          created_at: string
+          entity_id: string | null
+          entity_type: string
+          id: string
+          ip: unknown | null
+          message: string | null
+          meta: Json | null
+          status: Database["public"]["Enums"]["log_level"]
+          transportadora_id: string | null
+          user_agent: string | null
+        }
+        Insert: {
+          action: string
+          actor_role?: string | null
+          actor_user_id?: string | null
+          cliente_id?: string | null
+          correlation_id?: string | null
+          created_at?: string
+          entity_id?: string | null
+          entity_type: string
+          id?: string
+          ip?: unknown | null
+          message?: string | null
+          meta?: Json | null
+          status?: Database["public"]["Enums"]["log_level"]
+          transportadora_id?: string | null
+          user_agent?: string | null
+        }
+        Update: {
+          action?: string
+          actor_role?: string | null
+          actor_user_id?: string | null
+          cliente_id?: string | null
+          correlation_id?: string | null
+          created_at?: string
+          entity_id?: string | null
+          entity_type?: string
+          id?: string
+          ip?: unknown | null
+          message?: string | null
+          meta?: Json | null
+          status?: Database["public"]["Enums"]["log_level"]
+          transportadora_id?: string | null
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
       transportadoras: {
         Row: {
           cep: string | null
@@ -876,6 +930,36 @@ export type Database = {
         }
         Returns: string
       }
+      log_system_event: {
+        Args: {
+          p_action: string
+          p_cliente_id?: string
+          p_correlation_id?: string
+          p_entity_id?: string
+          p_entity_type: string
+          p_message?: string
+          p_meta?: Json
+          p_status?: Database["public"]["Enums"]["log_level"]
+          p_transportadora_id?: string
+        }
+        Returns: {
+          action: string
+          actor_role: string | null
+          actor_user_id: string | null
+          cliente_id: string | null
+          correlation_id: string | null
+          created_at: string
+          entity_id: string | null
+          entity_type: string
+          id: string
+          ip: unknown | null
+          message: string | null
+          meta: Json | null
+          status: Database["public"]["Enums"]["log_level"]
+          transportadora_id: string | null
+          user_agent: string | null
+        }
+      }
       nf_confirmar: {
         Args: { p_nf_id: string; p_user_id: string }
         Returns: undefined
@@ -921,6 +1005,7 @@ export type Database = {
       }
     }
     Enums: {
+      log_level: "INFO" | "WARN" | "ERROR"
       user_role: "super_admin" | "admin_transportadora" | "operador" | "cliente"
     }
     CompositeTypes: {
@@ -1049,6 +1134,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      log_level: ["INFO", "WARN", "ERROR"],
       user_role: ["super_admin", "admin_transportadora", "operador", "cliente"],
     },
   },
