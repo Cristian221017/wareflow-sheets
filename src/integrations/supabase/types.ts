@@ -901,6 +901,31 @@ export type Database = {
         Args: { _user_id: string }
         Returns: string
       }
+      get_current_user_dashboard: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          cliente_id: string
+          docs_vencendo: number
+          docs_vencidos: number
+          nfs_armazenadas: number
+          nfs_confirmadas: number
+          solicitacoes_pendentes: number
+          transportadora_id: string
+          user_type: string
+          valor_pendente: number
+          valor_vencido: number
+        }[]
+      }
+      get_realtime_stats: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          actor_id: string
+          entity_id: string
+          entity_type: string
+          last_update: string
+          status: string
+        }[]
+      }
       get_user_transportadora: {
         Args: { _user_id: string }
         Returns: string
