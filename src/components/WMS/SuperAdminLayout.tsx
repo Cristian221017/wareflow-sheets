@@ -12,7 +12,7 @@ import { SuperAdminUsuarios } from './SuperAdminUsuarios';
 import { SuperAdminDashboard } from './SuperAdminDashboard';
 import { FormCadastroUsuario } from './FormCadastroUsuario';
 import { FormCadastroTransportadora } from './FormCadastroTransportadora';
-import LogsPage from './LogsPage';
+import { LogsPage } from './LogsPage';
 import { 
   Building2, 
   Users, 
