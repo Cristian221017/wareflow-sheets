@@ -163,6 +163,42 @@ export type Database = {
         }
         Relationships: []
       }
+      event_log: {
+        Row: {
+          actor_id: string
+          actor_role: string
+          correlation_id: string | null
+          created_at: string
+          entity_id: string
+          entity_type: string
+          event_type: string
+          id: string
+          payload: Json | null
+        }
+        Insert: {
+          actor_id: string
+          actor_role: string
+          correlation_id?: string | null
+          created_at?: string
+          entity_id: string
+          entity_type: string
+          event_type: string
+          id?: string
+          payload?: Json | null
+        }
+        Update: {
+          actor_id?: string
+          actor_role?: string
+          correlation_id?: string | null
+          created_at?: string
+          entity_id?: string
+          entity_type?: string
+          event_type?: string
+          id?: string
+          payload?: Json | null
+        }
+        Relationships: []
+      }
       integration_configs: {
         Row: {
           api_key: string | null
@@ -782,6 +818,17 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      log_event: {
+        Args: {
+          p_actor_id: string
+          p_actor_role: string
+          p_entity_id: string
+          p_entity_type: string
+          p_event_type: string
+          p_payload?: Json
+        }
+        Returns: string
       }
       nf_confirmar: {
         Args: { p_nf_id: string; p_user_id: string }
