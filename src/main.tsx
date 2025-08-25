@@ -2,6 +2,7 @@ import { createRoot } from 'react-dom/client'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import App from './App.tsx'
 import './index.css'
+import './utils/debugUtils'
 
 // Criar instância do Query Client
 const queryClient = new QueryClient({
