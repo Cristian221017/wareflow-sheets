@@ -395,13 +395,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "notas_fiscais_cliente_id_fkey"
-            columns: ["cliente_id"]
-            isOneToOne: false
-            referencedRelation: "mv_cliente_dashboard"
-            referencedColumns: ["cliente_id"]
-          },
-          {
             foreignKeyName: "notas_fiscais_transportadora_id_fkey"
             columns: ["transportadora_id"]
             isOneToOne: false
@@ -487,13 +480,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "clientes"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "pedidos_liberacao_cliente_id_fkey"
-            columns: ["cliente_id"]
-            isOneToOne: false
-            referencedRelation: "mv_cliente_dashboard"
-            referencedColumns: ["cliente_id"]
           },
           {
             foreignKeyName: "pedidos_liberacao_nota_fiscal_id_fkey"
@@ -585,13 +571,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "clientes"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "pedidos_liberados_cliente_id_fkey"
-            columns: ["cliente_id"]
-            isOneToOne: false
-            referencedRelation: "mv_cliente_dashboard"
-            referencedColumns: ["cliente_id"]
           },
           {
             foreignKeyName: "pedidos_liberados_nota_fiscal_id_fkey"
@@ -757,13 +736,6 @@ export type Database = {
             referencedRelation: "clientes"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "user_clientes_cliente_id_fkey"
-            columns: ["cliente_id"]
-            isOneToOne: false
-            referencedRelation: "mv_cliente_dashboard"
-            referencedColumns: ["cliente_id"]
-          },
         ]
       }
       user_transportadoras: {
@@ -813,51 +785,7 @@ export type Database = {
       }
     }
     Views: {
-      mv_cliente_dashboard: {
-        Row: {
-          boletos_pendentes: number | null
-          boletos_vencidos: number | null
-          carregamentos_confirmados: number | null
-          cliente_id: string | null
-          nfs_armazenadas: number | null
-          solicitacoes_enviadas: number | null
-          transportadora_id: string | null
-          ultima_atualizacao_df: string | null
-          ultima_atualizacao_nf: string | null
-          valor_pendente: number | null
-          valor_vencido: number | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "clientes_transportadora_id_fkey"
-            columns: ["transportadora_id"]
-            isOneToOne: false
-            referencedRelation: "transportadoras"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      mv_transportadora_dashboard: {
-        Row: {
-          docs_vencendo: number | null
-          docs_vencidos: number | null
-          nfs_armazenadas: number | null
-          nfs_confirmadas: number | null
-          solicitacoes_pendentes: number | null
-          transportadora_id: string | null
-          ultima_atualizacao_df: string | null
-          ultima_atualizacao_nf: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "user_transportadoras_transportadora_id_fkey"
-            columns: ["transportadora_id"]
-            isOneToOne: false
-            referencedRelation: "transportadoras"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
+      [_ in never]: never
     }
     Functions: {
       atualizar_status_vencidos: {
