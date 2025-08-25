@@ -10,6 +10,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { SuperAdminTransportadoras } from './SuperAdminTransportadoras';
 import { SuperAdminUsuarios } from './SuperAdminUsuarios';
 import { SuperAdminDashboard } from './SuperAdminDashboard';
+import { DeploymentSafetyDashboard } from './DeploymentSafetyDashboard';
 import { FormCadastroUsuario } from './FormCadastroUsuario';
 import { FormCadastroTransportadora } from './FormCadastroTransportadora';
 import { LogsPage } from './LogsPage';
@@ -23,7 +24,8 @@ import {
   Plus,
   UserPlus,
   Menu,
-  FileText
+  FileText,
+  Shield
 } from 'lucide-react';
 
 export function SuperAdminLayout() {
@@ -36,6 +38,7 @@ export function SuperAdminLayout() {
     { value: "dashboard", label: "Dashboard", icon: BarChart3 },
     { value: "transportadoras", label: "Transportadoras", icon: Building2 },
     { value: "usuarios", label: "Usuários", icon: Users },
+    { value: "deployment", label: "Deployment Seguro", icon: Shield },
     { value: "logs", label: "Logs", icon: FileText },
     { value: "cadastro-usuario", label: "Cadastro", icon: UserPlus },
     { value: "configuracoes", label: "Configurações", icon: Settings },
@@ -199,7 +202,7 @@ export function SuperAdminLayout() {
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           {/* Desktop Navigation */}
           <div className="hidden md:block">
-            <TabsList className="grid w-full grid-cols-2 md:grid-cols-3 lg:grid-cols-6 max-w-5xl">
+            <TabsList className="grid w-full grid-cols-2 md:grid-cols-3 lg:grid-cols-7 max-w-6xl">
               {tabs.map((tab) => {
                 const Icon = tab.icon;
                 return (
@@ -227,6 +230,10 @@ export function SuperAdminLayout() {
 
           <TabsContent value="usuarios">
             <SuperAdminUsuarios />
+          </TabsContent>
+
+          <TabsContent value="deployment">
+            <DeploymentSafetyDashboard />
           </TabsContent>
 
           <TabsContent value="logs">
