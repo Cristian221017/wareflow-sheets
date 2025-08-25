@@ -104,10 +104,14 @@ export function FormCadastroCliente({ clienteToEdit, onSuccess }: FormCadastroCl
             .maybeSingle();
 
           if (!profErr && prof?.user_id) {
+            // Usar upsert para evitar erro de duplicidade
             const { error: linkErr } = await supabase
               .from('user_clientes' as any)
-              .insert({ user_id: prof.user_id, cliente_id: novoCliente.id });
-            if (linkErr && !linkErr.message?.includes('duplicate key')) {
+              .upsert(
+                { user_id: prof.user_id, cliente_id: novoCliente.id }, 
+                { onConflict: 'user_id,cliente_id', ignoreDuplicates: true }
+              );
+            if (linkErr) {
               console.warn('Falha ao vincular user↔cliente', linkErr);
             } else {
               console.log('✅ Vínculo user↔cliente criado com sucesso');
@@ -177,10 +181,14 @@ export function FormCadastroCliente({ clienteToEdit, onSuccess }: FormCadastroCl
       .maybeSingle();
 
     if (!profErr && prof?.user_id) {
+      // Usar upsert para evitar erro de duplicidade
       const { error: linkErr } = await supabase
         .from('user_clientes' as any)
-        .insert({ user_id: prof.user_id, cliente_id: id });
-      if (linkErr && !linkErr.message?.includes('duplicate key')) {
+        .upsert(
+          { user_id: prof.user_id, cliente_id: id }, 
+          { onConflict: 'user_id,cliente_id', ignoreDuplicates: true }
+        );
+      if (linkErr) {
         console.warn('Falha ao vincular user↔cliente', linkErr);
       } else {
         console.log('✅ Vínculo user↔cliente atualizado com sucesso');

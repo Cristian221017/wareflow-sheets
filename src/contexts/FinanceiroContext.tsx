@@ -192,7 +192,10 @@ export function FinanceiroProvider({ children }: { children: ReactNode }) {
       
       const { error: uploadError } = await supabase.storage
         .from('financeiro-docs')
-        .upload(uploadPath, fileData.file, { upsert: true });
+        .upload(uploadPath, fileData.file, { 
+          upsert: true, 
+          contentType: fileData.file.type 
+        });
       
       if (uploadError) {
         console.error('❌ Erro no upload para storage:', uploadError);
@@ -205,17 +208,23 @@ export function FinanceiroProvider({ children }: { children: ReactNode }) {
       const updateField = fileData.type === 'boleto' ? 'arquivo_boleto_path' : 'arquivo_cte_path';
       console.log('📝 Atualizando banco de dados:', { updateField, uploadPath, documentoId });
       
-      const { error: updErr } = await supabase
+      const { data: updateResult, error: updErr } = await supabase
         .from('documentos_financeiros' as any)
         .update({ [updateField]: uploadPath })
-        .eq('id', documentoId);
+        .eq('id', documentoId)
+        .select();
 
       if (updErr) {
         console.error('❌ Erro ao atualizar path no banco:', updErr);
         throw updErr;
       }
 
-      console.log('✅ Path atualizado no banco de dados');
+      if (!updateResult || updateResult.length === 0) {
+        console.error('❌ Nenhum documento foi atualizado - documento não encontrado');
+        throw new Error('Documento não encontrado para atualização');
+      }
+
+      console.log('✅ Path atualizado no banco de dados:', updateResult[0]);
 
       // Invalidar listas de financeiro (cliente e transportadora)
       queryClient.invalidateQueries({ queryKey: ['documentos_financeiros'] });
