@@ -60,7 +60,7 @@ const isVencido = (dataVencimento: string, status: string): boolean => {
 };
 
 export function FinanceiroTransportadoraTable() {
-  const { documentosFinanceiros, updateDocumentoFinanceiro, uploadArquivo, downloadArquivo, deleteDocumentoFinanceiro, atualizarStatusVencidos } = useFinanceiro();
+  const { documentos, updateDocumentoFinanceiro, uploadArquivo, downloadArquivo, deleteDocumentoFinanceiro, atualizarStatusVencidos } = useFinanceiro();
   const { clientes } = useAuth();
   const [selectedDoc, setSelectedDoc] = useState<DocumentoFinanceiro | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -79,7 +79,7 @@ export function FinanceiroTransportadoraTable() {
   const [editDataPagamento, setEditDataPagamento] = useState<string>('');
 
   const documentosFiltrados = useMemo(() => {
-    let filtered = [...documentosFinanceiros];
+    let filtered = [...documentos];
     
     // Search filter
     if (searchTerm) {
@@ -104,7 +104,7 @@ export function FinanceiroTransportadoraTable() {
     }
     
     return filtered;
-  }, [documentosFinanceiros, searchTerm, statusFilter, clienteFilter, clientes]);
+  }, [documentos, searchTerm, statusFilter, clienteFilter, clientes]);
 
   const getClienteNome = (clienteId: string) => {
     const cliente = clientes.find(c => c.id === clienteId);
@@ -183,17 +183,17 @@ export function FinanceiroTransportadoraTable() {
 
   // Estatísticas rápidas
   const stats = useMemo(() => {
-    const total = documentosFinanceiros.length;
-    const emAberto = documentosFinanceiros.filter(d => d.status === 'Em aberto').length;
-    const pagos = documentosFinanceiros.filter(d => d.status === 'Pago').length;
-    const vencidos = documentosFinanceiros.filter(d => d.status === 'Vencido').length;
+    const total = documentos.length;
+    const emAberto = documentos.filter(d => d.status === 'Em aberto').length;
+    const pagos = documentos.filter(d => d.status === 'Pago').length;
+    const vencidos = documentos.filter(d => d.status === 'Vencido').length;
     // Valor total dos documentos em aberto e vencidos
-    const valorTotal = documentosFinanceiros
+    const valorTotal = documentos
       .filter(d => d.valor && (d.status === 'Em aberto' || d.status === 'Vencido'))
       .reduce((sum, d) => sum + (d.valor || 0), 0);
 
     return { total, emAberto, pagos, vencidos, valorTotal };
-  }, [documentosFinanceiros]);
+  }, [documentos]);
 
   return (
     <div className="space-y-6">
@@ -343,7 +343,7 @@ export function FinanceiroTransportadoraTable() {
           {/* Results count */}
           <div className="flex items-center justify-between">
             <p className="text-sm text-muted-foreground">
-              Mostrando {documentosFiltrados.length} de {documentosFinanceiros.length} documentos
+              Mostrando {documentosFiltrados.length} de {documentos.length} documentos
             </p>
           </div>
 
@@ -529,7 +529,7 @@ export function FinanceiroTransportadoraTable() {
             )}
           </div>
 
-          {documentosFiltrados.length === 0 && documentosFinanceiros.length > 0 && (
+          {documentosFiltrados.length === 0 && documentos.length > 0 && (
             <div className="text-center py-8 text-muted-foreground">
               <Search className="w-12 h-12 mx-auto mb-4 opacity-50" />
               <p>Nenhum documento encontrado com os filtros aplicados</p>

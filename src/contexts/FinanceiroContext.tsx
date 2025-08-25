@@ -24,7 +24,7 @@ const isDateOverdue = (dateString: string, status: string): boolean => {
 };
 
 interface FinanceiroContextType {
-  documentosFinanceiros: DocumentoFinanceiro[];
+  documentos: DocumentoFinanceiro[];
   loading: boolean;
   addDocumentoFinanceiro: (data: DocumentoFinanceiroFormData) => Promise<{ id: string } | null>;
   updateDocumentoFinanceiro: (id: string, data: Partial<DocumentoFinanceiroFormData>) => Promise<void>;
@@ -323,7 +323,7 @@ export function FinanceiroProvider({ children }: { children: ReactNode }) {
   return (
     <FinanceiroContext.Provider
       value={{
-        documentosFinanceiros,
+        documentos: documentosFinanceiros,
         loading,
         addDocumentoFinanceiro,
         updateDocumentoFinanceiro,

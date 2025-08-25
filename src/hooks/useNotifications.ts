@@ -7,7 +7,7 @@ import { useWMS } from '@/contexts/WMSContext';
 export function useNotifications() {
   const { armazenadas, solicitadas, confirmadas } = useAllNFs();
   const { pedidosLiberados } = useWMS();
-  const { documentosFinanceiros } = useFinanceiro();
+  const { documentos } = useFinanceiro();
   const { hasNewItems, getLastVisit } = useLastVisit();
 
   const notifications = useMemo(() => {
@@ -28,13 +28,13 @@ export function useNotifications() {
       // Para clientes
       nfsConfirmadas: countNewItems('nfs-confirmadas', confirmadas || []),
       pedidosLiberados: countNewItems('pedidos-liberados', pedidosLiberados || []),
-      documentosFinanceiros: countNewItems('documentos-financeiros', documentosFinanceiros || []),
+      documentosFinanceiros: countNewItems('documentos-financeiros', documentos || []),
       
       // Para transportadores  
       solicitacoesPendentes: countNewItems('solicitacoes-pendentes', solicitadas || []),
       nfsArmazenadas: countNewItems('nfs-armazenadas', armazenadas || []),
     };
-  }, [armazenadas, solicitadas, confirmadas, pedidosLiberados, documentosFinanceiros, getLastVisit]);
+  }, [armazenadas, solicitadas, confirmadas, pedidosLiberados, documentos, getLastVisit]);
 
   return notifications;
 }
