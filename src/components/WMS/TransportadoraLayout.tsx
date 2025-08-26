@@ -21,6 +21,7 @@ import IntegrationConfig from './IntegrationConfig';
 import { NotasFiscaisTable } from './NotasFiscaisTable';
 import { SolicitacoesPendentesTable } from './SolicitacoesPendentesTable';
 import { PedidosConfirmadosTransportadora } from './PedidosConfirmadosTransportadora';
+import { LogsPage } from './LogsPage';
 
 import { 
   Plus,
@@ -29,7 +30,8 @@ import {
   User,
   Menu,
   Receipt,
-  UserPlus
+  UserPlus,
+  Activity
 } from 'lucide-react';
 
 import { useAuth } from '@/contexts/AuthContext';
@@ -276,12 +278,13 @@ export function TransportadoraLayout() {
                   Financeiro
                 </TabsTrigger>
                 <TabsTrigger value="relatorios" className="text-xs px-2 py-2 whitespace-nowrap">Relatórios</TabsTrigger>
+                <TabsTrigger value="logs" className="text-xs px-2 py-2 whitespace-nowrap">Logs</TabsTrigger>
               </TabsList>
             </div>
             
             {/* Desktop: Grid layout */}
             <div className="hidden lg:block mb-6">
-              <TabsList className="grid w-full grid-cols-7 gap-1">
+              <TabsList className="grid w-full grid-cols-8 gap-1">
                 <TabsTrigger value="dashboard" className="text-sm">Dashboard</TabsTrigger>
                 <TabsTrigger value="fluxo-nfs" className="text-sm">Fluxo de NFs</TabsTrigger>
                 <TabsTrigger 
@@ -308,6 +311,7 @@ export function TransportadoraLayout() {
                   Financeiro
                 </TabsTrigger>
                 <TabsTrigger value="relatorios" className="text-sm">Relatórios</TabsTrigger>
+                <TabsTrigger value="logs" className="text-sm">Logs</TabsTrigger>
               </TabsList>
             </div>
             
@@ -337,6 +341,10 @@ export function TransportadoraLayout() {
             
             <TabsContent value="relatorios" className="space-y-4">
               <RelatorioControleCargas />
+            </TabsContent>
+            
+            <TabsContent value="logs" className="space-y-4">
+              <LogsPage />
             </TabsContent>
           </Tabs>
         </div>
