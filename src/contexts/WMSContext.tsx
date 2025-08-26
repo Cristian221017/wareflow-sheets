@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import { solicitarNF, confirmarNF, recusarNF } from "@/lib/nfApi";
 import { useQueryClient } from '@tanstack/react-query';
 import { notificationService } from '@/utils/notificationService';
+import { log, warn, error as logError } from '@/utils/logger';
 
 interface WMSContextType {
   // Data
@@ -155,8 +156,8 @@ export function WMSProvider({ children }: { children: ReactNode }) {
         setPedidosLiberados(transformedLiberados);
       }
 
-    } catch (error) {
-      console.error('❌ Erro ao carregar dados WMS:', error);
+    } catch (err) {
+      logError('❌ Erro ao carregar dados WMS:', err);
       toast.error('Erro ao carregar dados do sistema');
     } finally {
       setIsLoading(false);
@@ -166,7 +167,7 @@ export function WMSProvider({ children }: { children: ReactNode }) {
   // Add Nota Fiscal
   const addNotaFiscal = async (nfData: Omit<NotaFiscal, 'id' | 'createdAt'>) => {
     try {
-      console.log('📦 Adicionando nova NF:', nfData);
+      log('📦 Adicionando nova NF:', nfData);
 
       // Get cliente_id from cnpj
       const { data: cliente } = await supabase
@@ -215,24 +216,24 @@ export function WMSProvider({ children }: { children: ReactNode }) {
             clienteData.razao_social
           );
         }
-      } catch (emailError) {
-        console.warn('⚠️ Erro ao enviar notificação de NF:', emailError);
-      }
+        } catch (emailError) {
+        warn('⚠️ Erro ao enviar notificação de NF:', emailError);
+        }
       
       toast.success('✅ Nota Fiscal cadastrada com sucesso!');
       await loadData();
       
-    } catch (error: any) {
-      console.error('❌ Erro ao adicionar NF:', error);
-      toast.error(error.message || 'Erro ao cadastrar Nota Fiscal');
-      throw error;
+    } catch (err: any) {
+      logError('❌ Erro ao adicionar NF:', err);
+      toast.error(err.message || 'Erro ao cadastrar Nota Fiscal');
+      throw err;
     }
   };
 
   // Solicitar carregamento (Cliente)
   const solicitarCarregamento = async (numeroNF: string) => {
     try {
-      console.log('🚚 Solicitando carregamento para NF:', numeroNF);
+      log('🚚 Solicitando carregamento para NF:', numeroNF);
 
       const nf = notasFiscais.find(n => n.numeroNF === numeroNF);
       if (!nf) {
@@ -260,25 +261,25 @@ export function WMSProvider({ children }: { children: ReactNode }) {
             clienteData.razao_social
           );
         }
-      } catch (emailError) {
-        console.warn('⚠️ Erro ao enviar notificação de solicitação:', emailError);
-      }
+        } catch (emailError) {
+        warn('⚠️ Erro ao enviar notificação de solicitação:', emailError);
+        }
       
       invalidateAll();
       toast.success(`✅ Carregamento solicitado para NF ${numeroNF}!`);
       await loadData();
       
-    } catch (error: any) {
-      console.error('❌ Erro ao solicitar carregamento:', error);
-      toast.error(error.message || 'Erro ao solicitar carregamento');
-      throw error;
+    } catch (err: any) {
+      logError('❌ Erro ao solicitar carregamento:', err);
+      toast.error(err.message || 'Erro ao solicitar carregamento');
+      throw err;
     }
   };
 
   // Aprovar carregamento (Transportadora)
   const aprovarCarregamento = async (numeroNF: string, transportadora: string) => {
     try {
-      console.log('✅ Aprovando carregamento para NF:', numeroNF);
+      log('✅ Aprovando carregamento para NF:', numeroNF);
 
       const nf = notasFiscais.find(n => n.numeroNF === numeroNF);
       if (!nf) {
@@ -306,25 +307,25 @@ export function WMSProvider({ children }: { children: ReactNode }) {
             transportadora
           );
         }
-      } catch (emailError) {
-        console.warn('⚠️ Erro ao enviar notificação de confirmação:', emailError);
-      }
+        } catch (emailError) {
+        warn('⚠️ Erro ao enviar notificação de confirmação:', emailError);
+        }
       
       invalidateAll();
       toast.success(`✅ Carregamento aprovado para NF ${numeroNF}!`);
       await loadData();
       
-    } catch (error: any) {
-      console.error('❌ Erro ao aprovar carregamento:', error);
-      toast.error(error.message || 'Erro ao aprovar carregamento');
-      throw error;
+    } catch (err: any) {
+      logError('❌ Erro ao aprovar carregamento:', err);
+      toast.error(err.message || 'Erro ao aprovar carregamento');
+      throw err;
     }
   };
 
   // Rejeitar carregamento (Transportadora)
   const rejeitarCarregamento = async (numeroNF: string, motivo: string) => {
     try {
-      console.log('❌ Rejeitando carregamento para NF:', numeroNF, 'Motivo:', motivo);
+      log('❌ Rejeitando carregamento para NF:', numeroNF, 'Motivo:', motivo);
 
       const nf = notasFiscais.find(n => n.numeroNF === numeroNF);
       if (!nf) {
@@ -340,10 +341,10 @@ export function WMSProvider({ children }: { children: ReactNode }) {
       toast.success(`❌ Carregamento rejeitado para NF ${numeroNF}!`);
       await loadData();
       
-    } catch (error: any) {
-      console.error('❌ Erro ao rejeitar carregamento:', error);
-      toast.error(error.message || 'Erro ao rejeitar carregamento');
-      throw error;
+    } catch (err: any) {
+      logError('❌ Erro ao rejeitar carregamento:', err);
+      toast.error(err.message || 'Erro ao rejeitar carregamento');
+      throw err;
     }
   };
 
@@ -372,10 +373,10 @@ export function WMSProvider({ children }: { children: ReactNode }) {
       toast.success('Nota Fiscal excluída com sucesso');
       await loadData();
       
-    } catch (error: any) {
-      console.error('❌ Erro ao excluir NF:', error);
-      toast.error(error.message || 'Erro ao excluir Nota Fiscal');
-      throw error;
+    } catch (err: any) {
+      logError('❌ Erro ao excluir NF:', err);
+      toast.error(err.message || 'Erro ao excluir Nota Fiscal');
+      throw err;
     }
   };
 
@@ -396,10 +397,10 @@ export function WMSProvider({ children }: { children: ReactNode }) {
       toast.success('Pedido de liberação excluído com sucesso');
       await loadData();
       
-    } catch (error: any) {
-      console.error('❌ Erro ao excluir pedido:', error);
-      toast.error(error.message || 'Erro ao excluir pedido');
-      throw error;
+    } catch (err: any) {
+      logError('❌ Erro ao excluir pedido:', err);
+      toast.error(err.message || 'Erro ao excluir pedido');
+      throw err;
     }
   };
 
@@ -415,10 +416,10 @@ export function WMSProvider({ children }: { children: ReactNode }) {
       toast.success('Pedido liberado excluído com sucesso');
       await loadData();
       
-    } catch (error: any) {
-      console.error('❌ Erro ao excluir pedido liberado:', error);
-      toast.error(error.message || 'Erro ao excluir pedido liberado');
-      throw error;
+    } catch (err: any) {
+      logError('❌ Erro ao excluir pedido liberado:', err);
+      toast.error(err.message || 'Erro ao excluir pedido liberado');
+      throw err;
     }
   };
 

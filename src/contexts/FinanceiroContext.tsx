@@ -8,6 +8,7 @@ import { saveFinanceFilePathRPC } from '@/lib/financeiro/saveFinanceFilePathRPC'
 import { saveFinanceFilePathV2 } from '@/lib/financeiro/saveFinanceFilePathV2';
 import { useFeatureFlags } from '@/hooks/useFeatureFlags';
 import { notificationService } from '@/utils/notificationService';
+import { log, warn, error as logError } from '@/utils/logger';
 
 // Utilitários para padronizar datas
 const formatDateForDatabase = (dateString: string): string => {
@@ -15,6 +16,13 @@ const formatDateForDatabase = (dateString: string): string => {
   // Garante que a data seja interpretada corretamente no timezone local
   return dateString;
 };
+
+// Sanitização de path para uploads
+function slugify(s: string): string {
+  return s.normalize('NFD').replace(/[\u0300-\u036f]/g, '') // remove acentos
+          .replace(/[^a-zA-Z0-9._-]/g, '_')                 // só seguro
+          .replace(/_+/g, '_').toLowerCase();
+}
 
 const isDateOverdue = (dateString: string, status: string): boolean => {
   if (!dateString || status !== 'Em aberto') return false;
@@ -62,7 +70,7 @@ export function FinanceiroProvider({ children }: { children: ReactNode }) {
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('❌ Erro ao buscar documentos financeiros:', error);
+        logError('❌ Erro ao buscar documentos financeiros:', error);
         toast.error('Erro ao carregar documentos financeiros');
         return;
       }
@@ -84,8 +92,8 @@ export function FinanceiroProvider({ children }: { children: ReactNode }) {
       })) as DocumentoFinanceiro[];
 
       setDocumentosFinanceiros(documentosFormatados || []);
-    } catch (error) {
-      console.error('Erro inesperado ao buscar documentos financeiros:', error);
+    } catch (err) {
+      logError('Erro inesperado ao buscar documentos financeiros:', err);
       toast.error('Erro inesperado ao carregar documentos');
     } finally {
       setLoading(false);
@@ -124,15 +132,15 @@ export function FinanceiroProvider({ children }: { children: ReactNode }) {
         .single();
 
       if (error) {
-        console.error('Erro ao inserir documento financeiro:', error);
+        logError('Erro ao inserir documento financeiro:', error);
         throw new Error('Erro ao cadastrar documento financeiro');
       }
 
       await fetchDocumentosFinanceiros();
       return { id: (insertedData as any).id };
-    } catch (error) {
-      console.error('Erro ao adicionar documento financeiro:', error);
-      throw error;
+    } catch (err) {
+      logError('Erro ao adicionar documento financeiro:', err);
+      throw err;
     }
   };
 
@@ -153,15 +161,15 @@ export function FinanceiroProvider({ children }: { children: ReactNode }) {
         .eq('id', id);
 
       if (error) {
-        console.error('Erro ao atualizar documento financeiro:', error);
+        logError('Erro ao atualizar documento financeiro:', error);
         throw new Error('Erro ao atualizar documento financeiro');
       }
 
       await fetchDocumentosFinanceiros();
       toast.success('Documento financeiro atualizado com sucesso!');
-    } catch (error) {
-      console.error('Erro ao atualizar documento financeiro:', error);
-      throw error;
+    } catch (err) {
+      logError('Erro ao atualizar documento financeiro:', err);
+      throw err;
     }
   };
 
@@ -173,15 +181,15 @@ export function FinanceiroProvider({ children }: { children: ReactNode }) {
         .eq('id', id);
 
       if (error) {
-        console.error('Erro ao excluir documento financeiro:', error);
+        logError('Erro ao excluir documento financeiro:', error);
         throw new Error('Erro ao excluir documento financeiro');
       }
 
       await fetchDocumentosFinanceiros();
       toast.success('Documento financeiro excluído com sucesso!');
-    } catch (error) {
-      console.error('Erro ao excluir documento financeiro:', error);
-      throw error;
+    } catch (err) {
+      logError('Erro ao excluir documento financeiro:', err);
+      throw err;
     }
   };
 
@@ -192,8 +200,10 @@ export function FinanceiroProvider({ children }: { children: ReactNode }) {
 
     try {
       // B) Salvar caminho do arquivo após upload + invalidar listas
-      const uploadPath = `${user.id}/${fileData.numeroCte}/${fileData.type}-${fileData.file.name}`;
-      console.log('📤 Iniciando upload:', { uploadPath, documentoId, fileType: fileData.type });
+      const safeNumber = slugify(fileData.numeroCte || 'sem_numero');
+      const safeName = slugify(fileData.file.name);
+      const uploadPath = `${user.id}/${safeNumber}/${fileData.type}-${safeName}`;
+      log('📤 Iniciando upload:', { uploadPath, documentoId, fileType: fileData.type });
       
       // 1) Upload do arquivo
       const { error: uploadError } = await supabase.storage
@@ -204,51 +214,58 @@ export function FinanceiroProvider({ children }: { children: ReactNode }) {
         });
       
       if (uploadError) {
-        console.error('❌ Erro no upload para storage:', uploadError);
+        logError('❌ Erro no upload para storage:', uploadError);
         throw uploadError;
       }
       
-      console.log('✅ Upload para storage concluído');
+      log('✅ Upload para storage concluído');
 
       // 2) Salvar path no registro usando RPC segura (com versionamento)
       try {
-        console.log('📝 Salvando path no banco de dados via RPC:', { documentoId, type: fileData.type, uploadPath });
+        log('📝 Salvando path no banco de dados via RPC:', { documentoId, type: fileData.type, uploadPath });
         
         // Use v2 RPC if feature flag is enabled, fallback to v1
         if (isEnabled('enable_new_financeiro_v2', false)) {
-          console.log('🆕 Usando RPC v2 para salvar path');
+          log('🆕 Usando RPC v2 para salvar path');
           await saveFinanceFilePathV2(documentoId, fileData.type as "boleto" | "cte", uploadPath);
         } else {
-          console.log('📝 Usando RPC v1 para salvar path');
+          log('📝 Usando RPC v1 para salvar path');
           await saveFinanceFilePathRPC(documentoId, fileData.type as "boleto" | "cte", uploadPath);
         }
         
-        console.log('✅ Path salvo no banco de dados via RPC');
+        log('✅ Path salvo no banco de dados via RPC');
       } catch (pathError) {
-        console.error('❌ Erro ao salvar path no banco:', pathError);
+        logError('❌ Erro ao salvar path no banco:', pathError);
         
         // Rollback defensivo: remover arquivo órfão
         await supabase.storage.from('financeiro-docs').remove([uploadPath]);
-        console.log('🗑️ Arquivo órfão removido devido ao erro de path');
+        log('🗑️ Arquivo órfão removido devido ao erro de path');
         
         throw pathError;
       }
 
-      // 3) Invalidar listas de financeiro (cliente e transportadora)
-      queryClient.invalidateQueries({ queryKey: ['documentos_financeiros'] });
-      queryClient.invalidateQueries({ queryKey: ['financeiro'] });
+      // 3) Invalidar listas de financeiro (cliente e transportadora) com escopo específico
+      const doc = documentosFinanceiros.find(d => d.id === documentoId);
+      if (doc) {
+        queryClient.invalidateQueries({ queryKey: ['documentos_financeiros', 'transportadora', doc.transportadoraId] });
+        queryClient.invalidateQueries({ queryKey: ['documentos_financeiros', 'cliente', doc.clienteId] });
+      } else {
+        // Fallback para invalidação geral
+        queryClient.invalidateQueries({ queryKey: ['documentos_financeiros'] });
+        queryClient.invalidateQueries({ queryKey: ['financeiro'] });
+      }
       
       await fetchDocumentosFinanceiros();
       toast.success(`${fileData.type === 'boleto' ? 'Boleto' : 'CTE'} anexado com sucesso!`);
-    } catch (error) {
-      console.error('❌ Erro completo no upload de arquivo:', error);
-      throw error;
+    } catch (err) {
+      logError('❌ Erro completo no upload de arquivo:', err);
+      throw err;
     }
   };
 
   const downloadArquivo = async (documentoId: string, type: 'boleto' | 'cte') => {
     try {
-      console.log('📥 Iniciando download:', { documentoId, type });
+      log('📥 Iniciando download:', { documentoId, type });
       
       const documento = documentosFinanceiros.find(d => d.id === documentoId);
       if (!documento) {
@@ -256,38 +273,50 @@ export function FinanceiroProvider({ children }: { children: ReactNode }) {
       }
 
       const filePath = type === 'boleto' ? documento.arquivoBoletoPath : documento.arquivoCtePath;
-      console.log('📂 Path do arquivo:', filePath);
+      log('📂 Path do arquivo:', filePath);
       
       if (!filePath) {
         throw new Error(`${type === 'boleto' ? 'Boleto' : 'CTE'} não encontrado`);
       }
 
-      console.log('📥 Baixando arquivo do storage:', filePath);
-      const { data, error } = await supabase.storage
+      log('📥 Baixando arquivo do storage:', filePath);
+      const { data, error: downloadError } = await supabase.storage
         .from('financeiro-docs')
         .download(filePath);
 
-      if (error) {
-        console.error('❌ Erro no download:', error);
-        throw new Error('Erro ao baixar arquivo');
+      if (!downloadError && data) {
+        log('✅ Download direto bem-sucedido');
+        const url = URL.createObjectURL(data);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `${documento.numeroCte}_${type}.${filePath.split('.').pop()}`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+        toast.success(`${type === 'boleto' ? 'Boleto' : 'CTE'} baixado com sucesso!`);
+        return;
       }
 
-      console.log('✅ Arquivo baixado com sucesso');
+      // 🔁 Fallback com URL assinada (60s)
+      warn('⚠️ Download direto falhou, usando fallback com URL assinada:', downloadError);
+      const { data: signedData, error: signedError } = await supabase.storage
+        .from('financeiro-docs')
+        .createSignedUrl(filePath, 60);
       
-      // Criar URL de download e disparar download
-      const url = URL.createObjectURL(data);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `${documento.numeroCte}_${type}.${filePath.split('.').pop()}`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
+      if (signedData?.signedUrl) {
+        log('✅ URL assinada criada com sucesso');
+        window.open(signedData.signedUrl, '_blank');
+        toast.success(`${type === 'boleto' ? 'Boleto' : 'CTE'} baixado com sucesso!`);
+        return;
+      }
 
-      toast.success(`${type === 'boleto' ? 'Boleto' : 'CTE'} baixado com sucesso!`);
-    } catch (error) {
-      console.error('❌ Erro completo no download:', error);
-      toast.error(error instanceof Error ? error.message : 'Erro ao baixar arquivo');
+      // Registrar evento de falha
+      logError('❌ Falha completa no download:', { downloadError, signedError, filePath });
+      throw new Error(downloadError?.message || signedError?.message || 'Falha ao baixar arquivo');
+    } catch (err) {
+      logError('❌ Erro completo no download:', err);
+      toast.error(err instanceof Error ? err.message : 'Erro ao baixar arquivo');
     }
   };
 
@@ -296,13 +325,13 @@ export function FinanceiroProvider({ children }: { children: ReactNode }) {
       const { error } = await supabase.rpc('atualizar_status_vencidos' as any);
       
       if (error) {
-        console.error('Erro ao atualizar status vencidos:', error);
+        logError('Erro ao atualizar status vencidos:', error);
         return;
       }
 
       await fetchDocumentosFinanceiros();
-    } catch (error) {
-      console.error('Erro ao atualizar status vencidos:', error);
+    } catch (err) {
+      logError('Erro ao atualizar status vencidos:', err);
     }
   };
 
