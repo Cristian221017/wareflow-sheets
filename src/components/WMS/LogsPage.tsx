@@ -10,7 +10,7 @@ import { Activity, Filter, RefreshCw, Search, TestTube } from 'lucide-react';
 import { useSystemLogs, type LogFilters } from '@/hooks/useSystemLogs';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { log } from '@/utils/logger';
+import { log, error as logError } from '@/utils/logger';
 import { supabase } from '@/integrations/supabase/client';
 
 export function LogsPage() {
@@ -42,13 +42,13 @@ export function LogsPage() {
       });
 
       if (error) {
-        console.error("Erro ao gerar log de teste:", error);
+        logError("Erro ao gerar log de teste:", error);
       } else {
-        console.log("Log de teste gerado com sucesso!");
+        log("Log de teste gerado com sucesso!");
         refetch(); // recarrega tabela de logs
       }
     } catch (e) {
-      console.error("Erro ao gerar log:", e);
+      logError("Erro ao gerar log:", e);
     }
   };
 

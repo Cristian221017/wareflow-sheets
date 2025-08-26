@@ -3,6 +3,7 @@ import { User as SupabaseUser, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { clientPasswordManager } from '@/utils/clientPasswordManager';
 import { User, AuthContextType } from '@/types/auth';
+import { log, warn, error as logError, audit } from '@/utils/logger';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -13,12 +14,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [clientes, setClientes] = useState<User[]>([]);
 
   useEffect(() => {
-    console.log('Initializing auth state...');
+    log('Initializing auth state...');
     
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log('Auth state changed:', event, session?.user?.id);
+        log('Auth state changed:', event, session?.user?.id);
         setSession(session);
         
         if (session?.user) {
@@ -35,7 +36,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     // Check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
-      console.log('Initial session check:', session?.user?.id);
+      log('Initial session check:', session?.user?.id);
       setSession(session);
       
       if (session?.user) {
@@ -54,11 +55,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const loadUserProfile = async (supabaseUser: SupabaseUser) => {
     try {
-      console.log('Loading user profile for:', supabaseUser.id);
+      log('Loading user profile for:', supabaseUser.id);
       
       // Force a fresh query by adding a timestamp
       const timestamp = Date.now();
-      console.log('🔄 Query timestamp:', timestamp);
+      log('🔄 Query timestamp:', timestamp);
       
       // Create a timeout promise
       const timeoutPromise = new Promise((_, reject) => {
@@ -70,12 +71,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       const userData = await Promise.race([userDataPromise, timeoutPromise]) as User;
       
-      console.log('User profile loaded successfully:', userData);
+      log('User profile loaded successfully:', userData);
+      audit('LOGIN_SUCCESS', 'AUTH', { userId: supabaseUser.id, userEmail: userData.email });
       setUser(userData);
       setLoading(false);
 
     } catch (error) {
-      console.error('Error loading user profile:', error);
+      logError('Error loading user profile:', error);
+      audit('LOGIN_FAILURE', 'AUTH', { userId: supabaseUser.id, error: String(error) });
       
       // Create fallback user data
       const fallbackUser: User = {
@@ -87,14 +90,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         transportadoraId: undefined
       };
       
-      console.log('Using fallback user data:', fallbackUser);
+      warn('Using fallback user data:', { fallbackUser });
       setUser(fallbackUser);
       setLoading(false);
     }
   };
 
   const getUserData = async (supabaseUser: SupabaseUser): Promise<User> => {
-    console.log('🔍 Starting getUserData for:', supabaseUser.email);
+    log('🔍 Starting getUserData for:', supabaseUser.email);
     
     // First check system user (admin/transportadora roles)
     try {
@@ -115,8 +118,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const profile = profileResult.data;
       const userRole = roleResult.data;
 
-      console.log('🔍 Profile result:', profile);
-      console.log('🔍 Role result:', userRole);
+      log('🔍 Profile result:', profile);
+      log('🔍 Role result:', userRole);
 
       // If user has a system role (admin/transportadora)
       if (userRole && userRole.role) {
@@ -129,11 +132,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           transportadoraId: userRole.transportadora_id
         };
 
-        console.log('🔍 System user detected:', userData);
+        log('🔍 System user detected:', userData);
         return userData;
       }
     } catch (error) {
-      console.error('Error checking system user:', error);
+      logError('Error checking system user:', error);
     }
 
     // If not a system user, try cliente via email match 
@@ -145,7 +148,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .eq('status', 'ativo')
         .maybeSingle();
 
-      console.log('🔍 Cliente query result:', clienteData);
+      log('🔍 Cliente query result:', clienteData);
 
       if (clienteData && !clienteError) {
         const userData: User = {
@@ -160,15 +163,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           transportadoraId: clienteData.transportadora_id
         };
 
-        console.log('🔍 Cliente user detected:', userData);
+        log('🔍 Cliente user detected:', userData);
         return userData;
       }
     } catch (error) {
-      console.error('Error checking cliente:', error);
+      logError('Error checking cliente:', error);
     }
 
     // Fallback - create basic user
-    console.log('🔍 Using fallback user data');
+    warn('🔍 Using fallback user data');
     throw new Error('User not found in any table');
   };
 
@@ -182,14 +185,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
 
       if (error) {
-        console.error('Login error:', error);
+        logError('Login error:', error);
+        audit('LOGIN_FAILURE', 'AUTH', { email, error: error.message });
         setLoading(false);
         return false;
       }
 
+      audit('LOGIN_SUCCESS', 'AUTH', { email });
       return true;
-    } catch (error) {
-      console.error('Login error:', error);
+    } catch (err) {
+      logError('Login error:', err);
+      audit('LOGIN_FAILURE', 'AUTH', { email, error: String(err) });
       setLoading(false);
       return false;
     }
@@ -223,6 +229,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const logout = async () => {
     setLoading(true);
+    audit('LOGOUT', 'AUTH', { userId: user?.id, userEmail: user?.email });
     await supabase.auth.signOut();
     setUser(null);
     setSession(null);
@@ -258,7 +265,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // 2. Se uma senha foi fornecida, criar conta de usuário
       if (clienteData.senha) {
         try {
-          console.log(`🔧 Criando autenticação para novo cliente: ${clienteData.email}`);
+          log(`🔧 Criando autenticação para novo cliente: ${clienteData.email}`);
           const authResult = await clientPasswordManager.createClientAccount(
             clienteData.email,
             clienteData.senha,
@@ -266,12 +273,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           );
           
           if (authResult.success) {
-            console.log('✅ Conta criada com sucesso no cadastro:', authResult.message);
+            log('✅ Conta criada com sucesso no cadastro:', authResult.message);
+            audit('VINCULO_USER_CLIENTE', 'AUTH', { clienteEmail: clienteData.email, transportadoraId: user.transportadoraId });
           } else if ('error' in authResult) {
-            console.warn('⚠️ Aviso na criação de conta:', authResult.error);
+            warn('⚠️ Aviso na criação de conta:', authResult.error);
           }
         } catch (authError) {
-          console.error('Erro ao criar autenticação:', authError);
+          logError('Erro ao criar autenticação:', authError);
         }
       }
 
@@ -279,9 +287,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       await loadClientes();
       
       return { id: data.id };
-    } catch (error) {
-      console.error('Error adding cliente:', error);
-      throw error;
+    } catch (err) {
+      logError('Error adding cliente:', err);
+      throw err;
     }
   };
 
@@ -296,7 +304,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .eq('status', 'ativo');
 
       if (error) {
-        console.error('Error loading clientes:', error);
+        logError('Error loading clientes:', error);
         return;
       }
 
@@ -312,8 +320,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       })) || [];
 
       setClientes(clientesFormatted);
-    } catch (error) {
-      console.error('Error in loadClientes:', error);
+    } catch (err) {
+      logError('Error in loadClientes:', err);
     }
   };
 
