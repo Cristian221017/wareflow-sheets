@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { log, warn, error as logError } from '@/utils/logger';
 import {
   Dialog,
   DialogContent,
@@ -117,7 +118,7 @@ export function SafeDeploymentDialog({
         }
       }
     } catch (error) {
-      console.error('Erro no deployment seguro:', error);
+      logError('Erro no deployment seguro:', error);
       setDeploymentResult('failed');
       
       // Mark current step as failed
