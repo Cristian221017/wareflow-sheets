@@ -1,11 +1,12 @@
-import { useState, useEffect } from 'react';
+import { log, warn, error as logError } from '@/utils/logger';
+import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
+import { useState, useEffect } from 'react';
 import { FormCadastroCliente } from './FormCadastroCliente';
 import { clientPasswordManager } from '@/utils/clientPasswordManager';
 import {
@@ -63,7 +64,7 @@ export function ClientesTable() {
       if (error) throw error;
       setClientes(data || []);
     } catch (error) {
-      console.error('Erro ao carregar clientes:', error);
+      logError('Erro ao carregar clientes:', error);
       showToast({
         title: 'Erro',
         description: 'Não foi possível carregar os clientes',
@@ -92,7 +93,7 @@ export function ClientesTable() {
         variant: 'default',
       });
     } catch (error) {
-      console.error('Erro ao alterar status do cliente:', error);
+      logError('Erro ao alterar status do cliente:', error);
       showToast({
         title: 'Erro',
         description: 'Não foi possível alterar o status do cliente',
@@ -143,7 +144,7 @@ export function ClientesTable() {
           .eq('cliente_id', clienteId);
         
         if (pedidosLiberadosError) {
-          console.error('Erro ao excluir pedidos liberados:', pedidosLiberadosError);
+          logError('Erro ao excluir pedidos liberados:', pedidosLiberadosError);
         }
 
         // 2. Excluir pedidos de liberação
@@ -153,7 +154,7 @@ export function ClientesTable() {
           .eq('cliente_id', clienteId);
         
         if (pedidosLiberacaoError) {
-          console.error('Erro ao excluir pedidos de liberação:', pedidosLiberacaoError);
+          logError('Erro ao excluir pedidos de liberação:', pedidosLiberacaoError);
         }
 
         // 3. Excluir notas fiscais
@@ -163,7 +164,7 @@ export function ClientesTable() {
           .eq('cliente_id', clienteId);
         
         if (notasError) {
-          console.error('Erro ao excluir notas fiscais:', notasError);
+          logError('Erro ao excluir notas fiscais:', notasError);
         }
 
         // 4. Finalmente, excluir o cliente
@@ -173,7 +174,7 @@ export function ClientesTable() {
           .eq('id', clienteId);
 
         if (error) {
-          console.error('Erro ao excluir cliente:', error);
+          logError('Erro ao excluir cliente:', error);
           throw error;
         }
 
@@ -184,7 +185,7 @@ export function ClientesTable() {
           variant: 'default',
         });
       } catch (error) {
-        console.error('Erro ao excluir cliente:', error);
+        logError('Erro ao excluir cliente:', error);
         showToast({
           title: 'Erro',
           description: 'Não foi possível excluir o cliente. Verifique se você tem permissões adequadas.',

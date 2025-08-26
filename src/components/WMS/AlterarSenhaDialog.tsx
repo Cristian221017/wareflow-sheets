@@ -21,6 +21,7 @@ import {
   DialogTitle 
 } from '@/components/ui/dialog';
 import { supabase } from '@/integrations/supabase/client';
+import { log, warn, error as logError } from '@/utils/logger';
 import { toast } from 'sonner';
 import { KeyRound, Eye, EyeOff } from 'lucide-react';
 
@@ -66,7 +67,7 @@ export function AlterarSenhaDialog({ isOpen, onClose, userEmail, userName }: Alt
       });
 
       if (error) {
-        console.error('Erro ao alterar senha:', error);
+        logError('Erro ao alterar senha:', error);
         toast.error('Erro ao alterar senha: ' + error.message);
         return;
       }
@@ -80,7 +81,7 @@ export function AlterarSenhaDialog({ isOpen, onClose, userEmail, userName }: Alt
       form.reset();
       onClose();
     } catch (error) {
-      console.error('Erro ao alterar senha:', error);
+      logError('Erro ao alterar senha:', error);
       toast.error('Erro ao alterar senha');
     } finally {
       setIsLoading(false);

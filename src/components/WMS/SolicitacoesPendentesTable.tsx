@@ -14,7 +14,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Input } from '@/components/ui/input';
 import { Clock, CheckCircle, X, Truck } from 'lucide-react';
 import { useState } from 'react';
-import { toast } from 'sonner';
+import { log, warn, error as logError } from '@/utils/logger';
 import { useNFs, useFluxoMutations } from '@/hooks/useNFs';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -52,7 +52,7 @@ function AprovarDialog({ nfId, numeroNf, numeroPedido }: { nfId: string, numeroN
       setOpen(false);
       form.reset();
     } catch (error) {
-      console.error('Erro ao aprovar solicitação:', error);
+      logError('Erro ao aprovar solicitação:', error);
     }
   };
 
@@ -141,7 +141,7 @@ function RecusarDialog({ nfId, numeroNf, numeroPedido }: { nfId: string, numeroN
       setOpen(false);
       form.reset();
     } catch (error) {
-      console.error('Erro ao recusar solicitação:', error);
+      logError('Erro ao recusar solicitação:', error);
     }
   };
 

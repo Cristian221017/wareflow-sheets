@@ -16,6 +16,7 @@ import {
   Save,
   X
 } from 'lucide-react';
+import { log, warn, error as logError } from '@/utils/logger';
 import { supabase } from '@/integrations/supabase/client';
 import { useFeatureFlags } from '@/hooks/useFeatureFlags';
 import { useAuth } from '@/contexts/AuthContext';
@@ -67,7 +68,7 @@ export function FeatureFlagsManager() {
       if (error) throw error;
       setAllFlags(data || []);
     } catch (error) {
-      console.error('Erro ao buscar feature flags:', error);
+      logError('Erro ao buscar feature flags:', error);
     }
   };
 
@@ -88,7 +89,7 @@ export function FeatureFlagsManager() {
       toast.success(`Feature flag ${enabled ? 'ativada' : 'desativada'} com sucesso!`);
       await fetchAllFlags();
     } catch (error) {
-      console.error('Erro ao atualizar feature flag:', error);
+      logError('Erro ao atualizar feature flag:', error);
       toast.error('Erro ao atualizar feature flag');
     }
   };
@@ -121,7 +122,7 @@ export function FeatureFlagsManager() {
       setNewFlag({ key: '', description: '', environment: 'all', enabled: false });
       await fetchAllFlags();
     } catch (error) {
-      console.error('Erro ao criar feature flag:', error);
+      logError('Erro ao criar feature flag:', error);
       toast.error('Erro ao criar feature flag');
     }
   };
@@ -148,7 +149,7 @@ export function FeatureFlagsManager() {
       setEditingFlag(null);
       await fetchAllFlags();
     } catch (error) {
-      console.error('Erro ao atualizar feature flag:', error);
+      logError('Erro ao atualizar feature flag:', error);
       toast.error('Erro ao atualizar feature flag');
     }
   };

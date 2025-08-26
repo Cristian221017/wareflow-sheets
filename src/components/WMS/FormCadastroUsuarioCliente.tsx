@@ -15,6 +15,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { UserPlus } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { log, warn, error as logError } from '@/utils/logger';
 import { toast } from 'sonner';
 
 const formSchema = z.object({
@@ -86,14 +87,14 @@ export function FormCadastroUsuarioCliente({ onSuccess }: FormCadastroUsuarioCli
         }]);
 
       if (profileError) {
-        console.warn('Profile creation warning:', profileError);
+        warn('Profile creation warning:', profileError);
       }
 
       toast.success('Usuário criado com sucesso! Pode fazer login imediatamente.');
       form.reset();
       onSuccess?.();
     } catch (error) {
-      console.error('Erro ao criar usuário:', error);
+      logError('Erro ao criar usuário:', error);
       toast.error('Erro inesperado ao criar usuário');
     } finally {
       setIsLoading(false);

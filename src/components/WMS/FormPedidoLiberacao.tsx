@@ -7,6 +7,7 @@ import { Combobox } from '@/components/ui/combobox';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
+import { log, warn, error as logError } from '@/utils/logger';
 import { useWMS } from '@/contexts/WMSContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { PedidoLiberacao, NotaFiscal } from '@/types/wms';
@@ -37,7 +38,7 @@ const formSchema = z.object({
 type FormData = z.infer<typeof formSchema>;
 
 export function FormPedidoLiberacao({ notaFiscal, onSuccess }: FormPedidoLiberacaoProps = {}) {
-  console.log('FormPedidoLiberacao - notaFiscal recebida:', notaFiscal);
+  log('FormPedidoLiberacao - notaFiscal recebida:', notaFiscal);
   const { addPedidoLiberacao, notasFiscais } = useWMS();
   const { user } = useAuth();
   

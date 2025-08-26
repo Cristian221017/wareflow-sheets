@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
+import { log, warn, error as logError } from '@/utils/logger';
 import { toast } from 'sonner';
 import { UserPlus, Building2 } from 'lucide-react';
 
@@ -43,13 +44,13 @@ export function FormCadastroUsuario({ userType = 'super_admin', onSuccess }: For
         .order('razao_social');
 
       if (error) {
-        console.error('Error loading transportadoras:', error);
+        logError('Error loading transportadoras:', error);
         return;
       }
 
       setTransportadoras(data || []);
     } catch (error) {
-      console.error('Error in loadTransportadoras:', error);
+      logError('Error in loadTransportadoras:', error);
     }
   };
 
@@ -87,7 +88,7 @@ export function FormCadastroUsuario({ userType = 'super_admin', onSuccess }: For
       });
 
       if (authError) {
-        console.error('Error creating auth user:', authError);
+        logError('Error creating auth user:', authError);
         toast.error('Erro ao criar usuário: ' + authError.message);
         return;
       }
@@ -107,7 +108,7 @@ export function FormCadastroUsuario({ userType = 'super_admin', onSuccess }: For
         }]);
 
       if (profileError) {
-        console.warn('Profile creation warning:', profileError);
+        warn('Profile creation warning:', profileError);
       }
 
       // 3. Create user-transportadora relationship (if not super_admin and not cliente)
@@ -122,7 +123,7 @@ export function FormCadastroUsuario({ userType = 'super_admin', onSuccess }: For
           }]);
 
         if (relationError) {
-          console.error('Error creating user-transportadora relation:', relationError);
+          logError('Error creating user-transportadora relation:', relationError);
           toast.error('Erro ao associar usuário à transportadora');
           return;
         }
@@ -140,7 +141,7 @@ export function FormCadastroUsuario({ userType = 'super_admin', onSuccess }: For
             }]);
 
           if (relationError) {
-            console.warn('Warning creating super admin relation:', relationError);
+            warn('Warning creating super admin relation:', relationError);
           }
         }
       } else if (formData.role === 'cliente' && formData.transportadora_id) {
@@ -156,7 +157,7 @@ export function FormCadastroUsuario({ userType = 'super_admin', onSuccess }: For
           }]);
 
         if (clienteError) {
-          console.error('Error creating cliente:', clienteError);
+          logError('Error creating cliente:', clienteError);
           toast.error('Erro ao criar cliente');
           return;
         }
@@ -177,7 +178,7 @@ export function FormCadastroUsuario({ userType = 'super_admin', onSuccess }: For
       onSuccess?.();
 
     } catch (error) {
-      console.error('Error in handleSubmit:', error);
+      logError('Error in handleSubmit:', error);
       toast.error('Erro inesperado ao criar usuário');
     } finally {
       setLoading(false);

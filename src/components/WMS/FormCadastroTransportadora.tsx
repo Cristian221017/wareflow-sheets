@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
+import { log, warn, error as logError } from '@/utils/logger';
 import { toast } from 'sonner';
 import { Building2 } from 'lucide-react';
 
@@ -56,7 +57,7 @@ export function FormCadastroTransportadora() {
         .single();
 
       if (transportadoraError) {
-        console.error('Error creating transportadora:', transportadoraError);
+        logError('Error creating transportadora:', transportadoraError);
         toast.error('Erro ao criar transportadora: ' + transportadoraError.message);
         return;
       }
@@ -75,7 +76,7 @@ export function FormCadastroTransportadora() {
       });
 
       if (userError) {
-        console.error('Error creating admin user:', userError);
+        logError('Error creating admin user:', userError);
         toast.error('Transportadora criada, mas erro ao criar usuário admin: ' + userError.message);
         return;
       }
@@ -102,7 +103,7 @@ export function FormCadastroTransportadora() {
       });
 
     } catch (error) {
-      console.error('Error in handleSubmit:', error);
+      logError('Error in handleSubmit:', error);
       toast.error('Erro inesperado ao criar transportadora');
     } finally {
       setLoading(false);
