@@ -136,7 +136,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.error('Error checking system user:', error);
     }
 
-    // If not a system user, try cliente
+    // If not a system user, try cliente via email match 
     try {
       const { data: clienteData, error: clienteError } = await supabase
         .from('clientes')
