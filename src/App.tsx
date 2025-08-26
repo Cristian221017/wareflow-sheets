@@ -7,6 +7,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { FinanceiroProvider } from "@/contexts/FinanceiroContext";
 import { useAuth } from "@/contexts/AuthContext";
 import EnvBanner from "@/components/system/EnvBanner";
+import { log } from "@/utils/logger";
 import Index from "./pages/Index";
 import SuperAdminPortal from "./pages/SuperAdminPortal";
 import TransportadoraPortal from "./pages/TransportadoraPortal";
@@ -53,7 +54,7 @@ function ProtectedRoute({ children, allowedRoles }: { children: React.ReactNode,
     return user.role && allowedRoles.includes(user.role);
   })();
 
-  console.log('🔒 ProtectedRoute Check:', {
+  log('🔒 ProtectedRoute Check:', {
     user: user?.email,
     userRole: user?.role,
     userType: user?.type,
@@ -62,7 +63,7 @@ function ProtectedRoute({ children, allowedRoles }: { children: React.ReactNode,
   });
 
   if (!hasAccess) {
-    console.log('❌ Access denied, redirecting to /');
+    log('❌ Access denied, redirecting to /');
     return <Navigate to="/" replace />;
   }
 

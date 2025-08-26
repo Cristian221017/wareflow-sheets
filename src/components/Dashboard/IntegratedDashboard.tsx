@@ -7,6 +7,7 @@ import { useSearchParams } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Activity, BarChart3 } from "lucide-react";
+import { log } from "@/utils/logger";
 
 interface IntegratedDashboardProps {
   onDeepLink?: (path: string) => void;
@@ -21,7 +22,7 @@ export function IntegratedDashboard({ onDeepLink }: IntegratedDashboardProps) {
   useEffect(() => {
     if (once.current) return;
     once.current = true;
-    console.log('🔄 Configurando realtime centralizado para Dashboard');
+    log('🔄 Configurando realtime centralizado para Dashboard');
     return subscribeCentralizedChanges(queryClient);
   }, [queryClient]);
 
@@ -31,7 +32,7 @@ export function IntegratedDashboard({ onDeepLink }: IntegratedDashboardProps) {
     const highlight = searchParams.get('highlight');
     
     if (tab || highlight) {
-      console.log('🔗 Deep link detectado:', { tab, highlight });
+      log('🔗 Deep link detectado:', { tab, highlight });
       // Aqui você pode implementar a navegação automática baseada nos parâmetros
     }
   }, [searchParams]);

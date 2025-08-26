@@ -11,6 +11,7 @@ import { useNFs, useFluxoMutations } from "@/hooks/useNFs";
 import { subscribeCentralizedChanges } from "@/lib/realtimeCentralized";
 import { useAuth } from "@/contexts/AuthContext";
 import type { NotaFiscal } from "@/types/nf";
+import { log } from "@/utils/logger";
 
 // Componente para mostrar estado vazio
 function EmptyState({ icon: Icon, title, description }: { 
@@ -300,7 +301,7 @@ export function FluxoNFs() {
   useEffect(() => {
     if (once.current) return;
     once.current = true;
-    console.log('🔄 Configurando realtime centralizado para FluxoNFs');
+    log('🔄 Configurando realtime centralizado para FluxoNFs');
     return subscribeCentralizedChanges(queryClient);
   }, [queryClient]);
 

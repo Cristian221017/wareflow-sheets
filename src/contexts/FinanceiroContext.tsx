@@ -9,13 +9,7 @@ import { saveFinanceFilePathV2 } from '@/lib/financeiro/saveFinanceFilePathV2';
 import { useFeatureFlags } from '@/hooks/useFeatureFlags';
 import { notificationService } from '@/utils/notificationService';
 import { log, warn, error as logError } from '@/utils/logger';
-
-// Utilitários para padronizar datas
-const formatDateForDatabase = (dateString: string): string => {
-  if (!dateString) return '';
-  // Garante que a data seja interpretada corretamente no timezone local
-  return dateString;
-};
+import { formatDateForDatabase, isDateOverdue } from '@/utils/date';
 
 // Sanitização de path para uploads
 function slugify(s: string): string {
@@ -23,14 +17,6 @@ function slugify(s: string): string {
           .replace(/[^a-zA-Z0-9._-]/g, '_')                 // só seguro
           .replace(/_+/g, '_').toLowerCase();
 }
-
-const isDateOverdue = (dateString: string, status: string): boolean => {
-  if (!dateString || status !== 'Em aberto') return false;
-  const date = new Date(dateString + 'T00:00:00');
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  return date < today;
-};
 
 interface FinanceiroContextType {
   documentos: DocumentoFinanceiro[];
