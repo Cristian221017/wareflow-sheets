@@ -1029,6 +1029,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      cleanup_orphaned_users: {
+        Args: Record<PropertyKey, never>
+        Returns: number
+      }
       create_safety_backup: {
         Args: { p_backup_name: string }
         Returns: string
@@ -1294,6 +1298,10 @@ export type Database = {
           status: string
           validation_id: string
         }[]
+      }
+      validate_user_has_links: {
+        Args: { user_uuid: string }
+        Returns: boolean
       }
     }
     Enums: {
