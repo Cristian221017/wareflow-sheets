@@ -10,6 +10,7 @@ import { Activity, Filter, RefreshCw, Search } from 'lucide-react';
 import { useSystemLogs, type LogFilters } from '@/hooks/useSystemLogs';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { log } from '@/utils/logger';
 
 export function LogsPage() {
   const queryClient = useQueryClient();
@@ -32,7 +33,7 @@ export function LogsPage() {
   useEffect(() => {
     if (once.current) return;
     once.current = true;
-    console.log('🔄 Configurando realtime para logs');
+    log('🔄 Configurando realtime para logs');
   }, []);
 
   const applyFilters = () => {
