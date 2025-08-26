@@ -57,9 +57,9 @@ export function LogsPage() {
 
   const applyFilters = () => {
     const newFilters: LogFilters = {
-      level: selectedLevel ? [selectedLevel as any] : ['ERROR', 'WARN', 'INFO'],
-      entityType: selectedEntityType ? [selectedEntityType] : [],
-      action: selectedAction ? [selectedAction] : [],
+      level: selectedLevel && selectedLevel !== 'all' ? [selectedLevel as any] : ['ERROR', 'WARN', 'INFO'],
+      entityType: selectedEntityType && selectedEntityType !== 'all' ? [selectedEntityType] : [],
+      action: selectedAction && selectedAction !== 'all' ? [selectedAction] : [],
       q: searchTerm || undefined
     };
     setFilters(newFilters);
@@ -67,9 +67,9 @@ export function LogsPage() {
 
   const clearFilters = () => {
     setSearchTerm('');
-    setSelectedEntityType('');
-    setSelectedAction('');
-    setSelectedLevel('');
+    setSelectedEntityType('all');
+    setSelectedAction('all');
+    setSelectedLevel('all');
     setFilters({
       level: ['ERROR', 'WARN', 'INFO'],
       entityType: [],
@@ -86,9 +86,9 @@ export function LogsPage() {
   ];
 
   const applyQuickFilter = (quickFilter: any) => {
-    setSelectedEntityType(quickFilter.entityType || '');
-    setSelectedAction(quickFilter.action || '');
-    setSelectedLevel(quickFilter.level || '');
+    setSelectedEntityType(quickFilter.entityType || 'all');
+    setSelectedAction(quickFilter.action || 'all');
+    setSelectedLevel(quickFilter.level || 'all');
     setSearchTerm('');
     
     const newFilters: LogFilters = {
@@ -157,7 +157,7 @@ export function LogsPage() {
                     <SelectValue placeholder="Todos" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Todos</SelectItem>
+                    <SelectItem value="all">Todos</SelectItem>
                     <SelectItem value="FINANCEIRO">Financeiro</SelectItem>
                     <SelectItem value="NF">Notas Fiscais</SelectItem>
                     <SelectItem value="CLIENTE">Clientes</SelectItem>
@@ -173,7 +173,7 @@ export function LogsPage() {
                     <SelectValue placeholder="Todas" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Todas</SelectItem>
+                    <SelectItem value="all">Todas</SelectItem>
                     <SelectItem value="DOC_CREATED">Documento Criado</SelectItem>
                     <SelectItem value="DOC_UPDATED">Documento Atualizado</SelectItem>
                     <SelectItem value="DOC_PATH_SET">Arquivo Anexado</SelectItem>
@@ -191,7 +191,7 @@ export function LogsPage() {
                     <SelectValue placeholder="Todos" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Todos</SelectItem>
+                    <SelectItem value="all">Todos</SelectItem>
                     <SelectItem value="INFO">Info</SelectItem>
                     <SelectItem value="WARN">Warning</SelectItem>
                     <SelectItem value="ERROR">Error</SelectItem>
