@@ -6,11 +6,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Activity, Filter, RefreshCw, Search } from 'lucide-react';
+import { Activity, Filter, RefreshCw, Search, TestTube } from 'lucide-react';
 import { useSystemLogs, type LogFilters } from '@/hooks/useSystemLogs';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { log } from '@/utils/logger';
+import { supabase } from '@/integrations/supabase/client';
 
 export function LogsPage() {
   const queryClient = useQueryClient();
@@ -28,6 +29,24 @@ export function LogsPage() {
   const [selectedLevel, setSelectedLevel] = useState<string>('');
 
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading, refetch } = useSystemLogs(filters);
+
+  // Função de teste para gerar logs
+  const handleTestLog = async () => {
+    console.log('🔎 Log de teste gerado!', { 
+      source: 'LogsPage', 
+      timestamp: new Date().toISOString() 
+    });
+    
+    // Tentar disparar um evento que possa gerar logs do sistema
+    try {
+      // Simular uma operação que gere log via funções existentes
+      await supabase.auth.getUser(); 
+      console.log('Operação de teste executada - verifique se gerou logs');
+      refetch();
+    } catch (e) {
+      console.error('Teste falhou:', e);
+    }
+  };
 
   // Configurar realtime para logs com guard
   useEffect(() => {
@@ -194,6 +213,10 @@ export function LogsPage() {
               <Button variant="outline" onClick={() => refetch()} className="gap-2">
                 <RefreshCw className="w-4 h-4" />
                 Atualizar
+              </Button>
+              <Button variant="secondary" onClick={handleTestLog} className="gap-2">
+                <TestTube className="w-4 h-4" />
+                Gerar Log Teste
               </Button>
             </div>
           </div>

@@ -1130,6 +1130,13 @@ export type Database = {
               p_transportadora_id?: string
             }
           | {
+              p_action?: string
+              p_entity_type?: string
+              p_level: string
+              p_message?: string
+              p_meta?: Json
+            }
+          | {
               p_actor_id: string
               p_actor_role: string
               p_entity_id: string
@@ -1137,7 +1144,7 @@ export type Database = {
               p_event_type: string
               p_payload?: Json
             }
-        Returns: string
+        Returns: undefined
       }
       log_system_event: {
         Args: {
