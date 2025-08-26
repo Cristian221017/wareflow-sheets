@@ -96,26 +96,30 @@ export function FormCadastroCliente({ clienteToEdit, onSuccess, isClientPortal =
           senha: values.senha || undefined,
         });
 
-        // A) Vincular user_clientes no fluxo do formulário
-        if (novoCliente?.id) {
-          const { data: prof, error: profErr } = await supabase
+        // A) Tentar criar vínculo user_clientes se aplicável
+        if (novoCliente?.id && values.senha) {
+          // Buscar o profile recém-criado
+          const { data: profile } = await supabase
             .from('profiles')
             .select('user_id')
             .eq('email', values.email)
             .maybeSingle();
 
-          if (!profErr && prof?.user_id) {
-            // Usar upsert para evitar erro de duplicidade
-            const { error: linkErr } = await supabase
-              .from('user_clientes' as any)
-              .upsert(
-                { user_id: prof.user_id, cliente_id: novoCliente.id }, 
-                { onConflict: 'user_id,cliente_id', ignoreDuplicates: true }
-              );
-            if (linkErr) {
-              console.warn('Falha ao vincular user↔cliente', linkErr);
-            } else {
-              console.log('✅ Vínculo user↔cliente criado com sucesso');
+          if (profile?.user_id) {
+            try {
+              // Tentar criar vínculo via SQL direto
+              const { error: linkErr } = await supabase.rpc('create_user_cliente_link' as any, {
+                p_user_id: profile.user_id,
+                p_cliente_id: novoCliente.id
+              });
+              
+              if (!linkErr) {
+                console.log('✅ Vínculo user↔cliente criado com sucesso');
+              } else {
+                console.warn('⚠️  Erro ao vincular user↔cliente:', linkErr);
+              }
+            } catch (error) {
+              console.warn('⚠️  Falha ao vincular user↔cliente:', error);
             }
           }
         }
@@ -174,25 +178,30 @@ export function FormCadastroCliente({ clienteToEdit, onSuccess, isClientPortal =
       }
     }
 
-    // A) Vincular user_clientes no fluxo de edição após atualização
-    const { data: prof, error: profErr } = await supabase
-      .from('profiles')
-      .select('user_id')
-      .eq('email', cliente.email)
-      .maybeSingle();
+    // A) Tentar recriar vínculo user_clientes após atualização
+    if (cliente.senha) {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('user_id')
+        .eq('email', cliente.email)
+        .maybeSingle();
 
-    if (!profErr && prof?.user_id) {
-      // Usar upsert para evitar erro de duplicidade
-      const { error: linkErr } = await supabase
-        .from('user_clientes' as any)
-        .upsert(
-          { user_id: prof.user_id, cliente_id: id }, 
-          { onConflict: 'user_id,cliente_id', ignoreDuplicates: true }
-        );
-      if (linkErr) {
-        console.warn('Falha ao vincular user↔cliente', linkErr);
-      } else {
-        console.log('✅ Vínculo user↔cliente atualizado com sucesso');
+      if (profile?.user_id) {
+        try {
+          // Tentar criar/atualizar vínculo via SQL direto  
+          const { error: linkErr } = await supabase.rpc('create_user_cliente_link' as any, {
+            p_user_id: profile.user_id,
+            p_cliente_id: id
+          });
+          
+          if (!linkErr) {
+            console.log('✅ Vínculo user↔cliente atualizado com sucesso');
+          } else {
+            console.warn('⚠️  Erro ao atualizar vínculo user↔cliente:', linkErr);
+          }
+        } catch (error) {
+          console.warn('⚠️  Falha ao atualizar vínculo user↔cliente:', error);
+        }
       }
     }
   };
