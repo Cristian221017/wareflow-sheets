@@ -230,7 +230,11 @@ export type Database = {
           entity_type: string
           event_type: string
           id: string
+          level: string | null
+          message: string | null
           payload: Json | null
+          tenant_id: string | null
+          user_id: string | null
         }
         Insert: {
           actor_id: string
@@ -241,7 +245,11 @@ export type Database = {
           entity_type: string
           event_type: string
           id?: string
+          level?: string | null
+          message?: string | null
           payload?: Json | null
+          tenant_id?: string | null
+          user_id?: string | null
         }
         Update: {
           actor_id?: string
@@ -252,7 +260,11 @@ export type Database = {
           entity_type?: string
           event_type?: string
           id?: string
+          level?: string | null
+          message?: string | null
           payload?: Json | null
+          tenant_id?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }
