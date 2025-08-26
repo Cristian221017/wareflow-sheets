@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useFinanceiro } from '@/contexts/FinanceiroContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { log, error } from '@/utils/logger';
 import { DocumentoFinanceiro } from '@/types/financeiro';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -148,17 +149,17 @@ export function FinanceiroTransportadoraTable() {
     if (!selectedDoc) return;
 
     try {
-      console.log('📤 Upload iniciado via edição:', { file: file.name, type, docId: selectedDoc.id });
+      log('📤 Upload iniciado via edição:', { file: file.name, type, docId: selectedDoc.id });
       
       await uploadArquivo(selectedDoc.id, { 
         file, 
         type, 
         numeroCte: selectedDoc.numeroCte 
       });
-      console.log('✅ Upload concluído via edição');
+      log('✅ Upload concluído via edição');
       toast.success(`${type === 'boleto' ? 'Boleto' : 'CTE'} anexado com sucesso!`);
-    } catch (error) {
-      console.error('❌ Erro no upload via edição:', error);
+    } catch (err) {
+      error('❌ Erro no upload via edição:', err);
       toast.error('Erro ao anexar arquivo');
     }
   };

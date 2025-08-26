@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { solicitarNF, confirmarNF, recusarNF, fetchNFsByStatus } from "@/lib/nfApi";
 import { toast } from "sonner";
+import { log, audit, error } from "@/utils/logger";
 import type { NFStatus, NotaFiscal } from "@/types/nf";
 
 const NF_QUERY_KEY = "nfs";
@@ -33,7 +34,7 @@ export function useFluxoMutations() {
   const queryClient = useQueryClient();
   
   const invalidateAll = () => {
-    console.log('🔄 Invalidando cache de todas as NFs');
+    log('🔄 Invalidando cache de todas as NFs');
     const statuses: NFStatus[] = ["ARMAZENADA", "SOLICITADA", "CONFIRMADA"];
     statuses.forEach(status => 
       queryClient.invalidateQueries({ queryKey: [NF_QUERY_KEY, status] })
@@ -42,37 +43,43 @@ export function useFluxoMutations() {
 
   const solicitar = useMutation({
     mutationFn: solicitarNF,
-    onSuccess: () => {
+    onSuccess: (_, nfId) => {
+      audit('NF_SOLICITADA', 'NF', { nfId });
       invalidateAll();
       toast.success("Carregamento solicitado com sucesso!");
     },
-    onError: (error: Error) => {
-      console.error('❌ Erro na solicitação:', error);
-      toast.error(error.message);
+    onError: (err: Error, nfId) => {
+      error('❌ Erro na solicitação:', err);
+      audit('NF_SOLICITACAO_ERRO', 'NF', { nfId, error: err.message });
+      toast.error(err.message);
     },
   });
 
   const confirmar = useMutation({
     mutationFn: confirmarNF,
-    onSuccess: () => {
+    onSuccess: (_, nfId) => {
+      audit('NF_CONFIRMADA', 'NF', { nfId });
       invalidateAll();
       toast.success("Carregamento confirmado com sucesso!");
     },
-    onError: (error: Error) => {
-      console.error('❌ Erro na confirmação:', error);
-      toast.error(error.message);
+    onError: (err: Error, nfId) => {
+      error('❌ Erro na confirmação:', err);
+      audit('NF_CONFIRMACAO_ERRO', 'NF', { nfId, error: err.message });
+      toast.error(err.message);
     },
   });
 
   const recusar = useMutation({
     mutationFn: recusarNF,
-    onSuccess: () => {
+    onSuccess: (_, nfId) => {
+      audit('NF_RECUSADA', 'NF', { nfId });
       invalidateAll();
       toast.success("Carregamento recusado. NF retornada para armazenadas.");
     },
-    onError: (error: Error) => {
-      console.error('❌ Erro na recusa:', error);
-      toast.error(error.message);
+    onError: (err: Error, nfId) => {
+      error('❌ Erro na recusa:', err);
+      audit('NF_RECUSA_ERRO', 'NF', { nfId, error: err.message });
+      toast.error(err.message);
     },
   });
 

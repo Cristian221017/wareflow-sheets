@@ -9,6 +9,7 @@ import { z } from 'zod';
 import { useWMS } from '@/contexts/WMSContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { NotaFiscal } from '@/types/wms';
+import { log, warn, error as logError } from '@/utils/logger';
 import { toast } from 'sonner';
 import { Package } from 'lucide-react';
 
@@ -82,9 +83,9 @@ export function FormNotaFiscal() {
       await addNotaFiscal(nfData as Omit<NotaFiscal, 'id' | 'createdAt'>);
       toast.success('Nota Fiscal cadastrada com sucesso!');
       form.reset();
-    } catch (error) {
-      console.error('Erro ao cadastrar NF:', error);
-      toast.error(error instanceof Error ? error.message : 'Erro ao cadastrar Nota Fiscal');
+    } catch (err) {
+      logError('Erro ao cadastrar NF:', err);
+      toast.error(err instanceof Error ? err.message : 'Erro ao cadastrar Nota Fiscal');
     }
   };
 

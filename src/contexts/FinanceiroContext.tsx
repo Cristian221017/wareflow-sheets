@@ -8,7 +8,7 @@ import { saveFinanceFilePathRPC } from '@/lib/financeiro/saveFinanceFilePathRPC'
 import { saveFinanceFilePathV2 } from '@/lib/financeiro/saveFinanceFilePathV2';
 import { useFeatureFlags } from '@/hooks/useFeatureFlags';
 import { notificationService } from '@/utils/notificationService';
-import { log, warn, error as logError } from '@/utils/logger';
+import { log, warn, error as logError, audit } from '@/utils/logger';
 import { formatDateForDatabase, isDateOverdue } from '@/utils/date';
 
 // Sanitização de path para uploads
@@ -219,6 +219,13 @@ export function FinanceiroProvider({ children }: { children: ReactNode }) {
           await saveFinanceFilePathRPC(documentoId, fileData.type as "boleto" | "cte", uploadPath);
         }
         
+        // Auditoria do upload bem-sucedido
+        audit('DOC_UPLOAD', 'FINANCEIRO', { 
+          docId: documentoId, 
+          kind: fileData.type,
+          uploadPath,
+          numeroCte: fileData.numeroCte 
+        });
         log('✅ Path salvo no banco de dados via RPC');
       } catch (pathError) {
         logError('❌ Erro ao salvar path no banco:', pathError);
@@ -272,6 +279,12 @@ export function FinanceiroProvider({ children }: { children: ReactNode }) {
 
       if (!downloadError && data) {
         log('✅ Download direto bem-sucedido');
+        audit('DOC_DOWNLOAD', 'FINANCEIRO', { 
+          docId: documentoId, 
+          kind: type, 
+          via: 'direct',
+          numeroCte: documento.numeroCte 
+        });
         const url = URL.createObjectURL(data);
         const link = document.createElement('a');
         link.href = url;
@@ -292,6 +305,12 @@ export function FinanceiroProvider({ children }: { children: ReactNode }) {
       
       if (signedData?.signedUrl) {
         log('✅ URL assinada criada com sucesso');
+        audit('DOC_DOWNLOAD', 'FINANCEIRO', { 
+          docId: documentoId, 
+          kind: type, 
+          via: 'signed',
+          numeroCte: documento.numeroCte 
+        });
         window.open(signedData.signedUrl, '_blank');
         toast.success(`${type === 'boleto' ? 'Boleto' : 'CTE'} baixado com sucesso!`);
         return;

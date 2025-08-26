@@ -1,14 +1,15 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { useAllNFs } from '@/hooks/useNFs';
+import { log, warn, error as logError } from '@/utils/logger';
 import { useAuth } from '@/contexts/AuthContext';
-import { Package, FileText, Truck, BarChart3 } from 'lucide-react';
+import { useAllNFs } from '@/hooks/useNFs';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
+import { Package, FileText, Truck, BarChart3 } from 'lucide-react';
 export function ClienteDashboard() {
   const { armazenadas, solicitadas, confirmadas, isLoading } = useAllNFs();
   const { user } = useAuth();
 
   // Debug: Log current NF data
-  console.log('🔍 ClienteDashboard Debug:', {
+  log('🔍 ClienteDashboard Debug:', {
     armazenadas: armazenadas.length,
     solicitadas: solicitadas.length, 
     confirmadas: confirmadas.length,

@@ -1,7 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
+import { toast } from 'sonner';
+import { log, warn, error as logError, audit } from '@/utils/logger';
 import {
   Form,
   FormControl,
@@ -15,9 +17,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { User, UserPlus } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
 import { clientPasswordManager } from '@/utils/clientPasswordManager';
-import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 import { notificationService } from '@/utils/notificationService';
 
 const formSchema = z.object({
@@ -113,7 +114,13 @@ export function FormCadastroCliente({ clienteToEdit, onSuccess, isClientPortal =
             });
             
             if (linkErr) {
-              console.warn('⚠️ Erro ao vincular user↔cliente:', linkErr);
+              warn('⚠️ Erro ao vincular user↔cliente:', linkErr);
+            } else {
+              audit('VINCULO_USER_CLIENTE', 'AUTH', { 
+                userId: profile.user_id, 
+                clienteId: novoCliente.id,
+                email: values.email 
+              });
             }
           }
         }
@@ -133,7 +140,7 @@ export function FormCadastroCliente({ clienteToEdit, onSuccess, isClientPortal =
             }
           });
         } catch (emailError) {
-          console.warn('⚠️ Erro ao enviar email de boas-vindas:', emailError);
+          warn('⚠️ Erro ao enviar email de boas-vindas:', emailError);
         }
 
         toast.success('Cliente cadastrado com sucesso!');
@@ -141,7 +148,8 @@ export function FormCadastroCliente({ clienteToEdit, onSuccess, isClientPortal =
       
       form.reset();
       onSuccess?.();
-    } catch (error) {
+    } catch (err) {
+      logError(`Erro ao ${clienteToEdit ? 'atualizar' : 'cadastrar'} cliente:`, err);
       toast.error(`Erro ao ${clienteToEdit ? 'atualizar' : 'cadastrar'} cliente`);
     } finally {
       setIsLoading(false);
@@ -179,13 +187,13 @@ export function FormCadastroCliente({ clienteToEdit, onSuccess, isClientPortal =
         );
         
         if (!authResult.success && 'error' in authResult) {
-          console.warn('Aviso na autenticação:', authResult.error);
+          warn('Aviso na autenticação:', authResult.error);
           toast.warning(`Cliente atualizado, mas houve um problema com a autenticação: ${authResult.error}`);
         } else if (authResult.success && 'message' in authResult) {
           toast.success(authResult.message);
         }
-      } catch (authError) {
-        console.error('Erro ao criar/atualizar autenticação:', authError);
+      } catch (authErr) {
+        logError('Erro ao criar/atualizar autenticação:', authErr);
         toast.warning('Cliente atualizado, mas houve erro na autenticação');
       }
     }
@@ -204,7 +212,13 @@ export function FormCadastroCliente({ clienteToEdit, onSuccess, isClientPortal =
       });
       
       if (linkErr) {
-        console.warn('⚠️ Erro ao vincular user↔cliente:', linkErr);
+        warn('⚠️ Erro ao vincular user↔cliente:', linkErr);
+      } else {
+        audit('VINCULO_USER_CLIENTE', 'AUTH', { 
+          userId: profile.user_id, 
+          clienteId: id,
+          email: cliente.email 
+        });
       }
     }
   };

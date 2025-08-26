@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { log, error } from "@/utils/logger";
 import type { NFStatus } from "@/types/nf";
 
 async function getCurrentUserId(): Promise<string> {
@@ -11,59 +12,59 @@ async function getCurrentUserId(): Promise<string> {
 
 export async function solicitarNF(nfId: string): Promise<void> {
   const userId = await getCurrentUserId();
-  console.log('🚚 Solicitando carregamento NF:', { nfId, userId });
+  log('🚚 Solicitando carregamento NF:', { nfId, userId });
   
-  const { error } = await supabase.rpc("nf_solicitar", { 
+  const { error: rpcError } = await supabase.rpc("nf_solicitar", { 
     p_nf_id: nfId, 
     p_user_id: userId 
   });
   
-  if (error) {
-    console.error('❌ Erro ao solicitar NF:', error);
-    throw new Error(`Erro ao solicitar carregamento: ${error.message}`);
+  if (rpcError) {
+    error('❌ Erro ao solicitar NF:', rpcError);
+    throw new Error(`Erro ao solicitar carregamento: ${rpcError.message}`);
   }
   
-  console.log('✅ NF solicitada com sucesso');
+  log('✅ NF solicitada com sucesso');
 }
 
 export async function confirmarNF(nfId: string): Promise<void> {
   const userId = await getCurrentUserId();
-  console.log('✅ Confirmando carregamento NF:', { nfId, userId });
+  log('✅ Confirmando carregamento NF:', { nfId, userId });
   
-  const { error } = await supabase.rpc("nf_confirmar", { 
+  const { error: rpcError } = await supabase.rpc("nf_confirmar", { 
     p_nf_id: nfId, 
     p_user_id: userId 
   });
   
-  if (error) {
-    console.error('❌ Erro ao confirmar NF:', error);
-    throw new Error(`Erro ao confirmar carregamento: ${error.message}`);
+  if (rpcError) {
+    error('❌ Erro ao confirmar NF:', rpcError);
+    throw new Error(`Erro ao confirmar carregamento: ${rpcError.message}`);
   }
   
-  console.log('✅ NF confirmada com sucesso');
+  log('✅ NF confirmada com sucesso');
 }
 
 export async function recusarNF(nfId: string): Promise<void> {
   const userId = await getCurrentUserId();
-  console.log('❌ Recusando carregamento NF:', { nfId, userId });
+  log('❌ Recusando carregamento NF:', { nfId, userId });
   
-  const { error } = await supabase.rpc("nf_recusar", { 
+  const { error: rpcError } = await supabase.rpc("nf_recusar", { 
     p_nf_id: nfId, 
     p_user_id: userId 
   });
   
-  if (error) {
-    console.error('❌ Erro ao recusar NF:', error);
-    throw new Error(`Erro ao recusar carregamento: ${error.message}`);
+  if (rpcError) {
+    error('❌ Erro ao recusar NF:', rpcError);
+    throw new Error(`Erro ao recusar carregamento: ${rpcError.message}`);
   }
   
-  console.log('✅ NF recusada com sucesso');
+  log('✅ NF recusada com sucesso');
 }
 
 export async function fetchNFsByStatus(status: NFStatus) {
-  console.log('📋 Buscando NFs com status:', status);
+  log('📋 Buscando NFs com status:', status);
   
-  const { data, error } = await supabase
+  const { data, error: fetchError } = await supabase
     .from("notas_fiscais")
     .select(`
       id,
@@ -86,12 +87,12 @@ export async function fetchNFsByStatus(status: NFStatus) {
     .eq("status", status)
     .order("created_at", { ascending: false });
   
-  if (error) {
-    console.error('❌ Erro ao buscar NFs:', error);
-    throw new Error(`Erro ao buscar notas fiscais: ${error.message}`);
+  if (fetchError) {
+    error('❌ Erro ao buscar NFs:', fetchError);
+    throw new Error(`Erro ao buscar notas fiscais: ${fetchError.message}`);
   }
   
-  console.log(`📊 Encontradas ${data?.length || 0} NFs com status ${status}`);
+  log(`📊 Encontradas ${data?.length || 0} NFs com status ${status}`);
   
   // Cast explícito do status para NFStatus
   return (data || []).map(item => ({
