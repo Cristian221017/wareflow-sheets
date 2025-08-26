@@ -96,9 +96,9 @@ export function FormCadastroCliente({ clienteToEdit, onSuccess, isClientPortal =
           senha: values.senha || undefined,
         });
 
-        // A) Tentar criar vínculo user_clientes se aplicável
-        if (novoCliente?.id && values.senha) {
-          // Buscar o profile recém-criado
+        // A) Tentar criar vínculo user_clientes sempre que possível
+        if (novoCliente?.id) {
+          // Buscar o profile pelo email
           const { data: profile } = await supabase
             .from('profiles')
             .select('user_id')
@@ -106,20 +106,13 @@ export function FormCadastroCliente({ clienteToEdit, onSuccess, isClientPortal =
             .maybeSingle();
 
           if (profile?.user_id) {
-            try {
-              // Tentar criar vínculo via SQL direto
-              const { error: linkErr } = await supabase.rpc('create_user_cliente_link' as any, {
-                p_user_id: profile.user_id,
-                p_cliente_id: novoCliente.id
-              });
-              
-              if (!linkErr) {
-                console.log('✅ Vínculo user↔cliente criado com sucesso');
-              } else {
-                console.warn('⚠️  Erro ao vincular user↔cliente:', linkErr);
-              }
-            } catch (error) {
-              console.warn('⚠️  Falha ao vincular user↔cliente:', error);
+            const { error: linkErr } = await supabase.rpc('create_user_cliente_link' as any, {
+              p_user_id: profile.user_id,
+              p_cliente_id: novoCliente.id
+            });
+            
+            if (linkErr) {
+              console.warn('⚠️ Erro ao vincular user↔cliente:', linkErr);
             }
           }
         }
@@ -178,30 +171,21 @@ export function FormCadastroCliente({ clienteToEdit, onSuccess, isClientPortal =
       }
     }
 
-    // A) Tentar recriar vínculo user_clientes após atualização
-    if (cliente.senha) {
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('user_id')
-        .eq('email', cliente.email)
-        .maybeSingle();
+    // Tentar criar vínculo user-cliente sempre que possível
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('user_id')
+      .eq('email', cliente.email)
+      .maybeSingle();
 
-      if (profile?.user_id) {
-        try {
-          // Tentar criar/atualizar vínculo via SQL direto  
-          const { error: linkErr } = await supabase.rpc('create_user_cliente_link' as any, {
-            p_user_id: profile.user_id,
-            p_cliente_id: id
-          });
-          
-          if (!linkErr) {
-            console.log('✅ Vínculo user↔cliente atualizado com sucesso');
-          } else {
-            console.warn('⚠️  Erro ao atualizar vínculo user↔cliente:', linkErr);
-          }
-        } catch (error) {
-          console.warn('⚠️  Falha ao atualizar vínculo user↔cliente:', error);
-        }
+    if (profile?.user_id) {
+      const { error: linkErr } = await supabase.rpc('create_user_cliente_link' as any, {
+        p_user_id: profile.user_id,
+        p_cliente_id: id
+      });
+      
+      if (linkErr) {
+        console.warn('⚠️ Erro ao vincular user↔cliente:', linkErr);
       }
     }
   };

@@ -81,7 +81,18 @@ const App = () => (
           <BrowserRouter>
             <Routes>
               <Route path="/" element={<Index />} />
-              <Route path="/health" element={<HealthPage />} />
+              <Route
+                path="/health"
+                element={
+                  <pre style={{ padding: 16 }}>
+                    {JSON.stringify({
+                      env: import.meta.env.VITE_ENV ?? 'unknown',
+                      mode: import.meta.env.MODE,
+                      supabaseUrl: import.meta.env.VITE_SUPABASE_URL ? 'set' : 'missing'
+                    }, null, 2)}
+                  </pre>
+                }
+              />
               <Route path="/system-admin" element={<SystemAdminLogin />} />
               <Route path="/reset-password" element={<ResetPassword />} />
               <Route 
