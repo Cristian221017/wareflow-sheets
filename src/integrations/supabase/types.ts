@@ -1020,6 +1020,10 @@ export type Database = {
         }
         Returns: string
       }
+      create_user_cliente_link: {
+        Args: { p_cliente_id: string; p_user_id: string }
+        Returns: boolean
+      }
       email_matches: {
         Args: { email1: string; email2: string }
         Returns: boolean
@@ -1076,6 +1080,18 @@ export type Database = {
           entity_type: string
           last_update: string
           status: string
+        }[]
+      }
+      get_user_clientes_info: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          cliente_email: string
+          cliente_id: string
+          cliente_nome: string
+          cliente_status: string
+          user_email: string
+          user_id: string
+          user_name: string
         }[]
       }
       get_user_transportadora: {
