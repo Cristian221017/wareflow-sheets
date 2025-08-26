@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { log, warn, error as logError } from '@/utils/logger';
 import { supabase } from '@/integrations/supabase/client';
 import { 
   Building2, 
@@ -39,7 +40,7 @@ export function SuperAdminDashboard() {
         .select('status');
 
       if (transpError) {
-        console.error('Error loading transportadoras:', transpError);
+        logError('Error loading transportadoras:', transpError);
       }
 
       // Get users stats
@@ -48,7 +49,7 @@ export function SuperAdminDashboard() {
         .select('is_active');
 
       if (usersError) {
-        console.error('Error loading users:', usersError);
+        logError('Error loading users:', usersError);
       }
 
       // Get profiles count
@@ -57,7 +58,7 @@ export function SuperAdminDashboard() {
         .select('*', { count: 'exact', head: true });
 
       if (profilesError) {
-        console.error('Error loading profiles count:', profilesError);
+        logError('Error loading profiles count:', profilesError);
       }
 
       const transportadorasData = transportadoras || [];
@@ -70,7 +71,7 @@ export function SuperAdminDashboard() {
         usuariosPendentes: usuariosData.filter(u => !u.is_active).length
       });
     } catch (error) {
-      console.error('Error in loadDashboardStats:', error);
+      logError('Error in loadDashboardStats:', error);
     } finally {
       setLoading(false);
     }

@@ -19,6 +19,7 @@ import {
   X,
   Package
 } from 'lucide-react';
+import { log, error as logError } from '@/utils/logger';
 import { toast } from 'sonner';
 import type { NotaFiscal } from '@/types/nf';
 import { useFluxoMutations } from '@/hooks/useNFs';
@@ -79,7 +80,7 @@ export function NFBulkActions({
             break;
         }
       } catch (error) {
-        console.error(`Erro ao processar NF ${id}:`, error);
+        logError(`Erro ao processar NF ${id}:`, error);
         throw error;
       }
     });

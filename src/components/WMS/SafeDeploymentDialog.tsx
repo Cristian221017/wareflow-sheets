@@ -287,7 +287,7 @@ export function SafeDeploymentDialog({
               <Button
                 onClick={() => {
                   // Aqui você integraria com o sistema de deployment real
-                  console.log('Prosseguir com deployment...');
+                  log('Prosseguir com deployment...');
                   handleClose();
                 }}
                 className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800"
