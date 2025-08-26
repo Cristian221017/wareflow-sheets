@@ -30,21 +30,25 @@ export function LogsPage() {
 
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading, refetch } = useSystemLogs(filters);
 
-  // Função de teste para gerar logs
+  // Função de teste para gerar logs (usa RPC real)
   const handleTestLog = async () => {
-    console.log('🔎 Log de teste gerado!', { 
-      source: 'LogsPage', 
-      timestamp: new Date().toISOString() 
-    });
-    
-    // Tentar disparar um evento que possa gerar logs do sistema
     try {
-      // Simular uma operação que gere log via funções existentes
-      await supabase.auth.getUser(); 
-      console.log('Operação de teste executada - verifique se gerou logs');
-      refetch();
+      const { error } = await (supabase.rpc as any)("log_system_event", {
+        p_entity_type: "TEST",
+        p_action: "BUTTON_CLICK",
+        p_status: "INFO",
+        p_message: "🔎 Teste de log gerado via botão da UI",
+        p_meta: { source: "LogsPage", timestamp: new Date().toISOString() }
+      });
+
+      if (error) {
+        console.error("Erro ao gerar log de teste:", error);
+      } else {
+        console.log("Log de teste gerado com sucesso!");
+        refetch(); // recarrega tabela de logs
+      }
     } catch (e) {
-      console.error('Teste falhou:', e);
+      console.error("Erro ao gerar log:", e);
     }
   };
 
@@ -216,7 +220,7 @@ export function LogsPage() {
               </Button>
               <Button variant="secondary" onClick={handleTestLog} className="gap-2">
                 <TestTube className="w-4 h-4" />
-                Gerar Log Teste
+                🔎 Gerar Log Teste
               </Button>
             </div>
           </div>
