@@ -10,7 +10,7 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
 import { 
   Dialog, 
@@ -25,11 +25,9 @@ import { toast } from 'sonner';
 import { KeyRound } from 'lucide-react';
 
 const formSchema = z.object({
-  novaSenha: z.string().min(6, 'Nova senha deve ter pelo menos 6 caracteres'),
-  confirmarSenha: z.string().min(6, 'Confirmação deve ter pelo menos 6 caracteres'),
-}).refine((data) => data.novaSenha === data.confirmarSenha, {
-  message: "As senhas não coincidem",
-  path: ["confirmarSenha"],
+  confirmacao: z.boolean().refine(val => val === true, {
+    message: "Você deve confirmar antes de enviar"
+  })
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -47,44 +45,34 @@ export function AlterarSenhaDialog({ isOpen, onClose, userEmail, userName }: Alt
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      novaSenha: '',
-      confirmarSenha: '',
+      confirmacao: false,
     },
   });
 
   const onSubmit = async (values: FormValues) => {
     setIsLoading(true);
     try {
-      // Criar/atualizar usuário no Supabase Auth
-      const { error } = await supabase.auth.signUp({
-        email: userEmail,
-        password: values.novaSenha,
-        options: {
-          emailRedirectTo: `${window.location.origin}/cliente`,
-          data: {
-            name: userName
-          }
-        }
+      // Enviar email de reset de senha para o usuário
+      const { error } = await supabase.auth.resetPasswordForEmail(userEmail, {
+        redirectTo: `${window.location.origin}/reset-password`
       });
 
-      // Se o usuário já existe, o erro será sobre usuário já registrado, isso é ok
-      if (error && !error.message.includes('already registered')) {
-        console.error('Erro ao criar/atualizar usuário:', error);
-        toast.error('Erro ao configurar acesso');
+      if (error) {
+        console.error('Erro ao enviar reset de senha:', error);
+        toast.error('Erro ao enviar reset de senha: ' + error.message);
         return;
       }
 
-      // Enviar email de notificação
+      // Enviar email de notificação personalizado (opcional)
       try {
         await supabase.functions.invoke('send-notification-email', {
           body: {
             to: userEmail,
-            subject: 'Acesso Criado - Sistema WMS',
-            type: 'senha_alterada',
+            subject: 'Reset de Senha - Sistema WMS',
+            type: 'reset_senha',
             data: {
               nome: userName,
-              email: userEmail,
-              novaSenha: values.novaSenha
+              email: userEmail
             }
           }
         });
@@ -92,7 +80,7 @@ export function AlterarSenhaDialog({ isOpen, onClose, userEmail, userName }: Alt
         console.error('Erro ao enviar email de notificação:', emailError);
       }
 
-      toast.success('Acesso configurado com sucesso! O cliente pode fazer login no portal.');
+      toast.success('Email de reset de senha enviado! O usuário deve verificar sua caixa de entrada e seguir as instruções.');
       form.reset();
       onClose();
     } catch (error) {
@@ -109,10 +97,11 @@ export function AlterarSenhaDialog({ isOpen, onClose, userEmail, userName }: Alt
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <KeyRound className="w-5 h-5 text-primary" />
-            Alterar Senha
+            Reset de Senha
           </DialogTitle>
           <DialogDescription>
-            Defina uma nova senha para {userName} ({userEmail})
+            Será enviado um email de reset de senha para {userName} ({userEmail}).
+            O usuário deve seguir as instruções no email para definir uma nova senha.
           </DialogDescription>
         </DialogHeader>
         
@@ -120,36 +109,21 @@ export function AlterarSenhaDialog({ isOpen, onClose, userEmail, userName }: Alt
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField
               control={form.control}
-              name="novaSenha"
+              name="confirmacao"
               render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Nova Senha</FormLabel>
+                <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
                   <FormControl>
-                    <Input 
-                      type="password" 
-                      placeholder="Digite a nova senha" 
-                      {...field} 
+                    <Checkbox
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
                     />
                   </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="confirmarSenha"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Confirmar Nova Senha</FormLabel>
-                  <FormControl>
-                    <Input 
-                      type="password" 
-                      placeholder="Confirme a nova senha" 
-                      {...field} 
-                    />
-                  </FormControl>
-                  <FormMessage />
+                  <div className="space-y-1 leading-none">
+                    <FormLabel>
+                      Confirmo que quero enviar o email de reset de senha para este usuário
+                    </FormLabel>
+                    <FormMessage />
+                  </div>
                 </FormItem>
               )}
             />
@@ -158,9 +132,9 @@ export function AlterarSenhaDialog({ isOpen, onClose, userEmail, userName }: Alt
               <Button type="button" variant="outline" onClick={onClose}>
                 Cancelar
               </Button>
-              <Button type="submit" disabled={isLoading}>
+              <Button type="submit" disabled={isLoading || !form.watch('confirmacao')}>
                 <KeyRound className="w-4 h-4 mr-2" />
-                {isLoading ? 'Alterando...' : 'Alterar Senha'}
+                {isLoading ? 'Enviando...' : 'Enviar Reset de Senha'}
               </Button>
             </DialogFooter>
           </form>
