@@ -1,0 +1,342 @@
+EXPLICAÇÃO COMPLETA DO SISTEMA WMS - PARA CHATGPT
+
+=== VISÃO GERAL ===
+
+Este é um Sistema WMS (Warehouse Management System) completo para gestão de armazéns e transportadoras. O sistema foi desenvolvido com as seguintes tecnologias:
+
+FRONTEND:
+- React 18.3.1 com TypeScript 5.8.3
+- Vite como build tool
+- React Router DOM para navegação
+- Tailwind CSS + shadcn/ui para interface
+- React Hook Form + Zod para formulários
+- TanStack Query para gerenciamento de estado servidor
+- Sonner para notificações
+- Recharts para gráficos
+
+BACKEND:
+- Supabase como BaaS (Backend as a Service)
+- PostgreSQL como banco de dados
+- Supabase Auth para autenticação
+- Supabase Storage para arquivos
+- Supabase Realtime para atualizações em tempo real
+- Edge Functions para lógica de negócio
+
+=== ARQUITETURA ===
+
+ESTRUTURA DE PASTAS:
+src/
+├── components/           # Componentes reutilizáveis
+│   ├── ui/              # Componentes shadcn/ui (Button, Card, Dialog, etc.)
+│   ├── Auth/            # LoginPage, AdminLoginPage
+│   ├── WMS/             # Componentes específicos do WMS
+│   ├── Dashboard/       # DashboardStats, IntegratedDashboard
+│   ├── Notifications/   # NotificationCenter
+│   └── system/          # EnvironmentBadge, DiagnosticPage
+├── contexts/            # AuthContext, WMSContext, FinanceiroContext
+├── hooks/               # useNFs, useEnvironment, useFeatureFlags
+├── lib/                 # APIs e utilitários
+├── pages/               # Páginas principais
+├── types/               # Definições TypeScript
+├── utils/               # Funções utilitárias
+├── integrations/        # Cliente Supabase
+└── config/              # Configurações de ambiente
+
+FLUXO DE INICIALIZAÇÃO:
+1. main.tsx - Ponto de entrada com QueryClient
+2. App.tsx - Configuração de contextos e rotas
+3. AuthProvider → WMSProvider → FinanceiroProvider → TooltipProvider
+4. BrowserRouter com rotas protegidas
+
+=== SISTEMA DE AUTENTICAÇÃO ===
+
+TIPOS DE USUÁRIO:
+1. Super Admin (role: 'super_admin') - Acesso total ao sistema
+2. Admin Transportadora (role: 'admin_transportadora') - Gestão da transportadora
+3. Operador (role: 'operador') - Operações da transportadora
+4. Cliente (type: 'cliente') - Acesso limitado aos próprios dados
+
+INTERFACE DE USUÁRIO:
+interface User {
+  id: string;
+  name: string;
+  email: string;
+  type: 'transportadora' | 'cliente';
+  role?: 'super_admin' | 'admin_transportadora' | 'operador' | 'cliente';
+  transportadoraId?: string;
+  cnpj?: string;
+  emailNotaFiscal?: string;
+  emailSolicitacaoLiberacao?: string;
+  emailLiberacaoAutorizada?: string;
+}
+
+FLUXO DE AUTENTICAÇÃO:
+1. Usuário faz login via Supabase Auth
+2. AuthContext.loadUserProfile() é chamado
+3. Sistema verifica se é usuário do sistema (tabela user_transportadoras)
+4. Se não for, verifica na tabela clientes via email
+5. Cria o objeto User com as informações corretas
+6. Redireciona para a rota apropriada
+
+ROTAS E ACESSO:
+- /admin - Super Admin apenas
+- /transportadora - Admin e Operadores
+- /cliente - Clientes apenas
+- / - Página de login/redirecionamento
+
+=== BANCO DE DADOS ===
+
+PRINCIPAIS TABELAS:
+
+1. TRANSPORTADORAS
+- id (UUID, PK)
+- razao_social, nome_fantasia, cnpj, email
+- endereco, cidade, estado, cep
+- status, plano, limite_usuarios, limite_clientes
+- data_contrato, created_at, updated_at
+
+2. CLIENTES
+- id (UUID, PK)
+- transportadora_id (FK para transportadoras)
+- razao_social, cnpj, email
+- email_nota_fiscal, email_solicitacao_liberacao, email_liberacao_autorizada
+- status, created_at, updated_at
+
+3. NOTAS_FISCAIS
+- id (UUID, PK)
+- numero_nf, numero_pedido, ordem_compra
+- data_recebimento, fornecedor, cnpj_fornecedor
+- cliente_id (FK), transportadora_id (FK)
+- produto, quantidade, peso, volume, localizacao
+- status ('ARMAZENADA', 'SOLICITADA', 'CONFIRMADA')
+- requested_by, requested_at, approved_by, approved_at
+- created_at, updated_at
+
+4. DOCUMENTOS_FINANCEIROS
+- id (UUID, PK)
+- transportadora_id (FK), cliente_id (FK)
+- numero_cte, data_vencimento, valor, data_pagamento
+- status ('Em aberto', 'Pago', 'Vencido')
+- arquivo_boleto_path, arquivo_cte_path
+- observacoes, created_at, updated_at
+
+5. USER_TRANSPORTADORAS (relação usuários/transportadoras)
+- user_id (FK para auth.users)
+- transportadora_id (FK)
+- role (enum: super_admin, admin_transportadora, operador)
+- is_active (boolean)
+
+6. PROFILES (perfis de usuário)
+- user_id (FK para auth.users)
+- name, email
+- created_at, updated_at
+
+ROW LEVEL SECURITY (RLS):
+O sistema usa RLS extensivamente para segurança:
+- Clientes só veem seus próprios dados
+- Transportadoras só veem dados de seus clientes
+- Super admins veem tudo
+- Funções auxiliares: get_user_transportadora(), has_role()
+
+FUNÇÕES DO BANCO:
+- nf_solicitar(p_nf_id, p_user_id) - Cliente solicita carregamento
+- nf_confirmar(p_nf_id, p_user_id) - Transportadora confirma
+- nf_recusar(p_nf_id, p_user_id) - Transportadora recusa
+- financeiro_create_documento() - Cria documento financeiro
+- log_system_event() - Sistema de logs
+- create_user_cliente_link() - Vincula usuário a cliente
+
+=== FLUXO DE NEGÓCIO ===
+
+FLUXO DAS NOTAS FISCAIS:
+1. ARMAZENADA - NF está no armazém
+2. SOLICITADA - Cliente solicita carregamento
+3. CONFIRMADA - Transportadora aprova carregamento
+4. (ARMAZENADA) - Transportadora pode recusar, volta para ARMAZENADA
+
+TRANSIÇÕES PERMITIDAS:
+- ARMAZENADA → SOLICITADA (por Cliente)
+- SOLICITADA → CONFIRMADA (por Transportadora)
+- SOLICITADA → ARMAZENADA (recusa por Transportadora)
+
+REGRAS DE NEGÓCIO:
+- Cliente só pode solicitar NFs no status ARMAZENADA
+- Transportadora só pode confirmar/recusar NFs SOLICITADAS
+- Todos os eventos são logados no sistema
+- RLS garante que cada usuário vê apenas seus dados
+
+=== CONTEXTOS REACT ===
+
+1. AUTHCONTEXT:
+- Gerencia autenticação e dados do usuário
+- Funções: login(), logout(), addCliente()
+- Estados: user, isAuthenticated, loading, clientes
+
+2. WMSCONTEXT:
+- Gerencia notas fiscais e pedidos
+- Funções: addNotaFiscal(), solicitarCarregamento(), aprovarCarregamento()
+- Estados: notasFiscais, pedidosLiberacao, isLoading
+
+3. FINANCEIROCONTEXT:
+- Gerencia documentos financeiros
+- Funções: addDocumentoFinanceiro(), uploadArquivo(), downloadArquivo()
+- Estados: documentos, loading
+
+=== HOOKS PERSONALIZADOS ===
+
+1. useNFs(status?) - Busca notas fiscais por status
+2. useEnvironment() - Detecta ambiente (teste/produção)
+3. useFeatureFlags() - Sistema de feature flags
+4. useDashboard() - Dados do dashboard
+5. useNotifications() - Sistema de notificações
+
+=== COMPONENTES PRINCIPAIS ===
+
+1. DASHBOARD:
+- IntegratedDashboard - Dashboard principal
+- DashboardStats - Estatísticas em cards
+- Gráficos com Recharts
+
+2. FLUXO DE NFS:
+- FluxoNFs - Visualização em colunas (Kanban)
+- NFCard - Card individual da NF
+- NFFilters - Filtros de busca
+
+3. FORMULÁRIOS:
+- FormCadastroCliente - Cadastro de clientes
+- FormCadastroUsuario - Cadastro de usuários
+- FormNotaFiscal - Cadastro de NFs
+- FormDocumentoFinanceiro - Documentos financeiros
+
+4. LAYOUT:
+- SuperAdminLayout - Layout para super admin
+- TransportadoraLayout - Layout para transportadora
+- ClienteLayout - Layout para cliente
+
+=== SISTEMA DE DESIGN ===
+
+TOKENS DE COR (HSL):
+--primary: 222.2 47.4% 11.2%
+--secondary: 210 40% 96.1%
+--success: 142 76% 36%
+--warning: 47.9 95.8% 53.1%
+--error: 0 84.2% 60.2%
+
+COMPONENTES SHADCN/UI:
+- Button (multiple variants)
+- Card, Dialog, Form, Table
+- Toast para notificações
+- Todos customizados com design system
+
+=== SEGURANÇA ===
+
+ROW LEVEL SECURITY:
+- Políticas específicas por tabela
+- Funções auxiliares para verificação de permissões
+- Isolamento completo entre transportadoras
+
+AUDITORIA:
+- system_logs - Logs de sistema
+- event_log - Logs de eventos
+- Rastreamento completo de ações
+
+VALIDAÇÕES:
+- Zod schemas para formulários
+- Validações no banco via funções
+- Tratamento de erros robusto
+
+=== REAL-TIME ===
+
+SUPABASE REALTIME:
+- Atualizações automáticas via WebSocket
+- Canais específicos por funcionalidade
+- Invalidação inteligente de cache (TanStack Query)
+
+NOTIFICAÇÕES:
+- Sistema de notificações em tempo real
+- Toast notifications para feedback imediato
+- Logs detalhados para debugging
+
+=== DEPLOYMENT ===
+
+CONFIGURAÇÃO:
+- Vite para build
+- Supabase para backend
+- Variáveis de ambiente via .env
+- Feature flags para controle de funcionalidades
+
+AMBIENTES:
+- Detecção automática (teste/produção)
+- Configurações específicas por ambiente
+- Badges visuais para identificação
+
+=== MONITORAMENTO ===
+
+LOGS:
+- PostgreSQL logs no Supabase
+- System logs customizados
+- Event logs para auditoria
+
+HEALTH CHECKS:
+- Verificação de integridade de dados
+- Validações automáticas
+- Sistema de backup
+
+AUDITORIA DE CADASTROS:
+- Script completo em src/utils/auditoriaCadastros.ts
+- Verificação de vínculos user-cliente
+- Correção automática de inconsistências
+
+=== PRINCIPAIS ARQUIVOS ===
+
+CONFIGURAÇÃO:
+- src/main.tsx - Ponto de entrada
+- src/App.tsx - Setup principal
+- src/config/env.ts - Variáveis de ambiente
+- tailwind.config.ts - Configuração do Tailwind
+- src/index.css - Design system
+
+CONTEXTOS:
+- src/contexts/AuthContext.tsx - Autenticação
+- src/contexts/WMSContext.tsx - WMS
+- src/contexts/FinanceiroContext.tsx - Financeiro
+
+TIPOS:
+- src/types/auth.ts - Tipos de autenticação
+- src/types/wms.ts - Tipos do WMS
+- src/types/financeiro.ts - Tipos financeiros
+
+PÁGINAS:
+- src/pages/Index.tsx - Página inicial
+- src/pages/SuperAdminPortal.tsx - Portal super admin
+- src/pages/TransportadoraPortal.tsx - Portal transportadora
+- src/pages/ClientePortal.tsx - Portal cliente
+
+APIs:
+- src/lib/nfApi.ts - API de notas fiscais
+- src/lib/financeiroApi.ts - API financeira
+- src/integrations/supabase/client.ts - Cliente Supabase
+
+=== COMO USAR O SISTEMA ===
+
+PARA DESENVOLVEDORES:
+1. Clone o repositório
+2. Configure as variáveis de ambiente (.env)
+3. Execute npm install
+4. Execute npm run dev
+5. Acesse via localhost
+
+PARA USUÁRIOS:
+1. Super Admin: Acesso total, gerencia transportadoras
+2. Admin Transportadora: Gerencia clientes e operações
+3. Operador: Executa operações diárias
+4. Cliente: Visualiza suas NFs e solicita carregamentos
+
+FLUXO TÍPICO:
+1. Admin cadastra clientes
+2. Operador registra NFs como ARMAZENADAS
+3. Cliente solicita carregamento (ARMAZENADA → SOLICITADA)
+4. Transportadora confirma ou recusa (SOLICITADA → CONFIRMADA/ARMAZENADA)
+5. Sistema gera logs e notificações
+
+Este sistema é uma aplicação completa de gestão de armazém com arquitetura moderna, segurança robusta e interface intuitiva.
