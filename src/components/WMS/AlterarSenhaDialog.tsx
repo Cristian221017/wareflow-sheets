@@ -10,7 +10,7 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { Checkbox } from '@/components/ui/checkbox';
+import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { 
   Dialog, 
@@ -22,12 +22,14 @@ import {
 } from '@/components/ui/dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { KeyRound } from 'lucide-react';
+import { KeyRound, Eye, EyeOff } from 'lucide-react';
 
 const formSchema = z.object({
-  confirmacao: z.boolean().refine(val => val === true, {
-    message: "Você deve confirmar antes de enviar"
-  })
+  novaSenha: z.string().min(6, 'Senha deve ter pelo menos 6 caracteres'),
+  confirmarSenha: z.string().min(6, 'Confirmação deve ter pelo menos 6 caracteres')
+}).refine(data => data.novaSenha === data.confirmarSenha, {
+  message: "Senhas não coincidem",
+  path: ["confirmarSenha"]
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -41,51 +43,45 @@ interface AlterarSenhaDialogProps {
 
 export function AlterarSenhaDialog({ isOpen, onClose, userEmail, userName }: AlterarSenhaDialogProps) {
   const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      confirmacao: false,
+      novaSenha: '',
+      confirmarSenha: '',
     },
   });
 
   const onSubmit = async (values: FormValues) => {
     setIsLoading(true);
     try {
-      // Enviar email de reset de senha para o usuário
-      const { error } = await supabase.auth.resetPasswordForEmail(userEmail, {
-        redirectTo: `${window.location.origin}/reset-password`
+      // Chamar edge function para alterar senha diretamente
+      const { data, error } = await supabase.functions.invoke('admin-reset-password', {
+        body: {
+          userEmail: userEmail,
+          newPassword: values.novaSenha
+        }
       });
 
       if (error) {
-        console.error('Erro ao enviar reset de senha:', error);
-        toast.error('Erro ao enviar reset de senha: ' + error.message);
+        console.error('Erro ao alterar senha:', error);
+        toast.error('Erro ao alterar senha: ' + error.message);
         return;
       }
 
-      // Enviar email de notificação personalizado (opcional)
-      try {
-        await supabase.functions.invoke('send-notification-email', {
-          body: {
-            to: userEmail,
-            subject: 'Reset de Senha - Sistema WMS',
-            type: 'reset_senha',
-            data: {
-              nome: userName,
-              email: userEmail
-            }
-          }
-        });
-      } catch (emailError) {
-        console.error('Erro ao enviar email de notificação:', emailError);
+      if (data?.error) {
+        toast.error(data.error);
+        return;
       }
 
-      toast.success('Email de reset de senha enviado! O usuário deve verificar sua caixa de entrada e seguir as instruções.');
+      toast.success('Senha alterada com sucesso!');
       form.reset();
       onClose();
     } catch (error) {
-      console.error('Erro ao configurar acesso:', error);
-      toast.error('Erro ao configurar acesso');
+      console.error('Erro ao alterar senha:', error);
+      toast.error('Erro ao alterar senha');
     } finally {
       setIsLoading(false);
     }
@@ -97,11 +93,10 @@ export function AlterarSenhaDialog({ isOpen, onClose, userEmail, userName }: Alt
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <KeyRound className="w-5 h-5 text-primary" />
-            Reset de Senha
+            Alterar Senha
           </DialogTitle>
           <DialogDescription>
-            Será enviado um email de reset de senha para {userName} ({userEmail}).
-            O usuário deve seguir as instruções no email para definir uma nova senha.
+            Defina uma nova senha para {userName} ({userEmail}).
           </DialogDescription>
         </DialogHeader>
         
@@ -109,21 +104,66 @@ export function AlterarSenhaDialog({ isOpen, onClose, userEmail, userName }: Alt
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField
               control={form.control}
-              name="confirmacao"
+              name="novaSenha"
               render={({ field }) => (
-                <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                <FormItem>
+                  <FormLabel>Nova Senha</FormLabel>
                   <FormControl>
-                    <Checkbox
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
+                    <div className="relative">
+                      <Input
+                        type={showPassword ? "text" : "password"}
+                        placeholder="Digite a nova senha"
+                        {...field}
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                        onClick={() => setShowPassword(!showPassword)}
+                      >
+                        {showPassword ? (
+                          <EyeOff className="h-4 w-4" />
+                        ) : (
+                          <Eye className="h-4 w-4" />
+                        )}
+                      </Button>
+                    </div>
                   </FormControl>
-                  <div className="space-y-1 leading-none">
-                    <FormLabel>
-                      Confirmo que quero enviar o email de reset de senha para este usuário
-                    </FormLabel>
-                    <FormMessage />
-                  </div>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="confirmarSenha"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Confirmar Nova Senha</FormLabel>
+                  <FormControl>
+                    <div className="relative">
+                      <Input
+                        type={showConfirmPassword ? "text" : "password"}
+                        placeholder="Confirme a nova senha"
+                        {...field}
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      >
+                        {showConfirmPassword ? (
+                          <EyeOff className="h-4 w-4" />
+                        ) : (
+                          <Eye className="h-4 w-4" />
+                        )}
+                      </Button>
+                    </div>
+                  </FormControl>
+                  <FormMessage />
                 </FormItem>
               )}
             />
@@ -132,9 +172,9 @@ export function AlterarSenhaDialog({ isOpen, onClose, userEmail, userName }: Alt
               <Button type="button" variant="outline" onClick={onClose}>
                 Cancelar
               </Button>
-              <Button type="submit" disabled={isLoading || !form.watch('confirmacao')}>
+              <Button type="submit" disabled={isLoading}>
                 <KeyRound className="w-4 h-4 mr-2" />
-                {isLoading ? 'Enviando...' : 'Enviar Reset de Senha'}
+                {isLoading ? 'Alterando...' : 'Alterar Senha'}
               </Button>
             </DialogFooter>
           </form>
