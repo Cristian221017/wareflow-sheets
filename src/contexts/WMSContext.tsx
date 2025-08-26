@@ -5,6 +5,7 @@ import { NotaFiscal, PedidoLiberacao, PedidoLiberado } from '@/types/wms';
 import { toast } from 'sonner';
 import { solicitarNF, confirmarNF, recusarNF } from "@/lib/nfApi";
 import { useQueryClient } from '@tanstack/react-query';
+import { notificationService } from '@/utils/notificationService';
 
 interface WMSContextType {
   // Data
@@ -199,6 +200,25 @@ export function WMSProvider({ children }: { children: ReactNode }) {
 
       if (error) throw error;
       
+      // Enviar notificação por email se houver email de NF configurado
+      try {
+        const { data: clienteData } = await supabase
+          .from('clientes')
+          .select('razao_social, email_nota_fiscal')
+          .eq('id', cliente.id)
+          .single();
+        
+        if (clienteData?.email_nota_fiscal) {
+          await notificationService.enviarNotificacaoNFCadastrada(
+            clienteData.email_nota_fiscal,
+            nfData.numeroNF,
+            clienteData.razao_social
+          );
+        }
+      } catch (emailError) {
+        console.warn('⚠️ Erro ao enviar notificação de NF:', emailError);
+      }
+      
       toast.success('✅ Nota Fiscal cadastrada com sucesso!');
       await loadData();
       
@@ -224,6 +244,26 @@ export function WMSProvider({ children }: { children: ReactNode }) {
       }
 
       await solicitarNF(nf.id);
+      
+      // Enviar notificação de solicitação de carregamento
+      try {
+        const { data: clienteData } = await supabase
+          .from('clientes')
+          .select('razao_social, email_solicitacao_liberacao')
+          .eq('id', nf.clienteId)
+          .single();
+        
+        if (clienteData?.email_solicitacao_liberacao) {
+          await notificationService.enviarNotificacaoSolicitacaoCarregamento(
+            clienteData.email_solicitacao_liberacao,
+            numeroNF,
+            clienteData.razao_social
+          );
+        }
+      } catch (emailError) {
+        console.warn('⚠️ Erro ao enviar notificação de solicitação:', emailError);
+      }
+      
       invalidateAll();
       toast.success(`✅ Carregamento solicitado para NF ${numeroNF}!`);
       await loadData();
@@ -250,6 +290,26 @@ export function WMSProvider({ children }: { children: ReactNode }) {
       }
 
       await confirmarNF(nf.id);
+      
+      // Enviar notificação de confirmação autorizada
+      try {
+        const { data: clienteData } = await supabase
+          .from('clientes')
+          .select('razao_social, email_liberacao_autorizada')
+          .eq('id', nf.clienteId)
+          .single();
+        
+        if (clienteData?.email_liberacao_autorizada) {
+          await notificationService.enviarNotificacaoConfirmacaoAutorizada(
+            clienteData.email_liberacao_autorizada,
+            numeroNF,
+            transportadora
+          );
+        }
+      } catch (emailError) {
+        console.warn('⚠️ Erro ao enviar notificação de confirmação:', emailError);
+      }
+      
       invalidateAll();
       toast.success(`✅ Carregamento aprovado para NF ${numeroNF}!`);
       await loadData();

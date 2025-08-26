@@ -18,6 +18,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { clientPasswordManager } from '@/utils/clientPasswordManager';
 import { toast } from 'sonner';
+import { notificationService } from '@/utils/notificationService';
 
 const formSchema = z.object({
   name: z.string().min(1, 'Nome é obrigatório'),
@@ -115,6 +116,24 @@ export function FormCadastroCliente({ clienteToEdit, onSuccess, isClientPortal =
               console.warn('⚠️ Erro ao vincular user↔cliente:', linkErr);
             }
           }
+        }
+
+        // B) Enviar email de boas-vindas ao cliente
+        try {
+          await supabase.functions.invoke('send-notification-email', {
+            body: {
+              to: values.email,
+              subject: 'Bem-vindo ao Sistema WMS!',
+              type: 'cliente_cadastrado',
+              data: {
+                nome: values.name,
+                email: values.email,
+                senha: values.senha || undefined
+              }
+            }
+          });
+        } catch (emailError) {
+          console.warn('⚠️ Erro ao enviar email de boas-vindas:', emailError);
         }
 
         toast.success('Cliente cadastrado com sucesso!');

@@ -7,6 +7,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { saveFinanceFilePathRPC } from '@/lib/financeiro/saveFinanceFilePathRPC';
 import { saveFinanceFilePathV2 } from '@/lib/financeiro/saveFinanceFilePathV2';
 import { useFeatureFlags } from '@/hooks/useFeatureFlags';
+import { notificationService } from '@/utils/notificationService';
 
 // Utilitários para padronizar datas
 const formatDateForDatabase = (dateString: string): string => {
