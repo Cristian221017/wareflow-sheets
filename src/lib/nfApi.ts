@@ -81,6 +81,7 @@ export async function fetchNFsByStatus(status: NFStatus) {
       localizacao,
       data_recebimento,
       status,
+      status_separacao,
       created_at,
       updated_at
     `)
@@ -94,9 +95,10 @@ export async function fetchNFsByStatus(status: NFStatus) {
   
   log(`📊 Encontradas ${data?.length || 0} NFs com status ${status}`);
   
-  // Cast explícito do status para NFStatus
-  return (data || []).map(item => ({
+  // Cast explícito do status para NFStatus e adicionar status_separacao default se não existir
+  return (data || []).map((item: any) => ({
     ...item,
-    status: item.status as NFStatus
+    status: item.status as NFStatus,
+    status_separacao: item.status_separacao || 'pendente'
   }));
 }

@@ -431,6 +431,9 @@ export type Database = {
           requested_at: string | null
           requested_by: string | null
           status: string
+          status_separacao:
+            | Database["public"]["Enums"]["separacao_status"]
+            | null
           sync_status: string | null
           transportadora_id: string
           updated_at: string
@@ -460,6 +463,9 @@ export type Database = {
           requested_at?: string | null
           requested_by?: string | null
           status?: string
+          status_separacao?:
+            | Database["public"]["Enums"]["separacao_status"]
+            | null
           sync_status?: string | null
           transportadora_id: string
           updated_at?: string
@@ -489,6 +495,9 @@ export type Database = {
           requested_at?: string | null
           requested_by?: string | null
           status?: string
+          status_separacao?:
+            | Database["public"]["Enums"]["separacao_status"]
+            | null
           sync_status?: string | null
           transportadora_id?: string
           updated_at?: string
@@ -1205,6 +1214,14 @@ export type Database = {
         Args: { p_nf_id: string; p_user_id: string }
         Returns: undefined
       }
+      nf_update_status_separacao: {
+        Args: {
+          p_nf_id: string
+          p_observacoes?: string
+          p_status_separacao: Database["public"]["Enums"]["separacao_status"]
+        }
+        Returns: undefined
+      }
       refresh_dashboard_views: {
         Args: Record<PropertyKey, never>
         Returns: undefined
@@ -1281,6 +1298,11 @@ export type Database = {
     }
     Enums: {
       log_level: "INFO" | "WARN" | "ERROR"
+      separacao_status:
+        | "pendente"
+        | "em_separacao"
+        | "separacao_concluida"
+        | "separacao_com_pendencia"
       user_role: "super_admin" | "admin_transportadora" | "operador" | "cliente"
     }
     CompositeTypes: {
@@ -1410,6 +1432,12 @@ export const Constants = {
   public: {
     Enums: {
       log_level: ["INFO", "WARN", "ERROR"],
+      separacao_status: [
+        "pendente",
+        "em_separacao",
+        "separacao_concluida",
+        "separacao_com_pendencia",
+      ],
       user_role: ["super_admin", "admin_transportadora", "operador", "cliente"],
     },
   },

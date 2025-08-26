@@ -10,6 +10,7 @@ import { FluxoNFs } from '../NfLists/FluxoNFs';
 import { ClienteDashboard } from './ClienteDashboard';
 import { ClienteMercadoriasTable } from './ClienteMercadoriasTable';
 import { ClienteSolicitacaoCarregamento } from './ClienteSolicitacaoCarregamento';
+import { ClienteStatusSeparacao } from './ClienteStatusSeparacao';
 import { FinanceiroCliente } from './FinanceiroCliente';
 import { PedidosConfirmadosTable } from './PedidosConfirmadosTable';
 import { FormCadastroUsuario } from './FormCadastroUsuario';
@@ -26,7 +27,8 @@ import {
   Receipt,
   Menu,
   UserPlus,
-  Home
+  Home,
+  Eye
 } from 'lucide-react';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 
@@ -71,6 +73,7 @@ export function ClienteLayout() {
     { id: 'dashboard', label: 'Dashboard', icon: Home, shortLabel: 'Home', notification: 0 },
     { id: 'fluxo-nfs', label: 'Fluxo de NFs', icon: Package, shortLabel: 'Fluxo', notification: 0 },
     { id: 'mercadorias', label: 'Notas Fiscais', icon: Package, shortLabel: 'Notas', notification: notifications.nfsConfirmadas },
+    { id: 'status-separacao', label: 'Status de Separação', icon: Eye, shortLabel: 'Separação', notification: 0 },
     { id: 'pedidos', label: 'Pedidos de Liberação', icon: FileText, shortLabel: 'Pedidos', notification: 0 },
     { id: 'liberados', label: 'Pedidos Liberados', icon: CheckCircle, shortLabel: 'Liberados', notification: notifications.pedidosLiberados },
     { id: 'financeiro', label: 'Financeiro', icon: Receipt, shortLabel: 'Fin', notification: notifications.documentosFinanceiros },
@@ -139,6 +142,8 @@ export function ClienteLayout() {
         return <FluxoNFs />;
       case 'mercadorias':
         return <ClienteMercadoriasTable />;
+      case 'status-separacao':
+        return <ClienteStatusSeparacao />;
       case 'pedidos':
         return <ClienteSolicitacaoCarregamento />;
       case 'liberados':

@@ -1,3 +1,4 @@
+import { StatusSeparacaoManager } from './StatusSeparacaoManager';
 import {
   Table,
   TableBody,
@@ -10,6 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Combobox } from '@/components/ui/combobox';
 import { Package } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
 import { useNFs } from '@/hooks/useNFs';
 import { cn } from '@/lib/utils';
 import { useState, useMemo } from 'react';
@@ -38,8 +40,16 @@ const isOverdue = (dataRecebimento: string, prazoMaximo: number = 30) => {
 };
 
 export function NotasFiscaisTable() {
-  const { data: notasFiscais, isLoading } = useNFs("ARMAZENADA");
+  const { data: notasFiscais, isLoading, refetch } = useNFs("ARMAZENADA");
+  const { user } = useAuth();
   const [selectedCliente, setSelectedCliente] = useState<string>('todos');
+
+  // Determinar se o usuário pode editar status de separação
+  const canEditSeparacao = user?.type === 'transportadora' && (
+    user?.role === 'admin_transportadora' || 
+    user?.role === 'operador' ||
+    user?.role === 'super_admin'
+  );
 
   const validNfs = notasFiscais || [];
 
@@ -107,6 +117,7 @@ export function NotasFiscaisTable() {
                   <TableHead>Volume (m³)</TableHead>
                   <TableHead>Localização</TableHead>
                   <TableHead>Status</TableHead>
+                  <TableHead>Status Separação</TableHead>
                 </TableRow>
             </TableHeader>
             <TableBody>
@@ -133,6 +144,15 @@ export function NotasFiscaisTable() {
                     <Badge className={getStatusColor(nf.status)}>
                       {nf.status}
                     </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <StatusSeparacaoManager
+                      nfId={nf.id}
+                      statusAtual={nf.status_separacao || 'pendente'}
+                      numeroNf={nf.numero_nf}
+                      canEdit={canEditSeparacao}
+                      onStatusChanged={() => refetch()}
+                    />
                   </TableCell>
                 </TableRow>
               ))}
