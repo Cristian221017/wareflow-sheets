@@ -11,19 +11,7 @@ export const clientPasswordManager = {
     try {
       console.log(`🔑 Criando conta para: ${email}`);
       
-      // Primeiro, verificar se o usuário já existe tentando fazer login
-      const { data: existingUser } = await supabase.auth.signInWithPassword({
-        email,
-        password
-      });
-      
-      if (existingUser.user) {
-        console.log(`✅ Conta já existe e senha está correta para: ${email}`);
-        await supabase.auth.signOut(); // Fazer logout
-        return { success: true, message: 'Conta já existe com essa senha' };
-      }
-      
-      // Se chegou aqui, precisa criar nova conta
+      // Tentar criar nova conta diretamente
       const currentOrigin = window.location.origin;
       const redirectUrl = `${currentOrigin}/cliente`;
       
@@ -42,10 +30,26 @@ export const clientPasswordManager = {
       });
 
       if (error) {
-        // Se erro é que usuário já existe, tentar reset de senha
+        // Se erro é que usuário já existe, significa que a conta existe
         if (error.message.includes('User already registered')) {
-          console.log(`🔄 Usuário existe, enviando reset de senha para: ${email}`);
-          return await clientPasswordManager.resetPassword(email);
+          console.log(`✅ Usuário já tem conta: ${email}, senha foi atualizada`);
+          // Tentar fazer login para verificar se a senha está correta
+          const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({
+            email,
+            password
+          });
+          
+          if (loginData.user) {
+            await supabase.auth.signOut(); // Fazer logout imediatamente
+            return { 
+              success: true, 
+              message: 'Conta existe e senha está funcionando corretamente!' 
+            };
+          } else if (loginError) {
+            // Se login falhou, enviar reset de senha
+            console.log(`🔄 Senha incorreta, enviando reset para: ${email}`);
+            return await clientPasswordManager.resetPassword(email);
+          }
         }
         throw error;
       }
