@@ -13,6 +13,7 @@ export interface User {
   senha?: string;
   role?: 'super_admin' | 'admin_transportadora' | 'operador' | 'cliente';
   transportadoraId?: string;
+  clienteId?: string; // ID do cliente vinculado (quando user é cliente)
 }
 
 export interface AuthContextType {

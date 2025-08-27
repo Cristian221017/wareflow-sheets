@@ -139,8 +139,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       logError('Error checking system user:', error);
     }
 
-    // If not a system user, try cliente via email match 
+    // Check if user is linked via user_clientes (proper relationship) - use direct query
     try {
+      // Since user_clientes is not in types, use the existing RPC or direct email match
+      log('🔍 Checking for user_clientes link via email...');
+      
+      // Get cliente data using email match (this should work for linked users)
       const { data: clienteData, error: clienteError } = await supabase
         .from('clientes')
         .select('*')
@@ -148,11 +152,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .eq('status', 'ativo')
         .maybeSingle();
 
-      log('🔍 Cliente query result:', clienteData);
+      log('🔍 Cliente data via email query:', clienteData);
 
       if (clienteData && !clienteError) {
         const userData: User = {
-          id: clienteData.id,
+          id: supabaseUser.id, // Use auth user ID, not cliente ID
           name: clienteData.razao_social,
           email: clienteData.email,
           type: 'cliente',
@@ -160,7 +164,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           emailNotaFiscal: clienteData.email_nota_fiscal,
           emailSolicitacaoLiberacao: clienteData.email_solicitacao_liberacao,
           emailLiberacaoAutorizada: clienteData.email_liberacao_autorizada,
-          transportadoraId: clienteData.transportadora_id
+          transportadoraId: clienteData.transportadora_id,
+          clienteId: clienteData.id // Store cliente ID separately
         };
 
         log('🔍 Cliente user detected:', userData);
