@@ -225,8 +225,9 @@ export function WMSProvider({ children }: { children: ReactNode }) {
       
     } catch (err: any) {
       logError('❌ Erro ao adicionar NF:', err);
-      toast.error(err.message || 'Erro ao cadastrar Nota Fiscal');
-      throw err;
+      const errorMessage = err?.message || 'Erro desconhecido ao cadastrar Nota Fiscal';
+      toast.error(errorMessage);
+      throw new Error(errorMessage);
     }
   };
 

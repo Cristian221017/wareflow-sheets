@@ -49,7 +49,7 @@ export function FormNotaFiscal() {
       quantidade: 0,
       peso: 0,
       volume: 0,
-      localizacao: '',
+      localizacao: 'A definir',
       status: 'ARMAZENADA' as const
     }
   });
@@ -75,8 +75,8 @@ export function FormNotaFiscal() {
         produto: data.produto,
         quantidade: data.quantidade,
         peso: data.peso,
-        volume: data.volume && data.volume > 0 ? data.volume : null,
-        localizacao: data.localizacao && data.localizacao.trim() ? data.localizacao.trim() : null,
+        volume: data.volume && data.volume > 0 ? data.volume : 0,
+        localizacao: data.localizacao && data.localizacao.trim() ? data.localizacao.trim() : 'A definir',
         status: 'ARMAZENADA' as const
       };
 
@@ -85,7 +85,8 @@ export function FormNotaFiscal() {
       form.reset();
     } catch (err) {
       logError('Erro ao cadastrar NF:', err);
-      toast.error(err instanceof Error ? err.message : 'Erro ao cadastrar Nota Fiscal');
+      const errorMessage = err instanceof Error ? err.message : 'Erro ao cadastrar Nota Fiscal';
+      toast.error(errorMessage);
     }
   };
 
