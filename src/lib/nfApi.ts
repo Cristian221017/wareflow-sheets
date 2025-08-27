@@ -1,7 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { log, warn, error, audit, auditError } from "@/utils/logger";
 import type { NFStatus } from "@/types/nf";
-import { audit, auditError } from "@/utils/logger";
 
 async function getCurrentUserId(): Promise<string> {
   const { data, error } = await supabase.auth.getUser();
@@ -66,7 +65,7 @@ export async function recusarNF(nfId: string): Promise<void> {
 }
 
 export async function fetchNFsByStatus(status: NFStatus) {
-  log('📋 Buscando NFs com status:', status);
+  log('📋 Buscando NFs da transportadora com status:', status);
   
   const { data, error: fetchError } = await supabase
     .from("notas_fiscais")
@@ -93,13 +92,60 @@ export async function fetchNFsByStatus(status: NFStatus) {
     .order("created_at", { ascending: false });
   
   if (fetchError) {
-    error('❌ Erro ao buscar NFs:', fetchError);
+    auditError('NF_FETCH_BY_STATUS_FAIL', 'NF', fetchError, { status });
     throw new Error(`Erro ao buscar notas fiscais: ${fetchError.message}`);
   }
   
-  log(`📊 Encontradas ${data?.length || 0} NFs com status ${status}`);
+  log(`📊 Encontradas ${data?.length || 0} NFs da transportadora com status ${status}`);
   
   // Cast explícito do status para NFStatus e adicionar status_separacao default se não existir
+  return (data || []).map((item: any) => ({
+    ...item,
+    status: item.status as NFStatus,
+    status_separacao: item.status_separacao || 'pendente'
+  }));
+}
+
+export async function fetchNFsCliente(status?: NFStatus) {
+  log('🏢 Buscando NFs do cliente (fallback para query direta):', { status });
+  
+  // Temporário: usar query direta até tipos RPC serem atualizados
+  let query = supabase
+    .from("notas_fiscais")
+    .select(`
+      id,
+      numero_nf,
+      numero_pedido,
+      ordem_compra,
+      cliente_id,
+      transportadora_id,
+      fornecedor,
+      produto,
+      quantidade,
+      peso,
+      volume,
+      localizacao,
+      data_recebimento,
+      status,
+      status_separacao,
+      created_at,
+      updated_at
+    `)
+    .order("created_at", { ascending: false });
+
+  if (status) {
+    query = query.eq("status", status);
+  }
+
+  const { data, error: fetchError } = await query;
+  
+  if (fetchError) {
+    auditError('NF_FETCH_CLIENTE_FAIL', 'NF', fetchError, { status });
+    throw new Error(`Erro ao buscar notas fiscais do cliente: ${fetchError.message}`);
+  }
+  
+  log(`📊 Encontradas ${data?.length || 0} NFs do cliente`, { status });
+  
   return (data || []).map((item: any) => ({
     ...item,
     status: item.status as NFStatus,

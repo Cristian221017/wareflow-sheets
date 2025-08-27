@@ -1,4 +1,4 @@
-// Status unificado para NFs - única fonte da verdade
+// Status unificado - única fonte da verdade
 export const NF_STATUS = ['ARMAZENADA', 'SOLICITADA', 'CONFIRMADA'] as const;
 export type NFStatus = typeof NF_STATUS[number];
 

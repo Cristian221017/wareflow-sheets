@@ -42,14 +42,20 @@ export function WMSProvider({ children }: { children: ReactNode }) {
   
   const invalidateWithScope = (entityType: 'nfs' | 'documentos_financeiros', entityId?: string, userType?: string, userId?: string) => {
     if (entityType === 'nfs') {
+      // Invalidar queries da transportadora
       const statuses = ["ARMAZENADA", "SOLICITADA", "CONFIRMADA"];
       statuses.forEach(status => 
         queryClient.invalidateQueries({ queryKey: ["nfs", status] })
       );
-      // Invalidar específico se disponível
-      if (userType === 'cliente' && userId) {
-        queryClient.invalidateQueries({ queryKey: ['nfs', 'cliente', userId] });
-      } else if (user?.transportadoraId) {
+      
+      // Invalidar queries do cliente (com chaves escopadas)
+      queryClient.invalidateQueries({ queryKey: ['nfs', 'cliente', 'todas'] });
+      statuses.forEach(status => 
+        queryClient.invalidateQueries({ queryKey: ['nfs', 'cliente', status] })
+      );
+      
+      // Invalidar transportadora se disponível
+      if (user?.transportadoraId) {
         queryClient.invalidateQueries({ queryKey: ['nfs', 'transportadora', user.transportadoraId] });
       }
     } else if (entityType === 'documentos_financeiros') {
