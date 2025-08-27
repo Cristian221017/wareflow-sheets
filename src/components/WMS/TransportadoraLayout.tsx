@@ -6,7 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useNotifications } from '@/hooks/useNotifications';
 import { useLastVisit } from '@/hooks/useLastVisit';
 import { NotificationBadge } from '@/components/ui/notification-badge';
-import { FluxoNFs } from '../NfLists/FluxoNFs';
+import { TransportadoraStatusSeparacao } from './TransportadoraStatusSeparacao';
 import { Dashboard } from './Dashboard';
 import { FormNotaFiscal } from './FormNotaFiscal';
 import { FormPedidoLiberacao } from './FormPedidoLiberacao';
@@ -251,7 +251,7 @@ export function TransportadoraLayout() {
             <div className="lg:hidden w-full overflow-x-auto mb-6">
               <TabsList className="flex w-max min-w-full h-auto p-1 gap-1">
                 <TabsTrigger value="dashboard" className="text-xs px-2 py-2 whitespace-nowrap">Dashboard</TabsTrigger>
-                <TabsTrigger value="fluxo-nfs" className="text-xs px-2 py-2 whitespace-nowrap">Fluxo de NFs</TabsTrigger>
+                <TabsTrigger value="fluxo-nfs" className="text-xs px-2 py-2 whitespace-nowrap">Mercadorias Armazenadas</TabsTrigger>
                 <TabsTrigger 
                   value="pedidos-liberacao" 
                   className="text-xs px-2 py-2 whitespace-nowrap relative"
@@ -275,7 +275,7 @@ export function TransportadoraLayout() {
             <div className="hidden lg:block mb-6">
               <TabsList className="grid w-full grid-cols-6 gap-1">
                 <TabsTrigger value="dashboard" className="text-sm">Dashboard</TabsTrigger>
-                <TabsTrigger value="fluxo-nfs" className="text-sm">Fluxo de NFs</TabsTrigger>
+                <TabsTrigger value="fluxo-nfs" className="text-sm">Mercadorias Armazenadas</TabsTrigger>
                 <TabsTrigger 
                   value="pedidos-liberacao" 
                   className="text-sm relative"
@@ -300,7 +300,7 @@ export function TransportadoraLayout() {
             </TabsContent>
 
             <TabsContent value="fluxo-nfs" className="space-y-4">
-              <FluxoNFs />
+              <TransportadoraStatusSeparacao />
             </TabsContent>
 
 
