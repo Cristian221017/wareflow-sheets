@@ -75,7 +75,7 @@ export function FormNotaFiscal() {
         produto: data.produto,
         quantidade: data.quantidade,
         peso: data.peso,
-        volume: data.volume && data.volume > 0 ? data.volume : 0,
+        volume: data.volume && data.volume > 0 ? data.volume : null, // Permitir null em vez de 0
         localizacao: data.localizacao && data.localizacao.trim() ? data.localizacao.trim() : 'A definir',
         status: 'ARMAZENADA' as const
       };
