@@ -3,7 +3,7 @@ import { User as SupabaseUser, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { clientPasswordManager } from '@/utils/clientPasswordManager';
 import { User, AuthContextType } from '@/types/auth';
-import { log, warn, error as logError, audit } from '@/utils/logger';
+import { log, warn, error as logError, audit, auditError } from '@/utils/logger';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -170,9 +170,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       logError('Error checking cliente:', error);
     }
 
-    // Fallback - create basic user
-    warn('🔍 Using fallback user data');
-    throw new Error('User not found in any table');
+    // Fallback for orphaned users - create basic user with limited access
+    warn('🔍 User authenticated but not linked to any table - creating fallback user');
+    auditError('USER_NOT_LINKED', 'AUTH', new Error('User authenticated but no table links found'), {
+      userId: supabaseUser.id,
+      email: supabaseUser.email,
+      authCreatedAt: supabaseUser.created_at
+    });
+
+    const fallbackUser: User = {
+      id: supabaseUser.id,
+      name: supabaseUser.email?.split('@')[0] || 'Usuário',
+      email: supabaseUser.email || '',
+      type: 'cliente', // Default to cliente
+      role: undefined,
+      transportadoraId: undefined
+    };
+
+    log('🔍 Fallback user created:', fallbackUser);
+    return fallbackUser;
   };
 
   const login = async (email: string, password: string): Promise<boolean> => {
