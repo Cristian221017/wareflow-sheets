@@ -6,12 +6,63 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Activity, Filter, RefreshCw, Search, TestTube } from 'lucide-react';
+import { Activity, Filter, RefreshCw, Search, TestTube, Copy, ChevronDown, ChevronRight } from 'lucide-react';
 import { useSystemLogs, type LogFilters } from '@/hooks/useSystemLogs';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { log, error as logError } from '@/utils/logger';
 import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
+
+function PrettyJson({ data }: { data: any }) {
+  const [open, setOpen] = useState(false);
+  
+  if (!data || (typeof data === 'object' && Object.keys(data).length === 0)) {
+    return null;
+  }
+
+  const copyToClipboard = async () => {
+    try {
+      await navigator.clipboard.writeText(JSON.stringify(data, null, 2));
+      toast.success("Meta copiada para clipboard");
+    } catch (err) {
+      toast.error("Erro ao copiar meta");
+    }
+  };
+
+  return (
+    <div className="mt-2 space-y-2">
+      <div className="flex items-center gap-2">
+        <Button
+          size="sm"
+          variant="ghost"
+          onClick={() => setOpen(!open)}
+          className="h-6 px-2 text-xs"
+        >
+          {open ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
+          {open ? "Esconder meta" : "Ver meta"}
+        </Button>
+        <Button
+          size="sm"
+          variant="ghost"
+          onClick={copyToClipboard}
+          className="h-6 px-2 text-xs"
+        >
+          <Copy className="w-3 h-3 mr-1" />
+          Copiar JSON
+        </Button>
+      </div>
+      
+      {open && (
+        <div className="border rounded-md bg-muted/50">
+          <pre className="p-3 text-xs overflow-auto max-h-60 font-mono">
+            {JSON.stringify(data, null, 2)}
+          </pre>
+        </div>
+      )}
+    </div>
+  );
+}
 
 export function LogsPage() {
   const queryClient = useQueryClient();
@@ -263,14 +314,7 @@ export function LogsPage() {
                             {log.message || 'Sem mensagem'}
                           </p>
                           
-                          {log.meta && Object.keys(log.meta).length > 0 && (
-                            <details className="text-xs text-muted-foreground">
-                              <summary className="cursor-pointer">Ver detalhes</summary>
-                              <pre className="mt-2 p-2 bg-muted rounded text-xs overflow-x-auto">
-                                {JSON.stringify(log.meta, null, 2)}
-                              </pre>
-                            </details>
-                          )}
+                          <PrettyJson data={log.meta} />
                         </div>
                         
                         <div className="text-right text-xs text-muted-foreground ml-4">

@@ -9,7 +9,7 @@ import { z } from 'zod';
 import { useWMS } from '@/contexts/WMSContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { NotaFiscal } from '@/types/wms';
-import { log, warn, error as logError } from '@/utils/logger';
+import { log, warn, error as logError, auditError } from '@/utils/logger';
 import { toast } from 'sonner';
 import { Package } from 'lucide-react';
 
@@ -84,7 +84,13 @@ export function FormNotaFiscal() {
       toast.success('Nota Fiscal cadastrada com sucesso!');
       form.reset();
     } catch (err) {
-      logError('Erro ao cadastrar NF:', err);
+      auditError('NF_FORM_SUBMIT_FAIL', 'NF', err, { 
+        payload: { 
+          numeroNF: data.numeroNF, 
+          clienteId: data.clienteId,
+          produto: data.produto 
+        } 
+      });
       const errorMessage = err instanceof Error ? err.message : 'Erro ao cadastrar Nota Fiscal';
       toast.error(errorMessage);
     }

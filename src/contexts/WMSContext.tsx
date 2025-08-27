@@ -6,7 +6,7 @@ import { toast } from 'sonner';
 import { solicitarNF, confirmarNF, recusarNF } from "@/lib/nfApi";
 import { useQueryClient } from '@tanstack/react-query';
 import { notificationService } from '@/utils/notificationService';
-import { log, warn, error as logError } from '@/utils/logger';
+import { log, warn, error as logError, auditError } from '@/utils/logger';
 
 interface WMSContextType {
   // Data
@@ -224,7 +224,13 @@ export function WMSProvider({ children }: { children: ReactNode }) {
       await loadData();
       
     } catch (err: any) {
-      logError('❌ Erro ao adicionar NF:', err);
+      auditError('NF_CREATE_FAIL', 'NF', err, { 
+        payload: { 
+          numeroNF: nfData.numeroNF, 
+          cnpjCliente: nfData.cnpjCliente?.replace(/(\d{5})\d+/, "$1***"),
+          produto: nfData.produto 
+        } 
+      });
       const errorMessage = err?.message || 'Erro desconhecido ao cadastrar Nota Fiscal';
       toast.error(errorMessage);
       throw new Error(errorMessage);
