@@ -6,7 +6,7 @@ import { useWMS } from '@/contexts/WMSContext';
 import { useNotifications } from '@/hooks/useNotifications';
 import { useLastVisit } from '@/hooks/useLastVisit';
 import { NotificationBadge } from '@/components/ui/notification-badge';
-import { FluxoNFs } from '../NfLists/FluxoNFs';
+
 import { ClienteDashboard } from './ClienteDashboard';
 import { ClienteMercadoriasTable } from './ClienteMercadoriasTable';
 import { ClienteSolicitacaoCarregamento } from './ClienteSolicitacaoCarregamento';
@@ -71,11 +71,10 @@ export function ClienteLayout() {
 
   const navigationItems = [
     { id: 'dashboard', label: 'Dashboard', icon: Home, shortLabel: 'Home', notification: 0 },
-    { id: 'fluxo-nfs', label: 'Fluxo de NFs', icon: Package, shortLabel: 'Fluxo', notification: 0 },
     { id: 'mercadorias', label: 'Notas Fiscais', icon: Package, shortLabel: 'Notas', notification: notifications.nfsConfirmadas },
-    { id: 'status-separacao', label: 'Status de Separação', icon: Eye, shortLabel: 'Separação', notification: 0 },
-    { id: 'pedidos', label: 'Pedidos de Liberação', icon: FileText, shortLabel: 'Pedidos', notification: 0 },
-    { id: 'liberados', label: 'Pedidos Liberados', icon: CheckCircle, shortLabel: 'Liberados', notification: notifications.pedidosLiberados },
+    { id: 'status-separacao', label: 'Mercadorias Armazenadas', icon: Eye, shortLabel: 'Armazenadas', notification: 0 },
+    { id: 'pedidos', label: 'Carregamentos Solicitados', icon: FileText, shortLabel: 'Solicitados', notification: 0 },
+    { id: 'liberados', label: 'Carregamentos Confirmados', icon: CheckCircle, shortLabel: 'Confirmados', notification: notifications.pedidosLiberados },
     { id: 'financeiro', label: 'Financeiro', icon: Receipt, shortLabel: 'Fin', notification: notifications.documentosFinanceiros },
     { id: 'cadastro-usuario', label: 'Cadastro de Usuários', icon: UserPlus, shortLabel: 'Users', notification: 0 }
   ];
@@ -138,8 +137,6 @@ export function ClienteLayout() {
     switch (activeTab) {
       case 'dashboard':
         return <ClienteDashboard />;
-      case 'fluxo-nfs':
-        return <FluxoNFs />;
       case 'mercadorias':
         return <ClienteMercadoriasTable />;
       case 'status-separacao':

@@ -1,120 +1,221 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
-import { Package, Clock, CheckCircle, AlertTriangle, Eye } from 'lucide-react';
-import { useNFs } from '@/hooks/useNFs';
-import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
-import { cn } from '@/lib/utils';
+import { useState, useEffect, useRef } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { useNFs, useFluxoMutations } from "@/hooks/useNFs";
+import { useNFsCliente } from "@/hooks/useNFsCliente";
+import { useAuth } from "@/contexts/AuthContext";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
+import { AlertCircle, CheckCircle, Clock, Package, Pause, Truck, BarChart3, Eye } from "lucide-react";
+import { NFFilters, type NFFilterState } from "@/components/NfLists/NFFilters";
+import { NFCard } from "@/components/NfLists/NFCard";
+import { NFBulkActions } from "@/components/NfLists/NFBulkActions";
+import { subscribeCentralizedChanges } from "@/lib/realtimeCentralized";
+import type { NotaFiscal } from "@/types/nf";
+import { log } from "@/utils/logger";
 
+// Configuração dos status de separação
 const statusConfig = {
   pendente: {
-    label: 'Aguardando Separação',
+    label: "Aguardando Separação",
     icon: Clock,
-    variant: 'secondary' as const,
-    description: 'Sua mercadoria está sendo preparada para separação',
+    color: "text-muted-foreground",
+    description: "Sua mercadoria está sendo preparada para separação",
     progress: 25,
-    color: 'text-muted-foreground'
   },
   em_separacao: {
-    label: 'Em Separação',
+    label: "Em Separação",
     icon: Package,
-    variant: 'default' as const,
-    description: 'Nossa equipe está separando seus produtos',
+    color: "text-blue-600",
+    description: "Nossa equipe está separando seus produtos",
     progress: 50,
-    color: 'text-blue-600'
   },
   separacao_concluida: {
-    label: 'Separação Concluída',
+    label: "Separação Concluída",
     icon: CheckCircle,
-    variant: 'default' as const,
-    description: 'Produtos separados e prontos para carregamento',
+    color: "text-green-600",
+    description: "Produtos separados e prontos para carregamento",
     progress: 100,
-    color: 'text-green-600'
   },
   separacao_com_pendencia: {
-    label: 'Pendências na Separação',
-    icon: AlertTriangle,
-    variant: 'destructive' as const,
-    description: 'Encontramos algumas pendências que requerem atenção',
+    label: "Pendências na Separação",
+    icon: AlertCircle,
+    color: "text-red-600",
+    description: "Encontramos algumas pendências que requerem atenção",
     progress: 75,
-    color: 'text-red-600'
-  }
+  },
 };
 
 export function ClienteStatusSeparacao() {
-  const { data: notasFiscais, isLoading } = useNFs("ARMAZENADA");
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+  const once = useRef(false);
+  const isCliente = user?.type === "cliente";
+  const { data: nfs, isLoading, isError } = isCliente ? useNFsCliente("ARMAZENADA") : useNFs("ARMAZENADA");
+  const { solicitar } = useFluxoMutations();
+
+  // Estados para filtros e seleção múltipla
+  const [filters, setFilters] = useState<NFFilterState>({
+    searchNF: "",
+    searchPedido: "",
+    cliente: "",
+    produto: "",
+    fornecedor: "",
+    dataInicio: "",
+    dataFim: "",
+    localizacao: "",
+  });
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+
+  // Configurar realtime centralizado
+  useEffect(() => {
+    if (once.current) return;
+    once.current = true;
+    log("🔄 Configurando realtime centralizado para ClienteStatusSeparacao");
+    return subscribeCentralizedChanges(queryClient);
+  }, [queryClient]);
 
   if (isLoading) {
     return (
-      <Card>
-        <CardContent className="flex items-center justify-center h-32">
-          <p>Carregando informações de separação...</p>
-        </CardContent>
-      </Card>
+      <div className="text-center py-8">
+        <p className="text-muted-foreground">Carregando...</p>
+      </div>
     );
   }
 
-  const nfsArmazenadas = notasFiscais || [];
-
-  if (nfsArmazenadas.length === 0) {
+  if (isError) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Eye className="w-5 h-5" />
-            Status de Separação
-          </CardTitle>
-          <CardDescription>
-            Acompanhe o progresso da separação das suas mercadorias
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="text-center py-8 text-muted-foreground">
-            <Package className="w-12 h-12 mx-auto mb-4 opacity-50" />
-            <p>Não há mercadorias em separação no momento</p>
-            <p className="text-sm mt-1">Quando você tiver produtos armazenados, o status aparecerá aqui</p>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="text-center py-8">
+        <p className="text-red-500">Erro ao carregar dados</p>
+      </div>
     );
   }
 
-  // Agrupar por status de separação
-  const statusCounts = nfsArmazenadas.reduce((acc, nf) => {
-    const status = nf.status_separacao || 'pendente';
-    acc[status] = (acc[status] || 0) + 1;
+  const validNfs = Array.isArray(nfs) ? nfs : [];
+
+  if (validNfs.length === 0) {
+    return (
+      <div className="space-y-6">
+        <div className="text-center">
+          <h1 className="text-3xl font-bold tracking-tight">Mercadorias Armazenadas</h1>
+          <p className="text-muted-foreground mt-2">
+            Acompanhe o status de separação das suas mercadorias armazenadas
+          </p>
+        </div>
+
+        <div className="text-center py-12 text-muted-foreground">
+          <Package className="w-16 h-16 mx-auto mb-4 opacity-50" />
+          <h3 className="text-lg font-medium mb-2">Nenhuma nota fiscal armazenada</h3>
+          <p className="text-sm">As mercadorias armazenadas aparecerão aqui</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Função para filtrar NFs
+  const applyFilters = (nfs: NotaFiscal[]) => {
+    return nfs.filter((nf) => {
+      if (
+        filters.searchNF &&
+        !nf.numero_nf.toLowerCase().includes(filters.searchNF.toLowerCase())
+      ) {
+        return false;
+      }
+      if (
+        filters.searchPedido &&
+        !nf.numero_pedido.toLowerCase().includes(filters.searchPedido.toLowerCase())
+      ) {
+        return false;
+      }
+      if (
+        filters.produto &&
+        !nf.produto.toLowerCase().includes(filters.produto.toLowerCase())
+      ) {
+        return false;
+      }
+      if (
+        filters.fornecedor &&
+        !nf.fornecedor.toLowerCase().includes(filters.fornecedor.toLowerCase())
+      ) {
+        return false;
+      }
+      if (
+        filters.localizacao &&
+        !nf.localizacao?.toLowerCase().includes(filters.localizacao.toLowerCase())
+      ) {
+        return false;
+      }
+      if (filters.dataInicio || filters.dataFim) {
+        const nfDate = new Date(nf.data_recebimento);
+        if (filters.dataInicio) {
+          const startDate = new Date(filters.dataInicio);
+          if (nfDate < startDate) return false;
+        }
+        if (filters.dataFim) {
+          const endDate = new Date(filters.dataFim);
+          endDate.setHours(23, 59, 59, 999);
+          if (nfDate > endDate) return false;
+        }
+      }
+      return true;
+    });
+  };
+
+  const filteredNfs = applyFilters(validNfs);
+
+  const handleSelection = (id: string, selected: boolean) => {
+    setSelectedIds((prev) =>
+      selected ? [...prev, id] : prev.filter((selectedId) => selectedId !== id)
+    );
+  };
+
+  // Agrupar por status de separação para resumo
+  const statusGroups = filteredNfs.reduce((acc, nf) => {
+    const status = nf.status_separacao || "pendente";
+    if (!acc[status]) acc[status] = [];
+    acc[status].push(nf);
     return acc;
-  }, {} as Record<string, number>);
+  }, {} as Record<string, any[]>);
 
   return (
     <div className="space-y-6">
-      {/* Resumo geral */}
+      <div className="text-center">
+        <h1 className="text-3xl font-bold tracking-tight">Mercadorias Armazenadas</h1>
+        <p className="text-muted-foreground mt-2">
+          Acompanhe o status de separação das suas mercadorias e solicite carregamentos
+        </p>
+      </div>
+
+      {/* Filtros */}
+      <NFFilters filters={filters} onFiltersChange={setFilters} showClientFilter={false} />
+
+      {/* Resumo dos Status */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Eye className="w-5 h-5" />
-            Resumo da Separação
+          <CardTitle className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <BarChart3 className="w-5 h-5" />
+              Resumo dos Status de Separação
+            </div>
+            <Badge variant="secondary">
+              {filteredNfs.length}
+              {validNfs.length !== filteredNfs.length && ` de ${validNfs.length}`}
+            </Badge>
           </CardTitle>
-          <CardDescription>
-            Status geral das suas {nfsArmazenadas.length} notas fiscais armazenadas
-          </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {Object.entries(statusConfig).map(([key, config]) => {
-              const count = statusCounts[key] || 0;
-              const Icon = config.icon;
-              
+            {Object.entries(statusConfig).map(([status, config]) => {
+              const count = statusGroups[status]?.length || 0;
               return (
-                <div key={key} className="flex items-center space-x-3 p-3 rounded-lg border">
-                  <div className={cn("flex-shrink-0", config.color)}>
-                    <Icon className="w-6 h-6" />
+                <div key={status} className="p-4 border rounded-lg">
+                  <div className="flex items-center gap-2 mb-2">
+                    <config.icon className={`w-5 h-5 ${config.color}`} />
+                    <Badge variant="secondary">{count}</Badge>
                   </div>
-                  <div className="flex-1">
-                    <p className="text-sm font-medium">{config.label}</p>
-                    <p className="text-2xl font-bold">{count}</p>
-                  </div>
+                  <h3 className="font-medium text-sm">{config.label}</h3>
+                  <p className="text-xs text-muted-foreground mt-1">{config.description}</p>
                 </div>
               );
             })}
@@ -122,58 +223,89 @@ export function ClienteStatusSeparacao() {
         </CardContent>
       </Card>
 
-      {/* Lista detalhada */}
+      {/* Ações em massa para NFs com separação concluída */}
+      {filteredNfs.some((nf) => nf.status_separacao === "separacao_concluida") && (
+        <NFBulkActions
+          nfs={filteredNfs.filter((nf) => nf.status_separacao === "separacao_concluida")}
+          selectedIds={selectedIds.filter((id) =>
+            filteredNfs.some((nf) => nf.id === id && nf.status_separacao === "separacao_concluida")
+          )}
+          onSelectionChange={setSelectedIds}
+          canRequest={isCliente}
+        />
+      )}
+
+      {/* Lista detalhada com ações de carregamento */}
       <Card>
         <CardHeader>
-          <CardTitle>Detalhes por Nota Fiscal</CardTitle>
-          <CardDescription>
-            Status individual de cada NF no processo de separação
-          </CardDescription>
+          <CardTitle className="flex items-center gap-2">
+            <Package className="w-5 h-5" />
+            Detalhes por Nota Fiscal
+          </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            {nfsArmazenadas.map((nf) => {
-              const statusSeparacao = nf.status_separacao || 'pendente';
-              const config = statusConfig[statusSeparacao];
-              const Icon = config.icon;
-              
-              return (
-                <div key={nf.id} className="flex items-center justify-between p-4 border rounded-lg">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-3">
-                      <div className={cn("flex-shrink-0", config.color)}>
-                        <Icon className="w-5 h-5" />
-                      </div>
-                      <div>
-                        <h4 className="font-semibold">NF {nf.numero_nf}</h4>
-                        <p className="text-sm text-muted-foreground">
-                          {nf.produto} • Qtd: {nf.quantidade} • {Number(nf.peso).toFixed(1)}kg
-                        </p>
-                      </div>
-                    </div>
-                    
+          {filteredNfs.length > 0 ? (
+            <div className="space-y-3">
+              {filteredNfs.map((nf) => {
+                const status = nf.status_separacao || "pendente";
+                const config = statusConfig[status];
+
+                return (
+                  <div key={nf.id} className="space-y-3">
+                    <NFCard
+                      nf={nf}
+                      showSelection={
+                        filteredNfs.length > 1 && nf.status_separacao === "separacao_concluida"
+                      }
+                      isSelected={selectedIds.includes(nf.id)}
+                      onSelect={handleSelection}
+                      actions={
+                        isCliente && nf.status_separacao === "separacao_concluida" ? (
+                          <Button
+                            size="sm"
+                            disabled={solicitar.isPending}
+                            onClick={() => solicitar.mutate(nf.id)}
+                            className="w-full"
+                          >
+                            <Truck className="w-3 h-3 mr-1" />
+                            {solicitar.isPending ? "Solicitando..." : "Solicitar Carregamento"}
+                          </Button>
+                        ) : isCliente && nf.status_separacao !== "separacao_concluida" ? (
+                          <div className="text-center p-2 text-sm text-muted-foreground bg-muted rounded">
+                            Carregamento disponível quando separação estiver concluída
+                          </div>
+                        ) : null
+                      }
+                    />
                     <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <Badge variant={config.variant} className="flex items-center gap-1">
-                          {config.label}
-                        </Badge>
-                        <span className="text-sm text-muted-foreground">
-                          Recebida em {format(new Date(nf.data_recebimento), "dd/MM/yyyy", { locale: ptBR })}
-                        </span>
+                      <div className="flex items-center justify-between text-sm">
+                        <div className="flex items-center gap-1">
+                          <config.icon className={`w-3 h-3 ${config.color}`} />
+                          <span>Status: {config.label}</span>
+                        </div>
+                        <span className="text-muted-foreground">{config.progress}%</span>
                       </div>
-                      
-                      <div className="space-y-1">
-                        <Progress value={config.progress} className="h-2" />
-                        <p className="text-sm text-muted-foreground">{config.description}</p>
-                      </div>
+                      <Progress value={config.progress} className="h-2" />
+                      <p className="text-xs text-muted-foreground">{config.description}</p>
                     </div>
                   </div>
-                </div>
-              );
-            })}
-          </div>
+                );
+              })}
+            </div>
+          ) : validNfs.length > 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              <Package className="w-12 h-12 mx-auto mb-2 opacity-50" />
+              <p>Nenhuma NF encontrada com os filtros aplicados</p>
+            </div>
+          ) : null}
         </CardContent>
       </Card>
+
+      {/* Footer com informações */}
+      <div className="text-center text-sm text-muted-foreground bg-muted/30 rounded-lg p-4">
+        <p className="font-medium mb-1">🔄 Atualizações em tempo real ativas</p>
+        <p>As mudanças são refletidas automaticamente sem necessidade de recarregar a página</p>
+      </div>
     </div>
   );
 }
