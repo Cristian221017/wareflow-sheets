@@ -107,9 +107,9 @@ export async function fetchNFsByStatus(status: NFStatus) {
 }
 
 export async function fetchNFsCliente(status?: NFStatus) {
-  log('🏢 Buscando NFs do cliente (fallback para query direta):', { status });
+  log('🏢 Buscando NFs do cliente (políticas RLS usando user_clientes):', { status });
   
-  // Temporário: usar query direta até tipos RPC serem atualizados
+  // Usar query direta - as políticas RLS já garantem que só vê NFs vinculadas
   let query = supabase
     .from("notas_fiscais")
     .select(`
