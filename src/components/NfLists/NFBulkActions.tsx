@@ -66,21 +66,43 @@ export function NFBulkActions({
       return;
     }
 
-    const promises = selectedIds.map(async (id) => {
+    // Filtrar NFs que podem ser processadas baseado na ação
+    let validNfs = nfs.filter(nf => selectedIds.includes(nf.id));
+    
+    // Para solicitação, só permitir NFs com separação concluída
+    if (bulkAction === 'solicitar') {
+      const nfsComSeparacaoConcluida = validNfs.filter(nf => nf.status_separacao === 'separacao_concluida');
+      const nfsRejeitadas = validNfs.length - nfsComSeparacaoConcluida.length;
+      
+      if (nfsRejeitadas > 0) {
+        toast.error(`${nfsRejeitadas} NFs não podem ser solicitadas pois não têm separação concluída.`, {
+          description: "Apenas NFs com separação concluída podem ter carregamento solicitado."
+        });
+      }
+      
+      validNfs = nfsComSeparacaoConcluida;
+      
+      if (validNfs.length === 0) {
+        toast.error('Nenhuma NF selecionada tem separação concluída.');
+        return;
+      }
+    }
+
+    const promises = validNfs.map(async (nf) => {
       try {
         switch (bulkAction) {
           case 'solicitar':
-            await solicitar.mutateAsync(id);
+            await solicitar.mutateAsync(nf.id);
             break;
           case 'confirmar':
-            await confirmar.mutateAsync(id);
+            await confirmar.mutateAsync(nf.id);
             break;
           case 'recusar':
-            await recusar.mutateAsync(id);
+            await recusar.mutateAsync(nf.id);
             break;
         }
       } catch (error) {
-        logError(`Erro ao processar NF ${id}:`, error);
+        logError(`Erro ao processar NF ${nf.id}:`, error);
         throw error;
       }
     });
@@ -94,7 +116,7 @@ export function NFBulkActions({
         recusar: 'recusadas'
       };
       
-      toast.success(`${selectedIds.length} NFs ${actionNames[bulkAction as keyof typeof actionNames]} com sucesso!`);
+      toast.success(`${validNfs.length} NFs ${actionNames[bulkAction as keyof typeof actionNames]} com sucesso!`);
       onSelectionChange([]);
       setBulkAction('');
     } catch (error) {
@@ -143,6 +165,9 @@ export function NFBulkActions({
                       <div className="flex items-center gap-2">
                         <Truck className="w-4 h-4" />
                         Solicitar Carregamento
+                        <span className="text-xs text-muted-foreground">
+                          (apenas separação concluída)
+                        </span>
                       </div>
                     </SelectItem>
                   )}

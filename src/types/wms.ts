@@ -15,6 +15,7 @@ export interface NotaFiscal {
   volume: number;
   localizacao: string;
   status: 'ARMAZENADA' | 'SOLICITADA' | 'CONFIRMADA';
+  statusSeparacao?: 'pendente' | 'em_separacao' | 'separacao_concluida' | 'separacao_com_pendencia';
   createdAt: string;
   integration_metadata?: any; // For storing additional metadata like rejection notes
 }

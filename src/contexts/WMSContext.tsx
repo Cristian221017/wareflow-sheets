@@ -100,6 +100,7 @@ export function WMSProvider({ children }: { children: ReactNode }) {
           volume: parseFloat(nf.volume.toString()),
           localizacao: nf.localizacao,
           status: nf.status as 'ARMAZENADA' | 'SOLICITADA' | 'CONFIRMADA',
+          statusSeparacao: (nf as any).status_separacao || 'pendente',
           createdAt: nf.created_at,
           integration_metadata: (nf as any).integration_metadata || {}
         }));
@@ -216,6 +217,7 @@ export function WMSProvider({ children }: { children: ReactNode }) {
           volume: Number(nfData.volume) || 0, // Garantir que nunca seja null/undefined
           localizacao: nfData.localizacao || 'A definir',
           status: 'ARMAZENADA',
+          status_separacao: nfData.statusSeparacao || 'pendente',
           transportadora_id: user?.transportadoraId
         });
 
@@ -269,6 +271,10 @@ export function WMSProvider({ children }: { children: ReactNode }) {
 
       if (nf.status !== 'ARMAZENADA') {
         throw new Error(`NF não pode ser solicitada. Status atual: ${nf.status}`);
+      }
+
+      if (nf.statusSeparacao !== 'separacao_concluida') {
+        throw new Error('Só é possível solicitar carregamento quando a separação estiver concluída');
       }
 
       await solicitarNF(nf.id);

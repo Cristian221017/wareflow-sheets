@@ -51,6 +51,26 @@ export function NFCard({
     }
   };
 
+  const getSeparacaoStatusColor = () => {
+    switch (nf.status_separacao) {
+      case 'pendente': return 'bg-gray-100 text-gray-800 border-gray-300';
+      case 'em_separacao': return 'bg-orange-100 text-orange-800 border-orange-300';
+      case 'separacao_concluida': return 'bg-green-100 text-green-800 border-green-300';
+      case 'separacao_com_pendencia': return 'bg-red-100 text-red-800 border-red-300';
+      default: return 'bg-gray-100 text-gray-800 border-gray-300';
+    }
+  };
+
+  const getSeparacaoStatusLabel = () => {
+    switch (nf.status_separacao) {
+      case 'pendente': return 'Separação Pendente';
+      case 'em_separacao': return 'Em Separação';
+      case 'separacao_concluida': return 'Separação Concluída';
+      case 'separacao_com_pendencia': return 'Separação com Pendência';
+      default: return 'Status não definido';
+    }
+  };
+
   return (
     <Card className={`hover:shadow-md transition-shadow ${isSelected ? 'ring-2 ring-primary' : ''}`}>
       <CardContent className="p-4 space-y-3">
@@ -69,10 +89,15 @@ export function NFCard({
               <p className="text-sm text-muted-foreground">Pedido: {nf.numero_pedido}</p>
             </div>
           </div>
-          <Badge className={`${getStatusColor()} flex items-center gap-1`}>
-            {getStatusIcon()}
-            {nf.status}
-          </Badge>
+          <div className="flex flex-col gap-1">
+            <Badge className={`${getStatusColor()} flex items-center gap-1`}>
+              {getStatusIcon()}
+              {nf.status}
+            </Badge>
+            <Badge variant="outline" className={`${getSeparacaoStatusColor()} text-xs`}>
+              {getSeparacaoStatusLabel()}
+            </Badge>
+          </div>
         </div>
 
         {/* Informações principais */}

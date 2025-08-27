@@ -87,7 +87,7 @@ function ArmazenadasColumn({
               isSelected={selectedIds.includes(nf.id)}
               onSelect={onSelect}
               actions={
-                canRequest ? (
+                canRequest && nf.status_separacao === 'separacao_concluida' ? (
                   <Button
                     size="sm"
                     disabled={solicitar.isPending}
@@ -97,6 +97,10 @@ function ArmazenadasColumn({
                     <Truck className="w-3 h-3 mr-1" />
                     {solicitar.isPending ? "Solicitando..." : "Solicitar Carregamento"}
                   </Button>
+                ) : canRequest && nf.status_separacao !== 'separacao_concluida' ? (
+                  <div className="text-center p-2 text-sm text-muted-foreground bg-muted rounded">
+                    Carregamento disponível apenas quando separação estiver concluída
+                  </div>
                 ) : null
               }
             />

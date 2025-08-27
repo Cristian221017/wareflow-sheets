@@ -26,7 +26,7 @@ const formSchema = z.object({
   peso: z.coerce.number().min(0.1, 'Peso deve ser maior que 0'),
   volume: z.coerce.number().min(0, 'Volume deve ser 0 ou maior').default(0), // Garantir padrão 0
   localizacao: z.string().nullable().optional(),
-  status: z.enum(['ARMAZENADA', 'SOLICITADA', 'CONFIRMADA']).default('ARMAZENADA')
+  statusSeparacao: z.enum(['pendente', 'em_separacao', 'separacao_concluida', 'separacao_com_pendencia']).default('pendente')
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -50,7 +50,7 @@ export function FormNotaFiscal() {
       peso: 0,
       volume: 0,
       localizacao: 'A definir',
-      status: 'ARMAZENADA' as const
+      statusSeparacao: 'pendente' as const
     }
   });
 
@@ -77,7 +77,8 @@ export function FormNotaFiscal() {
         peso: data.peso,
         volume: data.volume && data.volume > 0 ? data.volume : 0, // Enviar 0 em vez de null (NOT NULL constraint)
         localizacao: data.localizacao && data.localizacao.trim() ? data.localizacao.trim() : 'A definir',
-        status: 'ARMAZENADA' as const
+        status: 'ARMAZENADA' as const, // Sempre ARMAZENADA no cadastro
+        statusSeparacao: data.statusSeparacao
       };
 
       await addNotaFiscal(nfData as Omit<NotaFiscal, 'id' | 'createdAt'>);
@@ -302,20 +303,21 @@ export function FormNotaFiscal() {
 
               <FormField
                 control={form.control}
-                name="status"
+                name="statusSeparacao"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Status *</FormLabel>
+                    <FormLabel>Status de Separação *</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Selecione o status" />
+                          <SelectValue placeholder="Selecione o status de separação" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="ARMAZENADA">Armazenada</SelectItem>
-                        <SelectItem value="SOLICITADA">Solicitada</SelectItem>
-                        <SelectItem value="CONFIRMADA">Confirmada</SelectItem>
+                        <SelectItem value="pendente">Separação Pendente</SelectItem>
+                        <SelectItem value="em_separacao">Em Separação</SelectItem>
+                        <SelectItem value="separacao_concluida">Separação Concluída</SelectItem>
+                        <SelectItem value="separacao_com_pendencia">Separação com Pendência</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
