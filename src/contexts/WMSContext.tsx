@@ -40,11 +40,25 @@ export function WMSProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   
-  const invalidateAll = () => {
-    const statuses = ["ARMAZENADA", "SOLICITADA", "CONFIRMADA"];
-    statuses.forEach(status => 
-      queryClient.invalidateQueries({ queryKey: ["nfs", status] })
-    );
+  const invalidateWithScope = (entityType: 'nfs' | 'documentos_financeiros', entityId?: string, userType?: string, userId?: string) => {
+    if (entityType === 'nfs') {
+      const statuses = ["ARMAZENADA", "SOLICITADA", "CONFIRMADA"];
+      statuses.forEach(status => 
+        queryClient.invalidateQueries({ queryKey: ["nfs", status] })
+      );
+      // Invalidar específico se disponível
+      if (userType === 'cliente' && userId) {
+        queryClient.invalidateQueries({ queryKey: ['nfs', 'cliente', userId] });
+      } else if (user?.transportadoraId) {
+        queryClient.invalidateQueries({ queryKey: ['nfs', 'transportadora', user.transportadoraId] });
+      }
+    } else if (entityType === 'documentos_financeiros') {
+      if (userType === 'cliente' && userId) {
+        queryClient.invalidateQueries({ queryKey: ['documentos_financeiros', 'cliente', userId] });
+      } else if (user?.transportadoraId) {
+        queryClient.invalidateQueries({ queryKey: ['documentos_financeiros', 'transportadora', user.transportadoraId] });
+      }
+    }
   };
   const [notasFiscais, setNotasFiscais] = useState<NotaFiscal[]>([]);
   const [pedidosLiberacao, setPedidosLiberacao] = useState<PedidoLiberacao[]>([]);
@@ -272,8 +286,8 @@ export function WMSProvider({ children }: { children: ReactNode }) {
         warn('⚠️ Erro ao enviar notificação de solicitação:', emailError);
         }
       
-      invalidateAll();
-      toast.success(`✅ Carregamento solicitado para NF ${numeroNF}!`);
+      // Invalidar com escopo
+      invalidateWithScope('nfs', undefined, user?.type, user?.id);
       await loadData();
       
     } catch (err: any) {
@@ -318,7 +332,8 @@ export function WMSProvider({ children }: { children: ReactNode }) {
         warn('⚠️ Erro ao enviar notificação de confirmação:', emailError);
         }
       
-      invalidateAll();
+      // Invalidar com escopo
+      invalidateWithScope('nfs', undefined, user?.type, user?.id);
       toast.success(`✅ Carregamento aprovado para NF ${numeroNF}!`);
       await loadData();
       
@@ -344,7 +359,9 @@ export function WMSProvider({ children }: { children: ReactNode }) {
       }
 
       await recusarNF(nf.id);
-      invalidateAll();
+      
+      // Invalidar com escopo
+      invalidateWithScope('nfs', undefined, user?.type, user?.id);
       toast.success(`❌ Carregamento rejeitado para NF ${numeroNF}!`);
       await loadData();
       

@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { log, warn, error, audit, auditError } from '@/utils/logger';
 
 async function getCurrentUserId(): Promise<string> {
   const { data, error } = await supabase.auth.getUser();
@@ -16,7 +17,7 @@ export async function createDocumentoFinanceiro(
   observacoes?: string,
   status: string = 'Em aberto'
 ): Promise<string> {
-  console.log('💰 Criando documento financeiro:', { clienteId, numeroCte, valor });
+  log('💰 Criando documento financeiro:', { clienteId, numeroCte, valor });
   
   const { data, error } = await supabase.rpc("financeiro_create_documento" as any, { 
     p_cliente_id: clienteId,
@@ -28,11 +29,12 @@ export async function createDocumentoFinanceiro(
   });
   
   if (error) {
-    console.error('❌ Erro ao criar documento financeiro:', error);
+    auditError('DOC_CREATE_FAIL', 'FINANCEIRO', error, { clienteId, numeroCte, valor });
     throw new Error(`Erro ao criar documento financeiro: ${error.message}`);
   }
   
-  console.log('✅ Documento financeiro criado com sucesso:', data);
+  audit('DOC_CREATED', 'FINANCEIRO', { documentoId: data, clienteId, numeroCte, valor });
+  log('✅ Documento financeiro criado com sucesso:', data);
   return data as string;
 }
 
@@ -45,7 +47,7 @@ export async function updateDocumentoFinanceiro(
     dataPagamento?: string;
   }
 ): Promise<void> {
-  console.log('💰 Atualizando documento financeiro:', { documentoId, updates });
+  log('💰 Atualizando documento financeiro:', { documentoId, updates });
   
   const { error } = await supabase.rpc("financeiro_update_documento" as any, { 
     p_documento_id: documentoId,
@@ -56,11 +58,12 @@ export async function updateDocumentoFinanceiro(
   });
   
   if (error) {
-    console.error('❌ Erro ao atualizar documento financeiro:', error);
+    auditError('DOC_UPDATE_FAIL', 'FINANCEIRO', error, { documentoId, updates });
     throw new Error(`Erro ao atualizar documento financeiro: ${error.message}`);
   }
   
-  console.log('✅ Documento financeiro atualizado com sucesso');
+  audit('DOC_UPDATED', 'FINANCEIRO', { documentoId, updates });
+  log('✅ Documento financeiro atualizado com sucesso');
 }
 
 export async function createNotaFiscal(nfData: {
@@ -77,7 +80,7 @@ export async function createNotaFiscal(nfData: {
   volume: number;
   localizacao: string;
 }): Promise<string> {
-  console.log('📦 Criando nota fiscal:', nfData);
+  log('📦 Criando nota fiscal:', nfData);
   
   const { data, error } = await supabase.rpc("nf_create" as any, { 
     p_numero_nf: nfData.numeroNF,
@@ -95,10 +98,11 @@ export async function createNotaFiscal(nfData: {
   });
   
   if (error) {
-    console.error('❌ Erro ao criar NF:', error);
+    auditError('NF_CREATE_FAIL', 'NF', error, { numeroNF: nfData.numeroNF, clienteCnpj: nfData.clienteCnpj });
     throw new Error(`Erro ao criar nota fiscal: ${error.message}`);
   }
   
-  console.log('✅ Nota fiscal criada com sucesso:', data);
+  audit('NF_CREATED', 'NF', { nfId: data, numeroNF: nfData.numeroNF, clienteCnpj: nfData.clienteCnpj });
+  log('✅ Nota fiscal criada com sucesso:', data);
   return data as string;
 }

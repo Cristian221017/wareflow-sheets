@@ -1,5 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
-import { log, error } from "@/utils/logger";
+import { log, warn, error, audit, auditError } from "@/utils/logger";
 import type { NFStatus } from "@/types/nf";
 
 async function getCurrentUserId(): Promise<string> {
@@ -20,10 +20,11 @@ export async function solicitarNF(nfId: string): Promise<void> {
   });
   
   if (rpcError) {
-    error('❌ Erro ao solicitar NF:', rpcError);
+    auditError('NF_SOLICITAR_FAIL', 'NF', rpcError, { nfId, userId });
     throw new Error(`Erro ao solicitar carregamento: ${rpcError.message}`);
   }
   
+  audit('NF_SOLICITADA', 'NF', { nfId, userId });
   log('✅ NF solicitada com sucesso');
 }
 
@@ -37,10 +38,11 @@ export async function confirmarNF(nfId: string): Promise<void> {
   });
   
   if (rpcError) {
-    error('❌ Erro ao confirmar NF:', rpcError);
+    auditError('NF_CONFIRMAR_FAIL', 'NF', rpcError, { nfId, userId });
     throw new Error(`Erro ao confirmar carregamento: ${rpcError.message}`);
   }
   
+  audit('NF_CONFIRMADA', 'NF', { nfId, userId });
   log('✅ NF confirmada com sucesso');
 }
 
@@ -54,10 +56,11 @@ export async function recusarNF(nfId: string): Promise<void> {
   });
   
   if (rpcError) {
-    error('❌ Erro ao recusar NF:', rpcError);
+    auditError('NF_RECUSAR_FAIL', 'NF', rpcError, { nfId, userId });
     throw new Error(`Erro ao recusar carregamento: ${rpcError.message}`);
   }
   
+  audit('NF_RECUSADA', 'NF', { nfId, userId });
   log('✅ NF recusada com sucesso');
 }
 
