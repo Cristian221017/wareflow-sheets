@@ -1029,6 +1029,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      cleanup_old_logs: {
+        Args: { retention_days?: number }
+        Returns: number
+      }
       cleanup_orphaned_users: {
         Args: Record<PropertyKey, never>
         Returns: number
@@ -1048,6 +1052,10 @@ export type Database = {
       create_user_cliente_link: {
         Args: { p_cliente_id: string; p_user_id: string }
         Returns: boolean
+      }
+      daily_log_cleanup: {
+        Args: Record<PropertyKey, never>
+        Returns: number
       }
       email_matches: {
         Args: { email1: string; email2: string }
