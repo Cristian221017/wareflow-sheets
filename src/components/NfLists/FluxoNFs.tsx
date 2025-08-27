@@ -8,6 +8,7 @@ import { NFCard } from "./NFCard";
 import { NFFilters, type NFFilterState } from "./NFFilters";
 import { NFBulkActions } from "./NFBulkActions";
 import { useNFs, useFluxoMutations } from "@/hooks/useNFs";
+import { useNFsCliente } from "@/hooks/useNFsCliente";
 import { subscribeCentralizedChanges } from "@/lib/realtimeCentralized";
 import { useAuth } from "@/contexts/AuthContext";
 import type { NotaFiscal } from "@/types/nf";
@@ -34,15 +35,19 @@ function ArmazenadasColumn({
   filters, 
   selectedIds, 
   onSelect,
+  onSelectionChange,
   applyFilters 
 }: { 
   canRequest: boolean;
   filters: NFFilterState;
   selectedIds: string[];
   onSelect: (id: string, selected: boolean) => void;
+  onSelectionChange: (ids: string[]) => void;
   applyFilters: (nfs: NotaFiscal[]) => NotaFiscal[];
 }) {
-  const { data: nfs, isLoading, isError } = useNFs("ARMAZENADA");
+  const { user } = useAuth();
+  const isCliente = user?.type === 'cliente';
+  const { data: nfs, isLoading, isError } = isCliente ? useNFsCliente("ARMAZENADA") : useNFs("ARMAZENADA");
   const { solicitar } = useFluxoMutations();
 
   if (isLoading) return <div className="p-4">Carregando...</div>;
@@ -68,11 +73,7 @@ function ArmazenadasColumn({
         <NFBulkActions
           nfs={filteredNfs}
           selectedIds={selectedIds.filter(id => filteredNfs.some(nf => nf.id === id))}
-          onSelectionChange={ids => {
-            // Manter apenas IDs válidos para esta coluna
-            const validIds = ids.filter(id => filteredNfs.some(nf => nf.id === id));
-            validIds.forEach(id => onSelect(id, true));
-          }}
+          onSelectionChange={onSelectionChange}
           canRequest={canRequest}
         />
       )}
@@ -128,15 +129,19 @@ function SolicitadasColumn({
   filters, 
   selectedIds, 
   onSelect,
+  onSelectionChange,
   applyFilters 
 }: { 
   canDecide: boolean;
   filters: NFFilterState;
   selectedIds: string[];
   onSelect: (id: string, selected: boolean) => void;
+  onSelectionChange: (ids: string[]) => void;
   applyFilters: (nfs: NotaFiscal[]) => NotaFiscal[];
 }) {
-  const { data: nfs, isLoading, isError } = useNFs("SOLICITADA");
+  const { user } = useAuth();
+  const isCliente = user?.type === 'cliente';
+  const { data: nfs, isLoading, isError } = isCliente ? useNFsCliente("SOLICITADA") : useNFs("SOLICITADA");
   const { confirmar, recusar } = useFluxoMutations();
 
   if (isLoading) return <div className="p-4">Carregando...</div>;
@@ -162,10 +167,7 @@ function SolicitadasColumn({
         <NFBulkActions
           nfs={filteredNfs}
           selectedIds={selectedIds.filter(id => filteredNfs.some(nf => nf.id === id))}
-          onSelectionChange={ids => {
-            const validIds = ids.filter(id => filteredNfs.some(nf => nf.id === id));
-            validIds.forEach(id => onSelect(id, true));
-          }}
+          onSelectionChange={onSelectionChange}
           canDecide={canDecide}
         />
       )}
@@ -236,7 +238,9 @@ function ConfirmadasColumn({
   onSelect: (id: string, selected: boolean) => void;
   applyFilters: (nfs: NotaFiscal[]) => NotaFiscal[];
 }) {
-  const { data: nfs, isLoading, isError } = useNFs("CONFIRMADA");
+  const { user } = useAuth();
+  const isCliente = user?.type === 'cliente';
+  const { data: nfs, isLoading, isError } = isCliente ? useNFsCliente("CONFIRMADA") : useNFs("CONFIRMADA");
 
   if (isLoading) return <div className="p-4">Carregando...</div>;
   if (isError) return <div className="p-4 text-red-500">Erro ao carregar dados</div>;
@@ -406,6 +410,7 @@ export function FluxoNFs() {
               filters={filters}
               selectedIds={selectedIds}
               onSelect={handleSelection}
+              onSelectionChange={setSelectedIds}
               applyFilters={applyFilters}
             />
           </TabsContent>
@@ -415,6 +420,7 @@ export function FluxoNFs() {
               filters={filters}
               selectedIds={selectedIds}
               onSelect={handleSelection}
+              onSelectionChange={setSelectedIds}
               applyFilters={applyFilters}
             />
           </TabsContent>
@@ -437,6 +443,7 @@ export function FluxoNFs() {
             filters={filters}
             selectedIds={selectedIds}
             onSelect={handleSelection}
+            onSelectionChange={setSelectedIds}
             applyFilters={applyFilters}
           />
         </div>
@@ -446,6 +453,7 @@ export function FluxoNFs() {
             filters={filters}
             selectedIds={selectedIds}
             onSelect={handleSelection}
+            onSelectionChange={setSelectedIds}
             applyFilters={applyFilters}
           />
         </div>
