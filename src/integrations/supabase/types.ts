@@ -1053,6 +1053,10 @@ export type Database = {
         Args: { p_cliente_id: string; p_user_id: string }
         Returns: boolean
       }
+      create_user_cliente_link_by_email: {
+        Args: { p_client_email: string }
+        Returns: boolean
+      }
       daily_log_cleanup: {
         Args: Record<PropertyKey, never>
         Returns: number
