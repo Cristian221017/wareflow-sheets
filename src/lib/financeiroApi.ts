@@ -90,8 +90,8 @@ export async function createNotaFiscal(nfData: {
     p_produto: nfData.produto,
     p_quantidade: nfData.quantidade,
     p_peso: nfData.peso,
-    p_volume: nfData.volume,
-    p_localizacao: nfData.localizacao
+    p_volume: Number(nfData.volume) || 0, // Garantir que nunca seja null/undefined
+    p_localizacao: nfData.localizacao || 'A definir'
   });
   
   if (error) {

@@ -193,8 +193,8 @@ export function WMSProvider({ children }: { children: ReactNode }) {
           produto: nfData.produto,
           quantidade: nfData.quantidade,
           peso: nfData.peso,
-          volume: nfData.volume,
-          localizacao: nfData.localizacao,
+          volume: Number(nfData.volume) || 0, // Garantir que nunca seja null/undefined
+          localizacao: nfData.localizacao || 'A definir',
           status: 'ARMAZENADA',
           transportadora_id: user?.transportadoraId
         });
