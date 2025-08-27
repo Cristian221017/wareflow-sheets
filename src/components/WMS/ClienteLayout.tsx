@@ -8,7 +8,7 @@ import { useLastVisit } from '@/hooks/useLastVisit';
 import { NotificationBadge } from '@/components/ui/notification-badge';
 
 import { ClienteDashboard } from './ClienteDashboard';
-import { ClienteMercadoriasTable } from './ClienteMercadoriasTable';
+
 import { ClienteSolicitacaoCarregamento } from './ClienteSolicitacaoCarregamento';
 import { ClienteStatusSeparacao } from './ClienteStatusSeparacao';
 import { FinanceiroCliente } from './FinanceiroCliente';
@@ -27,8 +27,7 @@ import {
   Receipt,
   Menu,
   UserPlus,
-  Home,
-  Eye
+  Home
 } from 'lucide-react';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 
@@ -56,9 +55,6 @@ export function ClienteLayout() {
     // Marcar como visitado baseado na aba - força re-render das notificações
     setTimeout(() => {
       switch (tabId) {
-        case 'mercadorias':
-          markAsVisited('nfs-confirmadas');
-          break;
         case 'liberados':
           markAsVisited('pedidos-liberados');
           break;
@@ -71,8 +67,7 @@ export function ClienteLayout() {
 
   const navigationItems = [
     { id: 'dashboard', label: 'Dashboard', icon: Home, shortLabel: 'Home', notification: 0 },
-    { id: 'mercadorias', label: 'Notas Fiscais', icon: Package, shortLabel: 'Notas', notification: notifications.nfsConfirmadas },
-    { id: 'status-separacao', label: 'Mercadorias Armazenadas', icon: Eye, shortLabel: 'Armazenadas', notification: 0 },
+    { id: 'status-separacao', label: 'Mercadorias Armazenadas', icon: Package, shortLabel: 'Armazenadas', notification: 0 },
     { id: 'pedidos', label: 'Carregamentos Solicitados', icon: FileText, shortLabel: 'Solicitados', notification: 0 },
     { id: 'liberados', label: 'Carregamentos Confirmados', icon: CheckCircle, shortLabel: 'Confirmados', notification: notifications.pedidosLiberados },
     { id: 'financeiro', label: 'Financeiro', icon: Receipt, shortLabel: 'Fin', notification: notifications.documentosFinanceiros },
@@ -137,8 +132,6 @@ export function ClienteLayout() {
     switch (activeTab) {
       case 'dashboard':
         return <ClienteDashboard />;
-      case 'mercadorias':
-        return <ClienteMercadoriasTable />;
       case 'status-separacao':
         return <ClienteStatusSeparacao />;
       case 'pedidos':
