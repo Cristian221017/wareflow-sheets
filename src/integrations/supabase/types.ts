@@ -1218,6 +1218,41 @@ export type Database = {
         }
         Returns: string
       }
+      nf_listar_do_cliente: {
+        Args: { p_status?: string }
+        Returns: {
+          approved_at: string | null
+          approved_by: string | null
+          cliente_id: string
+          cnpj_fornecedor: string
+          created_at: string
+          data_recebimento: string
+          edi_id: string | null
+          external_id: string | null
+          fornecedor: string
+          id: string
+          integration_metadata: Json | null
+          last_sync: string | null
+          localizacao: string
+          nfe_key: string | null
+          numero_nf: string
+          numero_pedido: string
+          ordem_compra: string
+          peso: number
+          produto: string
+          quantidade: number
+          requested_at: string | null
+          requested_by: string | null
+          status: string
+          status_separacao:
+            | Database["public"]["Enums"]["separacao_status"]
+            | null
+          sync_status: string | null
+          transportadora_id: string
+          updated_at: string
+          volume: number
+        }[]
+      }
       nf_recusar: {
         Args: { p_nf_id: string; p_user_id: string }
         Returns: undefined

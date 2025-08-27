@@ -1,6 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { log, warn, error, audit, auditError } from "@/utils/logger";
 import type { NFStatus } from "@/types/nf";
+import { audit, auditError } from "@/utils/logger";
 
 async function getCurrentUserId(): Promise<string> {
   const { data, error } = await supabase.auth.getUser();

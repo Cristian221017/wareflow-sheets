@@ -1,4 +1,6 @@
-export type NFStatus = "ARMAZENADA" | "SOLICITADA" | "CONFIRMADA";
+// Status unificado para NFs - única fonte da verdade
+export const NF_STATUS = ['ARMAZENADA', 'SOLICITADA', 'CONFIRMADA'] as const;
+export type NFStatus = typeof NF_STATUS[number];
 
 export interface NotaFiscal {
   id: string;
