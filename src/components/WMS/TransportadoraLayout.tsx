@@ -18,7 +18,7 @@ import { ClientesTable } from './ClientesTable';
 import { FinanceiroTransportadora } from './FinanceiroTransportadora';
 import { FormDocumentoFinanceiro } from './FormDocumentoFinanceiro';
 import IntegrationConfig from './IntegrationConfig';
-import { NotasFiscaisTable } from './NotasFiscaisTable';
+
 import { SolicitacoesPendentesTable } from './SolicitacoesPendentesTable';
 import { PedidosConfirmadosTransportadora } from './PedidosConfirmadosTransportadora';
 
@@ -253,14 +253,6 @@ export function TransportadoraLayout() {
                 <TabsTrigger value="dashboard" className="text-xs px-2 py-2 whitespace-nowrap">Dashboard</TabsTrigger>
                 <TabsTrigger value="fluxo-nfs" className="text-xs px-2 py-2 whitespace-nowrap">Fluxo de NFs</TabsTrigger>
                 <TabsTrigger 
-                  value="notas-fiscais" 
-                  className="text-xs px-2 py-2 whitespace-nowrap relative"
-                  onClick={() => setTimeout(() => markAsVisited('nfs-armazenadas'), 100)}
-                >
-                  Notas Fiscais
-                  <NotificationBadge count={notifications.nfsArmazenadas} className="absolute -top-1 -right-1 scale-50" />
-                </TabsTrigger>
-                <TabsTrigger 
                   value="pedidos-liberacao" 
                   className="text-xs px-2 py-2 whitespace-nowrap relative"
                   onClick={() => setTimeout(() => markAsVisited('solicitacoes-pendentes'), 100)}
@@ -281,17 +273,9 @@ export function TransportadoraLayout() {
             
             {/* Desktop: Grid layout */}
             <div className="hidden lg:block mb-6">
-              <TabsList className="grid w-full grid-cols-7 gap-1">
+              <TabsList className="grid w-full grid-cols-6 gap-1">
                 <TabsTrigger value="dashboard" className="text-sm">Dashboard</TabsTrigger>
                 <TabsTrigger value="fluxo-nfs" className="text-sm">Fluxo de NFs</TabsTrigger>
-                <TabsTrigger 
-                  value="notas-fiscais" 
-                  className="text-sm relative"
-                  onClick={() => setTimeout(() => markAsVisited('nfs-armazenadas'), 100)}
-                >
-                  Notas Fiscais
-                  <NotificationBadge count={notifications.nfsArmazenadas} className="absolute -top-2 -right-2 scale-75" />
-                </TabsTrigger>
                 <TabsTrigger 
                   value="pedidos-liberacao" 
                   className="text-sm relative"
@@ -319,9 +303,6 @@ export function TransportadoraLayout() {
               <FluxoNFs />
             </TabsContent>
 
-            <TabsContent value="notas-fiscais" className="space-y-4">
-              <NotasFiscaisTable />
-            </TabsContent>
 
             <TabsContent value="pedidos-liberacao" className="space-y-4">
               <SolicitacoesPendentesTable />
