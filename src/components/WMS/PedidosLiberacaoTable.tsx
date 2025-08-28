@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import {
   Table,
   TableBody,
@@ -9,17 +10,23 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useWMS } from '@/contexts/WMSContext';
-import { PedidoLiberacao } from '@/types/wms';
 import { AlertTriangle, CheckCircle, Trash2, Printer, Download } from 'lucide-react';
+import { useWMS } from '@/contexts/WMSContext';
+import type { PedidoLiberacao } from '@/types/wms';
+import { 
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle 
+} from '@/components/ui/dialog';
+import { NFFilters, type NFFilterState } from '@/components/NfLists/NFFilters';
 import { toast } from 'sonner';
-import { useState } from 'react';
-import { cn } from '@/lib/utils';
 
-const getPriorityColor = (prioridade: PedidoLiberacao['prioridade']) => {
+const getPrioridadeColor = (prioridade: string) => {
   switch (prioridade) {
     case 'Alta':
       return 'bg-destructive text-destructive-foreground';
@@ -38,15 +45,59 @@ export function PedidosLiberacaoTable() {
   const [solicitanteLiberacao, setSolicitanteLiberacao] = useState('');
   const [dataExpedicao, setDataExpedicao] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  
+  // Estados para filtros
+  const [filters, setFilters] = useState<NFFilterState>({
+    searchNF: '',
+    searchPedido: '',
+    cliente: '',
+    produto: '',
+    fornecedor: '',
+    dataInicio: '',
+    dataFim: '',
+    localizacao: '',
+  });
 
-  // Função para imprimir relatório
+  // Função para filtrar pedidos
+  const applyFilters = (pedidos: PedidoLiberacao[]) => {
+    return pedidos.filter(pedido => {
+      if (filters.searchPedido && !pedido.numeroPedido.toLowerCase().includes(filters.searchPedido.toLowerCase())) {
+        return false;
+      }
+      if (filters.produto && !pedido.produto.toLowerCase().includes(filters.produto.toLowerCase())) {
+        return false;
+      }
+      if (filters.dataInicio) {
+        const pedidoDate = new Date(pedido.dataSolicitacao);
+        const startDate = new Date(filters.dataInicio);
+        if (pedidoDate < startDate) return false;
+      }
+      if (filters.dataFim) {
+        const pedidoDate = new Date(pedido.dataSolicitacao);
+        const endDate = new Date(filters.dataFim);
+        endDate.setHours(23, 59, 59, 999);
+        if (pedidoDate > endDate) return false;
+      }
+      return true;
+    });
+  };
+
+  const filteredPedidos = applyFilters(pedidosLiberacao);
+
+  // Função para imprimir relatório (atualizada para usar filtros)
   const handleImprimir = () => {
     const hoje = new Date();
     const dataHoraImpressao = hoje.toLocaleString('pt-BR');
+    
+    const filtrosAplicados = [];
+    if (filters.searchPedido) filtrosAplicados.push(`Pedido: ${filters.searchPedido}`);
+    if (filters.produto) filtrosAplicados.push(`Produto: ${filters.produto}`);
+    if (filters.dataInicio) filtrosAplicados.push(`Data início: ${new Date(filters.dataInicio).toLocaleDateString('pt-BR')}`);
+    if (filters.dataFim) filtrosAplicados.push(`Data fim: ${new Date(filters.dataFim).toLocaleDateString('pt-BR')}`);
 
-    const totalPeso = pedidosLiberacao.reduce((sum, pedido) => sum + Number(pedido.peso || 0), 0);
-    const totalVolume = pedidosLiberacao.reduce((sum, pedido) => sum + Number(pedido.volume || 0), 0);
-    const totalQuantidade = pedidosLiberacao.reduce((sum, pedido) => sum + Number(pedido.quantidade || 0), 0);
+    const totalPeso = filteredPedidos.reduce((sum, pedido) => sum + Number(pedido.peso || 0), 0);
+    const totalVolume = filteredPedidos.reduce((sum, pedido) => sum + Number(pedido.volume || 0), 0);
+    const totalQuantidade = filteredPedidos.reduce((sum, pedido) => sum + Number(pedido.quantidade || 0), 0);
 
     let html = `
       <html>
@@ -55,6 +106,7 @@ export function PedidosLiberacaoTable() {
           <style>
             body { font-family: Arial, sans-serif; margin: 20px; }
             .header { text-align: center; margin-bottom: 30px; }
+            .filters { margin-bottom: 20px; padding: 10px; background-color: #f5f5f5; border-radius: 5px; }
             .summary { margin-bottom: 20px; }
             table { width: 100%; border-collapse: collapse; }
             th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
@@ -68,51 +120,57 @@ export function PedidosLiberacaoTable() {
             <h1>Relatório de Pedidos Pendentes de Liberação</h1>
             <p>Gerado em: ${dataHoraImpressao}</p>
           </div>
-
-          <div class="summary">
-            <h3>Resumo</h3>
-            <p><strong>Total de pedidos pendentes:</strong> ${pedidosLiberacao.length}</p>
-            <p><strong>Peso total:</strong> ${totalPeso.toLocaleString('pt-BR')} kg</p>
-            <p><strong>Volume total:</strong> ${totalVolume.toLocaleString('pt-BR')} m³</p>
-            <p><strong>Quantidade total:</strong> ${totalQuantidade.toLocaleString('pt-BR')} unidades</p>
-          </div>
-
-          <table>
-            <thead>
-              <tr>
-                <th>Nº Pedido</th>
-                <th>Ordem Compra</th>
-                <th>Data Solicitação</th>
-                <th>Cliente</th>
-                <th>CNPJ</th>
-                <th>NF Vinculada</th>
-                <th>Produto</th>
-                <th>Quantidade</th>
-                <th>Peso (kg)</th>
-                <th>Volume (m³)</th>
-                <th>Prioridade</th>
-                <th>Responsável</th>
-              </tr>
-            </thead>
-            <tbody>
     `;
 
-    pedidosLiberacao.forEach(pedido => {
-      const rowClass = pedido.prioridade === 'Alta' ? 'class="prioridade-alta"' : '';
+    if (filtrosAplicados.length > 0) {
       html += `
-        <tr ${rowClass}>
+        <div class="filters">
+          <strong>Filtros aplicados:</strong> ${filtrosAplicados.join(', ')}
+        </div>
+      `;
+    }
+
+    html += `
+      <div class="summary">
+        <h3>Resumo</h3>
+        <p><strong>Total de pedidos pendentes:</strong> ${filteredPedidos.length}</p>
+        <p><strong>Peso total:</strong> ${totalPeso.toLocaleString('pt-BR')} kg</p>
+        <p><strong>Volume total:</strong> ${totalVolume.toLocaleString('pt-BR')} m³</p>
+        <p><strong>Quantidade total:</strong> ${totalQuantidade.toLocaleString('pt-BR')} unidades</p>
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Nº Pedido</th>
+            <th>Ordem Compra</th>
+            <th>Produto</th>
+            <th>Quantidade</th>
+            <th>Peso (kg)</th>
+            <th>Volume (m³)</th>
+            <th>Prioridade</th>
+            <th>Responsável</th>
+            <th>Data Solicitação</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+    `;
+
+    filteredPedidos.forEach(pedido => {
+      const classPrioridade = pedido.prioridade === 'Alta' ? 'prioridade-alta' : '';
+      html += `
+        <tr class="${classPrioridade}">
           <td>${pedido.numeroPedido}</td>
           <td>${pedido.ordemCompra}</td>
-          <td>${new Date(pedido.dataSolicitacao).toLocaleDateString('pt-BR')}</td>
-          <td>${pedido.cliente}</td>
-          <td>${pedido.cnpjCliente}</td>
-          <td>${pedido.nfVinculada}</td>
           <td>${pedido.produto}</td>
           <td>${Number(pedido.quantidade).toLocaleString('pt-BR')}</td>
           <td>${Number(pedido.peso).toLocaleString('pt-BR')}</td>
           <td>${Number(pedido.volume).toLocaleString('pt-BR')}</td>
           <td>${pedido.prioridade}</td>
           <td>${pedido.responsavel}</td>
+          <td>${new Date(pedido.dataSolicitacao).toLocaleDateString('pt-BR')}</td>
+          <td>${pedido.status}</td>
         </tr>
       `;
     });
@@ -121,7 +179,7 @@ export function PedidosLiberacaoTable() {
         </tbody>
       </table>
       <div class="footer">
-        <p>Relatório gerado pelo Sistema WMS</p>
+        <p>Relatório gerado pelo Sistema WMS - Pedidos de Liberação</p>
       </div>
     </body>
     </html>
@@ -137,28 +195,26 @@ export function PedidosLiberacaoTable() {
     toast.success("Relatório enviado para impressão!");
   };
 
-  // Função para exportar CSV
+  // Função para exportar CSV (atualizada para usar filtros)
   const handleExportar = () => {
     const headers = [
-      'Nº Pedido', 'Ordem Compra', 'Data Solicitação', 'Cliente', 'CNPJ', 'NF Vinculada',
-      'Produto', 'Quantidade', 'Peso (kg)', 'Volume (m³)', 'Prioridade', 'Responsável'
+      'Nº Pedido', 'Ordem Compra', 'Produto', 'Quantidade', 
+      'Peso (kg)', 'Volume (m³)', 'Prioridade', 'Responsável', 'Data Solicitação', 'Status'
     ];
     
     const csvContent = [
       headers.join(','),
-      ...pedidosLiberacao.map(pedido => [
+      ...filteredPedidos.map(pedido => [
         pedido.numeroPedido,
         pedido.ordemCompra,
-        new Date(pedido.dataSolicitacao).toLocaleDateString('pt-BR'),
-        `"${pedido.cliente}"`,
-        pedido.cnpjCliente,
-        pedido.nfVinculada,
         `"${pedido.produto}"`,
         pedido.quantidade,
         pedido.peso,
         pedido.volume,
         pedido.prioridade,
-        `"${pedido.responsavel}"`
+        `"${pedido.responsavel}"`,
+        new Date(pedido.dataSolicitacao).toLocaleDateString('pt-BR'),
+        pedido.status
       ].join(','))
     ].join('\n');
 
@@ -166,7 +222,7 @@ export function PedidosLiberacaoTable() {
     const link = document.createElement('a');
     const url = URL.createObjectURL(blob);
     link.setAttribute('href', url);
-    link.setAttribute('download', `pedidos-liberacao-${new Date().toISOString().split('T')[0]}.csv`);
+    link.setAttribute('download', `pedidos-pendentes-liberacao-${new Date().toISOString().split('T')[0]}.csv`);
     link.style.visibility = 'hidden';
     document.body.appendChild(link);
     link.click();
@@ -175,20 +231,26 @@ export function PedidosLiberacaoTable() {
     toast.success("Arquivo CSV exportado com sucesso!");
   };
 
-  const handleLiberar = () => {
-    if (selectedPedido) {
-      liberarPedido(selectedPedido.id, solicitanteLiberacao, dataExpedicao || undefined);
+  const handleLiberarPedido = async () => {
+    if (!selectedPedido) return;
+
+    try {
+      await liberarPedido(selectedPedido.id, solicitanteLiberacao);
       setIsDialogOpen(false);
       setSelectedPedido(null);
       setSolicitanteLiberacao('');
       setDataExpedicao('');
+      toast.success("Pedido liberado com sucesso!");
+    } catch (error) {
+      toast.error('Erro ao liberar pedido');
     }
   };
 
-  const handleDelete = async (pedido: PedidoLiberacao) => {
-    if (window.confirm(`Tem certeza que deseja excluir o pedido ${pedido.numeroPedido}? Esta ação não pode ser desfeita.`)) {
+  const handleDeletePedido = async (pedido: PedidoLiberacao) => {
+    if (confirm(`Tem certeza que deseja excluir o pedido ${pedido.numeroPedido}?`)) {
       try {
         await deletePedidoLiberacao(pedido.id);
+        toast.success("Pedido excluído com sucesso!");
       } catch (error) {
         toast.error('Erro ao excluir pedido de liberação');
       }
@@ -196,149 +258,160 @@ export function PedidosLiberacaoTable() {
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center justify-between">
-          <span>Ordem de Carregamento</span>
-          {pedidosLiberacao.length > 0 && (
-            <div className="flex gap-2">
-              <Button onClick={handleImprimir} variant="outline" size="sm">
-                <Printer className="w-4 h-4 mr-2" />
-                Imprimir
-              </Button>
-              <Button onClick={handleExportar} variant="outline" size="sm">
-                <Download className="w-4 h-4 mr-2" />
-                Exportar CSV
-              </Button>
+    <div className="space-y-6">
+      {/* Filtros */}
+      <NFFilters
+        filters={filters}
+        onFiltersChange={setFilters}
+        showClientFilter={false}
+      />
+
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>Ordem de Carregamento</CardTitle>
+              <CardDescription>
+                Pedidos aguardando análise e liberação ({filteredPedidos.length}
+                {pedidosLiberacao.length !== filteredPedidos.length && ` de ${pedidosLiberacao.length}`} itens)
+              </CardDescription>
+            </div>
+            {filteredPedidos.length > 0 && (
+              <div className="flex gap-2">
+                <Button onClick={handleImprimir} variant="outline" size="sm">
+                  <Printer className="w-4 h-4 mr-2" />
+                  Imprimir
+                </Button>
+                <Button onClick={handleExportar} variant="outline" size="sm">
+                  <Download className="w-4 h-4 mr-2" />
+                  Exportar CSV
+                </Button>
+              </div>
+            )}
+          </div>
+        </CardHeader>
+        <CardContent>
+          {filteredPedidos.length > 0 ? (
+            <div className="overflow-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Nº Pedido</TableHead>
+                    <TableHead>Ordem Compra</TableHead>
+                    <TableHead>Data Solicitação</TableHead>
+                    <TableHead>Cliente</TableHead>
+                    <TableHead>CNPJ</TableHead>
+                    <TableHead>NF Vinculada</TableHead>
+                    <TableHead>Produto</TableHead>
+                    <TableHead>Quantidade</TableHead>
+                    <TableHead>Peso (kg)</TableHead>
+                    <TableHead>Volume (m³)</TableHead>
+                    <TableHead>Prioridade</TableHead>
+                    <TableHead>Responsável</TableHead>
+                    <TableHead>Ações</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredPedidos.map((pedido) => (
+                    <TableRow key={pedido.id}>
+                      <TableCell className="font-medium">{pedido.numeroPedido}</TableCell>
+                      <TableCell>{pedido.ordemCompra}</TableCell>
+                      <TableCell>{new Date(pedido.dataSolicitacao).toLocaleDateString('pt-BR')}</TableCell>
+                      <TableCell>{pedido.cliente}</TableCell>
+                      <TableCell>{pedido.cnpjCliente}</TableCell>
+                      <TableCell>{pedido.nfVinculada}</TableCell>
+                      <TableCell>{pedido.produto}</TableCell>
+                      <TableCell>{pedido.quantidade}</TableCell>
+                      <TableCell>{Number(pedido.peso).toFixed(1)}</TableCell>
+                      <TableCell>{Number(pedido.volume).toFixed(2)}</TableCell>
+                      <TableCell>
+                        <Badge className={getPrioridadeColor(pedido.prioridade)}>
+                          {pedido.prioridade}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>{pedido.responsavel}</TableCell>
+                      <TableCell>
+                        <div className="flex gap-2">
+                          <Button
+                            onClick={() => {
+                              setSelectedPedido(pedido);
+                              setIsDialogOpen(true);
+                            }}
+                            size="sm"
+                            className="flex-1"
+                          >
+                            <CheckCircle className="w-4 h-4 mr-1" />
+                            Liberar
+                          </Button>
+                          <Button
+                            onClick={() => handleDeletePedido(pedido)}
+                            size="sm"
+                            variant="destructive"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          ) : pedidosLiberacao.length > 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              <AlertTriangle className="w-12 h-12 mx-auto mb-4 opacity-50" />
+              <p>Nenhum pedido encontrado com os filtros aplicados</p>
+              <p className="text-sm mt-1">Tente ajustar os filtros para ver mais resultados</p>
+            </div>
+          ) : (
+            <div className="text-center py-8 text-muted-foreground">
+              <AlertTriangle className="w-12 h-12 mx-auto mb-4 opacity-50" />
+              <p>Nenhum pedido de liberação pendente</p>
+              <p className="text-sm mt-1">Os pedidos pendentes aparecerão aqui</p>
             </div>
           )}
-        </CardTitle>
-        <CardDescription>
-          Pedidos aguardando análise e liberação
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="overflow-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Nº Pedido</TableHead>
-                <TableHead>Ordem Compra</TableHead>
-                <TableHead>Data Solicitação</TableHead>
-                <TableHead>Cliente</TableHead>
-                <TableHead>CNPJ</TableHead>
-                <TableHead>NF Vinculada</TableHead>
-                <TableHead>Produto</TableHead>
-                <TableHead>Quantidade</TableHead>
-                <TableHead>Peso (kg)</TableHead>
-                <TableHead>Volume (m³)</TableHead>
-                <TableHead>Prioridade</TableHead>
-                <TableHead>Responsável</TableHead>
-                <TableHead>Ações</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {pedidosLiberacao.map((pedido) => (
-                <TableRow 
-                  key={pedido.id}
-                  className={cn(
-                    pedido.prioridade === 'Alta' 
-                      ? 'bg-destructive/10 hover:bg-destructive/20 border-l-4 border-l-destructive' 
-                      : ''
-                  )}
-                >
-                  <TableCell className="font-medium">{pedido.numeroPedido}</TableCell>
-                  <TableCell>{pedido.ordemCompra}</TableCell>
-                  <TableCell>{new Date(pedido.dataSolicitacao).toLocaleDateString('pt-BR')}</TableCell>
-                  <TableCell>{pedido.cliente}</TableCell>
-                  <TableCell>{pedido.cnpjCliente}</TableCell>
-                  <TableCell>{pedido.nfVinculada}</TableCell>
-                  <TableCell>{pedido.produto}</TableCell>
-                  <TableCell>{pedido.quantidade}</TableCell>
-                  <TableCell>{pedido.peso.toFixed(1)}</TableCell>
-                  <TableCell>{pedido.volume.toFixed(2)}</TableCell>
-                  <TableCell>
-                    <Badge className={getPriorityColor(pedido.prioridade)}>
-                      {pedido.prioridade === 'Alta' && <AlertTriangle className="w-3 h-3 mr-1" />}
-                      {pedido.prioridade}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>{pedido.responsavel}</TableCell>
-                   <TableCell>
-                     <div className="flex items-center gap-2">
-                       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                         <DialogTrigger asChild>
-                           <Button 
-                             size="sm" 
-                             onClick={() => setSelectedPedido(pedido)}
-                             className="bg-success text-success-foreground hover:bg-success/80"
-                           >
-                             <CheckCircle className="w-4 h-4 mr-1" />
-                             Liberar
-                           </Button>
-                         </DialogTrigger>
-                      <DialogContent>
-                        <DialogHeader>
-                          <DialogTitle>Liberar Pedido</DialogTitle>
-                          <DialogDescription>
-                            Confirme os dados para liberação do pedido {selectedPedido?.numeroPedido}
-                          </DialogDescription>
-                        </DialogHeader>
-                         <div className="grid gap-4 py-4">
-                           <div className="grid grid-cols-4 items-center gap-4">
-                             <Label htmlFor="solicitanteLiberacao" className="text-right">
-                               Solicitante
-                             </Label>
-                             <Input
-                               id="solicitanteLiberacao"
-                               value={solicitanteLiberacao}
-                               onChange={(e) => setSolicitanteLiberacao(e.target.value)}
-                               className="col-span-3"
-                               placeholder="Nome do solicitante da liberação"
-                             />
-                           </div>
-                          <div className="grid grid-cols-4 items-center gap-4">
-                            <Label htmlFor="dataExpedicao" className="text-right">
-                              Data Expedição
-                            </Label>
-                            <Input
-                              id="dataExpedicao"
-                              type="date"
-                              value={dataExpedicao}
-                              onChange={(e) => setDataExpedicao(e.target.value)}
-                              className="col-span-3"
-                            />
-                          </div>
-                        </div>
-                        <DialogFooter>
-                           <Button 
-                             type="submit" 
-                             onClick={handleLiberar}
-                             disabled={!solicitanteLiberacao}
-                             className="bg-success text-success-foreground hover:bg-success/80"
-                           >
-                            Confirmar Liberação
-                          </Button>
-                         </DialogFooter>
-                       </DialogContent>
-                     </Dialog>
-                     <Button
-                       size="sm"
-                       variant="outline"
-                       onClick={() => handleDelete(pedido)}
-                       className="text-destructive hover:text-destructive"
-                       title="Excluir pedido"
-                     >
-                       <Trash2 className="w-3 h-3" />
-                     </Button>
-                     </div>
-                   </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+
+      {/* Dialog para liberação */}
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Liberar Pedido</DialogTitle>
+            <DialogDescription>
+              Confirme os dados para liberar o pedido {selectedPedido?.numeroPedido}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="solicitante">Solicitante da Liberação</Label>
+              <Input
+                id="solicitante"
+                value={solicitanteLiberacao}
+                onChange={(e) => setSolicitanteLiberacao(e.target.value)}
+                placeholder="Nome do solicitante"
+              />
+            </div>
+            <div>
+              <Label htmlFor="data-expedicao">Data de Expedição</Label>
+              <Input
+                id="data-expedicao"
+                type="date"
+                value={dataExpedicao}
+                onChange={(e) => setDataExpedicao(e.target.value)}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+              Cancelar
+            </Button>
+            <Button onClick={handleLiberarPedido}>
+              Liberar Pedido
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
   );
 }
