@@ -34,6 +34,7 @@ export function ClienteSolicitacaoCarregamento() {
     dataInicio: "",
     dataFim: "",
     localizacao: "",
+    statusSeparacao: "",
   });
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
 

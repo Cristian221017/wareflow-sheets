@@ -32,6 +32,7 @@ export function PedidosConfirmadosTable() {
     dataInicio: "",
     dataFim: "",
     localizacao: "",
+    statusSeparacao: "",
   });
 
   // Configurar realtime centralizado

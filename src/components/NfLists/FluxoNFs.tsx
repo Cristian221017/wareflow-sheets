@@ -683,6 +683,7 @@ export function FluxoNFs() {
     dataInicio: '',
     dataFim: '',
     localizacao: '',
+    statusSeparacao: '',
   });
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
 

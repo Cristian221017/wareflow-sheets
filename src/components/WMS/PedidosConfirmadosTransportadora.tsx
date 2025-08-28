@@ -24,6 +24,7 @@ export function PedidosConfirmadosTransportadora() {
     dataInicio: '',
     dataFim: '',
     localizacao: '',
+    statusSeparacao: '',
   });
 
   // Função para filtrar NFs

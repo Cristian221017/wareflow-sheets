@@ -20,6 +20,9 @@ export function useLastVisit() {
     
     const now = new Date().toISOString();
     localStorage.setItem(getStorageKey(key), now);
+    
+    // Force immediate re-render by triggering a state update
+    window.dispatchEvent(new CustomEvent('notificationCleared', { detail: { key } }));
   }, [user]);
   
   const hasNewItems = useCallback((key: VisitKey, items: any[]): boolean => {

@@ -16,6 +16,7 @@ export interface NFFilterState {
   dataInicio: string;
   dataFim: string;
   localizacao: string;
+  statusSeparacao: string;
 }
 
 interface NFFiltersProps {
@@ -48,6 +49,7 @@ export function NFFilters({
       dataInicio: '',
       dataFim: '',
       localizacao: '',
+      statusSeparacao: '',
     });
   };
 
@@ -173,6 +175,25 @@ export function NFFilters({
                   value={filters.dataFim}
                   onChange={(e) => updateFilter('dataFim', e.target.value)}
                 />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="statusSeparacao">Status de Separação</Label>
+                <Select 
+                  value={filters.statusSeparacao} 
+                  onValueChange={(value) => updateFilter('statusSeparacao', value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Todos os status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">Todos os status</SelectItem>
+                    <SelectItem value="pendente">Separação Pendente</SelectItem>
+                    <SelectItem value="em_separacao">Em Separação</SelectItem>
+                    <SelectItem value="separacao_concluida">Separação Concluída</SelectItem>
+                    <SelectItem value="separacao_com_pendencia">Separação com Pendência</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
           )}

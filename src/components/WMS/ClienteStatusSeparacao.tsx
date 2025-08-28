@@ -66,6 +66,7 @@ export function ClienteStatusSeparacao() {
     dataInicio: "",
     dataFim: "",
     localizacao: "",
+    statusSeparacao: "",
   });
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
@@ -158,6 +159,12 @@ export function ClienteStatusSeparacao() {
           endDate.setHours(23, 59, 59, 999);
           if (nfDate > endDate) return false;
         }
+      }
+      if (
+        filters.statusSeparacao &&
+        nf.status_separacao !== filters.statusSeparacao
+      ) {
+        return false;
       }
       return true;
     });

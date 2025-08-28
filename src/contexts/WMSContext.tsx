@@ -314,7 +314,9 @@ export function WMSProvider({ children }: { children: ReactNode }) {
         warn('⚠️ Erro ao enviar notificação de solicitação:', emailError);
         }
       
-      // Invalidar com escopo
+      // Invalidar com escopo otimizado para melhor responsividade
+      queryClient.invalidateQueries({ queryKey: ['nfs'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
       invalidateWithScope('nfs', undefined, user?.type, user?.type === 'cliente' ? user?.clienteId : user?.transportadoraId);
       await loadData();
       

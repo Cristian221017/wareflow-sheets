@@ -29,6 +29,7 @@ export function PedidosLiberadosTable() {
     dataInicio: '',
     dataFim: '',
     localizacao: '',
+    statusSeparacao: '',
   });
 
   // Função para filtrar pedidos

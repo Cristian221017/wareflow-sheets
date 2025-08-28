@@ -56,6 +56,7 @@ export function PedidosLiberacaoTable() {
     dataInicio: '',
     dataFim: '',
     localizacao: '',
+    statusSeparacao: '',
   });
 
   // Função para filtrar pedidos

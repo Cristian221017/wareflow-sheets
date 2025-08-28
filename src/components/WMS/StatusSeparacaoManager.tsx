@@ -95,6 +95,9 @@ export function StatusSeparacaoManager({
 
       log('✅ Status de separação atualizado com sucesso');
       
+      // Otimizar invalidação para melhor responsividade
+      onStatusChanged?.();
+      
       toast({
         title: "Status atualizado",
         description: `Status da NF ${numeroNf} alterado para: ${statusConfig[novoStatus].label}`,
@@ -103,7 +106,6 @@ export function StatusSeparacaoManager({
 
       setIsOpen(false);
       setObservacoes('');
-      onStatusChanged?.();
 
     } catch (err) {
       logError('Erro inesperado ao atualizar status:', err);
@@ -117,20 +119,14 @@ export function StatusSeparacaoManager({
     }
   };
 
-  // Se não pode editar ou separação já concluída, mostra apenas o badge
-  const isSeparacaoConcluida = statusAtual === 'separacao_concluida';
-  if (!canEdit || isSeparacaoConcluida) {
+  // Se não pode editar, mostra apenas o badge (removido lock no separacao_concluida)
+  if (!canEdit) {
     return (
       <div className="flex items-center gap-2">
         <Badge variant={currentConfig.variant} className="flex items-center gap-1">
           <CurrentIcon className="w-3 h-3" />
           {currentConfig.label}
         </Badge>
-        {isSeparacaoConcluida && canEdit && (
-          <span className="text-xs text-muted-foreground">
-            (Status final - não editável)
-          </span>
-        )}
       </div>
     );
   }

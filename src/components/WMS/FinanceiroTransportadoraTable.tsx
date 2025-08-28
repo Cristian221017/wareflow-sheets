@@ -72,6 +72,8 @@ export function FinanceiroTransportadoraTable() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [clienteFilter, setClienteFilter] = useState<string>('all');
+  const [dataInicio, setDataInicio] = useState('');
+  const [dataFim, setDataFim] = useState('');
 
   // Edit form states
   const [editStatus, setEditStatus] = useState<string>('');
@@ -103,9 +105,22 @@ export function FinanceiroTransportadoraTable() {
     if (clienteFilter !== 'all') {
       filtered = filtered.filter(doc => doc.clienteId === clienteFilter);
     }
+
+    // Data filters
+    if (dataInicio) {
+      filtered = filtered.filter(doc => 
+        new Date(doc.dataVencimento) >= new Date(dataInicio)
+      );
+    }
+
+    if (dataFim) {
+      filtered = filtered.filter(doc => 
+        new Date(doc.dataVencimento) <= new Date(dataFim)
+      );
+    }
     
     return filtered;
-  }, [documentos, searchTerm, statusFilter, clienteFilter, clientes]);
+  }, [documentos, searchTerm, statusFilter, clienteFilter, clientes, dataInicio, dataFim]);
 
   const getClienteNome = (clienteId: string) => {
     const cliente = clientes.find(c => c.id === clienteId);
@@ -116,6 +131,8 @@ export function FinanceiroTransportadoraTable() {
     setSearchTerm('');
     setStatusFilter('all');
     setClienteFilter('all');
+    setDataInicio('');
+    setDataFim('');
   };
 
   const handleEdit = (documento: DocumentoFinanceiro) => {
@@ -287,7 +304,7 @@ export function FinanceiroTransportadoraTable() {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
               <div className="space-y-2">
                 <Label className="text-sm font-medium">Status</Label>
                 <Select value={statusFilter} onValueChange={setStatusFilter}>
@@ -319,6 +336,24 @@ export function FinanceiroTransportadoraTable() {
                     ))}
                   </SelectContent>
                 </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-sm font-medium">Data Início</Label>
+                <Input
+                  type="date"
+                  value={dataInicio}
+                  onChange={(e) => setDataInicio(e.target.value)}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-sm font-medium">Data Fim</Label>
+                <Input
+                  type="date"
+                  value={dataFim}
+                  onChange={(e) => setDataFim(e.target.value)}
+                />
               </div>
 
               <div className="space-y-2">

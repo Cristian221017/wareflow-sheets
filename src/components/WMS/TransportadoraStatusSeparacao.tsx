@@ -57,6 +57,7 @@ export function TransportadoraStatusSeparacao() {
     dataInicio: '',
     dataFim: '',
     localizacao: '',
+    statusSeparacao: '',
   });
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const queryClient = useQueryClient();

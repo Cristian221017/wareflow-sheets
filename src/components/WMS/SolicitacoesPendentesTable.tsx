@@ -23,6 +23,7 @@ export function SolicitacoesPendentesTable() {
     dataInicio: '',
     dataFim: '',
     localizacao: '',
+    statusSeparacao: '',
   });
 
   // Função para filtrar NFs
