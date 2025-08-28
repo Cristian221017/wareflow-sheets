@@ -3,10 +3,12 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useNFs, useFluxoMutations } from "@/hooks/useNFs";
 import { useNFsCliente } from "@/hooks/useNFsCliente";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLastVisit } from '@/hooks/useLastVisit';
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
+import { CarregamentoActionButton } from './CarregamentoActionButton';
 import { AlertCircle, CheckCircle, Clock, Package, Pause, Truck, BarChart3, Eye, Printer, Download } from "lucide-react";
 import { NFFilters, type NFFilterState } from "@/components/NfLists/NFFilters";
 import { NFCard } from "@/components/NfLists/NFCard";
@@ -52,6 +54,7 @@ export function ClienteStatusSeparacao() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const once = useRef(false);
+  const { markVisitForComponent } = useLastVisit();
   const isCliente = user?.type === "cliente";
   const { data: nfs, isLoading, isError } = isCliente ? useNFsCliente("ARMAZENADA") : useNFs("ARMAZENADA");
   const { solicitar } = useFluxoMutations();
@@ -75,8 +78,10 @@ export function ClienteStatusSeparacao() {
     if (once.current) return;
     once.current = true;
     log("🔄 Configurando realtime centralizado para ClienteStatusSeparacao");
+    // Mark visit for instant notification clearing
+    markVisitForComponent('nfs-armazenadas');
     return subscribeCentralizedChanges(queryClient);
-  }, [queryClient]);
+  }, [queryClient, markVisitForComponent]);
 
   if (isLoading) {
     return (
@@ -441,20 +446,15 @@ export function ClienteStatusSeparacao() {
                       isSelected={selectedIds.includes(nf.id)}
                       onSelect={handleSelection}
                       actions={
-                        isCliente && nf.status_separacao === "separacao_concluida" ? (
-                          <Button
-                            size="sm"
-                            disabled={solicitar.isPending}
-                            onClick={() => solicitar.mutate(nf.id)}
+                        isCliente ? (
+                          <CarregamentoActionButton
+                            nfId={nf.id}
+                            numeroNF={nf.numero_nf}
+                            status={nf.status}
+                            statusSeparacao={nf.status_separacao}
+                            canSolicitar={true}
                             className="w-full"
-                          >
-                            <Truck className="w-3 h-3 mr-1" />
-                            {solicitar.isPending ? "Solicitando..." : "Solicitar Carregamento"}
-                          </Button>
-                        ) : isCliente && nf.status_separacao !== "separacao_concluida" ? (
-                          <div className="text-center p-2 text-sm text-muted-foreground bg-muted rounded">
-                            Carregamento disponível quando separação estiver concluída
-                          </div>
+                          />
                         ) : null
                       }
                     />

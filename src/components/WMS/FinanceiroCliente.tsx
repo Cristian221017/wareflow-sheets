@@ -1,6 +1,7 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useFinanceiro } from '@/contexts/FinanceiroContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLastVisit } from '@/hooks/useLastVisit';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -14,12 +15,18 @@ import { useDateUtils } from '@/hooks/useDateUtils';
 export function FinanceiroCliente() {
   const { documentos, downloadArquivo, loading } = useFinanceiro();
   const { user } = useAuth();
+  const { markVisitForComponent } = useLastVisit();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [dataInicio, setDataInicio] = useState('');
   const [dataFim, setDataFim] = useState('');
   const [valorMin, setValorMin] = useState('');
   const [valorMax, setValorMax] = useState('');
+
+  // Mark visit for instant notification clearing
+  useEffect(() => {
+    markVisitForComponent('documentos-financeiros');
+  }, [markVisitForComponent]);
 
   // Filtrar documentos do cliente logado
   const documentosCliente = useMemo(() => {

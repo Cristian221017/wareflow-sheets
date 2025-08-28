@@ -3,6 +3,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNFs } from "@/hooks/useNFs";
 import { useNFsCliente } from "@/hooks/useNFsCliente";
+import { useLastVisit } from '@/hooks/useLastVisit';
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -18,6 +19,7 @@ export function PedidosConfirmadosTable() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const once = useRef(false);
+  const { markVisitForComponent } = useLastVisit();
   const isCliente = user?.type === "cliente";
   const isTransportadora = user?.role === "admin_transportadora" || user?.role === "operador";
   const { data: nfs, isLoading, isError } = isCliente ? useNFsCliente("CONFIRMADA") : useNFs("CONFIRMADA");
@@ -40,8 +42,10 @@ export function PedidosConfirmadosTable() {
     if (once.current) return;
     once.current = true;
     log("🔄 Configurando realtime centralizado para PedidosConfirmadosTable");
+    // Mark visit for instant notification clearing
+    markVisitForComponent('nfs-confirmadas');
     return subscribeCentralizedChanges(queryClient);
-  }, [queryClient]);
+  }, [queryClient, markVisitForComponent]);
 
   if (isLoading) {
     return (

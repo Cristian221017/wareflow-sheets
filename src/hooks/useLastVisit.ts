@@ -43,11 +43,18 @@ export function useLastVisit() {
     // Force re-evaluation by returning current timestamp
     return new Date().getTime();
   }, [markAsVisited]);
+
+  // Auto-clear notifications when component is viewed
+  const markVisitForComponent = useCallback((key: VisitKey) => {
+    // Mark as visited immediately for instant notification clearing
+    setTimeout(() => markAsVisited(key), 100);
+  }, [markAsVisited]);
   
   return {
     getLastVisit,
     markAsVisited,
     hasNewItems,
+    markVisitForComponent,
     clearNotification
   };
 }

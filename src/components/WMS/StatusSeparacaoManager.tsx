@@ -95,8 +95,16 @@ export function StatusSeparacaoManager({
 
       log('✅ Status de separação atualizado com sucesso');
       
-      // Otimizar invalidação para melhor responsividade
-      onStatusChanged?.();
+      // Usar invalidação otimizada para responsividade instantânea
+      if (onStatusChanged) {
+        onStatusChanged();
+      }
+      
+      // Forçar re-render imediato com estado local
+      setTimeout(() => {
+        // Aguardar um pouco para que o realtime atualize
+        onStatusChanged?.();
+      }, 100);
       
       toast({
         title: "Status atualizado",
