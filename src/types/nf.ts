@@ -25,6 +25,10 @@ export interface NotaFiscal {
   requested_at?: string | null;
   approved_by?: string | null;
   approved_at?: string | null;
+  // Novos campos para solicitação de carregamento
+  data_agendamento_entrega?: string | null;
+  observacoes_solicitacao?: string | null;
+  documentos_anexos?: any[] | null;
 }
 
 export interface NFTransition {

@@ -416,7 +416,9 @@ export type Database = {
           cliente_id: string
           cnpj_fornecedor: string
           created_at: string
+          data_agendamento_entrega: string | null
           data_recebimento: string
+          documentos_anexos: Json | null
           edi_id: string | null
           external_id: string | null
           fornecedor: string
@@ -427,6 +429,7 @@ export type Database = {
           nfe_key: string | null
           numero_nf: string
           numero_pedido: string
+          observacoes_solicitacao: string | null
           ordem_compra: string
           peso: number
           produto: string
@@ -448,7 +451,9 @@ export type Database = {
           cliente_id: string
           cnpj_fornecedor: string
           created_at?: string
+          data_agendamento_entrega?: string | null
           data_recebimento: string
+          documentos_anexos?: Json | null
           edi_id?: string | null
           external_id?: string | null
           fornecedor: string
@@ -459,6 +464,7 @@ export type Database = {
           nfe_key?: string | null
           numero_nf: string
           numero_pedido: string
+          observacoes_solicitacao?: string | null
           ordem_compra: string
           peso: number
           produto: string
@@ -480,7 +486,9 @@ export type Database = {
           cliente_id?: string
           cnpj_fornecedor?: string
           created_at?: string
+          data_agendamento_entrega?: string | null
           data_recebimento?: string
+          documentos_anexos?: Json | null
           edi_id?: string | null
           external_id?: string | null
           fornecedor?: string
@@ -491,6 +499,7 @@ export type Database = {
           nfe_key?: string | null
           numero_nf?: string
           numero_pedido?: string
+          observacoes_solicitacao?: string | null
           ordem_compra?: string
           peso?: number
           produto?: string
@@ -1233,7 +1242,9 @@ export type Database = {
           cliente_id: string
           cnpj_fornecedor: string
           created_at: string
+          data_agendamento_entrega: string | null
           data_recebimento: string
+          documentos_anexos: Json | null
           edi_id: string | null
           external_id: string | null
           fornecedor: string
@@ -1244,6 +1255,7 @@ export type Database = {
           nfe_key: string | null
           numero_nf: string
           numero_pedido: string
+          observacoes_solicitacao: string | null
           ordem_compra: string
           peso: number
           produto: string

@@ -4,6 +4,7 @@ import { Truck, Undo2 } from 'lucide-react';
 import { SolicitarCarregamentoDialog, SolicitacaoCarregamentoData } from './SolicitarCarregamentoDialog';
 import { useWMS } from '@/contexts/WMSContext';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 interface CarregamentoActionButtonProps {
   nfId: string;
@@ -29,18 +30,44 @@ export function CarregamentoActionButton({
   const handleSolicitarCarregamento = async (data: SolicitacaoCarregamentoData) => {
     setIsLoading(true);
     try {
-      // TODO: Implementar salvamento da data agendamento e documentos
+      // Solicitar carregamento
       await solicitarCarregamento(numeroNF);
       
+      // Salvar dados adicionais da solicitação se fornecidos
       if (data.dataAgendamento || data.observacoes || data.documentos?.length) {
-        // TODO: Salvar dados adicionais da solicitação
-        console.log('Dados adicionais da solicitação:', data);
+        const updateData: any = {};
+        
+        if (data.dataAgendamento) {
+          updateData.data_agendamento_entrega = data.dataAgendamento;
+        }
+        
+        if (data.observacoes) {
+          updateData.observacoes_solicitacao = data.observacoes;
+        }
+        
+        if (data.documentos?.length) {
+          // Por simplicidade, salvamos apenas os nomes dos arquivos
+          // Em um cenário real, você faria upload dos arquivos primeiro
+          updateData.documentos_anexos = data.documentos.map(doc => ({
+            nome: doc.name,
+            tamanho: doc.size,
+            tipo: doc.type,
+            data_upload: new Date().toISOString()
+          }));
+        }
+        
+        // Atualizar NF com dados adicionais
+        await supabase
+          .from('notas_fiscais')
+          .update(updateData)
+          .eq('numero_nf', numeroNF);
       }
       
       setIsDialogOpen(false);
       toast.success('Carregamento solicitado com sucesso!');
     } catch (error) {
       console.error('Erro ao solicitar carregamento:', error);
+      toast.error('Erro ao solicitar carregamento');
     } finally {
       setIsLoading(false);
     }

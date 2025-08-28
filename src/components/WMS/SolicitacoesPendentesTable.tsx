@@ -141,12 +141,19 @@ export function SolicitacoesPendentesTable() {
             <th>Peso (kg)</th>
             <th>Volume (m³)</th>
             <th>Data Solicitação</th>
+            <th>Agendamento</th>
+            <th>Observações</th>
+            <th>Documentos</th>
           </tr>
         </thead>
         <tbody>
     `;
 
     filteredSolicitadas.forEach(nf => {
+      const agendamento = nf.data_agendamento_entrega ? new Date(nf.data_agendamento_entrega).toLocaleDateString('pt-BR') : 'Não informado';
+      const observacoes = nf.observacoes_solicitacao || 'Nenhuma';
+      const documentos = nf.documentos_anexos?.length ? `${nf.documentos_anexos.length} arquivo(s)` : 'Nenhum';
+      
       html += `
         <tr>
           <td>${nf.numero_nf}</td>
@@ -158,6 +165,9 @@ export function SolicitacoesPendentesTable() {
           <td>${Number(nf.peso).toLocaleString('pt-BR')}</td>
           <td>${Number(nf.volume).toLocaleString('pt-BR')}</td>
           <td>${new Date(nf.created_at).toLocaleDateString('pt-BR')}</td>
+          <td>${agendamento}</td>
+          <td>${observacoes}</td>
+          <td>${documentos}</td>
         </tr>
       `;
     });
@@ -186,22 +196,31 @@ export function SolicitacoesPendentesTable() {
   const handleExportar = () => {
     const headers = [
       'NF', 'Pedido', 'Ordem Compra', 'Fornecedor', 'Produto', 'Quantidade', 
-      'Peso (kg)', 'Volume (m³)', 'Data Solicitação'
+      'Peso (kg)', 'Volume (m³)', 'Data Solicitação', 'Agendamento', 'Observações', 'Documentos'
     ];
     
     const csvContent = [
       headers.join(','),
-      ...filteredSolicitadas.map(nf => [
-        nf.numero_nf,
-        nf.numero_pedido,
-        nf.ordem_compra,
-        `"${nf.fornecedor}"`,
-        `"${nf.produto}"`,
-        nf.quantidade,
-        nf.peso,
-        nf.volume,
-        new Date(nf.created_at).toLocaleDateString('pt-BR')
-      ].join(','))
+      ...filteredSolicitadas.map(nf => {
+        const agendamento = nf.data_agendamento_entrega ? new Date(nf.data_agendamento_entrega).toLocaleDateString('pt-BR') : 'Não informado';
+        const observacoes = nf.observacoes_solicitacao || 'Nenhuma';
+        const documentos = nf.documentos_anexos?.length ? `${nf.documentos_anexos.length} arquivo(s)` : 'Nenhum';
+        
+        return [
+          nf.numero_nf,
+          nf.numero_pedido,
+          nf.ordem_compra,
+          `"${nf.fornecedor}"`,
+          `"${nf.produto}"`,
+          nf.quantidade,
+          nf.peso,
+          nf.volume,
+          new Date(nf.created_at).toLocaleDateString('pt-BR'),
+          `"${agendamento}"`,
+          `"${observacoes}"`,
+          `"${documentos}"`
+        ].join(',');
+      })
     ].join('\n');
 
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -258,12 +277,45 @@ export function SolicitacoesPendentesTable() {
             <div className="space-y-3">
               {filteredSolicitadas.map((nf) => (
                 <div key={nf.id} className="flex items-center justify-between p-4 border rounded-lg">
-                  <div className="flex-1">
+                  <div className="flex-1 space-y-3">
                     <NFCard
                       nf={nf}
                       showRequestInfo
                       showSelection={false}
                     />
+                    
+                    {/* Informações adicionais da solicitação */}
+                    {(nf.data_agendamento_entrega || nf.observacoes_solicitacao || nf.documentos_anexos?.length > 0) && (
+                      <div className="pl-4 border-l-2 border-primary/20 bg-muted/30 rounded-r p-3">
+                        <h4 className="text-sm font-medium text-primary mb-2">Informações da Solicitação:</h4>
+                        
+                        {nf.data_agendamento_entrega && (
+                          <p className="text-sm text-muted-foreground mb-1">
+                            <span className="font-medium">Data de Agendamento:</span>{' '}
+                            {new Date(nf.data_agendamento_entrega).toLocaleDateString('pt-BR')}
+                          </p>
+                        )}
+                        
+                        {nf.observacoes_solicitacao && (
+                          <p className="text-sm text-muted-foreground mb-1">
+                            <span className="font-medium">Observações:</span> {nf.observacoes_solicitacao}
+                          </p>
+                        )}
+                        
+                        {nf.documentos_anexos && Array.isArray(nf.documentos_anexos) && nf.documentos_anexos.length > 0 && (
+                          <div className="text-sm text-muted-foreground">
+                            <span className="font-medium">Documentos anexados ({nf.documentos_anexos.length}):</span>
+                            <ul className="mt-1 ml-4 list-disc">
+                              {nf.documentos_anexos.map((doc: any, index: number) => (
+                                <li key={index} className="text-xs">
+                                  {doc.nome} ({(doc.tamanho / 1024).toFixed(1)} KB)
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                   <div className="ml-4 flex gap-2">
                     <Button
