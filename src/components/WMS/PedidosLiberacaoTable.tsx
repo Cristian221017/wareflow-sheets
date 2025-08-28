@@ -14,7 +14,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useWMS } from '@/contexts/WMSContext';
 import { PedidoLiberacao } from '@/types/wms';
-import { AlertTriangle, CheckCircle, Trash2 } from 'lucide-react';
+import { AlertTriangle, CheckCircle, Trash2, Printer, Download } from 'lucide-react';
 import { toast } from 'sonner';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
@@ -39,6 +39,142 @@ export function PedidosLiberacaoTable() {
   const [dataExpedicao, setDataExpedicao] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
+  // Função para imprimir relatório
+  const handleImprimir = () => {
+    const hoje = new Date();
+    const dataHoraImpressao = hoje.toLocaleString('pt-BR');
+
+    const totalPeso = pedidosLiberacao.reduce((sum, pedido) => sum + Number(pedido.peso || 0), 0);
+    const totalVolume = pedidosLiberacao.reduce((sum, pedido) => sum + Number(pedido.volume || 0), 0);
+    const totalQuantidade = pedidosLiberacao.reduce((sum, pedido) => sum + Number(pedido.quantidade || 0), 0);
+
+    let html = `
+      <html>
+        <head>
+          <title>Relatório de Pedidos Pendentes de Liberação</title>
+          <style>
+            body { font-family: Arial, sans-serif; margin: 20px; }
+            .header { text-align: center; margin-bottom: 30px; }
+            .summary { margin-bottom: 20px; }
+            table { width: 100%; border-collapse: collapse; }
+            th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+            th { background-color: #f2f2f2; }
+            .footer { margin-top: 30px; text-align: center; font-size: 12px; color: #666; }
+            .prioridade-alta { background-color: #fee2e2; }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h1>Relatório de Pedidos Pendentes de Liberação</h1>
+            <p>Gerado em: ${dataHoraImpressao}</p>
+          </div>
+
+          <div class="summary">
+            <h3>Resumo</h3>
+            <p><strong>Total de pedidos pendentes:</strong> ${pedidosLiberacao.length}</p>
+            <p><strong>Peso total:</strong> ${totalPeso.toLocaleString('pt-BR')} kg</p>
+            <p><strong>Volume total:</strong> ${totalVolume.toLocaleString('pt-BR')} m³</p>
+            <p><strong>Quantidade total:</strong> ${totalQuantidade.toLocaleString('pt-BR')} unidades</p>
+          </div>
+
+          <table>
+            <thead>
+              <tr>
+                <th>Nº Pedido</th>
+                <th>Ordem Compra</th>
+                <th>Data Solicitação</th>
+                <th>Cliente</th>
+                <th>CNPJ</th>
+                <th>NF Vinculada</th>
+                <th>Produto</th>
+                <th>Quantidade</th>
+                <th>Peso (kg)</th>
+                <th>Volume (m³)</th>
+                <th>Prioridade</th>
+                <th>Responsável</th>
+              </tr>
+            </thead>
+            <tbody>
+    `;
+
+    pedidosLiberacao.forEach(pedido => {
+      const rowClass = pedido.prioridade === 'Alta' ? 'class="prioridade-alta"' : '';
+      html += `
+        <tr ${rowClass}>
+          <td>${pedido.numeroPedido}</td>
+          <td>${pedido.ordemCompra}</td>
+          <td>${new Date(pedido.dataSolicitacao).toLocaleDateString('pt-BR')}</td>
+          <td>${pedido.cliente}</td>
+          <td>${pedido.cnpjCliente}</td>
+          <td>${pedido.nfVinculada}</td>
+          <td>${pedido.produto}</td>
+          <td>${Number(pedido.quantidade).toLocaleString('pt-BR')}</td>
+          <td>${Number(pedido.peso).toLocaleString('pt-BR')}</td>
+          <td>${Number(pedido.volume).toLocaleString('pt-BR')}</td>
+          <td>${pedido.prioridade}</td>
+          <td>${pedido.responsavel}</td>
+        </tr>
+      `;
+    });
+
+    html += `
+        </tbody>
+      </table>
+      <div class="footer">
+        <p>Relatório gerado pelo Sistema WMS</p>
+      </div>
+    </body>
+    </html>
+    `;
+
+    const printWindow = window.open('', '_blank');
+    if (printWindow) {
+      printWindow.document.write(html);
+      printWindow.document.close();
+      printWindow.print();
+    }
+    
+    toast.success("Relatório enviado para impressão!");
+  };
+
+  // Função para exportar CSV
+  const handleExportar = () => {
+    const headers = [
+      'Nº Pedido', 'Ordem Compra', 'Data Solicitação', 'Cliente', 'CNPJ', 'NF Vinculada',
+      'Produto', 'Quantidade', 'Peso (kg)', 'Volume (m³)', 'Prioridade', 'Responsável'
+    ];
+    
+    const csvContent = [
+      headers.join(','),
+      ...pedidosLiberacao.map(pedido => [
+        pedido.numeroPedido,
+        pedido.ordemCompra,
+        new Date(pedido.dataSolicitacao).toLocaleDateString('pt-BR'),
+        `"${pedido.cliente}"`,
+        pedido.cnpjCliente,
+        pedido.nfVinculada,
+        `"${pedido.produto}"`,
+        pedido.quantidade,
+        pedido.peso,
+        pedido.volume,
+        pedido.prioridade,
+        `"${pedido.responsavel}"`
+      ].join(','))
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `pedidos-liberacao-${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    toast.success("Arquivo CSV exportado com sucesso!");
+  };
+
   const handleLiberar = () => {
     if (selectedPedido) {
       liberarPedido(selectedPedido.id, solicitanteLiberacao, dataExpedicao || undefined);
@@ -62,7 +198,21 @@ export function PedidosLiberacaoTable() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Ordem de Carregamento</CardTitle>
+        <CardTitle className="flex items-center justify-between">
+          <span>Ordem de Carregamento</span>
+          {pedidosLiberacao.length > 0 && (
+            <div className="flex gap-2">
+              <Button onClick={handleImprimir} variant="outline" size="sm">
+                <Printer className="w-4 h-4 mr-2" />
+                Imprimir
+              </Button>
+              <Button onClick={handleExportar} variant="outline" size="sm">
+                <Download className="w-4 h-4 mr-2" />
+                Exportar CSV
+              </Button>
+            </div>
+          )}
+        </CardTitle>
         <CardDescription>
           Pedidos aguardando análise e liberação
         </CardDescription>
