@@ -211,6 +211,13 @@ export function TransportadoraStatusSeparacao() {
     const totalQuantidade = filteredNfs.reduce((sum, nf) => sum + Number(nf.quantidade || 0), 0);
 
     // Resumo por status
+    const nfsByStatus = filteredNfs.reduce((acc, nf) => {
+      const status = nf.status_separacao || 'pendente';
+      if (!acc[status]) acc[status] = [];
+      acc[status].push(nf);
+      return acc;
+    }, {} as Record<string, NotaFiscal[]>);
+    
     const statusCounts = Object.entries(statusConfig).map(([status, config]) => ({
       status,
       label: config.label,

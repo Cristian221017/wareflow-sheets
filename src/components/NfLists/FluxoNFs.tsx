@@ -30,6 +30,138 @@ function EmptyState({ icon: Icon, title, description }: {
   );
 }
 
+// Função compartilhada para impressão
+function generatePrintReport(nfs: NotaFiscal[], filters: NFFilterState, reportTitle: string) {
+  const hoje = new Date();
+  const dataHoraImpressao = hoje.toLocaleString('pt-BR');
+  
+  const filtrosAplicados = [];
+  if (filters.searchNF) filtrosAplicados.push(`NF: ${filters.searchNF}`);
+  if (filters.searchPedido) filtrosAplicados.push(`Pedido: ${filters.searchPedido}`);
+  if (filters.cliente) filtrosAplicados.push(`Cliente: ${filters.cliente}`);
+  if (filters.produto) filtrosAplicados.push(`Produto: ${filters.produto}`);
+  if (filters.fornecedor) filtrosAplicados.push(`Fornecedor: ${filters.fornecedor}`);
+  if (filters.localizacao) filtrosAplicados.push(`Localização: ${filters.localizacao}`);
+  if (filters.dataInicio) filtrosAplicados.push(`Data início: ${new Date(filters.dataInicio).toLocaleDateString('pt-BR')}`);
+  if (filters.dataFim) filtrosAplicados.push(`Data fim: ${new Date(filters.dataFim).toLocaleDateString('pt-BR')}`);
+
+  let html = `
+    <html>
+      <head>
+        <title>${reportTitle}</title>
+        <style>
+          body { font-family: Arial, sans-serif; margin: 20px; }
+          .header { text-align: center; margin-bottom: 30px; }
+          .filters { margin-bottom: 20px; padding: 10px; background-color: #f5f5f5; border-radius: 5px; }
+          .summary { margin-bottom: 20px; }
+          table { width: 100%; border-collapse: collapse; }
+          th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+          th { background-color: #f2f2f2; }
+          .footer { margin-top: 30px; text-align: center; font-size: 12px; color: #666; }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <h1>${reportTitle}</h1>
+          <p>Gerado em: ${dataHoraImpressao}</p>
+        </div>
+  `;
+
+  if (filtrosAplicados.length > 0) {
+    html += `
+      <div class="filters">
+        <strong>Filtros aplicados:</strong> ${filtrosAplicados.join(', ')}
+      </div>
+    `;
+  }
+
+  const totalPeso = nfs.reduce((sum, nf) => sum + Number(nf.peso || 0), 0);
+  const totalVolume = nfs.reduce((sum, nf) => sum + Number(nf.volume || 0), 0);
+  const totalQuantidade = nfs.reduce((sum, nf) => sum + Number(nf.quantidade || 0), 0);
+
+  html += `
+    <div class="summary">
+      <h3>Resumo</h3>
+      <p><strong>Total de NFs:</strong> ${nfs.length}</p>
+      <p><strong>Peso total:</strong> ${totalPeso.toLocaleString('pt-BR')} kg</p>
+      <p><strong>Volume total:</strong> ${totalVolume.toLocaleString('pt-BR')} m³</p>
+      <p><strong>Quantidade total:</strong> ${totalQuantidade.toLocaleString('pt-BR')} unidades</p>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>NF</th>
+          <th>Pedido</th>
+          <th>Produto</th>
+          <th>Fornecedor</th>
+          <th>Quantidade</th>
+          <th>Peso (kg)</th>
+          <th>Volume (m³)</th>
+          <th>Localização</th>
+          <th>Data Receb.</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+  `;
+
+  nfs.forEach(nf => {
+    html += `
+      <tr>
+        <td>${nf.numero_nf}</td>
+        <td>${nf.numero_pedido}</td>
+        <td>${nf.produto}</td>
+        <td>${nf.fornecedor}</td>
+        <td>${Number(nf.quantidade).toLocaleString('pt-BR')}</td>
+        <td>${Number(nf.peso).toLocaleString('pt-BR')}</td>
+        <td>${Number(nf.volume).toLocaleString('pt-BR')}</td>
+        <td>${nf.localizacao}</td>
+        <td>${new Date(nf.data_recebimento).toLocaleDateString('pt-BR')}</td>
+        <td>${nf.status}</td>
+      </tr>
+    `;
+  });
+
+  html += `
+      </tbody>
+    </table>
+    <div class="footer">
+      <p>Relatório gerado pelo Sistema WMS - Fluxo de NFs</p>
+    </div>
+  </body>
+  </html>
+  `;
+
+  return html;
+}
+
+// Função compartilhada para export CSV
+function generateCSVExport(nfs: NotaFiscal[], reportTitle: string) {
+  const headers = [
+    'NF', 'Pedido', 'Produto', 'Fornecedor', 'Quantidade', 
+    'Peso (kg)', 'Volume (m³)', 'Localização', 'Data Recebimento', 'Status'
+  ];
+  
+  const csvContent = [
+    headers.join(','),
+    ...nfs.map(nf => [
+      nf.numero_nf,
+      nf.numero_pedido,
+      `"${nf.produto}"`,
+      `"${nf.fornecedor}"`,
+      nf.quantidade,
+      nf.peso,
+      nf.volume,
+      `"${nf.localizacao}"`,
+      new Date(nf.data_recebimento).toLocaleDateString('pt-BR'),
+      nf.status
+    ].join(','))
+  ].join('\n');
+
+  return csvContent;
+}
+
 // Coluna de NFs Armazenadas
 function ArmazenadasColumn({ 
   canRequest, 
@@ -48,6 +180,7 @@ function ArmazenadasColumn({
 }) {
   const { user } = useAuth();
   const isCliente = user?.type === 'cliente';
+  const isTransportadora = user?.role === 'admin_transportadora' || user?.role === 'operador';
   const { data: nfs, isLoading, isError } = isCliente ? useNFsCliente("ARMAZENADA") : useNFs("ARMAZENADA");
   const { solicitar } = useFluxoMutations();
 
@@ -57,6 +190,33 @@ function ArmazenadasColumn({
   const validNfs = Array.isArray(nfs) ? nfs : [];
   const filteredNfs = applyFilters(validNfs);
 
+  // Função para imprimir relatório
+  const handleImprimir = () => {
+    const html = generatePrintReport(filteredNfs, filters, "Relatório de NFs Armazenadas");
+    const printWindow = window.open('', '_blank');
+    if (printWindow) {
+      printWindow.document.write(html);
+      printWindow.document.close();
+      printWindow.print();
+    }
+    toast.success("Relatório enviado para impressão!");
+  };
+
+  // Função para exportar CSV
+  const handleExportar = () => {
+    const csvContent = generateCSVExport(filteredNfs, "NFs Armazenadas");
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `nfs-armazenadas-${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    toast.success("Arquivo CSV exportado com sucesso!");
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -64,9 +224,23 @@ function ArmazenadasColumn({
           <Package className="w-5 h-5 text-blue-600" />
           NFs Armazenadas
         </h3>
-        <Badge variant="secondary">
-          {filteredNfs.length}{validNfs.length !== filteredNfs.length && ` de ${validNfs.length}`}
-        </Badge>
+        <div className="flex items-center gap-2">
+          <Badge variant="secondary">
+            {filteredNfs.length}{validNfs.length !== filteredNfs.length && ` de ${validNfs.length}`}
+          </Badge>
+          {filteredNfs.length > 0 && (
+            <div className="flex gap-2">
+              <Button onClick={handleImprimir} variant="outline" size="sm">
+                <Printer className="w-3 h-3 mr-1" />
+                Imprimir
+              </Button>
+              <Button onClick={handleExportar} variant="outline" size="sm">
+                <Download className="w-3 h-3 mr-1" />
+                CSV
+              </Button>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Ações em massa */}
@@ -142,6 +316,7 @@ function SolicitadasColumn({
 }) {
   const { user } = useAuth();
   const isCliente = user?.type === 'cliente';
+  const isTransportadora = user?.role === 'admin_transportadora' || user?.role === 'operador';
   const { data: nfs, isLoading, isError } = isCliente ? useNFsCliente("SOLICITADA") : useNFs("SOLICITADA");
   const { confirmar, recusar } = useFluxoMutations();
 
@@ -151,6 +326,33 @@ function SolicitadasColumn({
   const validNfs = Array.isArray(nfs) ? nfs : [];
   const filteredNfs = applyFilters(validNfs);
 
+  // Função para imprimir relatório
+  const handleImprimir = () => {
+    const html = generatePrintReport(filteredNfs, filters, "Relatório de Carregamentos Solicitados");
+    const printWindow = window.open('', '_blank');
+    if (printWindow) {
+      printWindow.document.write(html);
+      printWindow.document.close();
+      printWindow.print();
+    }
+    toast.success("Relatório enviado para impressão!");
+  };
+
+  // Função para exportar CSV
+  const handleExportar = () => {
+    const csvContent = generateCSVExport(filteredNfs, "Carregamentos Solicitados");
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `carregamentos-solicitados-${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    toast.success("Arquivo CSV exportado com sucesso!");
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -158,9 +360,23 @@ function SolicitadasColumn({
           <Clock className="w-5 h-5 text-orange-600" />
           Carregamentos Solicitados
         </h3>
-        <Badge variant="secondary">
-          {filteredNfs.length}{validNfs.length !== filteredNfs.length && ` de ${validNfs.length}`}
-        </Badge>
+        <div className="flex items-center gap-2">
+          <Badge variant="secondary">
+            {filteredNfs.length}{validNfs.length !== filteredNfs.length && ` de ${validNfs.length}`}
+          </Badge>
+          {filteredNfs.length > 0 && (
+            <div className="flex gap-2">
+              <Button onClick={handleImprimir} variant="outline" size="sm">
+                <Printer className="w-3 h-3 mr-1" />
+                Imprimir
+              </Button>
+              <Button onClick={handleExportar} variant="outline" size="sm">
+                <Download className="w-3 h-3 mr-1" />
+                CSV
+              </Button>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Ações em massa */}
@@ -410,7 +626,7 @@ function ConfirmadasColumn({
           <Badge variant="secondary">
             {filteredNfs.length}{validNfs.length !== filteredNfs.length && ` de ${validNfs.length}`}
           </Badge>
-          {isTransportadora && filteredNfs.length > 0 && (
+          {filteredNfs.length > 0 && (
             <div className="flex gap-2">
               <Button onClick={handleImprimir} variant="outline" size="sm">
                 <Printer className="w-3 h-3 mr-1" />
