@@ -117,14 +117,20 @@ export function StatusSeparacaoManager({
     }
   };
 
-  // Se não pode editar, mostra apenas o badge
-  if (!canEdit) {
+  // Se não pode editar ou separação já concluída, mostra apenas o badge
+  const isSeparacaoConcluida = statusAtual === 'separacao_concluida';
+  if (!canEdit || isSeparacaoConcluida) {
     return (
       <div className="flex items-center gap-2">
         <Badge variant={currentConfig.variant} className="flex items-center gap-1">
           <CurrentIcon className="w-3 h-3" />
           {currentConfig.label}
         </Badge>
+        {isSeparacaoConcluida && canEdit && (
+          <span className="text-xs text-muted-foreground">
+            (Status final - não editável)
+          </span>
+        )}
       </div>
     );
   }
