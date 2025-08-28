@@ -2,13 +2,17 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { solicitarNF, confirmarNF, recusarNF, fetchNFsByStatus } from "@/lib/nfApi";
 import { toast } from "sonner";
 import { log, audit, error } from "@/utils/logger";
+import { useAuth } from "@/contexts/AuthContext";
 import type { NFStatus, NotaFiscal } from "@/types/nf";
 
 const NF_QUERY_KEY = "nfs";
 
 export function useNFs(status: NFStatus) {
+  const { user } = useAuth();
+  const scope = user?.type === 'cliente' ? user?.clienteId : user?.transportadoraId;
+  
   return useQuery({
-    queryKey: [NF_QUERY_KEY, status],
+    queryKey: [NF_QUERY_KEY, status, user?.type, scope],
     queryFn: () => fetchNFsByStatus(status),
     staleTime: 30000, // 30 segundos
     refetchOnWindowFocus: true,
@@ -32,13 +36,16 @@ export function useAllNFs() {
 
 export function useFluxoMutations() {
   const queryClient = useQueryClient();
+  const { user } = useAuth();
   
   const invalidateAll = () => {
     log('🔄 Invalidando cache de todas as NFs');
+    const scope = user?.type === 'cliente' ? user?.clienteId : user?.transportadoraId;
     const statuses: NFStatus[] = ["ARMAZENADA", "SOLICITADA", "CONFIRMADA"];
-    statuses.forEach(status => 
-      queryClient.invalidateQueries({ queryKey: [NF_QUERY_KEY, status] })
-    );
+    statuses.forEach(status => {
+      queryClient.invalidateQueries({ queryKey: [NF_QUERY_KEY, status, user?.type, scope] });
+    });
+    queryClient.invalidateQueries({ queryKey: ['dashboard'] });
   };
 
   const solicitar = useMutation({

@@ -42,11 +42,16 @@ export function WMSProvider({ children }: { children: ReactNode }) {
   
   const invalidateWithScope = (entityType: 'nfs' | 'documentos_financeiros', entityId?: string, userType?: string, userId?: string) => {
     if (entityType === 'nfs') {
-      // Invalidar queries da transportadora
+      // Invalidar queries com escopo por persona
+      const scope = user?.type === 'cliente' ? user?.clienteId : user?.transportadoraId;
       const statuses = ["ARMAZENADA", "SOLICITADA", "CONFIRMADA"];
-      statuses.forEach(status => 
-        queryClient.invalidateQueries({ queryKey: ["nfs", status] })
-      );
+      
+      statuses.forEach(status => {
+        // Queries antigas sem escopo (compatibilidade)
+        queryClient.invalidateQueries({ queryKey: ["nfs", status] });
+        // Queries com escopo por persona
+        queryClient.invalidateQueries({ queryKey: ["nfs", status, user?.type, scope] });
+      });
       
       // Invalidar queries do cliente (com chaves escopadas)
       queryClient.invalidateQueries({ queryKey: ['nfs', 'cliente', 'todas'] });
@@ -59,8 +64,8 @@ export function WMSProvider({ children }: { children: ReactNode }) {
         queryClient.invalidateQueries({ queryKey: ['nfs', 'transportadora', user.transportadoraId] });
       }
     } else if (entityType === 'documentos_financeiros') {
-      if (userType === 'cliente' && userId) {
-        queryClient.invalidateQueries({ queryKey: ['documentos_financeiros', 'cliente', userId] });
+      if (userType === 'cliente' && user?.clienteId) {
+        queryClient.invalidateQueries({ queryKey: ['documentos_financeiros', 'cliente', user.clienteId] });
       } else if (user?.transportadoraId) {
         queryClient.invalidateQueries({ queryKey: ['documentos_financeiros', 'transportadora', user.transportadoraId] });
       }
@@ -187,18 +192,29 @@ export function WMSProvider({ children }: { children: ReactNode }) {
 
   // Add Nota Fiscal
   const addNotaFiscal = async (nfData: Omit<NotaFiscal, 'id' | 'createdAt'>) => {
+    if (!user?.transportadoraId) {
+      throw new Error('Usuário não tem transportadora associada');
+    }
+
     try {
       log('📦 Adicionando nova NF:', nfData);
 
-      // Get cliente_id from cnpj
-      const { data: cliente } = await supabase
+      // Priorizar clienteId se fornecido
+      const clienteId = nfData.clienteId;
+      if (!clienteId) {
+        throw new Error('Cliente não selecionado');
+      }
+
+      // Validar cliente pelo ID
+      const { data: cliente, error: clienteError } = await supabase
         .from('clientes')
-        .select('id')
-        .eq('cnpj', nfData.cnpjCliente)
+        .select('id, transportadora_id, razao_social, cnpj')
+        .eq('id', clienteId)
+        .eq('transportadora_id', user.transportadoraId)
         .single();
 
-      if (!cliente) {
-        throw new Error('Cliente não encontrado');
+      if (clienteError || !cliente) {
+        throw new Error('Cliente inválido');
       }
 
       const { error } = await supabase
@@ -299,7 +315,7 @@ export function WMSProvider({ children }: { children: ReactNode }) {
         }
       
       // Invalidar com escopo
-      invalidateWithScope('nfs', undefined, user?.type, user?.id);
+      invalidateWithScope('nfs', undefined, user?.type, user?.type === 'cliente' ? user?.clienteId : user?.transportadoraId);
       await loadData();
       
     } catch (err: any) {
@@ -345,7 +361,7 @@ export function WMSProvider({ children }: { children: ReactNode }) {
         }
       
       // Invalidar com escopo
-      invalidateWithScope('nfs', undefined, user?.type, user?.id);
+      invalidateWithScope('nfs', undefined, user?.type, user?.type === 'cliente' ? user?.clienteId : user?.transportadoraId);
       toast.success(`✅ Carregamento aprovado para NF ${numeroNF}!`);
       await loadData();
       
@@ -373,7 +389,7 @@ export function WMSProvider({ children }: { children: ReactNode }) {
       await recusarNF(nf.id);
       
       // Invalidar com escopo
-      invalidateWithScope('nfs', undefined, user?.type, user?.id);
+      invalidateWithScope('nfs', undefined, user?.type, user?.type === 'cliente' ? user?.clienteId : user?.transportadoraId);
       toast.success(`❌ Carregamento rejeitado para NF ${numeroNF}!`);
       await loadData();
       

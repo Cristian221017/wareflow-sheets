@@ -19,6 +19,7 @@ export type Database = {
           cep: string | null
           cidade: string | null
           cnpj: string
+          cnpj_normalizado: string | null
           created_at: string
           edi_id: string | null
           email: string
@@ -44,6 +45,7 @@ export type Database = {
           cep?: string | null
           cidade?: string | null
           cnpj: string
+          cnpj_normalizado?: string | null
           created_at?: string
           edi_id?: string | null
           email: string
@@ -69,6 +71,7 @@ export type Database = {
           cep?: string | null
           cidade?: string | null
           cnpj?: string
+          cnpj_normalizado?: string | null
           created_at?: string
           edi_id?: string | null
           email?: string

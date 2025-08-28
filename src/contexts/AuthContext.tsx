@@ -156,7 +156,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (clienteData && !clienteError) {
         const userData: User = {
-          id: supabaseUser.id, // Use auth user ID, not cliente ID
+          id: supabaseUser.id, // SEMPRE Auth UID
           name: clienteData.razao_social,
           email: clienteData.email,
           type: 'cliente',
@@ -165,7 +165,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           emailSolicitacaoLiberacao: clienteData.email_solicitacao_liberacao,
           emailLiberacaoAutorizada: clienteData.email_liberacao_autorizada,
           transportadoraId: clienteData.transportadora_id,
-          clienteId: clienteData.id // Store cliente ID separately
+          clienteId: clienteData.id // ID de domínio do cliente
         };
 
         log('🔍 Cliente user detected:', userData);
