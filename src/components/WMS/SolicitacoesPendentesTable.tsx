@@ -1,227 +1,62 @@
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-import { Clock, CheckCircle, X, Truck } from 'lucide-react';
-import { useState } from 'react';
-import { log, warn, error as logError } from '@/utils/logger';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useNFs, useFluxoMutations } from '@/hooks/useNFs';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { Textarea } from '@/components/ui/textarea';
-
-const formSchema = z.object({
-  transportadora: z.string().min(1, 'Transportadora é obrigatória'),
-  dataExpedicao: z.string().optional()
-});
-
-const recusaFormSchema = z.object({
-  responsavel: z.string().min(1, 'Responsável é obrigatório'),
-  motivo: z.string().min(10, 'Motivo deve ter pelo menos 10 caracteres')
-});
-
-type FormData = z.infer<typeof formSchema>;
-type RecusaFormData = z.infer<typeof recusaFormSchema>;
-
-function AprovarDialog({ nfId, numeroNf, numeroPedido }: { nfId: string, numeroNf: string, numeroPedido: string }) {
-  const { confirmar } = useFluxoMutations();
-  const [open, setOpen] = useState(false);
-  
-  const form = useForm<FormData>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      transportadora: '',
-      dataExpedicao: ''
-    }
-  });
-
-  const onSubmit = async (data: FormData) => {
-    try {
-      await confirmar.mutateAsync(nfId);
-      setOpen(false);
-      form.reset();
-    } catch (error) {
-      logError('Erro ao aprovar solicitação:', error);
-    }
-  };
-
-  return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button
-          size="sm"
-          variant="outline"
-          className="text-success border-success hover:bg-success hover:text-success-foreground"
-        >
-          <CheckCircle className="w-3 h-3 mr-1" />
-          Aprovar
-        </Button>
-      </DialogTrigger>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Truck className="w-5 h-5" />
-            Aprovar Pedido de Liberação
-          </DialogTitle>
-          <DialogDescription>
-            Pedido: {numeroPedido} - NF: {numeroNf}
-          </DialogDescription>
-        </DialogHeader>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="transportadora"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Transportadora Responsável *</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Nome da transportadora" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="dataExpedicao"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Data de Expedição (Opcional)</FormLabel>
-                  <FormControl>
-                    <Input type="date" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <div className="flex justify-end gap-2">
-              <Button type="button" variant="outline" onClick={() => setOpen(false)}>
-                Cancelar
-              </Button>
-              <Button type="submit" className="bg-success text-success-foreground hover:bg-success/80">
-                Confirmar Aprovação
-              </Button>
-            </div>
-          </form>
-        </Form>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-function RecusarDialog({ nfId, numeroNf, numeroPedido }: { nfId: string, numeroNf: string, numeroPedido: string }) {
-  const { recusar } = useFluxoMutations();
-  const [open, setOpen] = useState(false);
-  
-  const form = useForm<RecusaFormData>({
-    resolver: zodResolver(recusaFormSchema),
-    defaultValues: {
-      responsavel: '',
-      motivo: ''
-    }
-  });
-
-  const onSubmit = async (data: RecusaFormData) => {
-    try {
-      await recusar.mutateAsync(nfId);
-      setOpen(false);
-      form.reset();
-    } catch (error) {
-      logError('Erro ao recusar solicitação:', error);
-    }
-  };
-
-  return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button
-          size="sm"
-          variant="outline"
-          className="text-destructive border-destructive hover:bg-destructive hover:text-destructive-foreground"
-        >
-          <X className="w-3 h-3 mr-1" />
-          Recusar
-        </Button>
-      </DialogTrigger>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <X className="w-5 h-5 text-destructive" />
-            Recusar Solicitação de Carregamento
-          </DialogTitle>
-          <DialogDescription>
-            Pedido: {numeroPedido} - NF: {numeroNf}
-            <br />
-            <span className="text-destructive font-medium">
-              A mercadoria voltará para "Armazenadas" com as observações da recusa.
-            </span>
-          </DialogDescription>
-        </DialogHeader>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="responsavel"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Responsável pela Recusa *</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Nome do responsável" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="motivo"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Motivo da Recusa *</FormLabel>
-                  <FormControl>
-                    <Textarea 
-                      placeholder="Descreva o motivo da recusa detalhadamente..."
-                      className="min-h-[100px]"
-                      {...field} 
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <div className="flex justify-end gap-2">
-              <Button type="button" variant="outline" onClick={() => setOpen(false)}>
-                Cancelar
-              </Button>
-              <Button type="submit" variant="destructive">
-                Confirmar Recusa
-              </Button>
-            </div>
-          </form>
-        </Form>
-      </DialogContent>
-    </Dialog>
-  );
-}
+import { NFCard } from '@/components/NfLists/NFCard';
+import { NFFilters, type NFFilterState } from '@/components/NfLists/NFFilters';
+import { Clock, CheckCircle, X, Printer, Download } from 'lucide-react';
+import { toast } from 'sonner';
+import type { NotaFiscal } from '@/types/nf';
+import { useState } from 'react';
 
 export function SolicitacoesPendentesTable() {
   const { data: solicitadas, isLoading } = useNFs("SOLICITADA");
+  const { confirmar, recusar } = useFluxoMutations();
+  
+  // Estados para filtros
+  const [filters, setFilters] = useState<NFFilterState>({
+    searchNF: '',
+    searchPedido: '',
+    cliente: '',
+    produto: '',
+    fornecedor: '',
+    dataInicio: '',
+    dataFim: '',
+    localizacao: '',
+  });
+
+  // Função para filtrar NFs
+  const applyFilters = (nfs: NotaFiscal[]) => {
+    return nfs.filter(nf => {
+      if (filters.searchNF && !nf.numero_nf.toLowerCase().includes(filters.searchNF.toLowerCase())) {
+        return false;
+      }
+      if (filters.searchPedido && !nf.numero_pedido.toLowerCase().includes(filters.searchPedido.toLowerCase())) {
+        return false;
+      }
+      if (filters.produto && !nf.produto.toLowerCase().includes(filters.produto.toLowerCase())) {
+        return false;
+      }
+      if (filters.fornecedor && !nf.fornecedor.toLowerCase().includes(filters.fornecedor.toLowerCase())) {
+        return false;
+      }
+      if (filters.localizacao && !nf.localizacao.toLowerCase().includes(filters.localizacao.toLowerCase())) {
+        return false;
+      }
+      if (filters.dataInicio) {
+        const nfDate = new Date(nf.data_recebimento);
+        const startDate = new Date(filters.dataInicio);
+        if (nfDate < startDate) return false;
+      }
+      if (filters.dataFim) {
+        const nfDate = new Date(nf.data_recebimento);
+        const endDate = new Date(filters.dataFim);
+        endDate.setHours(23, 59, 59, 999);
+        if (nfDate > endDate) return false;
+      }
+      return true;
+    });
+  };
 
   if (isLoading) {
     return (
@@ -234,75 +69,239 @@ export function SolicitacoesPendentesTable() {
   }
 
   const validSolicitadas = solicitadas || [];
+  const filteredSolicitadas = applyFilters(validSolicitadas);
+
+  // Função para imprimir relatório
+  const handleImprimir = () => {
+    const hoje = new Date();
+    const dataHoraImpressao = hoje.toLocaleString('pt-BR');
+    
+    const filtrosAplicados = [];
+    if (filters.searchNF) filtrosAplicados.push(`NF: ${filters.searchNF}`);
+    if (filters.searchPedido) filtrosAplicados.push(`Pedido: ${filters.searchPedido}`);
+    if (filters.produto) filtrosAplicados.push(`Produto: ${filters.produto}`);
+    if (filters.fornecedor) filtrosAplicados.push(`Fornecedor: ${filters.fornecedor}`);
+    if (filters.localizacao) filtrosAplicados.push(`Localização: ${filters.localizacao}`);
+    if (filters.dataInicio) filtrosAplicados.push(`Data início: ${new Date(filters.dataInicio).toLocaleDateString('pt-BR')}`);
+    if (filters.dataFim) filtrosAplicados.push(`Data fim: ${new Date(filters.dataFim).toLocaleDateString('pt-BR')}`);
+    
+    const totalPeso = filteredSolicitadas.reduce((sum, nf) => sum + Number(nf.peso || 0), 0);
+    const totalVolume = filteredSolicitadas.reduce((sum, nf) => sum + Number(nf.volume || 0), 0);
+    const totalQuantidade = filteredSolicitadas.reduce((sum, nf) => sum + Number(nf.quantidade || 0), 0);
+
+    let html = `
+      <html>
+        <head>
+          <title>Relatório de Solicitações Pendentes</title>
+          <style>
+            body { font-family: Arial, sans-serif; margin: 20px; }
+            .header { text-align: center; margin-bottom: 30px; }
+            .filters { margin-bottom: 20px; padding: 10px; background-color: #f5f5f5; border-radius: 5px; }
+            .summary { margin-bottom: 20px; }
+            table { width: 100%; border-collapse: collapse; }
+            th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+            th { background-color: #f2f2f2; }
+            .footer { margin-top: 30px; text-align: center; font-size: 12px; color: #666; }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h1>Relatório de Solicitações Pendentes</h1>
+            <p>Gerado em: ${dataHoraImpressao}</p>
+          </div>
+    `;
+
+    if (filtrosAplicados.length > 0) {
+      html += `
+        <div class="filters">
+          <strong>Filtros aplicados:</strong> ${filtrosAplicados.join(', ')}
+        </div>
+      `;
+    }
+
+    html += `
+      <div class="summary">
+        <h3>Resumo</h3>
+        <p><strong>Total de solicitações pendentes:</strong> ${filteredSolicitadas.length}</p>
+        <p><strong>Peso total:</strong> ${totalPeso.toLocaleString('pt-BR')} kg</p>
+        <p><strong>Volume total:</strong> ${totalVolume.toLocaleString('pt-BR')} m³</p>
+        <p><strong>Quantidade total:</strong> ${totalQuantidade.toLocaleString('pt-BR')} unidades</p>
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>NF</th>
+            <th>Pedido</th>
+            <th>Ordem Compra</th>
+            <th>Fornecedor</th>
+            <th>Produto</th>
+            <th>Quantidade</th>
+            <th>Peso (kg)</th>
+            <th>Volume (m³)</th>
+            <th>Data Solicitação</th>
+          </tr>
+        </thead>
+        <tbody>
+    `;
+
+    filteredSolicitadas.forEach(nf => {
+      html += `
+        <tr>
+          <td>${nf.numero_nf}</td>
+          <td>${nf.numero_pedido}</td>
+          <td>${nf.ordem_compra}</td>
+          <td>${nf.fornecedor}</td>
+          <td>${nf.produto}</td>
+          <td>${Number(nf.quantidade).toLocaleString('pt-BR')}</td>
+          <td>${Number(nf.peso).toLocaleString('pt-BR')}</td>
+          <td>${Number(nf.volume).toLocaleString('pt-BR')}</td>
+          <td>${new Date(nf.created_at).toLocaleDateString('pt-BR')}</td>
+        </tr>
+      `;
+    });
+
+    html += `
+        </tbody>
+      </table>
+      <div class="footer">
+        <p>Relatório gerado pelo Sistema WMS - Solicitações Pendentes</p>
+      </div>
+    </body>
+    </html>
+    `;
+
+    const printWindow = window.open('', '_blank');
+    if (printWindow) {
+      printWindow.document.write(html);
+      printWindow.document.close();
+      printWindow.print();
+    }
+    
+    toast.success("Relatório enviado para impressão!");
+  };
+
+  // Função para exportar CSV
+  const handleExportar = () => {
+    const headers = [
+      'NF', 'Pedido', 'Ordem Compra', 'Fornecedor', 'Produto', 'Quantidade', 
+      'Peso (kg)', 'Volume (m³)', 'Data Solicitação'
+    ];
+    
+    const csvContent = [
+      headers.join(','),
+      ...filteredSolicitadas.map(nf => [
+        nf.numero_nf,
+        nf.numero_pedido,
+        nf.ordem_compra,
+        `"${nf.fornecedor}"`,
+        `"${nf.produto}"`,
+        nf.quantidade,
+        nf.peso,
+        nf.volume,
+        new Date(nf.created_at).toLocaleDateString('pt-BR')
+      ].join(','))
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `solicitacoes-pendentes-${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    toast.success("Arquivo CSV exportado com sucesso!");
+  };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Clock className="w-5 h-5 text-warning" />
-          Solicitações Pendentes
-        </CardTitle>
-        <CardDescription>
-          Solicitações de carregamento enviadas pelos clientes aguardando aprovação
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="overflow-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Número NF</TableHead>
-                <TableHead>Nº Pedido</TableHead>
-                <TableHead>Ordem Compra</TableHead>
-                <TableHead>Fornecedor</TableHead>
-                <TableHead>Produto</TableHead>
-                <TableHead>Quantidade</TableHead>
-                <TableHead>Peso (kg)</TableHead>
-                <TableHead>Volume (m³)</TableHead>
-                <TableHead>Data Solicitação</TableHead>
-                <TableHead className="text-center">Ações</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {validSolicitadas.map((nf) => (
-                <TableRow key={nf.id}>
-                  <TableCell className="font-medium">{nf.numero_nf}</TableCell>
-                  <TableCell>{nf.numero_pedido}</TableCell>
-                  <TableCell>{nf.ordem_compra}</TableCell>
-                  <TableCell>{nf.fornecedor}</TableCell>
-                  <TableCell>{nf.produto}</TableCell>
-                  <TableCell>{nf.quantidade}</TableCell>
-                  <TableCell>{Number(nf.peso).toFixed(1)}</TableCell>
-                  <TableCell>{Number(nf.volume).toFixed(2)}</TableCell>
-                  <TableCell>{new Date(nf.created_at).toLocaleDateString('pt-BR')}</TableCell>
-                  <TableCell className="text-center">
-                    <div className="flex gap-2 justify-center">
-                      <AprovarDialog 
-                        nfId={nf.id} 
-                        numeroNf={nf.numero_nf} 
-                        numeroPedido={nf.numero_pedido} 
-                      />
-                      <RecusarDialog 
-                        nfId={nf.id} 
-                        numeroNf={nf.numero_nf} 
-                        numeroPedido={nf.numero_pedido} 
-                      />
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
-
-        {validSolicitadas.length === 0 && (
-          <div className="text-center py-8 text-muted-foreground">
-            <Clock className="w-12 h-12 mx-auto mb-4 opacity-50" />
-            <p>Nenhuma solicitação de carregamento pendente</p>
-            <p className="text-sm mt-1">As solicitações dos clientes aparecerão aqui</p>
+    <div className="space-y-6">
+      {/* Filtros */}
+      <NFFilters
+        filters={filters}
+        onFiltersChange={setFilters}
+        showClientFilter={true}
+      />
+      
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <Clock className="w-5 h-5 text-warning" />
+                Solicitações Pendentes
+              </CardTitle>
+              <CardDescription>
+                Solicitações de carregamento enviadas pelos clientes aguardando aprovação ({filteredSolicitadas.length}
+                {validSolicitadas.length !== filteredSolicitadas.length && ` de ${validSolicitadas.length}`} itens)
+              </CardDescription>
+            </div>
+            {filteredSolicitadas.length > 0 && (
+              <div className="flex gap-2">
+                <Button onClick={handleImprimir} variant="outline" size="sm">
+                  <Printer className="w-4 h-4 mr-2" />
+                  Imprimir
+                </Button>
+                <Button onClick={handleExportar} variant="outline" size="sm">
+                  <Download className="w-4 h-4 mr-2" />
+                  Exportar CSV
+                </Button>
+              </div>
+            )}
           </div>
-        )}
-      </CardContent>
-    </Card>
+        </CardHeader>
+        <CardContent>
+          {filteredSolicitadas.length > 0 ? (
+            <div className="space-y-3">
+              {filteredSolicitadas.map((nf) => (
+                <div key={nf.id} className="flex items-center justify-between p-4 border rounded-lg">
+                  <div className="flex-1">
+                    <NFCard
+                      nf={nf}
+                      showRequestInfo
+                      showSelection={false}
+                    />
+                  </div>
+                  <div className="ml-4 flex gap-2">
+                    <Button
+                      size="sm"
+                      disabled={confirmar.isPending || recusar.isPending}
+                      onClick={() => confirmar.mutate(nf.id)}
+                      className="bg-success text-success-foreground hover:bg-success/80"
+                    >
+                      <CheckCircle className="w-3 h-3 mr-1" />
+                      {confirmar.isPending ? "Aprovando..." : "Aprovar"}
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      disabled={confirmar.isPending || recusar.isPending}
+                      onClick={() => recusar.mutate(nf.id)}
+                    >
+                      <X className="w-3 h-3 mr-1" />
+                      {recusar.isPending ? "Recusando..." : "Recusar"}
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : validSolicitadas.length > 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              <Clock className="w-12 h-12 mx-auto mb-4 opacity-50" />
+              <p>Nenhuma solicitação encontrada com os filtros aplicados</p>
+              <p className="text-sm mt-1">Tente ajustar os filtros para ver mais resultados</p>
+            </div>
+          ) : (
+            <div className="text-center py-8 text-muted-foreground">
+              <Clock className="w-12 h-12 mx-auto mb-4 opacity-50" />
+              <p>Nenhuma solicitação pendente</p>
+              <p className="text-sm mt-1">As solicitações de carregamento aparecerão aqui</p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
   );
 }

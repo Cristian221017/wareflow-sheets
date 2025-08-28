@@ -310,7 +310,7 @@ export function PedidosConfirmadosTable() {
                 {filteredNfs.length}
                 {validNfs.length !== filteredNfs.length && ` de ${validNfs.length}`}
               </Badge>
-              {isTransportadora && filteredNfs.length > 0 && (
+              {filteredNfs.length > 0 && (
                 <div className="flex gap-2">
                   <Button onClick={handleImprimir} variant="outline" size="sm">
                     <Printer className="w-4 h-4 mr-2" />
