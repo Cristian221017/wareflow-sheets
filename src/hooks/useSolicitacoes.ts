@@ -54,27 +54,57 @@ export function useSolicitacoesTransportadora(status: 'PENDENTE' | 'APROVADA' | 
         nfsLegado = (todasNfsData || []).filter((nf: any) => !nfsComSolicitacao.has(nf.id));
       }
 
+      console.log('🔧 Solicitações modernas:', solicitacoesModernas?.length || 0);
+      console.log('🔧 NFs legado:', nfsLegado?.length || 0);
+
       // 3. Unificar dados no formato esperado
       const solicitacoesUnificadas = [
-        // Solicitações modernas (mantém formato original)
-        ...(solicitacoesModernas || []),
+        // Solicitações modernas (mapear dados aninhados para o nível superior)
+        ...(solicitacoesModernas || []).map((sol: any) => {
+          console.log('🔧 Solicitação moderna mapeada:', {
+            id: sol.id,
+            numero_nf: sol.notas_fiscais?.numero_nf,
+            produto: sol.notas_fiscais?.produto
+          });
+          return {
+            ...sol,
+            // Achatar dados da NF para compatibilidade com NFCard
+            numero_nf: sol.notas_fiscais?.numero_nf || '',
+            produto: sol.notas_fiscais?.produto || '',
+            numero_pedido: sol.notas_fiscais?.numero_pedido || '',
+            ordem_compra: sol.notas_fiscais?.ordem_compra || '',
+            peso: sol.notas_fiscais?.peso || 0,
+            volume: sol.notas_fiscais?.volume || 0,
+            quantidade: sol.notas_fiscais?.quantidade || 0,
+            fornecedor: sol.notas_fiscais?.fornecedor || '',
+            localizacao: sol.notas_fiscais?.localizacao || '',
+            data_recebimento: sol.notas_fiscais?.data_recebimento || '',
+            status_separacao: 'pendente', // Status padrão
+          };
+        }),
         // NFs legado convertidas para formato de solicitação
-        ...nfsLegado.map((nf: any) => ({
-          id: `legacy-${nf.id}`, // ID único para identificar como legado
-          nf_id: nf.id,
-          transportadora_id: user.transportadoraId,
-          cliente_id: nf.cliente_id,
-          data_agendamento: null,
-          observacoes: null,
-          anexos: [],
-          status: 'PENDENTE',
-          requested_by: nf.requested_by,
-          requested_at: nf.requested_at,
-          approved_by: null,
-          approved_at: null,
-          created_at: nf.requested_at,
-          updated_at: nf.requested_at,
-          notas_fiscais: {
+        ...nfsLegado.map((nf: any) => {
+          console.log('🔧 NF legado mapeada:', {
+            id: `legacy-${nf.id}`,
+            numero_nf: nf.numero_nf,
+            produto: nf.produto
+          });
+          return {
+            id: `legacy-${nf.id}`, // ID único para identificar como legado
+            nf_id: nf.id,
+            transportadora_id: user.transportadoraId,
+            cliente_id: nf.cliente_id,
+            data_agendamento: null,
+            observacoes: null,
+            anexos: [],
+            status: 'PENDENTE',
+            requested_by: nf.requested_by,
+            requested_at: nf.requested_at,
+            approved_by: null,
+            approved_at: null,
+            created_at: nf.requested_at,
+            updated_at: nf.requested_at,
+            // Dados da NF achatados para compatibilidade com NFCard
             numero_nf: nf.numero_nf,
             produto: nf.produto,
             numero_pedido: nf.numero_pedido,
@@ -85,12 +115,29 @@ export function useSolicitacoesTransportadora(status: 'PENDENTE' | 'APROVADA' | 
             fornecedor: nf.fornecedor,
             localizacao: nf.localizacao,
             data_recebimento: nf.data_recebimento,
-            created_at: nf.created_at,
-            cliente_id: nf.cliente_id
-          },
-          clientes: nf.clientes
-        }))
+            status_separacao: 'pendente', // Status padrão para NFs legado
+            // Manter estrutura aninhada para compatibilidade
+            notas_fiscais: {
+              numero_nf: nf.numero_nf,
+              produto: nf.produto,
+              numero_pedido: nf.numero_pedido,
+              ordem_compra: nf.ordem_compra,
+              peso: nf.peso,
+              volume: nf.volume,
+              quantidade: nf.quantidade,
+              fornecedor: nf.fornecedor,
+              localizacao: nf.localizacao,
+              data_recebimento: nf.data_recebimento,
+              created_at: nf.created_at,
+              cliente_id: nf.cliente_id
+            },
+            clientes: nf.clientes
+          };
+        })
       ].sort((a, b) => new Date(b.requested_at).getTime() - new Date(a.requested_at).getTime());
+      
+      console.log('🔧 Dados unificados finais:', solicitacoesUnificadas.length, 
+        solicitacoesUnificadas.slice(0, 2).map(s => ({ id: s.id, numero_nf: s.numero_nf, produto: s.produto })));
       
       return solicitacoesUnificadas;
     },
@@ -158,13 +205,14 @@ export function useSolicitacoesMutations() {
           })
           .eq('id', solicitacaoId)
           .select('nf_id')
-          .single();
+          .maybeSingle();
 
         if (updateError) throw updateError;
+        if (!solicitacao) throw new Error('Solicitação não encontrada');
 
         // Depois, confirmar a NF
         const { error: nfError } = await supabase.rpc('nf_confirmar', {
-          p_nf_id: (solicitacao as any).nf_id,
+          p_nf_id: solicitacao.nf_id,
           p_user_id: user?.id
         });
 
@@ -209,13 +257,14 @@ export function useSolicitacoesMutations() {
           })
           .eq('id', solicitacaoId)
           .select('nf_id')
-          .single();
+          .maybeSingle();
 
         if (updateError) throw updateError;
+        if (!solicitacao) throw new Error('Solicitação não encontrada');
 
         // Depois, recusar a NF
         const { error: nfError } = await supabase.rpc('nf_recusar', {
-          p_nf_id: (solicitacao as any).nf_id,
+          p_nf_id: solicitacao.nf_id,
           p_user_id: user?.id
         });
 

@@ -26,30 +26,30 @@ export function SolicitacoesPendentesTable() {
     statusSeparacao: 'all',
   });
 
-  // Função para filtrar NFs
-  const applyFilters = (nfs: NotaFiscal[]) => {
+  // Função para filtrar NFs (com verificações defensivas)
+  const applyFilters = (nfs: any[]) => {
     return nfs.filter(nf => {
-      if (filters.searchNF && !nf.numero_nf.toLowerCase().includes(filters.searchNF.toLowerCase())) {
+      if (filters.searchNF && nf.numero_nf && !nf.numero_nf.toLowerCase().includes(filters.searchNF.toLowerCase())) {
         return false;
       }
-      if (filters.searchPedido && !nf.numero_pedido.toLowerCase().includes(filters.searchPedido.toLowerCase())) {
+      if (filters.searchPedido && nf.numero_pedido && !nf.numero_pedido.toLowerCase().includes(filters.searchPedido.toLowerCase())) {
         return false;
       }
-      if (filters.produto && !nf.produto.toLowerCase().includes(filters.produto.toLowerCase())) {
+      if (filters.produto && nf.produto && !nf.produto.toLowerCase().includes(filters.produto.toLowerCase())) {
         return false;
       }
-      if (filters.fornecedor && !nf.fornecedor.toLowerCase().includes(filters.fornecedor.toLowerCase())) {
+      if (filters.fornecedor && nf.fornecedor && !nf.fornecedor.toLowerCase().includes(filters.fornecedor.toLowerCase())) {
         return false;
       }
-      if (filters.localizacao && !nf.localizacao.toLowerCase().includes(filters.localizacao.toLowerCase())) {
+      if (filters.localizacao && nf.localizacao && !nf.localizacao.toLowerCase().includes(filters.localizacao.toLowerCase())) {
         return false;
       }
-      if (filters.dataInicio) {
+      if (filters.dataInicio && nf.data_recebimento) {
         const nfDate = new Date(nf.data_recebimento);
         const startDate = new Date(filters.dataInicio);
         if (nfDate < startDate) return false;
       }
-      if (filters.dataFim) {
+      if (filters.dataFim && nf.data_recebimento) {
         const nfDate = new Date(nf.data_recebimento);
         const endDate = new Date(filters.dataFim);
         endDate.setHours(23, 59, 59, 999);
@@ -70,6 +70,7 @@ export function SolicitacoesPendentesTable() {
   }
 
   const validSolicitadas = solicitadas || [];
+  console.log('🔍 Solicitações recebidas:', validSolicitadas.length, validSolicitadas.slice(0, 2));
   const filteredSolicitadas = applyFilters(validSolicitadas);
 
   // Função para imprimir relatório
