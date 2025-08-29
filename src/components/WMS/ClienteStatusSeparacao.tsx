@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { useNFs, useFluxoMutations } from "@/hooks/useNFs";
-import { useNFsCliente } from "@/hooks/useNFsCliente";
+import { useNFs } from "@/hooks/useNFs";
+import { useNFsCliente, useClienteFluxoMutations } from "@/hooks/useNFsCliente";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLastVisit } from '@/hooks/useLastVisit';
 import { Badge } from "@/components/ui/badge";
@@ -57,7 +57,7 @@ export function ClienteStatusSeparacao() {
   const { markVisitForComponent } = useLastVisit();
   const isCliente = user?.type === "cliente";
   const { data: nfs, isLoading, isError } = isCliente ? useNFsCliente("ARMAZENADA") : useNFs("ARMAZENADA");
-  const { solicitar } = useFluxoMutations();
+  const { solicitar } = useClienteFluxoMutations();
 
   // Estados para filtros e seleção múltipla
   const [filters, setFilters] = useState<NFFilterState>({
@@ -411,14 +411,15 @@ export function ClienteStatusSeparacao() {
 
       {/* Ações em massa para NFs com separação concluída */}
       {filteredNfs.some((nf) => nf.status_separacao === "separacao_concluida") && (
-        <NFBulkActions
-          nfs={filteredNfs.filter((nf) => nf.status_separacao === "separacao_concluida")}
-          selectedIds={selectedIds.filter((id) =>
-            filteredNfs.some((nf) => nf.id === id && nf.status_separacao === "separacao_concluida")
-          )}
-          onSelectionChange={setSelectedIds}
-          canRequest={isCliente}
-        />
+          <NFBulkActions
+            nfs={filteredNfs.filter((nf) => nf.status_separacao === "separacao_concluida")}
+            selectedIds={selectedIds.filter((id) =>
+              filteredNfs.some((nf) => nf.id === id && nf.status_separacao === "separacao_concluida")
+            )}
+            onSelectionChange={setSelectedIds}
+            canRequest={isCliente}
+            solicitarMutation={solicitar}
+          />
       )}
 
       {/* Lista detalhada com ações de carregamento */}
@@ -454,6 +455,7 @@ export function ClienteStatusSeparacao() {
                             statusSeparacao={nf.status_separacao}
                             canSolicitar={true}
                             className="w-full"
+                            solicitarMutation={solicitar}
                           />
                         ) : null
                       }

@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Truck, Undo2 } from 'lucide-react';
 import { SolicitarCarregamentoDialog, SolicitacaoCarregamentoData } from './SolicitarCarregamentoDialog';
-import { useFluxoMutations } from '@/hooks/useNFs';
 import { toast } from 'sonner';
 
 interface CarregamentoActionButtonProps {
@@ -12,6 +11,10 @@ interface CarregamentoActionButtonProps {
   statusSeparacao?: string;
   canSolicitar: boolean;
   className?: string;
+  solicitarMutation?: {
+    mutateAsync: (data: { nfId: string; dadosAgendamento?: any }) => Promise<void>;
+    isPending: boolean;
+  };
 }
 
 export function CarregamentoActionButton({
@@ -20,13 +23,18 @@ export function CarregamentoActionButton({
   status,
   statusSeparacao,
   canSolicitar,
-  className = ""
+  className = "",
+  solicitarMutation
 }: CarregamentoActionButtonProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const { solicitar } = useFluxoMutations();
 
   const handleSolicitarCarregamento = async (data: SolicitacaoCarregamentoData) => {
     try {
+      if (!solicitarMutation) {
+        toast.error('Funcionalidade de solicitação não disponível');
+        return;
+      }
+
       // Converter os dados para o formato esperado pela API
       const dadosAgendamento = {
         dataAgendamento: data.dataAgendamento,
@@ -38,7 +46,7 @@ export function CarregamentoActionButton({
       };
       
       // Solicitar carregamento com dados de agendamento
-      await solicitar.mutateAsync({ 
+      await solicitarMutation.mutateAsync({ 
         nfId, 
         dadosAgendamento 
       });
@@ -77,11 +85,11 @@ export function CarregamentoActionButton({
           variant="default"
           size="sm"
           onClick={() => setIsDialogOpen(true)}
-          disabled={solicitar.isPending}
+          disabled={solicitarMutation?.isPending}
           className={className}
         >
           <Truck className="w-3 h-3 mr-1" />
-          {solicitar.isPending ? "Solicitando..." : "Solicitar Carregamento"}
+          {solicitarMutation?.isPending ? "Solicitando..." : "Solicitar Carregamento"}
         </Button>
 
         <SolicitarCarregamentoDialog
@@ -89,7 +97,7 @@ export function CarregamentoActionButton({
           onClose={() => setIsDialogOpen(false)}
           onConfirm={handleSolicitarCarregamento}
           numeroNF={numeroNF}
-          isLoading={solicitar.isPending}
+          isLoading={solicitarMutation?.isPending || false}
         />
       </>
     );

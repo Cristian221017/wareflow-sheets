@@ -22,7 +22,6 @@ import {
 import { log, error as logError } from '@/utils/logger';
 import { toast } from 'sonner';
 import type { NotaFiscal } from '@/types/nf';
-import { useFluxoMutations } from '@/hooks/useNFs';
 
 interface NFBulkActionsProps {
   nfs: NotaFiscal[];
@@ -31,6 +30,10 @@ interface NFBulkActionsProps {
   canRequest?: boolean;
   canDecide?: boolean;
   className?: string;
+  solicitarMutation?: {
+    mutateAsync: (data: { nfId: string; dadosAgendamento?: any }) => Promise<void>;
+    isPending: boolean;
+  };
 }
 
 export function NFBulkActions({
@@ -39,9 +42,9 @@ export function NFBulkActions({
   onSelectionChange,
   canRequest = false,
   canDecide = false,
-  className = ""
+  className = "",
+  solicitarMutation
 }: NFBulkActionsProps) {
-  const { solicitar, confirmar, recusar, isAnyLoading } = useFluxoMutations();
   const [bulkAction, setBulkAction] = useState<string>('');
 
   const allSelected = nfs.length > 0 && selectedIds.length === nfs.length;
@@ -92,13 +95,9 @@ export function NFBulkActions({
       try {
         switch (bulkAction) {
           case 'solicitar':
-            await solicitar.mutateAsync({ nfId: nf.id });
-            break;
-          case 'confirmar':
-            await confirmar.mutateAsync(nf.id);
-            break;
-          case 'recusar':
-            await recusar.mutateAsync(nf.id);
+            if (solicitarMutation) {
+              await solicitarMutation.mutateAsync({ nfId: nf.id });
+            }
             break;
         }
       } catch (error) {
@@ -192,10 +191,10 @@ export function NFBulkActions({
 
               <Button 
                 onClick={handleBulkAction}
-                disabled={!bulkAction || isAnyLoading}
+                disabled={!bulkAction || (solicitarMutation?.isPending ?? false)}
                 size="sm"
               >
-                {isAnyLoading ? 'Processando...' : 'Executar'}
+                {solicitarMutation?.isPending ? 'Processando...' : 'Executar'}
               </Button>
 
               <Button 
