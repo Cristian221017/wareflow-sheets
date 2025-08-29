@@ -8,7 +8,8 @@ import { NFCard } from "./NFCard";
 import { NFFilters, type NFFilterState } from "./NFFilters";
 import { NFBulkActions } from "./NFBulkActions";
 import { useNFs, useFluxoMutations } from "@/hooks/useNFs";
-import { useNFsCliente } from "@/hooks/useNFsCliente";
+import { useNFsCliente, useClienteFluxoMutations } from "@/hooks/useNFsCliente";
+import { CarregamentoActionButton } from "@/components/WMS/CarregamentoActionButton";
 import { subscribeCentralizedChanges } from "@/lib/realtimeCentralized";
 import { useAuth } from "@/contexts/AuthContext";
 import type { NotaFiscal } from "@/types/nf";
@@ -182,7 +183,7 @@ function ArmazenadasColumn({
   const isCliente = user?.type === 'cliente';
   const isTransportadora = user?.role === 'admin_transportadora' || user?.role === 'operador';
   const { data: nfs, isLoading, isError } = isCliente ? useNFsCliente("ARMAZENADA") : useNFs("ARMAZENADA");
-  const { solicitar } = useFluxoMutations();
+  const { solicitar } = isCliente ? useClienteFluxoMutations() : useFluxoMutations();
 
   if (isLoading) return <div className="p-4">Carregando...</div>;
   if (isError) return <div className="p-4 text-red-500">Erro ao carregar dados</div>;
@@ -263,7 +264,16 @@ function ArmazenadasColumn({
               isSelected={selectedIds.includes(nf.id)}
               onSelect={onSelect}
               actions={
-                canRequest && nf.status_separacao === 'separacao_concluida' ? (
+                isCliente && canRequest ? (
+                  <CarregamentoActionButton
+                    nfId={nf.id}
+                    numeroNF={nf.numero_nf}
+                    status={nf.status}
+                    statusSeparacao={nf.status_separacao}
+                    canSolicitar={canRequest}
+                    solicitarMutation={solicitar}
+                  />
+                ) : canRequest && nf.status_separacao === 'separacao_concluida' ? (
                   <Button
                     size="sm"
                     disabled={solicitar.isPending}

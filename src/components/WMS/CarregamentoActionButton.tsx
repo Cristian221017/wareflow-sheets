@@ -12,7 +12,12 @@ interface CarregamentoActionButtonProps {
   canSolicitar: boolean;
   className?: string;
   solicitarMutation?: {
-    mutateAsync: (data: { nfId: string; dadosAgendamento?: any }) => Promise<void>;
+    mutateAsync: (data: { 
+      nfId: string; 
+      dataAgendamento?: string;
+      observacoes?: string;
+      documentos?: File[];
+    }) => Promise<void>;
     isPending: boolean;
   };
 }
@@ -35,20 +40,12 @@ export function CarregamentoActionButton({
         return;
       }
 
-      // Converter os dados para o formato esperado pela API
-      const dadosAgendamento = {
-        dataAgendamento: data.dataAgendamento,
-        observacoes: data.observacoes,
-        documentos: data.documentos?.map(doc => ({
-          nome: doc.name,
-          tamanho: doc.size
-        }))
-      };
-      
-      // Solicitar carregamento com dados de agendamento
+      // Solicitar carregamento com dados completos
       await solicitarMutation.mutateAsync({ 
         nfId, 
-        dadosAgendamento 
+        dataAgendamento: data.dataAgendamento,
+        observacoes: data.observacoes,
+        documentos: data.documentos
       });
       
       setIsDialogOpen(false);

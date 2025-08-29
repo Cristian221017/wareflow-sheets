@@ -6,14 +6,24 @@ import { audit, auditError } from '@/utils/logger';
 import { solicitarCarregamentoComAgendamento, uploadAnexoSolicitacao } from '@/lib/nfApi';
 import { useAuth } from '@/contexts/AuthContext';
 
-// Hook para buscar NFs do cliente
+// Hook para buscar NFs do cliente com dados de solicitação
 export function useNFsCliente(status?: NFStatus) {
   return useQuery({
     queryKey: ['nfs', 'cliente', status],
     queryFn: async () => {
       let query = supabase
         .from('notas_fiscais')
-        .select('*')
+        .select(`
+          *,
+          solicitacoes_carregamento(
+            data_agendamento,
+            observacoes,
+            anexos,
+            status as solicitacao_status,
+            requested_at as solicitacao_requested_at,
+            approved_at as solicitacao_approved_at
+          )
+        `)
         .order('created_at', { ascending: false });
       
       if (status) {
@@ -23,10 +33,27 @@ export function useNFsCliente(status?: NFStatus) {
       const { data, error } = await query;
       if (error) throw error;
       
-      return data?.map(nf => ({
-        ...nf,
-        status_separacao: (nf as any).status_separacao || 'pendente'
-      })) || [];
+      // Transformar dados para incluir informações das solicitações na NF
+      return data?.map((item: any) => {
+        const nf = { ...item };
+        const solicitacao = item.solicitacoes_carregamento?.[0];
+        
+        if (solicitacao) {
+          nf.data_agendamento_entrega = solicitacao.data_agendamento;
+          nf.observacoes_solicitacao = solicitacao.observacoes;
+          nf.documentos_anexos = solicitacao.anexos;
+          nf.requested_at = solicitacao.solicitacao_requested_at;
+          nf.approved_at = solicitacao.solicitacao_approved_at;
+        }
+        
+        // Remover array de solicitações do objeto final
+        delete nf.solicitacoes_carregamento;
+        
+        return {
+          ...nf,
+          status_separacao: nf.status_separacao || 'pendente'
+        };
+      }) || [];
     }
   });
 }
