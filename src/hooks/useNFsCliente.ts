@@ -11,7 +11,7 @@ export function useNFsCliente(status?: NFStatus) {
   const { user } = useAuth();
   
   return useQuery({
-    queryKey: ['nfs', 'cliente', status, user?.id],
+    queryKey: ['nfs', 'cliente', user?.id ?? 'anon', status ?? 'todas'],
     queryFn: async () => {
       let query = supabase
         .from('notas_fiscais')
@@ -57,7 +57,7 @@ export function useNFsCliente(status?: NFStatus) {
         };
       }) || [];
     },
-    enabled: !!user?.id && user.type === 'cliente', // Só executar se usuário cliente autenticado
+    enabled: !!(user && user.id), // Só executar se usuário autenticado
   });
 }
 
@@ -115,9 +115,10 @@ export function useClienteFluxoMutations() {
       audit('SC_CREATE', 'SOLICITACAO', { userId: user?.id });
       
       // Invalidar queries com escopo consistente  
-      queryClient.invalidateQueries({ queryKey: ['nfs', 'cliente', user?.id] });
       queryClient.invalidateQueries({ queryKey: ['nfs'] });
-      queryClient.invalidateQueries({ queryKey: ['solicitacoes', 'cliente', user?.id] });
+      queryClient.invalidateQueries({ queryKey: ['nfs', 'cliente'] });
+      queryClient.invalidateQueries({ queryKey: ['solicitacoes', 'cliente'] });
+      queryClient.invalidateQueries({ queryKey: ['solicitacoes', 'transportadora'] });
       queryClient.invalidateQueries({ queryKey: ['dashboard'] });
     },
     onError: (error) => {

@@ -9,7 +9,7 @@ export function useSolicitacoesTransportadora(status: 'PENDENTE' | 'APROVADA' | 
   const { user } = useAuth();
   
   return useQuery({
-    queryKey: ['solicitacoes', 'transportadora', user?.transportadoraId, status],
+    queryKey: ['solicitacoes', 'transportadora', user?.transportadoraId ?? 'none', status ?? 'PENDENTE'],
     queryFn: async () => {
       if (!user?.transportadoraId) return [];
       
@@ -32,7 +32,7 @@ export function useSolicitacoesTransportadora(status: 'PENDENTE' | 'APROVADA' | 
       
       return data || [];
     },
-    enabled: !!user?.transportadoraId,
+    enabled: !!(user && user.transportadoraId),
     staleTime: 30000,
     refetchOnWindowFocus: true
   });
@@ -40,8 +40,10 @@ export function useSolicitacoesTransportadora(status: 'PENDENTE' | 'APROVADA' | 
 
 // Hook para buscar solicitações do cliente
 export function useSolicitacoesCliente(status: 'PENDENTE' | 'APROVADA' | 'RECUSADA' | 'TODAS' = 'TODAS') {
+  const { user } = useAuth();
+  
   return useQuery({
-    queryKey: ['solicitacoes', 'cliente', status],
+    queryKey: ['solicitacoes', 'cliente', user?.id ?? 'anon', status ?? 'TODAS'],
     queryFn: async () => {
       let query = (supabase as any)
         .from('solicitacoes_carregamento')
@@ -61,6 +63,7 @@ export function useSolicitacoesCliente(status: 'PENDENTE' | 'APROVADA' | 'RECUSA
       
       return data || [];
     },
+    enabled: !!(user && user.id),
     staleTime: 30000,
     refetchOnWindowFocus: true
   });
@@ -101,6 +104,8 @@ export function useSolicitacoesMutations() {
       
       // Invalidar queries relevantes
       queryClient.invalidateQueries({ queryKey: ['solicitacoes'] });
+      queryClient.invalidateQueries({ queryKey: ['solicitacoes', 'cliente'] });
+      queryClient.invalidateQueries({ queryKey: ['solicitacoes', 'transportadora'] });
       queryClient.invalidateQueries({ queryKey: ['nfs'] });
     },
     onError: (error) => {
@@ -139,6 +144,8 @@ export function useSolicitacoesMutations() {
       
       // Invalidar queries relevantes
       queryClient.invalidateQueries({ queryKey: ['solicitacoes'] });
+      queryClient.invalidateQueries({ queryKey: ['solicitacoes', 'cliente'] });
+      queryClient.invalidateQueries({ queryKey: ['solicitacoes', 'transportadora'] });
       queryClient.invalidateQueries({ queryKey: ['nfs'] });
     },
     onError: (error) => {
