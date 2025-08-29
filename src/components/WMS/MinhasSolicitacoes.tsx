@@ -9,10 +9,21 @@ import { toast } from "sonner";
 export function MinhasSolicitacoes() {
   const { data: solicitacoes, isLoading } = useSolicitacoesCliente();
 
-  const handleDownloadAnexo = async (anexo: any) => {
+  const handleDownloadAnexo = async (anexo: any, e?: React.MouseEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
     try {
       const url = await getAnexoUrl(anexo.path);
-      window.open(url, '_blank');
+      // Criar link temporário para download
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = anexo.name || 'documento';
+      link.target = '_blank';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     } catch (error) {
       toast.error('Erro ao baixar anexo');
     }
@@ -144,17 +155,31 @@ export function MinhasSolicitacoes() {
           onClick={async (e) => {
             e.preventDefault();
             e.stopPropagation();
+            console.log('📥 Download iniciado (MinhasSolicitacoes):', anexo.name);
             try {
               const url = await getAnexoUrl(anexo.path);
-              // Criar link temporário para download
+              console.log('🔗 URL gerada:', url);
+              
+              // Usar fetch para baixar e forçar download
+              const response = await fetch(url);
+              if (!response.ok) throw new Error('Erro ao baixar arquivo');
+              
+              const blob = await response.blob();
+              const downloadUrl = window.URL.createObjectURL(blob);
+              
               const link = document.createElement('a');
-              link.href = url;
+              link.href = downloadUrl;
               link.download = anexo.name || 'documento';
-              link.target = '_blank';
               document.body.appendChild(link);
               link.click();
               document.body.removeChild(link);
+              
+              // Limpar URL do blob
+              window.URL.revokeObjectURL(downloadUrl);
+              console.log('✅ Download concluído');
+              toast.success('Download realizado com sucesso!');
             } catch (error) {
+              console.error('❌ Erro no download:', error);
               toast.error('Erro ao baixar anexo');
             }
           }}

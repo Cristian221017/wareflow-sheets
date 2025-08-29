@@ -189,17 +189,31 @@ export function NFCard({
                           onClick={async (e) => {
                             e.preventDefault();
                             e.stopPropagation();
+                            console.log('📥 Download iniciado:', doc.name || doc.nome);
                             try {
                               const url = await getAnexoUrl(doc.path || doc.caminho);
-                              // Criar link temporário para download
+                              console.log('🔗 URL gerada:', url);
+                              
+                              // Usar fetch para baixar e forçar download
+                              const response = await fetch(url);
+                              if (!response.ok) throw new Error('Erro ao baixar arquivo');
+                              
+                              const blob = await response.blob();
+                              const downloadUrl = window.URL.createObjectURL(blob);
+                              
                               const link = document.createElement('a');
-                              link.href = url;
+                              link.href = downloadUrl;
                               link.download = doc.name || doc.nome || 'documento';
-                              link.target = '_blank';
                               document.body.appendChild(link);
                               link.click();
                               document.body.removeChild(link);
+                              
+                              // Limpar URL do blob
+                              window.URL.revokeObjectURL(downloadUrl);
+                              console.log('✅ Download concluído');
+                              toast.success('Download realizado com sucesso!');
                             } catch (error) {
+                              console.error('❌ Erro no download:', error);
                               toast.error('Erro ao baixar anexo');
                             }
                           }}
