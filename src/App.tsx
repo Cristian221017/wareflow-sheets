@@ -26,7 +26,8 @@ import { AuthRefreshButton } from "@/components/system/AuthRefreshButton";
 function ProtectedRoute({ children, allowedRoles }: { children: React.ReactNode, allowedRoles: string[] }) {
   const { user, isAuthenticated, loading } = useAuth();
 
-  if (loading) {
+  // Se está carregando E não tem usuário (primeiro carregamento)
+  if (loading && !user) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center space-y-4">
@@ -38,6 +39,7 @@ function ProtectedRoute({ children, allowedRoles }: { children: React.ReactNode,
   }
 
   if (!isAuthenticated) {
+    log('❌ Not authenticated, redirecting to /');
     return <Navigate to="/" replace />;
   }
 
@@ -59,7 +61,8 @@ function ProtectedRoute({ children, allowedRoles }: { children: React.ReactNode,
     userRole: user?.role,
     userType: user?.type,
     allowedRoles,
-    hasAccess
+    hasAccess,
+    loading
   });
 
   if (!hasAccess) {

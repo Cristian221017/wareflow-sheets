@@ -190,28 +190,29 @@ export function NFCard({
                             e.preventDefault();
                             e.stopPropagation();
                             console.log('📥 Download iniciado:', doc.name || doc.nome);
+                            
                             try {
+                              // Usar método mais direto sem fetch que pode causar navegação
                               const url = await getAnexoUrl(doc.path || doc.caminho);
                               console.log('🔗 URL gerada:', url);
                               
-                              // Usar fetch para baixar e forçar download
-                              const response = await fetch(url);
-                              if (!response.ok) throw new Error('Erro ao baixar arquivo');
+                              // Forçar download direto sem abrir nova tab
+                              const a = document.createElement('a');
+                              a.style.display = 'none';
+                              a.href = url;
+                              a.download = doc.name || doc.nome || 'documento';
+                              a.rel = 'noopener';
                               
-                              const blob = await response.blob();
-                              const downloadUrl = window.URL.createObjectURL(blob);
+                              document.body.appendChild(a);
+                              a.click();
                               
-                              const link = document.createElement('a');
-                              link.href = downloadUrl;
-                              link.download = doc.name || doc.nome || 'documento';
-                              document.body.appendChild(link);
-                              link.click();
-                              document.body.removeChild(link);
+                              // Cleanup imediato
+                              setTimeout(() => {
+                                document.body.removeChild(a);
+                                console.log('✅ Download concluído e cleanup feito');
+                              }, 100);
                               
-                              // Limpar URL do blob
-                              window.URL.revokeObjectURL(downloadUrl);
-                              console.log('✅ Download concluído');
-                              toast.success('Download realizado com sucesso!');
+                              toast.success('Download iniciado!');
                             } catch (error) {
                               console.error('❌ Erro no download:', error);
                               toast.error('Erro ao baixar anexo');

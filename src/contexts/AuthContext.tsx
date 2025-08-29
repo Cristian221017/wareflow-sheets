@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { User as SupabaseUser, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { clientPasswordManager } from '@/utils/clientPasswordManager';
@@ -12,6 +12,38 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [clientes, setClientes] = useState<User[]>([]);
+  
+  // Ref para evitar problemas de closure no onAuthStateChange
+  const userRef = useRef<User | null>(null);
+  
+  // Sincronizar ref com state
+  useEffect(() => {
+    log('🚀 AuthProvider initialized');
+    
+    // Detectar quando usuário retorna de navegação externa
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        log('👁️ App tornou-se visível - usuário retornou de navegação externa');
+      }
+    };
+    
+    const handleFocus = () => {
+      log('🔍 Window focus - usuário retornou para a aplicação');
+    };
+    
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('focus', handleFocus);
+    
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, []);
+
+  // Sincronizar ref com state  
+  useEffect(() => {
+    userRef.current = user;
+  }, [user]);
 
   useEffect(() => {
     log('Initializing auth state...');
@@ -19,13 +51,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        log('Auth state changed:', event, session?.user?.id);
+        log('🔄 Auth state changed:', event, session?.user?.id, 'hasCurrentUser:', !!user);
         setSession(session);
         
         if (session?.user) {
+          // Evitar reload desnecessário se é o mesmo usuário
+          const currentUser = userRef.current;
+          if (currentUser?.id === session.user.id && event !== 'SIGNED_IN') {
+            log('🔄 Same user, skipping profile reload for event:', event);
+            return;
+          }
+          
           // Load profile directly without setTimeout race condition
           loadUserProfile(session.user);
         } else {
+          log('🔄 No session, clearing user state');
           setUser(null);
           setLoading(false);
         }
@@ -47,12 +87,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => {
       subscription.unsubscribe();
     };
-  }, []);
+  }, []); // Sem dependências para evitar loops
 
   const loadUserProfile = async (supabaseUser: SupabaseUser) => {
     try {
-      setLoading(true);
-      log('Loading user profile for:', supabaseUser.id);
+      // Não mostrar loading se user já existe (apenas revalidação)
+      const currentUser = userRef.current;
+      const isRevalidation = !!currentUser;
+      if (!isRevalidation) {
+        setLoading(true);
+      }
+      
+      log('Loading user profile for:', supabaseUser.id, 'isRevalidation:', isRevalidation);
       
       // Get user data without artificial timeout race condition
       const userData = await getUserData(supabaseUser);
@@ -60,7 +106,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       log('User profile loaded successfully:', userData);
       audit('LOGIN_SUCCESS', 'AUTH', { userId: supabaseUser.id, userEmail: userData.email });
       setUser(userData);
-      setLoading(false);
+      
+      if (!isRevalidation) {
+        setLoading(false);
+      }
 
     } catch (error) {
       logError('Error loading user profile:', error);
