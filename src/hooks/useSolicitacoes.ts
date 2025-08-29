@@ -17,9 +17,13 @@ export function useSolicitacoesTransportadora(status: 'PENDENTE' | 'APROVADA' | 
       let queryModernas = (supabase as any)
         .from('solicitacoes_carregamento')
         .select(`
-          *,
-          notas_fiscais(numero_nf, produto, numero_pedido, ordem_compra, peso, volume, quantidade, fornecedor, localizacao, data_recebimento, created_at, cliente_id),
-          clientes(razao_social, cnpj)
+          id, nf_id, transportadora_id, cliente_id, data_agendamento, observacoes, anexos, status,
+          requested_by, requested_at, approved_by, approved_at, created_at, updated_at,
+          notas_fiscais:nf_id(
+            id, cliente_id, numero_nf, numero_pedido, ordem_compra, fornecedor, produto,
+            quantidade, peso, volume, localizacao, data_recebimento, created_at
+          ),
+          clientes:cliente_id(id, razao_social, cnpj)
         `)
         .eq('transportadora_id', user.transportadoraId)
         .order('requested_at', { ascending: false });
@@ -30,6 +34,29 @@ export function useSolicitacoesTransportadora(status: 'PENDENTE' | 'APROVADA' | 
       
       const { data: solicitacoesModernas, error: errorModernas } = await queryModernas;
       if (errorModernas) throw errorModernas;
+
+      // Fallback defensivo: hidratar NFs caso embed falhe por RLS/relacionamento
+      async function hydrateNF(sol: any) {
+        if (sol?.notas_fiscais || !sol?.nf_id) return sol;
+        
+        const { data: nfRow } = await supabase
+          .from('notas_fiscais')
+          .select('id, cliente_id, numero_nf, numero_pedido, ordem_compra, fornecedor, produto, quantidade, peso, volume, localizacao, data_recebimento, created_at')
+          .eq('id', sol.nf_id)
+          .maybeSingle();
+          
+        if (nfRow) {
+          sol.notas_fiscais = nfRow;
+        } else {
+          // Log quando embed falha
+          audit('SC_EMBED_EMPTY', 'SOLICITACAO', { solicitacaoId: sol.id, nfId: sol.nf_id });
+        }
+        
+        return sol;
+      }
+
+      // Aplicar hidratação em solicitações modernas
+      const modernasHydrated = await Promise.all((solicitacoesModernas || []).map(hydrateNF));
 
       // 2. Buscar NFs com status SOLICITADA que não têm entrada em solicitacoes_carregamento (legado)
       const nfStatusMap = status === 'PENDENTE' || status === 'TODAS' ? 'SOLICITADA' : null;
@@ -50,7 +77,7 @@ export function useSolicitacoesTransportadora(status: 'PENDENTE' | 'APROVADA' | 
         if (todasNfsError) throw todasNfsError;
         
         // Filtrar para excluir as que já têm entrada em solicitacoes_carregamento
-        const nfsComSolicitacao = new Set((solicitacoesModernas || []).map((s: any) => s.nf_id).filter(Boolean));
+        const nfsComSolicitacao = new Set((modernasHydrated || []).map((s: any) => s.nf_id).filter(Boolean));
         nfsLegado = (todasNfsData || []).filter((nf: any) => !nfsComSolicitacao.has(nf.id));
       }
 
@@ -60,7 +87,7 @@ export function useSolicitacoesTransportadora(status: 'PENDENTE' | 'APROVADA' | 
       // 3. Unificar dados no formato esperado
       const solicitacoesUnificadas = [
         // Solicitações modernas (mapear dados aninhados para o nível superior)
-        ...(solicitacoesModernas || []).map((sol: any) => {
+        ...(modernasHydrated || []).map((sol: any) => {
           console.log('🔧 Solicitação moderna mapeada:', {
             id: sol.id,
             numero_nf: sol.notas_fiscais?.numero_nf,
@@ -227,6 +254,7 @@ export function useSolicitacoesMutations() {
       queryClient.invalidateQueries({ queryKey: ['solicitacoes'] });
       queryClient.invalidateQueries({ queryKey: ['solicitacoes', 'cliente'] });
       queryClient.invalidateQueries({ queryKey: ['solicitacoes', 'transportadora'] });
+      queryClient.invalidateQueries({ queryKey: ['solicitacoes', 'transportadora', user?.transportadoraId ?? 'none'] });
       queryClient.invalidateQueries({ queryKey: ['nfs'] });
     },
     onError: (error) => {
@@ -279,6 +307,7 @@ export function useSolicitacoesMutations() {
       queryClient.invalidateQueries({ queryKey: ['solicitacoes'] });
       queryClient.invalidateQueries({ queryKey: ['solicitacoes', 'cliente'] });
       queryClient.invalidateQueries({ queryKey: ['solicitacoes', 'transportadora'] });
+      queryClient.invalidateQueries({ queryKey: ['solicitacoes', 'transportadora', user?.transportadoraId ?? 'none'] });
       queryClient.invalidateQueries({ queryKey: ['nfs'] });
     },
     onError: (error) => {
