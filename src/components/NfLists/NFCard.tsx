@@ -40,6 +40,17 @@ export function NFCard({
       case 'ARMAZENADA': return <Package className="w-4 h-4" />;
       case 'SOLICITADA': return <Clock className="w-4 h-4" />;
       case 'CONFIRMADA': return <CheckCircle className="w-4 h-4" />;
+      case 'PENDENTE': return <Clock className="w-4 h-4" />;
+    }
+  };
+
+  const getStatusLabel = () => {
+    switch (nf.status) {
+      case 'ARMAZENADA': return 'Armazenada';
+      case 'SOLICITADA': return 'Solicitada';
+      case 'CONFIRMADA': return 'Confirmada';
+      case 'PENDENTE': return 'Pendente';
+      default: return nf.status || 'Status não definido';
     }
   };
 
@@ -48,6 +59,8 @@ export function NFCard({
       case 'ARMAZENADA': return 'bg-blue-100 text-blue-800 border-blue-300';
       case 'SOLICITADA': return 'bg-orange-100 text-orange-800 border-orange-300';
       case 'CONFIRMADA': return 'bg-green-100 text-green-800 border-green-300';
+      case 'PENDENTE': return 'bg-yellow-100 text-yellow-800 border-yellow-300';
+      default: return 'bg-gray-100 text-gray-800 border-gray-300';
     }
   };
 
@@ -92,7 +105,7 @@ export function NFCard({
           <div className="flex flex-col gap-1">
             <Badge className={`${getStatusColor()} flex items-center gap-1`}>
               {getStatusIcon()}
-              {nf.status}
+              {getStatusLabel()}
             </Badge>
             <Badge variant="outline" className={`${getSeparacaoStatusColor()} text-xs`}>
               {getSeparacaoStatusLabel()}
