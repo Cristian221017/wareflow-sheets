@@ -4,19 +4,63 @@ import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { audit, auditError } from '@/utils/logger';
 
-// Simplificando - usar queries diretas do Supabase sem funções RPC customizadas
-export function useSolicitacoesTransportadora() {
+// Hook para buscar solicitações da transportadora
+export function useSolicitacoesTransportadora(status: 'PENDENTE' | 'APROVADA' | 'RECUSADA' | 'TODAS' = 'PENDENTE') {
   const { user } = useAuth();
   
   return useQuery({
-    queryKey: ['solicitacoes', 'transportadora', user?.transportadoraId],
+    queryKey: ['solicitacoes', 'transportadora', user?.transportadoraId, status],
     queryFn: async () => {
       if (!user?.transportadoraId) return [];
       
-      // Por enquanto, vamos retornar vazio até implementarmos a view completa
-      return [];
+      let query = (supabase as any)
+        .from('solicitacoes_carregamento')
+        .select(`
+          *,
+          notas_fiscais(numero_nf, produto, numero_pedido, ordem_compra),
+          clientes(razao_social, cnpj)
+        `)
+        .eq('transportadora_id', user.transportadoraId)
+        .order('requested_at', { ascending: false });
+      
+      if (status !== 'TODAS') {
+        query = query.eq('status', status);
+      }
+      
+      const { data, error } = await query;
+      if (error) throw error;
+      
+      return data || [];
     },
     enabled: !!user?.transportadoraId,
+    staleTime: 30000,
+    refetchOnWindowFocus: true
+  });
+}
+
+// Hook para buscar solicitações do cliente
+export function useSolicitacoesCliente(status: 'PENDENTE' | 'APROVADA' | 'RECUSADA' | 'TODAS' = 'TODAS') {
+  return useQuery({
+    queryKey: ['solicitacoes', 'cliente', status],
+    queryFn: async () => {
+      let query = (supabase as any)
+        .from('solicitacoes_carregamento')
+        .select(`
+          *,
+          notas_fiscais(numero_nf, produto, numero_pedido, ordem_compra),
+          transportadoras(razao_social)
+        `)
+        .order('requested_at', { ascending: false });
+      
+      if (status !== 'TODAS') {
+        query = query.eq('status', status);
+      }
+      
+      const { data, error } = await query;
+      if (error) throw error;
+      
+      return data || [];
+    },
     staleTime: 30000,
     refetchOnWindowFocus: true
   });
@@ -28,14 +72,28 @@ export function useSolicitacoesMutations() {
   const { user } = useAuth();
 
   const aprovarSolicitacao = useMutation({
-    mutationFn: async (nfId: string) => {
-      // Usar a função RPC existente para confirmar NF
-      const { error } = await supabase.rpc('nf_confirmar', {
-        p_nf_id: nfId,
+    mutationFn: async (solicitacaoId: string) => {
+      // Primeiro, atualizar status da solicitação
+      const { data: solicitacao, error: updateError } = await (supabase as any)
+        .from('solicitacoes_carregamento')
+        .update({ 
+          status: 'APROVADA',
+          approved_by: user?.id,
+          approved_at: new Date().toISOString()
+        })
+        .eq('id', solicitacaoId)
+        .select('nf_id')
+        .single();
+
+      if (updateError) throw updateError;
+
+      // Depois, confirmar a NF
+      const { error: nfError } = await supabase.rpc('nf_confirmar', {
+        p_nf_id: (solicitacao as any).nf_id,
         p_user_id: user?.id
       });
 
-      if (error) throw error;
+      if (nfError) throw nfError;
     },
     onSuccess: () => {
       toast.success('Solicitação aprovada com sucesso!');
@@ -52,14 +110,28 @@ export function useSolicitacoesMutations() {
   });
 
   const recusarSolicitacao = useMutation({
-    mutationFn: async (nfId: string) => {
-      // Usar a função RPC existente para recusar NF
-      const { error } = await supabase.rpc('nf_recusar', {
-        p_nf_id: nfId,
+    mutationFn: async (solicitacaoId: string) => {
+      // Primeiro, atualizar status da solicitação
+      const { data: solicitacao, error: updateError } = await (supabase as any)
+        .from('solicitacoes_carregamento')
+        .update({ 
+          status: 'RECUSADA',
+          approved_by: user?.id,
+          approved_at: new Date().toISOString()
+        })
+        .eq('id', solicitacaoId)
+        .select('nf_id')
+        .single();
+
+      if (updateError) throw updateError;
+
+      // Depois, recusar a NF
+      const { error: nfError } = await supabase.rpc('nf_recusar', {
+        p_nf_id: (solicitacao as any).nf_id,
         p_user_id: user?.id
       });
 
-      if (error) throw error;
+      if (nfError) throw nfError;
     },
     onSuccess: () => {
       toast.success('Solicitação recusada');

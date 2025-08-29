@@ -82,15 +82,16 @@ export function useClienteFluxoMutations() {
     },
     onSuccess: () => {
       toast.success('Carregamento solicitado com sucesso!');
-      audit('NF_SOLICITADA', 'NF', { userId: user?.id });
+      audit('SC_CREATE', 'SOLICITACAO', { userId: user?.id });
       
       // Invalidar as queries para atualizar os dados
       queryClient.invalidateQueries({ queryKey: ['nfs'] });
+      queryClient.invalidateQueries({ queryKey: ['solicitacoes'] });
     },
     onError: (error) => {
       console.error('Erro detalhado:', error);
       toast.error('Erro ao solicitar carregamento');
-      auditError('NF_SOLICITAR_FAIL', 'NF', error, { userId: user?.id });
+      auditError('SC_CREATE_FAIL', 'SOLICITACAO', error, { userId: user?.id });
     }
   });
   

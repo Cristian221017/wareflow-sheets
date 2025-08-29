@@ -165,11 +165,11 @@ export async function solicitarCarregamentoComAgendamento({
   });
 
   if (error) {
-    auditError('NF_SOLICITAR_FAIL', 'NF', error, { nfId });
+    auditError('SC_CREATE_FAIL', 'SOLICITACAO', error, { nfId });
     throw error;
   }
   
-  audit('NF_SOLICITADA', 'NF', { nfId, dataAgendamento, anexosCount: anexos?.length ?? 0 });
+  audit('SC_CREATE', 'SOLICITACAO', { nfId, dataAgendamento, anexosCount: anexos?.length ?? 0 });
   return data as string; // solicitacao_id
 }
 
@@ -186,11 +186,11 @@ export async function uploadAnexoSolicitacao(
     .upload(path, file, { contentType: file.type });
     
   if (error) {
-    auditError('UPLOAD_ANEXO_FAIL', 'STORAGE', error, { clienteId, nfId, fileName: file.name });
+    auditError('SC_UPLOAD_FAIL', 'STORAGE', error, { clienteId, nfId, fileName: file.name });
     throw error;
   }
   
-  audit('ANEXO_UPLOADED', 'STORAGE', { clienteId, nfId, fileName: file.name, path });
+  audit('SC_UPLOAD', 'STORAGE', { clienteId, nfId, fileName: file.name, path });
   
   return {
     name: file.name,
@@ -207,7 +207,7 @@ export async function getAnexoUrl(path: string): Promise<string> {
     .createSignedUrl(path, 60 * 60); // 1h
     
   if (error) {
-    auditError('GET_ANEXO_URL_FAIL', 'STORAGE', error, { path });
+    auditError('SC_DOWNLOAD_FAIL', 'STORAGE', error, { path });
     throw error;
   }
   
