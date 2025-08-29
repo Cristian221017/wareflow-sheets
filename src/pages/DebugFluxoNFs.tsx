@@ -272,8 +272,8 @@ export default function DebugFluxoNFs() {
                     Permissões ativas:
                   </p>
                   <ul className="text-xs text-muted-foreground space-y-1">
-                    {currentRoleInfo.permissions.map((permission, index) => (
-                      <li key={index} className="flex items-center gap-2">
+                    {currentRoleInfo.permissions.map((permission, permIndex) => (
+                      <li key={`${permission}-${permIndex}`} className="flex items-center gap-2">
                         <span className="w-1 h-1 bg-primary rounded-full" />
                         {permission}
                       </li>

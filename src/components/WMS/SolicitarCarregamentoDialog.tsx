@@ -129,14 +129,14 @@ export function SolicitarCarregamentoDialog({
             {documentos.length > 0 && (
               <div className="space-y-2">
                 <Label className="text-sm">Documentos selecionados:</Label>
-                {documentos.map((doc, index) => (
-                  <div key={index} className="flex items-center justify-between p-2 bg-muted rounded">
+                {documentos.map((doc, docIndex) => (
+                  <div key={`${doc.name}-${docIndex}`} className="flex items-center justify-between p-2 bg-muted rounded">
                     <span className="text-sm truncate">{doc.name}</span>
                     <Button
                       type="button"
                       variant="ghost"
                       size="sm"
-                      onClick={() => removeDocumento(index)}
+                      onClick={() => removeDocumento(docIndex)}
                     >
                       ×
                     </Button>

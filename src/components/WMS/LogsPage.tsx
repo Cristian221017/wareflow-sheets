@@ -183,7 +183,7 @@ export function LogsPage() {
               <span className="text-sm font-medium">Filtros rápidos:</span>
               {quickFilters.map((filter, index) => (
                 <Button
-                  key={index}
+                  key={`${filter.label}-${index}`}
                   variant="outline"
                   size="sm"
                   onClick={() => applyQuickFilter(filter)}

@@ -9,8 +9,6 @@ const Index = () => {
 
   useEffect(() => {
     if (isAuthenticated && user && !loading) {
-      console.log('Redirecting user:', user);
-      
       // Redirect based on user role/type
       if (user.role === 'super_admin') {
         navigate('/admin', { replace: true });

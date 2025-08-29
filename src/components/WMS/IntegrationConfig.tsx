@@ -64,7 +64,6 @@ export default function IntegrationConfig() {
       if (error) throw error;
       setConfigs(data || []);
     } catch (error: any) {
-      console.error('Error loading configs:', error);
       toast({
         title: "Erro",
         description: "Não foi possível carregar as configurações",
@@ -86,7 +85,7 @@ export default function IntegrationConfig() {
       if (error) throw error;
       setLogs(data || []);
     } catch (error: any) {
-      console.error('Error loading logs:', error);
+      // Falha silenciosa para logs
     }
   };
 
@@ -119,7 +118,6 @@ export default function IntegrationConfig() {
         description: "Configuração salva com sucesso",
       });
     } catch (error: any) {
-      console.error('Error saving config:', error);
       toast({
         title: "Erro",
         description: "Não foi possível salvar a configuração",
@@ -151,7 +149,6 @@ export default function IntegrationConfig() {
       
       await loadLogs();
     } catch (error: any) {
-      console.error('Error testing integration:', error);
       toast({
         title: "Erro no teste",
         description: error.message || "Falha ao testar a integração",

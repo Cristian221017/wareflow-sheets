@@ -129,8 +129,8 @@ export function MinhasSolicitacoes() {
                     Documentos anexados ({solicitacao.anexos.length}):
                   </span>
                   <div className="space-y-2">
-                    {solicitacao.anexos.map((anexo: any, index: number) => (
-                      <div key={index} className="flex items-center justify-between p-2 border rounded-lg">
+                    {solicitacao.anexos.map((anexo: any, anexoIndex: number) => (
+                      <div key={`${anexo.name}-${anexoIndex}`} className="flex items-center justify-between p-2 border rounded-lg">
                         <div className="flex items-center gap-2">
                           <FileText className="w-4 h-4 text-muted-foreground" />
                           <span className="text-sm">{anexo.name}</span>

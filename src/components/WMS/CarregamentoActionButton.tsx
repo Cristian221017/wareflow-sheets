@@ -50,7 +50,7 @@ export function CarregamentoActionButton({
       
       setIsDialogOpen(false);
     } catch (error) {
-      console.error('Erro ao solicitar carregamento:', error);
+      toast.error('Erro ao solicitar carregamento');
     }
   };
 

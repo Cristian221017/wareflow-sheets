@@ -383,8 +383,8 @@ export function PedidosConfirmadosTable() {
                         <div className="text-sm text-muted-foreground">
                           <span className="font-medium">Documentos anexados ({nf.documentos_anexos.length}):</span>
                           <ul className="mt-1 ml-4 list-disc">
-                            {nf.documentos_anexos.map((doc: any, index: number) => (
-                              <li key={index} className="text-xs">
+                            {nf.documentos_anexos.map((doc: any, docIndex: number) => (
+                              <li key={`${doc.nome}-${docIndex}`} className="text-xs">
                                 {doc.nome} ({((doc.tamanho || 0) / 1024).toFixed(1)} KB)
                               </li>
                             ))}

@@ -18,17 +18,13 @@ export function useDashboard() {
   return useQuery({
     queryKey: ["dashboard", "current-user"],
     queryFn: async (): Promise<DashboardStats | null> => {
-      console.log('📊 Buscando estatísticas do dashboard...');
-      
       const { data, error } = await supabase.rpc("get_current_user_dashboard" as any);
       
       if (error) {
-        console.error('❌ Erro ao buscar dashboard:', error);
         throw new Error(`Erro ao buscar dashboard: ${error.message}`);
       }
       
       if (!data || !Array.isArray(data) || data.length === 0) {
-        console.log('📊 Nenhuma estatística encontrada');
         return null;
       }
       
@@ -47,7 +43,6 @@ export function useDashboard() {
         valorVencido: stats.valor_vencido ? Number(stats.valor_vencido) : undefined,
       };
       
-      console.log('📊 Dashboard carregado:', dashboardStats);
       return dashboardStats;
     },
     staleTime: 30000, // 30 segundos
@@ -67,12 +62,9 @@ export function useRealtimeEvents() {
   return useQuery({
     queryKey: ["realtime", "events"],
     queryFn: async (): Promise<RealtimeEvent[]> => {
-      console.log('🔄 Buscando eventos em tempo real...');
-      
       const { data, error } = await supabase.rpc("get_realtime_stats" as any);
       
       if (error) {
-        console.error('❌ Erro ao buscar eventos:', error);
         return [];
       }
       
@@ -84,7 +76,6 @@ export function useRealtimeEvents() {
         actorId: event.actor_id,
       })) : [];
       
-      console.log(`🔄 ${events.length} eventos encontrados`);
       return events;
     },
     staleTime: 10000, // 10 segundos

@@ -136,9 +136,9 @@ export function EmptyState({ type, userType, onAction }: EmptyStateProps) {
         
         {config.actions.length > 0 && (
           <div className="flex flex-col sm:flex-row gap-3">
-            {config.actions.map((action, index) => (
+            {config.actions.map((action) => (
               <Button
-                key={index}
+                key={`${action.label}-${action.action}`}
                 variant={action.variant}
                 onClick={() => onAction?.(action.action)}
               >

@@ -181,8 +181,8 @@ export function Dashboard() {
                   fill="#8884d8"
                   dataKey="peso"
                 >
-                  {dashboardData.clientVolumeData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  {dashboardData.clientVolumeData.map((entry, entryIndex) => (
+                    <Cell key={`cell-${entryIndex}`} fill={COLORS[entryIndex % COLORS.length]} />
                   ))}
                 </Pie>
                 <Tooltip />

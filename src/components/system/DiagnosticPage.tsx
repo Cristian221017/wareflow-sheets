@@ -116,8 +116,8 @@ export default function DiagnosticPage() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {diagnostics.map((diagnostic, index) => (
-          <Card key={index}>
+        {diagnostics.map((diagnostic, diagIndex) => (
+          <Card key={`${diagnostic.title}-${diagIndex}`}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium flex items-center gap-2">
                 {diagnostic.icon}

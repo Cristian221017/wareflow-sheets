@@ -34,7 +34,6 @@ export function AuthRefreshButton() {
     setIsDebugging(true);
     try {
       const debugData = await debugUserData(user.id);
-      console.log('🔍 Debug completo do usuário:', debugData);
       toast.success('Debug executado! Verifique o console');
     } catch (error) {
       toast.error('Erro no debug');
