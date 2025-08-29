@@ -186,10 +186,19 @@ export function NFCard({
                         <Button
                           size="sm"
                           variant="ghost"
-                          onClick={async () => {
+                          onClick={async (e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
                             try {
                               const url = await getAnexoUrl(doc.path || doc.caminho);
-                              window.open(url, '_blank');
+                              // Criar link temporário para download
+                              const link = document.createElement('a');
+                              link.href = url;
+                              link.download = doc.name || doc.nome || 'documento';
+                              link.target = '_blank';
+                              document.body.appendChild(link);
+                              link.click();
+                              document.body.removeChild(link);
                             } catch (error) {
                               toast.error('Erro ao baixar anexo');
                             }

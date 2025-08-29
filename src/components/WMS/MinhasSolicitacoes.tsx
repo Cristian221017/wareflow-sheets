@@ -141,7 +141,23 @@ export function MinhasSolicitacoes() {
                         <Button
                           size="sm"
                           variant="outline"
-                          onClick={() => handleDownloadAnexo(anexo)}
+          onClick={async (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            try {
+              const url = await getAnexoUrl(anexo.path);
+              // Criar link temporário para download
+              const link = document.createElement('a');
+              link.href = url;
+              link.download = anexo.name || 'documento';
+              link.target = '_blank';
+              document.body.appendChild(link);
+              link.click();
+              document.body.removeChild(link);
+            } catch (error) {
+              toast.error('Erro ao baixar anexo');
+            }
+          }}
                         >
                           <Download className="w-3 h-3 mr-1" />
                           Baixar
