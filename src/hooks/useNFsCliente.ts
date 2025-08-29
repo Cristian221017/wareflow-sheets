@@ -8,8 +8,10 @@ import { useAuth } from '@/contexts/AuthContext';
 
 // Hook para buscar NFs do cliente com dados de solicitação
 export function useNFsCliente(status?: NFStatus) {
+  const { user } = useAuth();
+  
   return useQuery({
-    queryKey: ['nfs', 'cliente', status],
+    queryKey: ['nfs', 'cliente', status, user?.id],
     queryFn: async () => {
       let query = supabase
         .from('notas_fiscais')
@@ -54,7 +56,8 @@ export function useNFsCliente(status?: NFStatus) {
           status_separacao: nf.status_separacao || 'pendente'
         };
       }) || [];
-    }
+    },
+    enabled: !!user?.id, // Só executar se usuário estiver autenticado
   });
 }
 

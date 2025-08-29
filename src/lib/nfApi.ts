@@ -147,12 +147,28 @@ export async function fetchNFsByStatus(status: NFStatus) {
   
   log(`📊 Encontradas ${data?.length || 0} NFs com status ${status}`);
   
-  // Cast explícito do status para NFStatus e adicionar status_separacao default se não existir
-  return (data || []).map((item: any) => ({
-    ...item,
-    status: item.status as NFStatus,
-    status_separacao: item.status_separacao || 'pendente'
-  }));
+  // Mapear dados para incluir informações das solicitações na NF (igual ao useNFsCliente)
+  return (data || []).map((item: any) => {
+    const nf = { ...item };
+    const solicitacao = item.solicitacoes_carregamento?.[0];
+    
+    if (solicitacao) {
+      nf.data_agendamento_entrega = solicitacao.data_agendamento;
+      nf.observacoes_solicitacao = solicitacao.observacoes;
+      nf.documentos_anexos = solicitacao.anexos;
+      nf.requested_at = solicitacao.requested_at;
+      nf.approved_at = solicitacao.approved_at;
+    }
+    
+    // Remover array de solicitações do objeto final
+    delete nf.solicitacoes_carregamento;
+    
+    return {
+      ...nf,
+      status: nf.status as NFStatus,
+      status_separacao: nf.status_separacao || 'pendente'
+    };
+  });
 }
 
 export async function solicitarCarregamentoComAgendamento({

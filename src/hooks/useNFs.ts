@@ -12,10 +12,11 @@ export function useNFs(status: NFStatus) {
   const scope = user?.type === 'cliente' ? user?.clienteId : user?.transportadoraId;
   
   return useQuery({
-    queryKey: [NF_QUERY_KEY, status, user?.type, scope],
+    queryKey: ['nfs', status, user?.type, scope],
     queryFn: () => fetchNFsByStatus(status),
     staleTime: 30000, // 30 segundos
     refetchOnWindowFocus: true,
+    enabled: !!user?.id, // Só executar se usuário estiver autenticado
   });
 }
 
@@ -43,9 +44,10 @@ export function useFluxoMutations() {
     const scope = user?.type === 'cliente' ? user?.clienteId : user?.transportadoraId;
     const statuses: NFStatus[] = ["ARMAZENADA", "SOLICITADA", "CONFIRMADA"];
     statuses.forEach(status => {
-      queryClient.invalidateQueries({ queryKey: [NF_QUERY_KEY, status, user?.type, scope] });
+      queryClient.invalidateQueries({ queryKey: ['nfs', status, user?.type, scope] });
     });
     queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+    queryClient.invalidateQueries({ queryKey: ['solicitacoes'] });
   };
 
   const solicitar = useMutation({
