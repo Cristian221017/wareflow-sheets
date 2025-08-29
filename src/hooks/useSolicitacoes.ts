@@ -92,7 +92,8 @@ export function useSolicitacoesTransportadora(status: 'PENDENTE' | 'APROVADA' | 
             id: sol.id,
             numero_nf: sol.notas_fiscais?.numero_nf,
             produto: sol.notas_fiscais?.produto,
-            status_separacao: sol.notas_fiscais?.status_separacao
+            status_separacao: sol.notas_fiscais?.status_separacao,
+            dados_completos: !!sol.notas_fiscais
           });
           return {
             ...sol,

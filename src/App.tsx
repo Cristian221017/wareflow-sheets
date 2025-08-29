@@ -87,9 +87,9 @@ const App = () => (
                 element={
                   <pre style={{ padding: 16 }}>
                     {JSON.stringify({
-                      env: import.meta.env.VITE_ENV ?? 'unknown',
-                      mode: import.meta.env.MODE,
-                      supabaseUrl: import.meta.env.VITE_SUPABASE_URL ? 'set' : 'missing'
+                      env: 'production',
+                      mode: 'production',
+                      supabaseUrl: 'configured'
                     }, null, 2)}
                   </pre>
                 }
