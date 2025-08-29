@@ -378,13 +378,13 @@ export function RelatorioControleCargas() {
             </Card>
             <Card>
               <CardContent className="pt-6">
-                <div className="text-2xl font-bold text-primary">{relatorioData.totalPeso.toFixed(2)} kg</div>
+                <div className="text-2xl font-bold text-primary">{(relatorioData.totalPeso || 0).toFixed(2)} kg</div>
                 <p className="text-xs text-muted-foreground">Peso Total</p>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="pt-6">
-                <div className="text-2xl font-bold text-primary">{relatorioData.totalVolume.toFixed(2)} m³</div>
+                <div className="text-2xl font-bold text-primary">{(relatorioData.totalVolume || 0).toFixed(2)} m³</div>
                 <p className="text-xs text-muted-foreground">Volume Total</p>
               </CardContent>
             </Card>
@@ -434,8 +434,8 @@ export function RelatorioControleCargas() {
                     <TableRow key={cliente}>
                       <TableCell className="font-medium">{cliente}</TableCell>
                       <TableCell>{dados.quantidade}</TableCell>
-                      <TableCell>{dados.peso.toFixed(2)}</TableCell>
-                      <TableCell>{dados.volume.toFixed(2)}</TableCell>
+                      <TableCell>{(dados.peso || 0).toFixed(2)}</TableCell>
+                      <TableCell>{(dados.volume || 0).toFixed(2)}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -471,8 +471,8 @@ export function RelatorioControleCargas() {
                         <TableCell>{nf.cliente}</TableCell>
                         <TableCell>{nf.produto}</TableCell>
                         <TableCell>{nf.quantidade}</TableCell>
-                        <TableCell>{nf.peso.toFixed(2)}</TableCell>
-                        <TableCell>{nf.volume.toFixed(2)}</TableCell>
+                        <TableCell>{(nf.peso || 0).toFixed(2)}</TableCell>
+                        <TableCell>{(nf.volume || 0).toFixed(2)}</TableCell>
                         <TableCell>
                           <Badge className={getStatusColor(nf.status)}>
                             {nf.status}

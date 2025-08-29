@@ -125,7 +125,7 @@ export function SuperAdminDashboard() {
             <div className="text-2xl font-bold">{stats.transportadorasAtivas}</div>
             <div className="text-xs text-muted-foreground">
               {stats.totalTransportadoras > 0 ? 
-                `${((stats.transportadorasAtivas / stats.totalTransportadoras) * 100).toFixed(1)}% do total` 
+                `${((stats.transportadorasAtivas / stats.totalTransportadoras) * 100 || 0).toFixed(1)}% do total` 
                 : '0% do total'
               }
             </div>

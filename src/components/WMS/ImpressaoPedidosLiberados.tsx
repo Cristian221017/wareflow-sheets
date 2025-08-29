@@ -93,8 +93,8 @@ export function ImpressaoPedidosLiberados() {
                   <td>${pedido.cliente}</td>
                   <td>${pedido.nfVinculada}</td>
                   <td>${pedido.quantidade}</td>
-                  <td>${pedido.peso.toFixed(1)}</td>
-                  <td>${pedido.volume.toFixed(2)}</td>
+                  <td>${(pedido.peso || 0).toFixed(1)}</td>
+                  <td>${(pedido.volume || 0).toFixed(2)}</td>
                   <td>${pedido.transportadora}</td>
                   <td>${pedido.dataExpedicao ? new Date(pedido.dataExpedicao).toLocaleDateString('pt-BR') : 'Não informado'}</td>
                 </tr>
@@ -104,8 +104,8 @@ export function ImpressaoPedidosLiberados() {
 
           <div class="total">
             <p>Total de pedidos: ${pedidosFiltrados.length}</p>
-            <p>Peso total: ${pedidosFiltrados.reduce((acc, p) => acc + p.peso, 0).toFixed(1)} kg</p>
-            <p>Volume total: ${pedidosFiltrados.reduce((acc, p) => acc + p.volume, 0).toFixed(2)} m³</p>
+            <p>Peso total: ${pedidosFiltrados.reduce((acc, p) => acc + (p.peso || 0), 0).toFixed(1)} kg</p>
+            <p>Volume total: ${pedidosFiltrados.reduce((acc, p) => acc + (p.volume || 0), 0).toFixed(2)} m³</p>
           </div>
         </body>
       </html>
@@ -125,8 +125,8 @@ export function ImpressaoPedidosLiberados() {
         pedido.cliente,
         pedido.nfVinculada,
         pedido.quantidade,
-        pedido.peso.toFixed(1),
-        pedido.volume.toFixed(2),
+        (pedido.peso || 0).toFixed(1),
+        (pedido.volume || 0).toFixed(2),
         pedido.transportadora,
         pedido.dataExpedicao ? new Date(pedido.dataExpedicao).toLocaleDateString('pt-BR') : 'Não informado'
       ])
@@ -244,13 +244,13 @@ export function ImpressaoPedidosLiberados() {
             <div>
               <span className="text-muted-foreground">Peso total:</span>
               <span className="ml-2 font-medium">
-                {pedidosFiltrados.reduce((acc, p) => acc + p.peso, 0).toFixed(1)} kg
+                {pedidosFiltrados.reduce((acc, p) => acc + (p.peso || 0), 0).toFixed(1)} kg
               </span>
             </div>
             <div>
               <span className="text-muted-foreground">Volume total:</span>
               <span className="ml-2 font-medium">
-                {pedidosFiltrados.reduce((acc, p) => acc + p.volume, 0).toFixed(2)} m³
+                {pedidosFiltrados.reduce((acc, p) => acc + (p.volume || 0), 0).toFixed(2)} m³
               </span>
             </div>
           </div>

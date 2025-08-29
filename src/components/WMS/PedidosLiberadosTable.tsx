@@ -279,8 +279,8 @@ export function PedidosLiberadosTable() {
                       <TableCell>{pedido.cliente}</TableCell>
                       <TableCell>{pedido.nfVinculada}</TableCell>
                       <TableCell>{pedido.quantidade}</TableCell>
-                      <TableCell>{pedido.peso.toFixed(1)}</TableCell>
-                      <TableCell>{pedido.volume.toFixed(2)}</TableCell>
+                      <TableCell>{(pedido.peso || 0).toFixed(1)}</TableCell>
+                      <TableCell>{(pedido.volume || 0).toFixed(2)}</TableCell>
                       <TableCell className="flex items-center gap-2">
                         <Truck className="w-4 h-4 text-muted-foreground" />
                         {pedido.transportadora}

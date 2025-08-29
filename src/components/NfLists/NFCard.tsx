@@ -123,8 +123,8 @@ export function NFCard({
         {/* Informações de quantidade */}
         <div className="flex justify-between text-sm bg-muted/30 rounded-lg p-2">
           <span><strong>Qtd:</strong> {nf.quantidade}</span>
-          <span><strong>Peso:</strong> {nf.peso.toFixed(1)}kg</span>
-          <span><strong>Volume:</strong> {nf.volume.toFixed(2)}m³</span>
+          <span><strong>Peso:</strong> {(nf.peso || 0).toFixed(1)}kg</span>
+          <span><strong>Volume:</strong> {(nf.volume || 0).toFixed(2)}m³</span>
         </div>
 
         {/* Informações de solicitação */}
@@ -161,7 +161,7 @@ export function NFCard({
                 <ul className="mt-1 ml-3 list-disc list-inside">
                   {nf.documentos_anexos.map((doc: any, index: number) => (
                     <li key={index} className="text-xs">
-                      {doc.nome} ({(doc.tamanho / 1024).toFixed(1)} KB)
+                      {doc.nome} ({((doc.tamanho || 0) / 1024).toFixed(1)} KB)
                     </li>
                   ))}
                 </ul>

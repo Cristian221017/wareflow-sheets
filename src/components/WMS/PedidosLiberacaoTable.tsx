@@ -323,8 +323,8 @@ export function PedidosLiberacaoTable() {
                       <TableCell>{pedido.nfVinculada}</TableCell>
                       <TableCell>{pedido.produto}</TableCell>
                       <TableCell>{pedido.quantidade}</TableCell>
-                      <TableCell>{Number(pedido.peso).toFixed(1)}</TableCell>
-                      <TableCell>{Number(pedido.volume).toFixed(2)}</TableCell>
+                      <TableCell>{Number(pedido.peso || 0).toFixed(1)}</TableCell>
+                      <TableCell>{Number(pedido.volume || 0).toFixed(2)}</TableCell>
                       <TableCell>
                         <Badge className={getPrioridadeColor(pedido.prioridade)}>
                           {pedido.prioridade}

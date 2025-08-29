@@ -80,9 +80,9 @@ export function ClienteDashboard() {
             <BarChart3 className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{totalPeso.toFixed(1)} kg</div>
+            <div className="text-2xl font-bold">{(totalPeso || 0).toFixed(1)} kg</div>
             <p className="text-xs text-muted-foreground">
-              Volume: {totalVolume.toFixed(2)} m³
+              Volume: {(totalVolume || 0).toFixed(2)} m³
             </p>
           </CardContent>
         </Card>

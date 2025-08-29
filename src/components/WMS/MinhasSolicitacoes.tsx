@@ -135,7 +135,7 @@ export function MinhasSolicitacoes() {
                           <FileText className="w-4 h-4 text-muted-foreground" />
                           <span className="text-sm">{anexo.name}</span>
                           <span className="text-xs text-muted-foreground">
-                            ({(anexo.size / 1024).toFixed(1)} KB)
+                            ({((anexo.size || 0) / 1024).toFixed(1)} KB)
                           </span>
                         </div>
                         <Button

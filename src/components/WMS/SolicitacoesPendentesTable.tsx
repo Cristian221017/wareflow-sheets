@@ -308,7 +308,7 @@ export function SolicitacoesPendentesTable() {
                             <ul className="mt-1 ml-4 list-disc">
                               {nf.documentos_anexos.map((doc: any, index: number) => (
                                 <li key={index} className="text-xs">
-                                  {doc.nome} ({(doc.tamanho / 1024).toFixed(1)} KB)
+                                  {doc.nome} ({((doc.tamanho || 0) / 1024).toFixed(1)} KB)
                                 </li>
                               ))}
                             </ul>
