@@ -751,6 +751,79 @@ export type Database = {
         }
         Relationships: []
       }
+      solicitacoes_carregamento: {
+        Row: {
+          anexos: Json
+          approved_at: string | null
+          approved_by: string | null
+          cliente_id: string
+          created_at: string
+          data_agendamento: string | null
+          id: string
+          nf_id: string
+          observacoes: string | null
+          requested_at: string
+          requested_by: string
+          status: string
+          transportadora_id: string
+          updated_at: string
+        }
+        Insert: {
+          anexos?: Json
+          approved_at?: string | null
+          approved_by?: string | null
+          cliente_id: string
+          created_at?: string
+          data_agendamento?: string | null
+          id?: string
+          nf_id: string
+          observacoes?: string | null
+          requested_at?: string
+          requested_by?: string
+          status?: string
+          transportadora_id: string
+          updated_at?: string
+        }
+        Update: {
+          anexos?: Json
+          approved_at?: string | null
+          approved_by?: string | null
+          cliente_id?: string
+          created_at?: string
+          data_agendamento?: string | null
+          id?: string
+          nf_id?: string
+          observacoes?: string | null
+          requested_at?: string
+          requested_by?: string
+          status?: string
+          transportadora_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "solicitacoes_carregamento_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "solicitacoes_carregamento_nf_id_fkey"
+            columns: ["nf_id"]
+            isOneToOne: false
+            referencedRelation: "notas_fiscais"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "solicitacoes_carregamento_transportadora_id_fkey"
+            columns: ["transportadora_id"]
+            isOneToOne: false
+            referencedRelation: "transportadoras"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       status_mappings: {
         Row: {
           created_at: string | null
@@ -1279,6 +1352,15 @@ export type Database = {
       nf_solicitar: {
         Args: { p_nf_id: string; p_user_id: string }
         Returns: undefined
+      }
+      nf_solicitar_agendamento: {
+        Args: {
+          p_anexos: Json
+          p_data_agendamento: string
+          p_nf_id: string
+          p_observacoes: string
+        }
+        Returns: string
       }
       nf_update_status_separacao: {
         Args: {

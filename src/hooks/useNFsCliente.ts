@@ -1,72 +1,100 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { solicitarNF } from '@/lib/nfApi';
-import { fetchNFsCliente } from '@/lib/nfApi';
-import type { NFStatus } from '@/types/nf';
-import { log, audit, auditError } from '@/utils/logger';
+import { supabase } from '@/integrations/supabase/client';
+import { NFStatus } from '@/types/nf';
 import { toast } from 'sonner';
+import { audit, auditError } from '@/utils/logger';
+import { solicitarCarregamentoComAgendamento, uploadAnexoSolicitacao } from '@/lib/nfApi';
+import { useAuth } from '@/contexts/AuthContext';
 
+// Hook para buscar NFs do cliente
 export function useNFsCliente(status?: NFStatus) {
   return useQuery({
-    queryKey: ['nfs', 'cliente', status ?? 'todas'],
+    queryKey: ['nfs', 'cliente', status],
     queryFn: async () => {
-      try {
-        log('🔍 Buscando NFs do cliente via hook', { status });
-        return await fetchNFsCliente(status);
-      } catch (err: any) {
-        auditError('NF_HOOK_CLIENTE_ERROR', 'NF', err, { status });
-        throw err;
+      let query = supabase
+        .from('notas_fiscais')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (status) {
+        query = query.eq('status', status);
       }
-    },
-    staleTime: 30_000,
-    gcTime: 5 * 60_000,
+      
+      const { data, error } = await query;
+      if (error) throw error;
+      
+      return data?.map(nf => ({
+        ...nf,
+        status_separacao: (nf as any).status_separacao || 'pendente'
+      })) || [];
+    }
   });
 }
 
+// Hook para mutations do cliente (solicitar carregamento com agendamento)
 export function useClienteFluxoMutations() {
   const queryClient = useQueryClient();
+  const { user } = useAuth();
   
-  const invalidateAll = () => {
-    log('🔄 Invalidando cache de todas as NFs do cliente');
-    const statuses: NFStatus[] = ["ARMAZENADA", "SOLICITADA", "CONFIRMADA"];
-    statuses.forEach(status => {
-      queryClient.invalidateQueries({ queryKey: ['nfs', 'cliente', status] });
-    });
-    queryClient.invalidateQueries({ queryKey: ['nfs', 'cliente', 'todas'] });
-    queryClient.invalidateQueries({ queryKey: ['dashboard'] });
-  };
-
   const solicitar = useMutation({
-    mutationFn: (data: { 
-      nfId: string; 
-      dadosAgendamento?: { 
-        dataAgendamento?: string; 
-        observacoes?: string; 
-        documentos?: Array<{nome: string; tamanho: number}> 
-      } 
-    }) => {
-      log('📝 Cliente solicitando carregamento com dados:', data);
-      return solicitarNF(data.nfId, data.dadosAgendamento);
-    },
-    onSuccess: (_, data) => {
-      audit('NF_SOLICITADA_CLIENTE', 'NF', { 
-        nfId: data.nfId, 
-        dadosAgendamento: data.dadosAgendamento 
+    mutationFn: async (params: {
+      nfId: string;
+      dataAgendamento?: string;
+      observacoes?: string;
+      documentos?: File[];
+    }): Promise<void> => {
+      const { nfId, dataAgendamento, observacoes, documentos } = params;
+      
+      // Buscar informações do cliente para o upload
+      const { data: nfData } = await supabase
+        .from('notas_fiscais')
+        .select('cliente_id')
+        .eq('id', nfId)
+        .single();
+        
+      if (!nfData?.cliente_id) {
+        throw new Error('NF não encontrada ou sem cliente associado');
+      }
+      
+      let anexos: Array<{ name: string; path: string; size: number; contentType: string }> = [];
+      
+      // Upload dos documentos se existirem
+      if (documentos && documentos.length > 0) {
+        try {
+          const uploadPromises = documentos.map(file => 
+            uploadAnexoSolicitacao(nfData.cliente_id, nfId, file)
+          );
+          anexos = await Promise.all(uploadPromises);
+        } catch (uploadError) {
+          console.error('Erro no upload dos anexos:', uploadError);
+          toast.error('Erro ao fazer upload dos anexos');
+          throw uploadError;
+        }
+      }
+      
+      // Chamar a função de solicitação
+      await solicitarCarregamentoComAgendamento({
+        nfId,
+        dataAgendamento,
+        observacoes,
+        anexos
       });
-      invalidateAll();
-      toast.success("Carregamento solicitado com sucesso!");
-      log('✅ Solicitação de carregamento bem-sucedida:', data);
     },
-    onError: (err: Error, data) => {
-      auditError('NF_SOLICITACAO_CLIENTE_ERRO', 'NF', err, { 
-        nfId: data.nfId, 
-        dadosAgendamento: data.dadosAgendamento 
-      });
-      toast.error(`Erro ao solicitar carregamento: ${err.message}`);
-      log('❌ Erro na solicitação de carregamento:', { err, data });
+    onSuccess: () => {
+      toast.success('Carregamento solicitado com sucesso!');
+      audit('NF_SOLICITADA', 'NF', { userId: user?.id });
+      
+      // Invalidar as queries para atualizar os dados
+      queryClient.invalidateQueries({ queryKey: ['nfs'] });
     },
+    onError: (error) => {
+      console.error('Erro detalhado:', error);
+      toast.error('Erro ao solicitar carregamento');
+      auditError('NF_SOLICITAR_FAIL', 'NF', error, { userId: user?.id });
+    }
   });
-
-  return { 
+  
+  return {
     solicitar,
     isLoading: solicitar.isPending
   };

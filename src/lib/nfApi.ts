@@ -145,54 +145,71 @@ export async function fetchNFsByStatus(status: NFStatus) {
   }));
 }
 
-export async function fetchNFsCliente(status?: NFStatus) {
-  log('🏢 Buscando NFs do cliente (políticas RLS usando user_clientes):', { status });
-  
-  // Usar query direta - as políticas RLS já garantem que só vê NFs vinculadas
-  let query = supabase
-    .from("notas_fiscais")
-    .select(`
-      id,
-      numero_nf,
-      numero_pedido,
-      ordem_compra,
-      cliente_id,
-      transportadora_id,
-      fornecedor,
-      produto,
-      quantidade,
-      peso,
-      volume,
-      localizacao,
-      data_recebimento,
-      status,
-      status_separacao,
-      created_at,
-      updated_at,
-      requested_at,
-      approved_at,
-      data_agendamento_entrega,
-      observacoes_solicitacao,
-      documentos_anexos
-    `)
-    .order("created_at", { ascending: false });
+export async function solicitarCarregamentoComAgendamento({
+  nfId,
+  dataAgendamento,
+  observacoes,
+  anexos
+}: {
+  nfId: string;
+  dataAgendamento?: string; // ISO
+  observacoes?: string;
+  anexos?: Array<{ name: string; path: string; size?: number; contentType?: string }>;
+}): Promise<string> {
+  // Usar any para contornar limitação de tipos do Supabase
+  const { data, error } = await (supabase as any).rpc('nf_solicitar_agendamento', {
+    p_nf_id: nfId,
+    p_data_agendamento: dataAgendamento ? new Date(dataAgendamento).toISOString() : null,
+    p_observacoes: observacoes ?? null,
+    p_anexos: anexos ? JSON.stringify(anexos) : '[]'
+  });
 
-  if (status) {
-    query = query.eq("status", status);
-  }
-
-  const { data, error: fetchError } = await query;
-  
-  if (fetchError) {
-    auditError('NF_FETCH_CLIENTE_FAIL', 'NF', fetchError, { status });
-    throw new Error(`Erro ao buscar notas fiscais do cliente: ${fetchError.message}`);
+  if (error) {
+    auditError('NF_SOLICITAR_FAIL', 'NF', error, { nfId });
+    throw error;
   }
   
-  log(`📊 Encontradas ${data?.length || 0} NFs do cliente`, { status });
+  audit('NF_SOLICITADA', 'NF', { nfId, dataAgendamento, anexosCount: anexos?.length ?? 0 });
+  return data as string; // solicitacao_id
+}
+
+// Função para upload de anexos
+export async function uploadAnexoSolicitacao(
+  clienteId: string,
+  nfId: string,
+  file: File
+): Promise<{ name: string; path: string; size: number; contentType: string }> {
+  const path = `${clienteId}/${nfId}/${Date.now()}_${file.name}`;
   
-  return (data || []).map((item: any) => ({
-    ...item,
-    status: item.status as NFStatus,
-    status_separacao: item.status_separacao || 'pendente'
-  }));
+  const { error } = await supabase.storage
+    .from('solicitacoes-anexos')
+    .upload(path, file, { contentType: file.type });
+    
+  if (error) {
+    auditError('UPLOAD_ANEXO_FAIL', 'STORAGE', error, { clienteId, nfId, fileName: file.name });
+    throw error;
+  }
+  
+  audit('ANEXO_UPLOADED', 'STORAGE', { clienteId, nfId, fileName: file.name, path });
+  
+  return {
+    name: file.name,
+    path,
+    size: file.size,
+    contentType: file.type
+  };
+}
+
+// Função para baixar URL assinada do anexo
+export async function getAnexoUrl(path: string): Promise<string> {
+  const { data, error } = await supabase.storage
+    .from('solicitacoes-anexos')
+    .createSignedUrl(path, 60 * 60); // 1h
+    
+  if (error) {
+    auditError('GET_ANEXO_URL_FAIL', 'STORAGE', error, { path });
+    throw error;
+  }
+  
+  return data.signedUrl;
 }
