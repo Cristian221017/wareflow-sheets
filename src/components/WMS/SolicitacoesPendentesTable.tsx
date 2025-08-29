@@ -1,7 +1,7 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { useNFs, useFluxoMutations } from '@/hooks/useNFs';
+import { useSolicitacoesTransportadora, useSolicitacoesMutations } from '@/hooks/useSolicitacoes';
 import { NFCard } from '@/components/NfLists/NFCard';
 import { NFFilters, type NFFilterState } from '@/components/NfLists/NFFilters';
 import { Clock, CheckCircle, X, Printer, Download } from 'lucide-react';
@@ -10,8 +10,8 @@ import type { NotaFiscal } from '@/types/nf';
 import { useState } from 'react';
 
 export function SolicitacoesPendentesTable() {
-  const { data: solicitadas, isLoading } = useNFs("SOLICITADA");
-  const { confirmar, recusar } = useFluxoMutations();
+  const { data: solicitadas, isLoading } = useSolicitacoesTransportadora("PENDENTE");
+  const { aprovar, recusar } = useSolicitacoesMutations();
   
   // Estados para filtros
   const [filters, setFilters] = useState<NFFilterState>({
@@ -320,17 +320,17 @@ export function SolicitacoesPendentesTable() {
                   <div className="ml-4 flex gap-2">
                     <Button
                       size="sm"
-                      disabled={confirmar.isPending || recusar.isPending}
-                      onClick={() => confirmar.mutate(nf.id)}
+                      disabled={aprovar.isPending || recusar.isPending}
+                      onClick={() => aprovar.mutate(nf.id)}
                       className="bg-success text-success-foreground hover:bg-success/80"
                     >
                       <CheckCircle className="w-3 h-3 mr-1" />
-                      {confirmar.isPending ? "Aprovando..." : "Aprovar"}
+                      {aprovar.isPending ? "Aprovando..." : "Aprovar"}
                     </Button>
                     <Button
                       size="sm"
                       variant="destructive"
-                      disabled={confirmar.isPending || recusar.isPending}
+                      disabled={aprovar.isPending || recusar.isPending}
                       onClick={() => recusar.mutate(nf.id)}
                     >
                       <X className="w-3 h-3 mr-1" />

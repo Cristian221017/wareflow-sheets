@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
-import { useNFs, useFluxoMutations } from "@/hooks/useNFs";
-import { useNFsCliente } from "@/hooks/useNFsCliente";
+import { useNFsCliente, useClienteFluxoMutations } from "@/hooks/useNFsCliente";
+import { useSolicitacoesTransportadora, useSolicitacoesMutations } from "@/hooks/useSolicitacoes";
 import { useLastVisit } from '@/hooks/useLastVisit';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -23,8 +23,13 @@ export function ClienteSolicitacaoCarregamento() {
   const { markVisitForComponent } = useLastVisit();
   const isCliente = user?.type === "cliente";
   const isTransportadora = user?.role === "admin_transportadora" || user?.role === "operador";
-  const { data: nfs, isLoading, isError } = isCliente ? useNFsCliente("SOLICITADA") : useNFs("SOLICITADA");
-  const { confirmar, recusar } = useFluxoMutations();
+  // Usar hooks apropriados baseados no tipo de usuário
+  const { data: nfs, isLoading, isError } = isCliente 
+    ? useNFsCliente("SOLICITADA") 
+    : useSolicitacoesTransportadora("PENDENTE");
+  
+  const { aprovar, recusar } = useSolicitacoesMutations();
+  const { solicitar } = useClienteFluxoMutations();
 
   // Estados para filtros e seleção múltipla
   const [filters, setFilters] = useState<NFFilterState>({
@@ -364,17 +369,17 @@ export function ClienteSolicitacaoCarregamento() {
                       <div className="flex gap-2">
                         <Button
                           size="sm"
-                          disabled={confirmar.isPending || recusar.isPending}
-                          onClick={() => confirmar.mutate(nf.id)}
+                          disabled={aprovar.isPending || recusar.isPending}
+                          onClick={() => aprovar.mutate(nf.id)}
                           className="flex-1"
                         >
                           <CheckCircle className="w-3 h-3 mr-1" />
-                          {confirmar.isPending ? "Aprovando..." : "Aprovar"}
+                          {aprovar.isPending ? "Aprovando..." : "Aprovar"}
                         </Button>
                         <Button
                           size="sm"
                           variant="destructive"
-                          disabled={confirmar.isPending || recusar.isPending}
+                          disabled={aprovar.isPending || recusar.isPending}
                           onClick={() => recusar.mutate(nf.id)}
                           className="flex-1"
                         >
