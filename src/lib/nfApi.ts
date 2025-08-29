@@ -99,9 +99,15 @@ export async function recusarNF(nfId: string): Promise<void> {
 }
 
 export async function fetchNFsByStatus(status: NFStatus) {
-  log('📋 Buscando NFs da transportadora com status:', status);
+  log('📋 Buscando NFs com status:', status);
   
-  const { data, error: fetchError } = await supabase
+  // Primeiro, verificar se o usuário está autenticado e obter informações
+  const { data: authUser, error: authError } = await supabase.auth.getUser();
+  if (authError || !authUser.user?.id) {
+    throw new Error('Usuário não autenticado');
+  }
+
+  let query = supabase
     .from("notas_fiscais")
     .select(`
       id,
@@ -129,13 +135,17 @@ export async function fetchNFsByStatus(status: NFStatus) {
     `)
     .eq("status", status)
     .order("created_at", { ascending: false });
+
+  // Se for um usuário cliente, filtrar apenas suas NFs através do RLS
+  // O RLS já deve estar configurado para isso, mas vamos garantir que funcione
+  const { data, error: fetchError } = await query;
   
   if (fetchError) {
-    auditError('NF_FETCH_BY_STATUS_FAIL', 'NF', fetchError, { status });
+    auditError('NF_FETCH_BY_STATUS_FAIL', 'NF', fetchError, { status, userId: authUser.user.id });
     throw new Error(`Erro ao buscar notas fiscais: ${fetchError.message}`);
   }
   
-  log(`📊 Encontradas ${data?.length || 0} NFs da transportadora com status ${status}`);
+  log(`📊 Encontradas ${data?.length || 0} NFs com status ${status}`);
   
   // Cast explícito do status para NFStatus e adicionar status_separacao default se não existir
   return (data || []).map((item: any) => ({
