@@ -29,33 +29,11 @@ export async function solicitarNF(nfId: string, dadosAgendamento?: {
     throw new Error(`Erro ao solicitar carregamento: ${rpcError.message}`);
   }
   
-  // Se há dados de agendamento, atualizar a NF com essas informações
+  // CORREÇÃO: Dados de agendamento devem ir para solicitacoes_carregamento, não notas_fiscais
+  // Esses campos foram migrados para a tabela separada e são tratados pela nova função nf_solicitar_agendamento
   if (dadosAgendamento && (dadosAgendamento.dataAgendamento || dadosAgendamento.observacoes || dadosAgendamento.documentos)) {
-    const updateData: any = {};
-    
-    if (dadosAgendamento.dataAgendamento) {
-      updateData.data_agendamento_entrega = dadosAgendamento.dataAgendamento;
-    }
-    
-    if (dadosAgendamento.observacoes) {
-      updateData.observacoes_solicitacao = dadosAgendamento.observacoes;
-    }
-    
-    if (dadosAgendamento.documentos && dadosAgendamento.documentos.length > 0) {
-      updateData.documentos_anexos = dadosAgendamento.documentos;
-    }
-    
-    const { error: updateError } = await supabase
-      .from('notas_fiscais')
-      .update(updateData)
-      .eq('id', nfId);
-    
-    if (updateError) {
-      auditError('NF_UPDATE_AGENDAMENTO_FAIL', 'NF', updateError, { nfId, userId, dadosAgendamento });
-      warn('⚠️ NF solicitada mas dados de agendamento não foram salvos:', updateError.message);
-    } else {
-      log('📅 Dados de agendamento salvos com sucesso');
-    }
+    warn('⚠️ Dados de agendamento devem usar solicitarCarregamentoComAgendamento() em vez de solicitarNF()');
+    log('📅 Para agendamento, use a função específica com anexos e data');
   }
   
   audit('NF_SOLICITADA', 'NF', { nfId, userId, dadosAgendamento });
@@ -98,15 +76,16 @@ export async function recusarNF(nfId: string): Promise<void> {
   log('✅ NF recusada com sucesso');
 }
 
-export async function fetchNFsByStatus(status: NFStatus) {
+export async function fetchNFsByStatus(status?: NFStatus) {
   log('📋 Buscando NFs com status:', status);
   
-  // Primeiro, verificar se o usuário está autenticado e obter informações
+  // Verificar autenticação
   const { data: authUser, error: authError } = await supabase.auth.getUser();
   if (authError || !authUser.user?.id) {
     throw new Error('Usuário não autenticado');
   }
 
+  // SINCRONIZAÇÃO: Query idêntica ao useNFsCliente para consistência
   let query = supabase
     .from("notas_fiscais")
     .select(`
@@ -130,14 +109,16 @@ export async function fetchNFsByStatus(status: NFStatus) {
       requested_at,
       approved_at,
       solicitacoes_carregamento(
-        id, status, requested_at, data_agendamento, observacoes, anexos
+        id, status, requested_at, data_agendamento, observacoes, anexos, approved_at
       )
     `)
-    .eq("status", status)
     .order("created_at", { ascending: false });
 
-  // Se for um usuário cliente, filtrar apenas suas NFs através do RLS
-  // O RLS já deve estar configurado para isso, mas vamos garantir que funcione
+  // Aplicar filtro de status se fornecido
+  if (status) {
+    query = query.eq("status", status);
+  }
+
   const { data, error: fetchError } = await query;
   
   if (fetchError) {
@@ -145,9 +126,9 @@ export async function fetchNFsByStatus(status: NFStatus) {
     throw new Error(`Erro ao buscar notas fiscais: ${fetchError.message}`);
   }
   
-  log(`📊 Encontradas ${data?.length || 0} NFs com status ${status}`);
+  log(`📊 Encontradas ${data?.length || 0} NFs com status ${status || 'todos'}`);
   
-  // Mapear dados para incluir informações das solicitações na NF (igual ao useNFsCliente)
+  // MAPEAMENTO CONSISTENTE: Idêntico ao useNFsCliente
   return (data || []).map((item: any) => {
     const nf = { ...item };
     const solicitacao = item.solicitacoes_carregamento?.[0];

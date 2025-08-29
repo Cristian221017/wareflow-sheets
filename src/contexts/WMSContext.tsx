@@ -81,14 +81,21 @@ export function WMSProvider({ children }: { children: ReactNode }) {
     try {
       setIsLoading(true);
       
-      // Load Notas Fiscais
+      // Load Notas Fiscais with JOIN to avoid N+1 queries
       const { data: nfs } = await supabase
         .from('notas_fiscais')
-        .select('*')
+        .select(`
+          *,
+          clientes!inner(
+            id,
+            razao_social,
+            cnpj
+          )
+        `)
         .order('created_at', { ascending: false });
       
       if (nfs) {
-        const transformedNFs: NotaFiscal[] = nfs.map(nf => ({
+        const transformedNFs: NotaFiscal[] = nfs.map((nf: any) => ({
           id: nf.id,
           numeroNF: nf.numero_nf,
           numeroPedido: nf.numero_pedido,
@@ -97,34 +104,18 @@ export function WMSProvider({ children }: { children: ReactNode }) {
           fornecedor: nf.fornecedor,
           cnpj: nf.cnpj_fornecedor,
           clienteId: nf.cliente_id,
-          cliente: '', // Will be populated from clientes table
-          cnpjCliente: '', // Will be populated from clientes table
+          cliente: nf.clientes.razao_social, // From JOIN - no more N+1!
+          cnpjCliente: nf.clientes.cnpj,     // From JOIN - no more N+1!
           produto: nf.produto,
           quantidade: nf.quantidade,
-          peso: parseFloat(nf.peso.toString()),
-          volume: parseFloat(nf.volume.toString()),
+          peso: Number(nf.peso) || 0,
+          volume: Number(nf.volume) || 0,
           localizacao: nf.localizacao,
           status: nf.status as 'ARMAZENADA' | 'SOLICITADA' | 'CONFIRMADA',
-          statusSeparacao: (nf as any).status_separacao || 'pendente',
+          statusSeparacao: nf.status_separacao || 'pendente',
           createdAt: nf.created_at,
-          integration_metadata: (nf as any).integration_metadata || {}
+          integration_metadata: nf.integration_metadata || {}
         }));
-        
-        // Load cliente info for each NF
-        for (const nf of transformedNFs) {
-          if (nf.clienteId) {
-            const { data: cliente } = await supabase
-              .from('clientes')
-              .select('razao_social, cnpj')
-              .eq('id', nf.clienteId)
-              .single();
-            
-            if (cliente) {
-              nf.cliente = cliente.razao_social;
-              nf.cnpjCliente = cliente.cnpj;
-            }
-          }
-        }
         
         setNotasFiscais(transformedNFs);
       }

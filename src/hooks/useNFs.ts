@@ -16,7 +16,7 @@ export function useNFs(status: NFStatus) {
     queryFn: () => fetchNFsByStatus(status),
     staleTime: 30000, // 30 segundos
     refetchOnWindowFocus: true,
-    enabled: !!user?.id, // Só executar se usuário estiver autenticado
+    enabled: !!user?.id && !!scope, // Só executar se usuário estiver autenticado e com escopo
   });
 }
 

@@ -57,7 +57,7 @@ export function useNFsCliente(status?: NFStatus) {
         };
       }) || [];
     },
-    enabled: !!user?.id, // Só executar se usuário estiver autenticado
+    enabled: !!user?.id && user.type === 'cliente', // Só executar se usuário cliente autenticado
   });
 }
 
@@ -114,9 +114,11 @@ export function useClienteFluxoMutations() {
       toast.success('Carregamento solicitado com sucesso!');
       audit('SC_CREATE', 'SOLICITACAO', { userId: user?.id });
       
-      // Invalidar as queries para atualizar os dados
+      // Invalidar queries com escopo consistente  
+      queryClient.invalidateQueries({ queryKey: ['nfs', 'cliente', user?.id] });
       queryClient.invalidateQueries({ queryKey: ['nfs'] });
-      queryClient.invalidateQueries({ queryKey: ['solicitacoes'] });
+      queryClient.invalidateQueries({ queryKey: ['solicitacoes', 'cliente', user?.id] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
     },
     onError: (error) => {
       console.error('Erro detalhado:', error);
