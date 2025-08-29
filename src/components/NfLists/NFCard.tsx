@@ -137,6 +137,39 @@ export function NFCard({
           </div>
         )}
 
+        {/* Informações de agendamento e documentos da solicitação */}
+        {showRequestInfo && (nf.data_agendamento_entrega || nf.observacoes_solicitacao || nf.documentos_anexos?.length > 0) && (
+          <div className="text-xs bg-primary/5 border border-primary/20 rounded p-3">
+            <h5 className="font-medium text-primary mb-2">Informações da Solicitação:</h5>
+            
+            {nf.data_agendamento_entrega && (
+              <p className="text-muted-foreground mb-1">
+                <span className="font-medium">Data de Agendamento:</span>{' '}
+                {new Date(nf.data_agendamento_entrega).toLocaleDateString('pt-BR')}
+              </p>
+            )}
+            
+            {nf.observacoes_solicitacao && (
+              <p className="text-muted-foreground mb-1">
+                <span className="font-medium">Observações:</span> {nf.observacoes_solicitacao}
+              </p>
+            )}
+            
+            {nf.documentos_anexos && Array.isArray(nf.documentos_anexos) && nf.documentos_anexos.length > 0 && (
+              <div className="text-muted-foreground">
+                <span className="font-medium">Documentos anexados ({nf.documentos_anexos.length}):</span>
+                <ul className="mt-1 ml-3 list-disc list-inside">
+                  {nf.documentos_anexos.map((doc: any, index: number) => (
+                    <li key={index} className="text-xs">
+                      {doc.nome} ({(doc.tamanho / 1024).toFixed(1)} KB)
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Informações de aprovação */}
         {showApprovalInfo && nf.approved_at && (
           <div className="text-xs text-muted-foreground bg-green-50 p-2 rounded">

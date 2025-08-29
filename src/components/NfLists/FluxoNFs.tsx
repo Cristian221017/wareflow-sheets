@@ -648,6 +648,7 @@ function ConfirmadasColumn({
               key={nf.id}
               nf={nf}
               showApprovalInfo
+              showRequestInfo
               showSelection={false} // Confirmadas não precisam de seleção
             />
           ))}
