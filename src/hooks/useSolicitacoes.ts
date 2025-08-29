@@ -110,6 +110,10 @@ export function useSolicitacoesTransportadora(status: 'PENDENTE' | 'APROVADA' | 
             localizacao: sol.notas_fiscais?.localizacao || '',
             data_recebimento: sol.notas_fiscais?.data_recebimento || '',
             status_separacao: sol.notas_fiscais?.status_separacao || 'pendente',
+            // Mapear anexos para documentos_anexos para compatibilidade com NFCard
+            documentos_anexos: sol.anexos || [],
+            data_agendamento_entrega: sol.data_agendamento,
+            observacoes_solicitacao: sol.observacoes,
           };
         }),
         // NFs legado convertidas para formato de solicitação
@@ -146,6 +150,10 @@ export function useSolicitacoesTransportadora(status: 'PENDENTE' | 'APROVADA' | 
             localizacao: nf.localizacao,
             data_recebimento: nf.data_recebimento,
             status_separacao: nf.status_separacao || 'pendente',
+            // Mapear campos para compatibilidade com NFCard
+            documentos_anexos: [],
+            data_agendamento_entrega: null,
+            observacoes_solicitacao: null,
             // Manter estrutura aninhada para compatibilidade
             notas_fiscais: {
               numero_nf: nf.numero_nf,

@@ -4,10 +4,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { useSolicitacoesTransportadora, useSolicitacoesMutations } from '@/hooks/useSolicitacoes';
 import { NFCard } from '@/components/NfLists/NFCard';
 import { NFFilters, type NFFilterState } from '@/components/NfLists/NFFilters';
-import { Clock, CheckCircle, X, Printer, Download } from 'lucide-react';
+import { Clock, CheckCircle, X, Printer, Download, FileText } from 'lucide-react';
 import { toast } from 'sonner';
 import type { NotaFiscal } from '@/types/nf';
 import { useState } from 'react';
+import { getAnexoUrl } from '@/lib/nfApi';
 
 export function SolicitacoesPendentesTable() {
   const { data: solicitadas, isLoading } = useSolicitacoesTransportadora("PENDENTE");
@@ -314,13 +315,36 @@ export function SolicitacoesPendentesTable() {
                         {nf.documentos_anexos && Array.isArray(nf.documentos_anexos) && nf.documentos_anexos.length > 0 && (
                           <div className="text-sm text-muted-foreground">
                             <span className="font-medium">Documentos anexados ({nf.documentos_anexos.length}):</span>
-                            <ul className="mt-1 ml-4 list-disc">
+                            <div className="mt-2 space-y-2">
                               {nf.documentos_anexos.map((doc: any, docIndex: number) => (
-                                <li key={`${doc.nome}-${docIndex}`} className="text-xs">
-                                  {doc.nome} ({((doc.tamanho || 0) / 1024).toFixed(1)} KB)
-                                </li>
+                                <div key={`${doc.name || doc.nome}-${docIndex}`} className="flex items-center justify-between p-2 bg-background rounded border">
+                                  <div className="flex items-center gap-2">
+                                    <FileText className="w-4 h-4 text-muted-foreground" />
+                                    <span className="text-xs">{doc.name || doc.nome}</span>
+                                    <span className="text-xs text-muted-foreground">
+                                      ({((doc.size || doc.tamanho || 0) / 1024).toFixed(1)} KB)
+                                    </span>
+                                  </div>
+                                  {(doc.path || doc.caminho) && (
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      onClick={async () => {
+                                        try {
+                                          const url = await getAnexoUrl(doc.path || doc.caminho);
+                                          window.open(url, '_blank');
+                                        } catch (error) {
+                                          toast.error('Erro ao baixar anexo');
+                                        }
+                                      }}
+                                    >
+                                      <Download className="w-3 h-3 mr-1" />
+                                      Baixar
+                                    </Button>
+                                  )}
+                                </div>
                               ))}
-                            </ul>
+                            </div>
                           </div>
                         )}
                       </div>

@@ -2,8 +2,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Clock, Package, CheckCircle, Truck, User } from "lucide-react";
+import { Clock, Package, CheckCircle, Truck, User, Download } from "lucide-react";
 import type { NotaFiscal } from "@/types/nf";
+import { getAnexoUrl } from "@/lib/nfApi";
+import { toast } from "sonner";
 
 interface NFCardProps {
   nf: NotaFiscal;
@@ -171,13 +173,34 @@ export function NFCard({
             {nf.documentos_anexos && Array.isArray(nf.documentos_anexos) && nf.documentos_anexos.length > 0 && (
               <div className="text-muted-foreground">
                 <span className="font-medium">Documentos anexados ({nf.documentos_anexos.length}):</span>
-                <ul className="mt-1 ml-3 list-disc list-inside">
+                <div className="mt-2 space-y-1">
                   {nf.documentos_anexos.map((doc: any, docIndex: number) => (
-                    <li key={`${doc.nome}-${docIndex}`} className="text-xs">
-                      {doc.nome} ({((doc.tamanho || 0) / 1024).toFixed(1)} KB)
-                    </li>
+                    <div key={`${doc.name || doc.nome}-${docIndex}`} className="flex items-center justify-between text-xs p-2 bg-background rounded border">
+                      <div className="flex items-center gap-2">
+                        <span>{doc.name || doc.nome}</span>
+                        <span className="text-muted-foreground">
+                          ({((doc.size || doc.tamanho || 0) / 1024).toFixed(1)} KB)
+                        </span>
+                      </div>
+                      {(doc.path || doc.caminho) && (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={async () => {
+                            try {
+                              const url = await getAnexoUrl(doc.path || doc.caminho);
+                              window.open(url, '_blank');
+                            } catch (error) {
+                              toast.error('Erro ao baixar anexo');
+                            }
+                          }}
+                        >
+                          <Download className="w-3 h-3" />
+                        </Button>
+                      )}
+                    </div>
                   ))}
-                </ul>
+                </div>
               </div>
             )}
           </div>
