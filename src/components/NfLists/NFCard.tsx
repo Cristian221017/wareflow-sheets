@@ -107,9 +107,12 @@ export function NFCard({
               {getStatusIcon()}
               {getStatusLabel()}
             </Badge>
-            <Badge variant="outline" className={`${getSeparacaoStatusColor()} text-xs`}>
-              {getSeparacaoStatusLabel()}
-            </Badge>
+            {/* Só mostrar status de separação quando NF está ARMAZENADA */}
+            {nf.status === 'ARMAZENADA' && (
+              <Badge variant="outline" className={`${getSeparacaoStatusColor()} text-xs`}>
+                {getSeparacaoStatusLabel()}
+              </Badge>
+            )}
           </div>
         </div>
 
