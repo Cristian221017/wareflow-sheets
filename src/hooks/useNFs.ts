@@ -49,15 +49,16 @@ export function useFluxoMutations() {
   };
 
   const solicitar = useMutation({
-    mutationFn: solicitarNF,
-    onSuccess: (_, nfId) => {
-      audit('NF_SOLICITADA', 'NF', { nfId });
+    mutationFn: (data: { nfId: string; dadosAgendamento?: { dataAgendamento?: string; observacoes?: string; documentos?: Array<{nome: string; tamanho: number}> } }) => 
+      solicitarNF(data.nfId, data.dadosAgendamento),
+    onSuccess: (_, data) => {
+      audit('NF_SOLICITADA', 'NF', { nfId: data.nfId, dadosAgendamento: data.dadosAgendamento });
       invalidateAll();
       toast.success("Carregamento solicitado com sucesso!");
     },
-    onError: (err: Error, nfId) => {
+    onError: (err: Error, data) => {
       error('❌ Erro na solicitação:', err);
-      audit('NF_SOLICITACAO_ERRO', 'NF', { nfId, error: err.message });
+      audit('NF_SOLICITACAO_ERRO', 'NF', { nfId: data.nfId, error: err.message });
       toast.error(err.message);
     },
   });

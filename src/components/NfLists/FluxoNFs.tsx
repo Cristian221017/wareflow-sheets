@@ -267,7 +267,7 @@ function ArmazenadasColumn({
                   <Button
                     size="sm"
                     disabled={solicitar.isPending}
-                    onClick={() => solicitar.mutate(nf.id)}
+                    onClick={() => solicitar.mutate({ nfId: nf.id })}
                     className="w-full"
                   >
                     <Truck className="w-3 h-3 mr-1" />

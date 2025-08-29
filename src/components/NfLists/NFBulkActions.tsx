@@ -92,7 +92,7 @@ export function NFBulkActions({
       try {
         switch (bulkAction) {
           case 'solicitar':
-            await solicitar.mutateAsync(nf.id);
+            await solicitar.mutateAsync({ nfId: nf.id });
             break;
           case 'confirmar':
             await confirmar.mutateAsync(nf.id);

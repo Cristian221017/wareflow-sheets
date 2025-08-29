@@ -10,10 +10,15 @@ async function getCurrentUserId(): Promise<string> {
   return data.user.id;
 }
 
-export async function solicitarNF(nfId: string): Promise<void> {
+export async function solicitarNF(nfId: string, dadosAgendamento?: {
+  dataAgendamento?: string;
+  observacoes?: string;
+  documentos?: Array<{nome: string; tamanho: number}>;
+}): Promise<void> {
   const userId = await getCurrentUserId();
-  log('🚚 Solicitando carregamento NF:', { nfId, userId });
+  log('🚚 Solicitando carregamento NF:', { nfId, userId, dadosAgendamento });
   
+  // Primeiro, solicitar via RPC
   const { error: rpcError } = await supabase.rpc("nf_solicitar", { 
     p_nf_id: nfId, 
     p_user_id: userId 
@@ -24,7 +29,36 @@ export async function solicitarNF(nfId: string): Promise<void> {
     throw new Error(`Erro ao solicitar carregamento: ${rpcError.message}`);
   }
   
-  audit('NF_SOLICITADA', 'NF', { nfId, userId });
+  // Se há dados de agendamento, atualizar a NF com essas informações
+  if (dadosAgendamento && (dadosAgendamento.dataAgendamento || dadosAgendamento.observacoes || dadosAgendamento.documentos)) {
+    const updateData: any = {};
+    
+    if (dadosAgendamento.dataAgendamento) {
+      updateData.data_agendamento_entrega = dadosAgendamento.dataAgendamento;
+    }
+    
+    if (dadosAgendamento.observacoes) {
+      updateData.observacoes_solicitacao = dadosAgendamento.observacoes;
+    }
+    
+    if (dadosAgendamento.documentos && dadosAgendamento.documentos.length > 0) {
+      updateData.documentos_anexos = dadosAgendamento.documentos;
+    }
+    
+    const { error: updateError } = await supabase
+      .from('notas_fiscais')
+      .update(updateData)
+      .eq('id', nfId);
+    
+    if (updateError) {
+      auditError('NF_UPDATE_AGENDAMENTO_FAIL', 'NF', updateError, { nfId, userId, dadosAgendamento });
+      warn('⚠️ NF solicitada mas dados de agendamento não foram salvos:', updateError.message);
+    } else {
+      log('📅 Dados de agendamento salvos com sucesso');
+    }
+  }
+  
+  audit('NF_SOLICITADA', 'NF', { nfId, userId, dadosAgendamento });
   log('✅ NF solicitada com sucesso');
 }
 
@@ -86,7 +120,12 @@ export async function fetchNFsByStatus(status: NFStatus) {
       status,
       status_separacao,
       created_at,
-      updated_at
+      updated_at,
+      requested_at,
+      approved_at,
+      data_agendamento_entrega,
+      observacoes_solicitacao,
+      documentos_anexos
     `)
     .eq("status", status)
     .order("created_at", { ascending: false });
@@ -129,7 +168,12 @@ export async function fetchNFsCliente(status?: NFStatus) {
       status,
       status_separacao,
       created_at,
-      updated_at
+      updated_at,
+      requested_at,
+      approved_at,
+      data_agendamento_entrega,
+      observacoes_solicitacao,
+      documentos_anexos
     `)
     .order("created_at", { ascending: false });
 
