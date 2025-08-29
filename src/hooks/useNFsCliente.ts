@@ -19,9 +19,9 @@ export function useNFsCliente(status?: NFStatus) {
             data_agendamento,
             observacoes,
             anexos,
-            status as solicitacao_status,
-            requested_at as solicitacao_requested_at,
-            approved_at as solicitacao_approved_at
+            status,
+            requested_at,
+            approved_at
           )
         `)
         .order('created_at', { ascending: false });
@@ -42,8 +42,8 @@ export function useNFsCliente(status?: NFStatus) {
           nf.data_agendamento_entrega = solicitacao.data_agendamento;
           nf.observacoes_solicitacao = solicitacao.observacoes;
           nf.documentos_anexos = solicitacao.anexos;
-          nf.requested_at = solicitacao.solicitacao_requested_at;
-          nf.approved_at = solicitacao.solicitacao_approved_at;
+          nf.requested_at = solicitacao.requested_at;
+          nf.approved_at = solicitacao.approved_at;
         }
         
         // Remover array de solicitações do objeto final
