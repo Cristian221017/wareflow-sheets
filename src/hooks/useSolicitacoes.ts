@@ -21,7 +21,7 @@ export function useSolicitacoesTransportadora(status: 'PENDENTE' | 'APROVADA' | 
           requested_by, requested_at, approved_by, approved_at, created_at, updated_at,
           notas_fiscais:nf_id(
             id, cliente_id, numero_nf, numero_pedido, ordem_compra, fornecedor, produto,
-            quantidade, peso, volume, localizacao, data_recebimento, created_at
+            quantidade, peso, volume, localizacao, data_recebimento, created_at, status_separacao
           ),
           clientes:cliente_id(id, razao_social, cnpj)
         `)
@@ -41,7 +41,7 @@ export function useSolicitacoesTransportadora(status: 'PENDENTE' | 'APROVADA' | 
         
         const { data: nfRow } = await supabase
           .from('notas_fiscais')
-          .select('id, cliente_id, numero_nf, numero_pedido, ordem_compra, fornecedor, produto, quantidade, peso, volume, localizacao, data_recebimento, created_at')
+          .select('id, cliente_id, numero_nf, numero_pedido, ordem_compra, fornecedor, produto, quantidade, peso, volume, localizacao, data_recebimento, created_at, status_separacao')
           .eq('id', sol.nf_id)
           .maybeSingle();
           
@@ -68,7 +68,7 @@ export function useSolicitacoesTransportadora(status: 'PENDENTE' | 'APROVADA' | 
           .from('notas_fiscais')
           .select(`
             id, numero_nf, numero_pedido, ordem_compra, produto, peso, volume, quantidade, 
-            fornecedor, localizacao, data_recebimento, created_at, cliente_id, requested_at, requested_by,
+            fornecedor, localizacao, data_recebimento, created_at, cliente_id, requested_at, requested_by, status_separacao,
             clientes(razao_social, cnpj)
           `)
           .eq('transportadora_id', user.transportadoraId)
@@ -91,7 +91,8 @@ export function useSolicitacoesTransportadora(status: 'PENDENTE' | 'APROVADA' | 
           console.log('🔧 Solicitação moderna mapeada:', {
             id: sol.id,
             numero_nf: sol.notas_fiscais?.numero_nf,
-            produto: sol.notas_fiscais?.produto
+            produto: sol.notas_fiscais?.produto,
+            status_separacao: sol.notas_fiscais?.status_separacao
           });
           return {
             ...sol,
@@ -106,7 +107,7 @@ export function useSolicitacoesTransportadora(status: 'PENDENTE' | 'APROVADA' | 
             fornecedor: sol.notas_fiscais?.fornecedor || '',
             localizacao: sol.notas_fiscais?.localizacao || '',
             data_recebimento: sol.notas_fiscais?.data_recebimento || '',
-            status_separacao: 'pendente', // Status padrão
+            status_separacao: sol.notas_fiscais?.status_separacao || 'pendente',
           };
         }),
         // NFs legado convertidas para formato de solicitação
@@ -142,7 +143,7 @@ export function useSolicitacoesTransportadora(status: 'PENDENTE' | 'APROVADA' | 
             fornecedor: nf.fornecedor,
             localizacao: nf.localizacao,
             data_recebimento: nf.data_recebimento,
-            status_separacao: 'pendente', // Status padrão para NFs legado
+            status_separacao: nf.status_separacao || 'pendente',
             // Manter estrutura aninhada para compatibilidade
             notas_fiscais: {
               numero_nf: nf.numero_nf,
