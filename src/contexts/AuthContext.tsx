@@ -23,10 +23,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setSession(session);
         
         if (session?.user) {
-          // Use setTimeout to prevent blocking
-          setTimeout(() => {
-            loadUserProfile(session.user);
-          }, 0);
+          // Load profile directly without setTimeout race condition
+          loadUserProfile(session.user);
         } else {
           setUser(null);
           setLoading(false);
@@ -40,9 +38,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setSession(session);
       
       if (session?.user) {
-        setTimeout(() => {
-          loadUserProfile(session.user);
-        }, 0);
+        loadUserProfile(session.user);
       } else {
         setLoading(false);
       }
@@ -55,21 +51,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const loadUserProfile = async (supabaseUser: SupabaseUser) => {
     try {
+      setLoading(true);
       log('Loading user profile for:', supabaseUser.id);
       
-      // Force a fresh query by adding a timestamp
-      const timestamp = Date.now();
-      log('🔄 Query timestamp:', timestamp);
-      
-      // Create a timeout promise
-      const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error('Database query timeout')), 3000);
-      });
-
-      // Try to get user data with timeout
-      const userDataPromise = getUserData(supabaseUser);
-      
-      const userData = await Promise.race([userDataPromise, timeoutPromise]) as User;
+      // Get user data without artificial timeout race condition
+      const userData = await getUserData(supabaseUser);
       
       log('User profile loaded successfully:', userData);
       audit('LOGIN_SUCCESS', 'AUTH', { userId: supabaseUser.id, userEmail: userData.email });

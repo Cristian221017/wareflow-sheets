@@ -24,8 +24,8 @@ const formSchema = z.object({
   produto: z.string().min(1, 'Produto é obrigatório'),
   quantidade: z.coerce.number().min(1, 'Quantidade deve ser maior que 0'),
   peso: z.coerce.number().min(0.1, 'Peso deve ser maior que 0'),
-  volume: z.coerce.number().min(0, 'Volume deve ser 0 ou maior').default(0), // Garantir padrão 0
-  localizacao: z.string().nullable().optional(),
+  volume: z.coerce.number().min(0, 'Volume deve ser 0 ou maior').default(0),
+  localizacao: z.string().min(1, 'Localização é obrigatória').default('A definir'),
   statusSeparacao: z.enum(['pendente', 'em_separacao', 'separacao_concluida', 'separacao_com_pendencia']).default('pendente')
 });
 
@@ -62,6 +62,25 @@ export function FormNotaFiscal() {
         return;
       }
 
+      // Sanitizar e validar dados numéricos
+      const sanitizedData = {
+        quantidade: Math.floor(Math.max(1, data.quantidade || 1)),
+        peso: Math.max(0.01, Number(data.peso) || 0.01),
+        volume: Math.max(0, Number(data.volume) || 0),
+        localizacao: (data.localizacao || '').trim() || 'A definir'
+      };
+
+      // Validações de negócio
+      if (sanitizedData.peso > 50000) {
+        toast.error('Peso muito alto. Verifique se está em kg.');
+        return;
+      }
+      
+      if (sanitizedData.volume > 1000) {
+        toast.error('Volume muito alto. Verifique se está em m³.');
+        return;
+      }
+
       const nfData = {
         numeroNF: data.numeroNF,
         numeroPedido: data.numeroPedido,
@@ -69,15 +88,15 @@ export function FormNotaFiscal() {
         dataRecebimento: data.dataRecebimento,
         fornecedor: data.fornecedor,
         cnpj: data.cnpj,
-        clienteId: data.clienteId, // Pass the client ID directly
-        cliente: selectedCliente.name, // Keep for compatibility 
+        clienteId: data.clienteId,
+        cliente: selectedCliente.name,
         cnpjCliente: selectedCliente.cnpj || '',
         produto: data.produto,
-        quantidade: data.quantidade,
-        peso: data.peso,
-        volume: data.volume && data.volume > 0 ? data.volume : 0, // Enviar 0 em vez de null (NOT NULL constraint)
-        localizacao: data.localizacao && data.localizacao.trim() ? data.localizacao.trim() : 'A definir',
-        status: 'ARMAZENADA' as const, // Sempre ARMAZENADA no cadastro
+        quantidade: sanitizedData.quantidade,
+        peso: sanitizedData.peso,
+        volume: sanitizedData.volume,
+        localizacao: sanitizedData.localizacao,
+        status: 'ARMAZENADA' as const,
         statusSeparacao: data.statusSeparacao
       };
 

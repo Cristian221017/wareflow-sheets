@@ -47,7 +47,7 @@ export function useFluxoMutations() {
       queryClient.invalidateQueries({ queryKey: ['nfs', status, user?.type, scope] });
     });
     queryClient.invalidateQueries({ queryKey: ['dashboard'] });
-    queryClient.invalidateQueries({ queryKey: ['solicitacoes'] });
+    queryClient.invalidateQueries({ queryKey: ['solicitacoes', user?.type, scope] });
   };
 
   const solicitar = useMutation({
