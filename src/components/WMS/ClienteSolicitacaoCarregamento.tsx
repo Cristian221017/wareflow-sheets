@@ -255,7 +255,7 @@ export function ClienteSolicitacaoCarregamento() {
       ) {
         return false;
       }
-      if (filters.cliente && nf.cliente_id !== filters.cliente) {
+      if (filters.cliente && filters.cliente !== 'all' && nf.cliente_id !== filters.cliente) {
         return false;
       }
       if (

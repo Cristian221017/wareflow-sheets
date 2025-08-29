@@ -99,7 +99,7 @@ export function PedidosConfirmadosTable() {
       ) {
         return false;
       }
-      if (filters.cliente && nf.cliente_id !== filters.cliente) {
+      if (filters.cliente && filters.cliente !== 'all' && nf.cliente_id !== filters.cliente) {
         return false;
       }
       if (
@@ -146,7 +146,7 @@ export function PedidosConfirmadosTable() {
     const filtrosAplicados = [];
     if (filters.searchNF) filtrosAplicados.push(`NF: ${filters.searchNF}`);
     if (filters.searchPedido) filtrosAplicados.push(`Pedido: ${filters.searchPedido}`);
-    if (filters.cliente) filtrosAplicados.push(`Cliente: ${filters.cliente}`);
+    if (filters.cliente && filters.cliente !== 'all') filtrosAplicados.push(`Cliente: ${filters.cliente}`);
     if (filters.produto) filtrosAplicados.push(`Produto: ${filters.produto}`);
     if (filters.fornecedor) filtrosAplicados.push(`Fornecedor: ${filters.fornecedor}`);
     if (filters.localizacao) filtrosAplicados.push(`Localização: ${filters.localizacao}`);

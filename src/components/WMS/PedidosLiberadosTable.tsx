@@ -38,7 +38,7 @@ export function PedidosLiberadosTable() {
       if (filters.searchPedido && !pedido.numeroPedido.toLowerCase().includes(filters.searchPedido.toLowerCase())) {
         return false;
       }
-      if (filters.cliente && !pedido.cliente.toLowerCase().includes(filters.cliente.toLowerCase())) {
+      if (filters.cliente && filters.cliente !== 'all' && !pedido.cliente.toLowerCase().includes(filters.cliente.toLowerCase())) {
         return false;
       }
       if (filters.dataInicio) {
@@ -65,7 +65,7 @@ export function PedidosLiberadosTable() {
     
     const filtrosAplicados = [];
     if (filters.searchPedido) filtrosAplicados.push(`Pedido: ${filters.searchPedido}`);
-    if (filters.cliente) filtrosAplicados.push(`Cliente: ${filters.cliente}`);
+    if (filters.cliente && filters.cliente !== 'all') filtrosAplicados.push(`Cliente: ${filters.cliente}`);
     if (filters.dataInicio) filtrosAplicados.push(`Data início: ${new Date(filters.dataInicio).toLocaleDateString('pt-BR')}`);
     if (filters.dataFim) filtrosAplicados.push(`Data fim: ${new Date(filters.dataFim).toLocaleDateString('pt-BR')}`);
 

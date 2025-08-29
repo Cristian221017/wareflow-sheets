@@ -43,17 +43,24 @@ export function NFFilters({
     onFiltersChange({
       searchNF: '',
       searchPedido: '',
-      cliente: '',
+      cliente: 'all',
       produto: '',
       fornecedor: '',
       dataInicio: '',
       dataFim: '',
       localizacao: '',
-      statusSeparacao: '',
+      statusSeparacao: 'all',
     });
   };
 
-  const hasActiveFilters = Object.values(filters).some(value => value !== '');
+  const hasActiveFilters = Object.entries(filters).some(
+    ([key, value]) => {
+      if (key === 'cliente' || key === 'statusSeparacao') {
+        return value !== '' && value !== 'all';
+      }
+      return value !== '';
+    }
+  );
 
   return (
     <Card className={className}>
@@ -77,7 +84,12 @@ export function NFFilters({
               className="whitespace-nowrap"
             >
               <Filter className="w-4 h-4 mr-1" />
-              Filtros {hasActiveFilters && `(${Object.values(filters).filter(v => v !== '').length})`}
+              Filtros {hasActiveFilters && `(${Object.entries(filters).filter(([key, value]) => {
+                if (key === 'cliente' || key === 'statusSeparacao') {
+                  return value !== '' && value !== 'all';
+                }
+                return value !== '';
+              }).length})`}
             </Button>
             {hasActiveFilters && (
               <Button
@@ -116,7 +128,7 @@ export function NFFilters({
                       <SelectValue placeholder="Todos os clientes" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Todos os clientes</SelectItem>
+                      <SelectItem value="all">Todos os clientes</SelectItem>
                       {clientes.map((cliente) => (
                         <SelectItem key={cliente.id} value={cliente.id}>
                           {cliente.name}
@@ -187,7 +199,7 @@ export function NFFilters({
                     <SelectValue placeholder="Todos os status" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Todos os status</SelectItem>
+                    <SelectItem value="all">Todos os status</SelectItem>
                     <SelectItem value="pendente">Separação Pendente</SelectItem>
                     <SelectItem value="em_separacao">Em Separação</SelectItem>
                     <SelectItem value="separacao_concluida">Separação Concluída</SelectItem>

@@ -39,7 +39,7 @@ function generatePrintReport(nfs: NotaFiscal[], filters: NFFilterState, reportTi
   const filtrosAplicados = [];
   if (filters.searchNF) filtrosAplicados.push(`NF: ${filters.searchNF}`);
   if (filters.searchPedido) filtrosAplicados.push(`Pedido: ${filters.searchPedido}`);
-  if (filters.cliente) filtrosAplicados.push(`Cliente: ${filters.cliente}`);
+  if (filters.cliente && filters.cliente !== 'all') filtrosAplicados.push(`Cliente: ${filters.cliente}`);
   if (filters.produto) filtrosAplicados.push(`Produto: ${filters.produto}`);
   if (filters.fornecedor) filtrosAplicados.push(`Fornecedor: ${filters.fornecedor}`);
   if (filters.localizacao) filtrosAplicados.push(`Localização: ${filters.localizacao}`);
@@ -484,7 +484,7 @@ function ConfirmadasColumn({
     const filtrosAplicados = [];
     if (filters.searchNF) filtrosAplicados.push(`NF: ${filters.searchNF}`);
     if (filters.searchPedido) filtrosAplicados.push(`Pedido: ${filters.searchPedido}`);
-    if (filters.cliente) filtrosAplicados.push(`Cliente: ${filters.cliente}`);
+    if (filters.cliente && filters.cliente !== 'all') filtrosAplicados.push(`Cliente: ${filters.cliente}`);
     if (filters.produto) filtrosAplicados.push(`Produto: ${filters.produto}`);
     if (filters.fornecedor) filtrosAplicados.push(`Fornecedor: ${filters.fornecedor}`);
     if (filters.localizacao) filtrosAplicados.push(`Localização: ${filters.localizacao}`);
@@ -724,7 +724,7 @@ export function FluxoNFs() {
       }
       
       // Filtro por cliente (apenas para transportadora)
-      if (filters.cliente && nf.cliente_id !== filters.cliente) {
+      if (filters.cliente && filters.cliente !== 'all' && nf.cliente_id !== filters.cliente) {
         return false;
       }
       
@@ -757,6 +757,11 @@ export function FluxoNFs() {
           endDate.setHours(23, 59, 59, 999); // Incluir o dia inteiro
           if (nfDate > endDate) return false;
         }
+      }
+      
+      // Filtro por status de separação
+      if (filters.statusSeparacao && filters.statusSeparacao !== 'all' && nf.status_separacao !== filters.statusSeparacao) {
+        return false;
       }
       
       return true;
