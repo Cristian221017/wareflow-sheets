@@ -287,68 +287,12 @@ export function SolicitacoesPendentesTable() {
             <div className="space-y-3">
               {filteredSolicitadas.map((nf) => (
                 <div key={nf.id} className="flex items-center justify-between p-4 border rounded-lg">
-                  <div className="flex-1 space-y-3">
+                  <div className="flex-1">
                     <NFCard
                       nf={nf}
                       showRequestInfo
                       showSelection={false}
                     />
-                    
-                    {/* Informações adicionais da solicitação */}
-                    {(nf.data_agendamento_entrega || nf.observacoes_solicitacao || nf.documentos_anexos?.length > 0) && (
-                      <div className="pl-4 border-l-2 border-primary/20 bg-muted/30 rounded-r p-3">
-                        <h4 className="text-sm font-medium text-primary mb-2">Informações da Solicitação:</h4>
-                        
-                        {nf.data_agendamento_entrega && (
-                          <p className="text-sm text-muted-foreground mb-1">
-                            <span className="font-medium">Data de Agendamento:</span>{' '}
-                            {new Date(nf.data_agendamento_entrega).toLocaleDateString('pt-BR')}
-                          </p>
-                        )}
-                        
-                        {nf.observacoes_solicitacao && (
-                          <p className="text-sm text-muted-foreground mb-1">
-                            <span className="font-medium">Observações:</span> {nf.observacoes_solicitacao}
-                          </p>
-                        )}
-                        
-                        {nf.documentos_anexos && Array.isArray(nf.documentos_anexos) && nf.documentos_anexos.length > 0 && (
-                          <div className="text-sm text-muted-foreground">
-                            <span className="font-medium">Documentos anexados ({nf.documentos_anexos.length}):</span>
-                            <div className="mt-2 space-y-2">
-                              {nf.documentos_anexos.map((doc: any, docIndex: number) => (
-                                <div key={`${doc.name || doc.nome}-${docIndex}`} className="flex items-center justify-between p-2 bg-background rounded border">
-                                  <div className="flex items-center gap-2">
-                                    <FileText className="w-4 h-4 text-muted-foreground" />
-                                    <span className="text-xs">{doc.name || doc.nome}</span>
-                                    <span className="text-xs text-muted-foreground">
-                                      ({((doc.size || doc.tamanho || 0) / 1024).toFixed(1)} KB)
-                                    </span>
-                                  </div>
-                                  {(doc.path || doc.caminho) && (
-                                    <Button
-                                      size="sm"
-                                      variant="outline"
-                                      onClick={async () => {
-                                        try {
-                                          const url = await getAnexoUrl(doc.path || doc.caminho);
-                                          window.open(url, '_blank');
-                                        } catch (error) {
-                                          toast.error('Erro ao baixar anexo');
-                                        }
-                                      }}
-                                    >
-                                      <Download className="w-3 h-3 mr-1" />
-                                      Baixar
-                                    </Button>
-                                  )}
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    )}
                   </div>
                   <div className="ml-4 flex gap-2">
                     <Button
