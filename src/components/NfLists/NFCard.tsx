@@ -192,23 +192,37 @@ export function NFCard({
                             console.log('📥 Download iniciado:', doc.name || doc.nome);
                             
                             try {
-                              // Usar método mais direto sem fetch que pode causar navegação
-                              const url = await getAnexoUrl(doc.path || doc.caminho);
-                              console.log('🔗 URL gerada:', url);
+                              console.log('📥 Iniciando download:', doc.name || doc.nome);
                               
-                              // Forçar download direto sem abrir nova tab
+                              // Obter a URL do anexo
+                              const url = await getAnexoUrl(doc.path || doc.caminho);
+                              console.log('🔗 URL obtida:', url);
+                              
+                              // Fazer fetch da URL para obter o blob
+                              const response = await fetch(url);
+                              if (!response.ok) {
+                                throw new Error(`Erro HTTP: ${response.status}`);
+                              }
+                              
+                              const blob = await response.blob();
+                              console.log('📦 Blob criado:', blob.size, 'bytes');
+                              
+                              // Criar URL local do blob
+                              const blobUrl = URL.createObjectURL(blob);
+                              
+                              // Criar link para download forçado
                               const a = document.createElement('a');
                               a.style.display = 'none';
-                              a.href = url;
+                              a.href = blobUrl;
                               a.download = doc.name || doc.nome || 'documento';
-                              a.rel = 'noopener';
                               
                               document.body.appendChild(a);
                               a.click();
                               
-                              // Cleanup imediato
+                              // Cleanup
                               setTimeout(() => {
                                 document.body.removeChild(a);
+                                URL.revokeObjectURL(blobUrl);
                                 console.log('✅ Download concluído e cleanup feito');
                               }, 100);
                               

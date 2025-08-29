@@ -15,16 +15,43 @@ export function MinhasSolicitacoes() {
       e.stopPropagation();
     }
     try {
+      console.log('📥 Iniciando download:', anexo.name);
+      
+      // Obter a URL do anexo
       const url = await getAnexoUrl(anexo.path);
-      // Criar link temporário para download
+      console.log('🔗 URL obtida:', url);
+      
+      // Fazer fetch da URL para obter o blob
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`Erro HTTP: ${response.status}`);
+      }
+      
+      const blob = await response.blob();
+      console.log('📦 Blob criado:', blob.size, 'bytes');
+      
+      // Criar URL local do blob
+      const blobUrl = URL.createObjectURL(blob);
+      
+      // Criar link para download forçado
       const link = document.createElement('a');
-      link.href = url;
+      link.style.display = 'none';
+      link.href = blobUrl;
       link.download = anexo.name || 'documento';
-      link.target = '_blank';
+      
       document.body.appendChild(link);
       link.click();
-      document.body.removeChild(link);
+      
+      // Cleanup
+      setTimeout(() => {
+        document.body.removeChild(link);
+        URL.revokeObjectURL(blobUrl);
+        console.log('✅ Download concluído e cleanup feito');
+      }, 100);
+      
+      toast.success('Download iniciado!');
     } catch (error) {
+      console.error('❌ Erro ao baixar anexo:', error);
       toast.error('Erro ao baixar anexo');
     }
   };
@@ -152,38 +179,7 @@ export function MinhasSolicitacoes() {
                         <Button
                           size="sm"
                           variant="outline"
-                          onClick={async (e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            console.log('📥 Download iniciado (MinhasSolicitacoes):', anexo.name);
-                            
-                            try {
-                              // Usar método mais direto sem fetch que pode causar navegação
-                              const url = await getAnexoUrl(anexo.path);
-                              console.log('🔗 URL gerada:', url);
-                              
-                              // Forçar download direto sem abrir nova tab
-                              const a = document.createElement('a');
-                              a.style.display = 'none';
-                              a.href = url;
-                              a.download = anexo.name || 'documento';
-                              a.rel = 'noopener';
-                              
-                              document.body.appendChild(a);
-                              a.click();
-                              
-                              // Cleanup imediato
-                              setTimeout(() => {
-                                document.body.removeChild(a);
-                                console.log('✅ Download concluído e cleanup feito');
-                              }, 100);
-                              
-                              toast.success('Download iniciado!');
-                            } catch (error) {
-                              console.error('❌ Erro no download:', error);
-                              toast.error('Erro ao baixar anexo');
-                            }
-                          }}
+                          onClick={(e) => handleDownloadAnexo(anexo, e)}
                         >
                           <Download className="w-3 h-3 mr-1" />
                           Baixar
