@@ -70,7 +70,15 @@ export function SolicitacoesPendentesTable() {
   }
 
   const validSolicitadas = solicitadas || [];
-  console.log('🔍 Solicitações recebidas:', validSolicitadas.length, validSolicitadas.slice(0, 2));
+  console.log('🔍 SolicitacoesPendentesTable - dados recebidos:', {
+    total: validSolicitadas.length,
+    samples: validSolicitadas.slice(0, 2).map(s => ({ 
+      id: s.id, 
+      numero_nf: s.numero_nf, 
+      produto: s.produto,
+      status_separacao: s.status_separacao 
+    }))
+  });
   const filteredSolicitadas = applyFilters(validSolicitadas);
 
   // Função para imprimir relatório

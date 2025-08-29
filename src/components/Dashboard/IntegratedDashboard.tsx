@@ -6,8 +6,11 @@ import { subscribeCentralizedChanges } from "@/lib/realtimeCentralized";
 import { useSearchParams } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Activity, BarChart3 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Activity, BarChart3, AlertTriangle, CheckCircle } from "lucide-react";
 import { log } from "@/utils/logger";
+import { runSystemDiagnostic } from "@/utils/systemDiagnostic";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface IntegratedDashboardProps {
   onDeepLink?: (path: string) => void;
@@ -15,6 +18,7 @@ interface IntegratedDashboardProps {
 
 export function IntegratedDashboard({ onDeepLink }: IntegratedDashboardProps) {
   const queryClient = useQueryClient();
+  const { user } = useAuth();
   const once = useRef(false);
   const [searchParams, setSearchParams] = useSearchParams();
   

@@ -21,14 +21,17 @@ export function useDashboard() {
       const { data, error } = await supabase.rpc("get_current_user_dashboard" as any);
       
       if (error) {
+        console.error('❌ Erro no dashboard RPC:', error);
         throw new Error(`Erro ao buscar dashboard: ${error.message}`);
       }
       
       if (!data || !Array.isArray(data) || data.length === 0) {
+        console.warn('⚠️ Dashboard retornou dados vazios');
         return null;
       }
       
       const stats = data[0];
+      console.log('📊 Dashboard stats recebidos:', stats);
       
       const dashboardStats: DashboardStats = {
         userType: stats.user_type as 'transportadora' | 'cliente',
@@ -43,10 +46,12 @@ export function useDashboard() {
         valorVencido: stats.valor_vencido ? Number(stats.valor_vencido) : undefined,
       };
       
+      console.log('📊 Dashboard stats processados:', dashboardStats);
       return dashboardStats;
     },
-    staleTime: 30000, // 30 segundos
+    staleTime: 10000, // Reduzir para 10 segundos para sincronização mais rápida
     refetchOnWindowFocus: true,
+    refetchInterval: 30000, // Auto-refresh a cada 30 segundos
   });
 }
 

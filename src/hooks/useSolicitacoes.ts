@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { audit, auditError } from '@/utils/logger';
+import { useInvalidateAll } from './useInvalidateAll';
 
 // Hook para buscar solicitações da transportadora (unifica dados de ambas as fontes)
 export function useSolicitacoesTransportadora(status: 'PENDENTE' | 'APROVADA' | 'RECUSADA' | 'TODAS' = 'PENDENTE') {
@@ -211,6 +212,7 @@ export function useSolicitacoesCliente(status: 'PENDENTE' | 'APROVADA' | 'RECUSA
 export function useSolicitacoesMutations() {
   const queryClient = useQueryClient();
   const { user } = useAuth();
+  const { invalidateAll } = useInvalidateAll();
 
   const aprovarSolicitacao = useMutation({
     mutationFn: async (solicitacaoId: string) => {
@@ -251,13 +253,7 @@ export function useSolicitacoesMutations() {
     onSuccess: () => {
       toast.success('Solicitação aprovada com sucesso!');
       audit('SC_APPROVE', 'SOLICITACAO', { userId: user?.id });
-      
-      // Invalidar queries relevantes
-      queryClient.invalidateQueries({ queryKey: ['solicitacoes'] });
-      queryClient.invalidateQueries({ queryKey: ['solicitacoes', 'cliente'] });
-      queryClient.invalidateQueries({ queryKey: ['solicitacoes', 'transportadora'] });
-      queryClient.invalidateQueries({ queryKey: ['solicitacoes', 'transportadora', user?.transportadoraId ?? 'none'] });
-      queryClient.invalidateQueries({ queryKey: ['nfs'] });
+      invalidateAll(); // USAR FUNÇÃO CENTRALIZADA
     },
     onError: (error) => {
       toast.error('Erro ao aprovar solicitação');
@@ -304,13 +300,7 @@ export function useSolicitacoesMutations() {
     onSuccess: () => {
       toast.success('Solicitação recusada');
       audit('SC_REJECT', 'SOLICITACAO', { userId: user?.id });
-      
-      // Invalidar queries relevantes
-      queryClient.invalidateQueries({ queryKey: ['solicitacoes'] });
-      queryClient.invalidateQueries({ queryKey: ['solicitacoes', 'cliente'] });
-      queryClient.invalidateQueries({ queryKey: ['solicitacoes', 'transportadora'] });
-      queryClient.invalidateQueries({ queryKey: ['solicitacoes', 'transportadora', user?.transportadoraId ?? 'none'] });
-      queryClient.invalidateQueries({ queryKey: ['nfs'] });
+      invalidateAll(); // USAR FUNÇÃO CENTRALIZADA
     },
     onError: (error) => {
       toast.error('Erro ao recusar solicitação');

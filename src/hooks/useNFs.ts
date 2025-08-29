@@ -3,6 +3,7 @@ import { solicitarNF, confirmarNF, recusarNF, fetchNFsByStatus } from "@/lib/nfA
 import { toast } from "sonner";
 import { log, audit, error } from "@/utils/logger";
 import { useAuth } from "@/contexts/AuthContext";
+import { useInvalidateAll } from "./useInvalidateAll";
 import type { NFStatus, NotaFiscal } from "@/types/nf";
 
 const NF_QUERY_KEY = "nfs";
@@ -38,24 +39,14 @@ export function useAllNFs() {
 export function useFluxoMutations() {
   const queryClient = useQueryClient();
   const { user } = useAuth();
+  const { invalidateAll } = useInvalidateAll();
   
-  const invalidateAll = () => {
-    log('🔄 Invalidando cache de todas as NFs');
-    const scope = user?.type === 'cliente' ? user?.clienteId : user?.transportadoraId;
-    const statuses: NFStatus[] = ["ARMAZENADA", "SOLICITADA", "CONFIRMADA"];
-    statuses.forEach(status => {
-      queryClient.invalidateQueries({ queryKey: ['nfs', status, user?.type, scope] });
-    });
-    queryClient.invalidateQueries({ queryKey: ['dashboard'] });
-    queryClient.invalidateQueries({ queryKey: ['solicitacoes', user?.type, scope] });
-  };
-
   const solicitar = useMutation({
     mutationFn: (data: { nfId: string; dadosAgendamento?: { dataAgendamento?: string; observacoes?: string; documentos?: Array<{nome: string; tamanho: number}> } }) => 
       solicitarNF(data.nfId, data.dadosAgendamento),
     onSuccess: (_, data) => {
       audit('NF_SOLICITADA', 'NF', { nfId: data.nfId, dadosAgendamento: data.dadosAgendamento });
-      invalidateAll();
+      invalidateAll(); // USAR FUNÇÃO CENTRALIZADA
       toast.success("Carregamento solicitado com sucesso!");
     },
     onError: (err: Error, data) => {
@@ -69,7 +60,7 @@ export function useFluxoMutations() {
     mutationFn: confirmarNF,
     onSuccess: (_, nfId) => {
       audit('NF_CONFIRMADA', 'NF', { nfId });
-      invalidateAll();
+      invalidateAll(); // USAR FUNÇÃO CENTRALIZADA
       toast.success("Carregamento confirmado com sucesso!");
     },
     onError: (err: Error, nfId) => {
@@ -83,7 +74,7 @@ export function useFluxoMutations() {
     mutationFn: recusarNF,
     onSuccess: (_, nfId) => {
       audit('NF_RECUSADA', 'NF', { nfId });
-      invalidateAll();
+      invalidateAll(); // USAR FUNÇÃO CENTRALIZADA
       toast.success("Carregamento recusado. NF retornada para armazenadas.");
     },
     onError: (err: Error, nfId) => {
