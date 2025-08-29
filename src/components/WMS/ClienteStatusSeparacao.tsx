@@ -63,13 +63,13 @@ export function ClienteStatusSeparacao() {
   const [filters, setFilters] = useState<NFFilterState>({
     searchNF: "",
     searchPedido: "",
-    cliente: "",
+    cliente: "all",
     produto: "",
     fornecedor: "",
     dataInicio: "",
     dataFim: "",
     localizacao: "",
-    statusSeparacao: "",
+    statusSeparacao: "all",
   });
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
@@ -167,6 +167,7 @@ export function ClienteStatusSeparacao() {
       }
       if (
         filters.statusSeparacao &&
+        filters.statusSeparacao !== 'all' &&
         nf.status_separacao !== filters.statusSeparacao
       ) {
         return false;

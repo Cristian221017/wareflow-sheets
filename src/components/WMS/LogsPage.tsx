@@ -75,9 +75,9 @@ export function LogsPage() {
   });
 
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedEntityType, setSelectedEntityType] = useState<string>('');
-  const [selectedAction, setSelectedAction] = useState<string>('');
-  const [selectedLevel, setSelectedLevel] = useState<string>('');
+  const [selectedEntityType, setSelectedEntityType] = useState<string>('all');
+  const [selectedAction, setSelectedAction] = useState<string>('all');
+  const [selectedLevel, setSelectedLevel] = useState<string>('all');
 
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading, refetch } = useSystemLogs(filters);
 

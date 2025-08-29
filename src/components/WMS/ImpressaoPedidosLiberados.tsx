@@ -12,14 +12,14 @@ import { toast } from 'sonner';
 export function ImpressaoPedidosLiberados() {
   const { pedidosLiberados } = useWMS();
   const { clientes } = useAuth();
-  const [filtroCliente, setFiltroCliente] = useState<string>('');
+  const [filtroCliente, setFiltroCliente] = useState<string>('all');
   const [dataInicio, setDataInicio] = useState('');
   const [dataFim, setDataFim] = useState('');
   const [filtroTransportadora, setFiltroTransportadora] = useState<string>('');
   const [filtroNumeroPedido, setFiltroNumeroPedido] = useState<string>('');
 
   const clientesOptions = [
-    { value: '', label: 'Todos os clientes' },
+    { value: 'all', label: 'Todos os clientes' },
     ...clientes.map(cliente => ({
       value: cliente.name,
       label: cliente.name
@@ -27,7 +27,7 @@ export function ImpressaoPedidosLiberados() {
   ];
 
   const pedidosFiltrados = pedidosLiberados.filter(pedido => {
-    const matchCliente = !filtroCliente || pedido.cliente === filtroCliente;
+    const matchCliente = !filtroCliente || filtroCliente === 'all' || pedido.cliente === filtroCliente;
     const matchDataInicio = !dataInicio || new Date(pedido.dataLiberacao) >= new Date(dataInicio);
     const matchDataFim = !dataFim || new Date(pedido.dataLiberacao) <= new Date(dataFim);
     const matchTransportadora = !filtroTransportadora || pedido.transportadora.toLowerCase().includes(filtroTransportadora.toLowerCase());
@@ -65,7 +65,7 @@ export function ImpressaoPedidosLiberados() {
           
            <div class="filters">
              <h3>Filtros Aplicados:</h3>
-             <p><strong>Cliente:</strong> ${filtroCliente || 'Todos os clientes'}</p>
+             <p><strong>Cliente:</strong> ${filtroCliente && filtroCliente !== 'all' ? filtroCliente : 'Todos os clientes'}</p>
              <p><strong>Período:</strong> ${dataInicio ? new Date(dataInicio).toLocaleDateString('pt-BR') : 'Início'} até ${dataFim ? new Date(dataFim).toLocaleDateString('pt-BR') : 'Fim'}</p>
              ${filtroNumeroPedido ? `<p><strong>Número do Pedido:</strong> ${filtroNumeroPedido}</p>` : ''}
              ${filtroTransportadora ? `<p><strong>Transportadora:</strong> ${filtroTransportadora}</p>` : ''}
@@ -168,7 +168,7 @@ export function ImpressaoPedidosLiberados() {
               variant="outline" 
               size="sm" 
               onClick={() => {
-                setFiltroCliente('');
+                setFiltroCliente('all');
                 setDataInicio('');
                 setDataFim('');
                 setFiltroTransportadora('');

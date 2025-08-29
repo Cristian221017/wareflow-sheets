@@ -23,13 +23,13 @@ export function PedidosLiberadosTable() {
   const [filters, setFilters] = useState<NFFilterState>({
     searchNF: '',
     searchPedido: '',
-    cliente: '',
+    cliente: 'all',
     produto: '',
     fornecedor: '',
     dataInicio: '',
     dataFim: '',
     localizacao: '',
-    statusSeparacao: '',
+    statusSeparacao: 'all',
   });
 
   // Função para filtrar pedidos

@@ -28,13 +28,13 @@ export function PedidosConfirmadosTable() {
   const [filters, setFilters] = useState<NFFilterState>({
     searchNF: "",
     searchPedido: "",
-    cliente: "",
+    cliente: "all",
     produto: "",
     fornecedor: "",
     dataInicio: "",
     dataFim: "",
     localizacao: "",
-    statusSeparacao: "",
+    statusSeparacao: "all",
   });
 
   // Configurar realtime centralizado

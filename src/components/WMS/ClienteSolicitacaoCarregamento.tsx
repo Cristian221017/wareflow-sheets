@@ -35,13 +35,13 @@ export function ClienteSolicitacaoCarregamento() {
   const [filters, setFilters] = useState<NFFilterState>({
     searchNF: "",
     searchPedido: "",
-    cliente: "",
+    cliente: "all",
     produto: "",
     fornecedor: "",
     dataInicio: "",
     dataFim: "",
     localizacao: "",
-    statusSeparacao: "",
+    statusSeparacao: "all",
   });
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
