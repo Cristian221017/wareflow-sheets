@@ -129,9 +129,9 @@ export async function fetchNFsByStatus(status: NFStatus) {
       updated_at,
       requested_at,
       approved_at,
-      data_agendamento_entrega,
-      observacoes_solicitacao,
-      documentos_anexos
+      solicitacoes_carregamento(
+        id, status, requested_at, data_agendamento, observacoes, anexos
+      )
     `)
     .eq("status", status)
     .order("created_at", { ascending: false });
@@ -171,7 +171,7 @@ export async function solicitarCarregamentoComAgendamento({
     p_nf_id: nfId,
     p_data_agendamento: dataAgendamento ? new Date(dataAgendamento).toISOString() : null,
     p_observacoes: observacoes ?? null,
-    p_anexos: anexos ? JSON.stringify(anexos) : '[]'
+    p_anexos: anexos ?? []
   });
 
   if (error) {
