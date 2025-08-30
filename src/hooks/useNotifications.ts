@@ -28,7 +28,7 @@ export function useNotifications() {
       // Para clientes
       nfsConfirmadas: countNewItems('nfs-confirmadas', confirmadas || []),
       pedidosLiberados: countNewItems('pedidos-liberados', pedidosLiberados || []),
-      documentosFinanceiros: countNewItems('documentos-financeiros', documentos || []),
+      documentosFinanceiros: countNewItems('documentos_financeiros', documentos || []),
       
       // Para transportadores  
       solicitacoesPendentes: countNewItems('solicitacoes-pendentes', solicitadas || []),

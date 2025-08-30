@@ -25,7 +25,7 @@ export function FinanceiroCliente() {
 
   // Mark visit for instant notification clearing
   useEffect(() => {
-    markVisitForComponent('documentos-financeiros');
+    markVisitForComponent('documentos_financeiros');
   }, [markVisitForComponent]);
 
   // Filtrar documentos do cliente logado

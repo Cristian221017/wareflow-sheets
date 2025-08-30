@@ -59,7 +59,7 @@ export function ClienteLayout() {
           markAsVisited('pedidos-liberados');
           break;
         case 'financeiro':
-          markAsVisited('documentos-financeiros');
+          markAsVisited('documentos_financeiros');
           break;
       }
     }, 100);
