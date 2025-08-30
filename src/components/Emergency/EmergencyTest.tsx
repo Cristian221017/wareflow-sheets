@@ -6,18 +6,44 @@ export function EmergencyTest() {
   
   useEffect(() => {
     const runEmergencyTests = async () => {
-      console.log('🚨 === EXECUTANDO TESTES DE EMERGÊNCIA ===');
+      console.log('🚨 === EXECUTANDO TESTES DE EMERGÊNCIA AVANÇADOS ===');
       
       const results: any = {};
       
-      // Teste 1: Verificar configuração
+      // Teste 1: Verificar configuração detalhada
+      const fullKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
       results.config = {
         url: import.meta.env.VITE_SUPABASE_URL,
-        hasKey: !!import.meta.env.VITE_SUPABASE_ANON_KEY,
-        keyPreview: import.meta.env.VITE_SUPABASE_ANON_KEY?.substring(0, 20) + '...'
+        hasKey: !!fullKey,
+        keyPreview: fullKey?.substring(0, 20) + '...',
+        keyLength: fullKey?.length || 0,
+        keyIsJWT: fullKey?.startsWith('eyJ') || false
       };
       
-      // Teste 2: Teste de auth status
+      console.log('🔑 Chave completa (primeiros 50 chars):', fullKey?.substring(0, 50));
+      
+      // Teste 2: Teste direto da API REST sem supabase-js
+      try {
+        const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/rest/v1/`, {
+          headers: {
+            'apikey': fullKey,
+            'Authorization': `Bearer ${fullKey}`
+          }
+        });
+        
+        results.directAPI = {
+          status: response.status,
+          ok: response.ok,
+          statusText: response.statusText,
+          headers: Object.fromEntries(response.headers.entries())
+        };
+        
+        console.log('🌐 Resposta da API direta:', results.directAPI);
+      } catch (err) {
+        results.directAPI = { error: (err as Error).message };
+      }
+      
+      // Teste 3: Teste de auth status
       try {
         const { data: { session }, error } = await supabase.auth.getSession();
         results.auth = {
@@ -29,31 +55,76 @@ export function EmergencyTest() {
         results.auth = { error: (err as Error).message };
       }
       
-      // Teste 3: Teste de query simples
-      try {
-        const { data, error } = await supabase.from('profiles').select('count');
-        results.query = {
-          success: !error,
-          error: error?.message,
-          data: data
-        };
-      } catch (err) {
-        results.query = { error: (err as Error).message };
+      // Teste 4: Teste de diferentes tabelas
+      const tablesToTest = ['profiles', 'transportadoras', 'clientes'] as const;
+      results.tableTests = {};
+      
+      for (const table of tablesToTest) {
+        try {
+          const { data, error } = await supabase.from(table).select('*').limit(1);
+          results.tableTests[table] = {
+            success: !error,
+            error: error?.message,
+            errorCode: error?.code,
+            errorDetails: error?.details,
+            hasData: data && data.length > 0
+          };
+        } catch (err) {
+          results.tableTests[table] = { error: (err as Error).message };
+        }
       }
       
-      // Teste 4: Teste de RPC (removido por incompatibilidade de tipos)
+      // Teste 5: Verificar se a chave JWT é válida
       try {
-        // Teste alternativo - verificar se há functions disponíveis
-        results.rpc = {
-          success: true,
-          message: 'Teste de RPC removido temporariamente por incompatibilidade de tipos',
-          availableFunctions: ['get_user_transportadora', 'has_role', 'nf_solicitar', 'nf_confirmar', 'nf_recusar']
-        };
+        if (fullKey && fullKey.startsWith('eyJ')) {
+          const parts = fullKey.split('.');
+          if (parts.length === 3) {
+            const payload = JSON.parse(atob(parts[1]));
+            results.jwtInfo = {
+              valid: true,
+              iss: payload.iss,
+              role: payload.role,
+              exp: new Date(payload.exp * 1000).toISOString(),
+              expired: payload.exp * 1000 < Date.now()
+            };
+          } else {
+            results.jwtInfo = { valid: false, reason: 'JWT malformado' };
+          }
+        } else {
+          results.jwtInfo = { valid: false, reason: 'Não é um JWT' };
+        }
       } catch (err) {
-        results.rpc = { error: (err as Error).message };
+        results.jwtInfo = { valid: false, error: (err as Error).message };
       }
       
-      console.log('🔍 Resultados dos testes:', results);
+      // Teste 6: Teste de conexão com timeout
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000);
+        
+        const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/rest/v1/profiles?select=id&limit=1`, {
+          headers: {
+            'apikey': fullKey,
+            'Authorization': `Bearer ${fullKey}`,
+            'Content-Type': 'application/json'
+          },
+          signal: controller.signal
+        });
+        
+        clearTimeout(timeoutId);
+        
+        const responseText = await response.text();
+        results.connectionTest = {
+          status: response.status,
+          statusText: response.statusText,
+          responseText: responseText.substring(0, 200),
+          headers: Object.fromEntries([...response.headers.entries()])
+        };
+      } catch (err) {
+        results.connectionTest = { error: (err as Error).message };
+      }
+      
+      console.log('🔍 Resultados completos dos testes:', results);
       setTestResults(results);
     };
     
@@ -76,6 +147,13 @@ export function EmergencyTest() {
           </div>
           
           <div className="bg-white p-4 rounded border">
+            <h2 className="font-bold text-lg mb-2">🌐 Teste API Direta</h2>
+            <pre className="text-sm bg-gray-100 p-2 rounded overflow-x-auto">
+              {JSON.stringify(testResults.directAPI, null, 2)}
+            </pre>
+          </div>
+          
+          <div className="bg-white p-4 rounded border">
             <h2 className="font-bold text-lg mb-2">🔐 Autenticação</h2>
             <pre className="text-sm bg-gray-100 p-2 rounded overflow-x-auto">
               {JSON.stringify(testResults.auth, null, 2)}
@@ -83,16 +161,23 @@ export function EmergencyTest() {
           </div>
           
           <div className="bg-white p-4 rounded border">
-            <h2 className="font-bold text-lg mb-2">📊 Query Teste</h2>
+            <h2 className="font-bold text-lg mb-2">📊 Testes de Tabelas</h2>
             <pre className="text-sm bg-gray-100 p-2 rounded overflow-x-auto">
-              {JSON.stringify(testResults.query, null, 2)}
+              {JSON.stringify(testResults.tableTests, null, 2)}
             </pre>
           </div>
           
           <div className="bg-white p-4 rounded border">
-            <h2 className="font-bold text-lg mb-2">⚡ RPC Teste</h2>
+            <h2 className="font-bold text-lg mb-2">🔑 JWT Info</h2>
             <pre className="text-sm bg-gray-100 p-2 rounded overflow-x-auto">
-              {JSON.stringify(testResults.rpc, null, 2)}
+              {JSON.stringify(testResults.jwtInfo, null, 2)}
+            </pre>
+          </div>
+          
+          <div className="bg-white p-4 rounded border">
+            <h2 className="font-bold text-lg mb-2">🔗 Teste de Conexão</h2>
+            <pre className="text-sm bg-gray-100 p-2 rounded overflow-x-auto">
+              {JSON.stringify(testResults.connectionTest, null, 2)}
             </pre>
           </div>
         </div>
