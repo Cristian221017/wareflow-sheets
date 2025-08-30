@@ -11,42 +11,27 @@ export function useInvalidateAll() {
   const { user } = useAuth();
 
   const invalidateAll = () => {
-    log('🔄 Invalidando TODAS as queries do sistema para sincronização completa');
+    log('🔄 Invalidando TODAS as queries do sistema para sincronização completa (PREDICATE)');
     
-    const scope = user?.type === 'cliente' ? user?.clienteId : user?.transportadoraId;
-    const statuses = ['ARMAZENADA', 'SOLICITADA', 'CONFIRMADA', 'PENDENTE'];
-    const userTypes = ['cliente', 'transportadora'];
-
-    // 1. DASHBOARD - fonte crítica de dados
-    queryClient.invalidateQueries({ queryKey: ['dashboard'] });
-    queryClient.invalidateQueries({ queryKey: ['dashboard', 'current-user'] });
-
-    // 2. SOLICITAÇÕES - sistema unificado
-    queryClient.invalidateQueries({ queryKey: ['solicitacoes'] });
-    queryClient.invalidateQueries({ queryKey: ['solicitacoes', 'cliente'] });
-    queryClient.invalidateQueries({ queryKey: ['solicitacoes', 'transportadora'] });
-    queryClient.invalidateQueries({ queryKey: ['solicitacoes', 'transportadora', user?.transportadoraId ?? 'none'] });
-
-    // 3. NFS - todas as variações
-    statuses.forEach(status => {
-      queryClient.invalidateQueries({ queryKey: ['nfs', status] });
-      userTypes.forEach(type => {
-        queryClient.invalidateQueries({ queryKey: ['nfs', status, type, scope] });
-      });
+    // 🎯 INVALIDAÇÃO INTELIGENTE POR PREDICATE - elimina "buracos" de sincronização
+    queryClient.invalidateQueries({
+      predicate: (query) => {
+        if (!Array.isArray(query.queryKey)) return false;
+        const [firstKey] = query.queryKey;
+        return (
+          firstKey === 'nfs' ||
+          firstKey === 'solicitacoes' ||
+          firstKey === 'documentos_financeiros' ||
+          firstKey === 'financeiro' ||
+          firstKey === 'dashboard' ||
+          firstKey === 'realtime' ||
+          firstKey === 'event-logs' ||
+          firstKey === 'system-logs'
+        );
+      }
     });
-    queryClient.invalidateQueries({ queryKey: ['nfs'] });
-    queryClient.invalidateQueries({ queryKey: ['nfs', 'cliente'] });
 
-    // 4. FINANCEIRO
-    queryClient.invalidateQueries({ queryKey: ['documentos-financeiros'] });
-    queryClient.invalidateQueries({ queryKey: ['financeiro'] });
-
-    // 5. REALTIME & LOGS
-    queryClient.invalidateQueries({ queryKey: ['realtime', 'events'] });
-    queryClient.invalidateQueries({ queryKey: ['event-logs'] });
-    queryClient.invalidateQueries({ queryKey: ['system-logs'] });
-
-    log('✅ Invalidação completa do sistema executada');
+    log('✅ Invalidação completa por PREDICATE executada - 100% cobertura');
   };
 
   return { invalidateAll };

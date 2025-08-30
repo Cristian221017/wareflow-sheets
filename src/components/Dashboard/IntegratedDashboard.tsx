@@ -1,8 +1,6 @@
-import { useEffect, useRef } from "react";
-import { useQueryClient } from "@tanstack/react-query";
+import { useEffect } from "react";
 import { DashboardStatsComponent } from "./DashboardStats";
 import { NotificationCenter } from "../Notifications/NotificationCenter";
-import { subscribeCentralizedChanges } from "@/lib/realtimeCentralized";
 import { useSearchParams } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -17,18 +15,10 @@ interface IntegratedDashboardProps {
 }
 
 export function IntegratedDashboard({ onDeepLink }: IntegratedDashboardProps) {
-  const queryClient = useQueryClient();
   const { user } = useAuth();
-  const once = useRef(false);
   const [searchParams, setSearchParams] = useSearchParams();
   
-  // Configurar realtime centralizado
-  useEffect(() => {
-    if (once.current) return;
-    once.current = true;
-    log('🔄 Configurando realtime centralizado para Dashboard');
-    return subscribeCentralizedChanges(queryClient);
-  }, [queryClient]);
+  // ✅ Realtime agora é GLOBAL via RealtimeProvider - não precisa mais configurar aqui!
 
   // Lidar com deep links via URL params
   useEffect(() => {

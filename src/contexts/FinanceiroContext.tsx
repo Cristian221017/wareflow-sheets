@@ -243,9 +243,14 @@ export function FinanceiroProvider({ children }: { children: ReactNode }) {
         queryClient.invalidateQueries({ queryKey: ['documentos_financeiros', 'transportadora', doc.transportadoraId] });
         queryClient.invalidateQueries({ queryKey: ['documentos_financeiros', 'cliente', doc.clienteId] });
       } else {
-        // Fallback para invalidação geral
-        queryClient.invalidateQueries({ queryKey: ['documentos_financeiros'] });
-        queryClient.invalidateQueries({ queryKey: ['financeiro'] });
+        // 🎯 Fallback por PREDICATE para garantir sincronização
+        queryClient.invalidateQueries({
+          predicate: (query) => {
+            if (!Array.isArray(query.queryKey)) return false;
+            const [firstKey] = query.queryKey;
+            return firstKey === 'documentos_financeiros' || firstKey === 'financeiro';
+          }
+        });
       }
       
       await fetchDocumentosFinanceiros();

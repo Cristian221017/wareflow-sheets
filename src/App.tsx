@@ -1,4 +1,3 @@
-import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
@@ -19,6 +18,7 @@ import DebugFluxoNFs from "./pages/DebugFluxoNFs";
 import HealthPage from "./pages/HealthPage";
 import DiagnosticPage from "@/components/system/DiagnosticPage";
 import { AuthRefreshButton } from "@/components/system/AuthRefreshButton";
+import RealtimeProvider from "@/providers/RealtimeProvider";
 
 
 
@@ -80,9 +80,9 @@ const App = () => (
         <TooltipProvider>
           <EnvBanner />
           <AuthRefreshButton />
-          <Toaster />
           <Sonner />
-          <BrowserRouter>
+          <RealtimeProvider>
+            <BrowserRouter>
             <Routes>
               <Route path="/" element={<Index />} />
               <Route
@@ -143,7 +143,8 @@ const App = () => (
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
-          </BrowserRouter>
+            </BrowserRouter>
+          </RealtimeProvider>
         </TooltipProvider>
       </FinanceiroProvider>
     </WMSProvider>

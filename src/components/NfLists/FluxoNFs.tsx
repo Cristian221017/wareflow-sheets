@@ -10,7 +10,8 @@ import { NFBulkActions } from "./NFBulkActions";
 import { useNFs, useFluxoMutations } from "@/hooks/useNFs";
 import { useNFsCliente, useClienteFluxoMutations } from "@/hooks/useNFsCliente";
 import { CarregamentoActionButton } from "@/components/WMS/CarregamentoActionButton";
-import { subscribeCentralizedChanges } from "@/lib/realtimeCentralized";
+import { SolicitarCarregamentoDialog } from "@/components/WMS/SolicitarCarregamentoDialog";
+import { useAgendamentoUnificado } from "@/hooks/useAgendamentoUnificado";
 import { useAuth } from "@/contexts/AuthContext";
 import type { NotaFiscal } from "@/types/nf";
 import { log } from "@/utils/logger";
@@ -698,13 +699,7 @@ export function FluxoNFs() {
   });
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
-  // Configurar realtime centralizado com guard para StrictMode
-  useEffect(() => {
-    if (once.current) return;
-    once.current = true;
-    log('🔄 Configurando realtime centralizado para FluxoNFs');
-    return subscribeCentralizedChanges(queryClient);
-  }, [queryClient]);
+  // ✅ Realtime agora é GLOBAL via RealtimeProvider - não precisa mais configurar aqui!
 
   // Determinar permissões baseado no tipo e role do usuário
   const isCliente = user?.type === 'cliente';

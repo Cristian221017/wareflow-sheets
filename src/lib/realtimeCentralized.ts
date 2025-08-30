@@ -74,21 +74,16 @@ export function subscribeCentralizedChanges(queryClient: QueryClient): () => voi
 }
 
 function handleNFChange(payload: any, queryClient: QueryClient) {
-  // Invalidar queries relacionadas a NFs com escopo
-  const statuses = ["ARMAZENADA", "SOLICITADA", "CONFIRMADA"];
-  const userTypes = ['cliente', 'transportadora'];
-  
-  statuses.forEach(status => {
-    // Invalidar queries antigas sem escopo
-    queryClient.invalidateQueries({ queryKey: ["nfs", status] });
-    
-    // Invalidar queries com escopo por persona
-    userTypes.forEach(type => {
-      queryClient.invalidateQueries({ queryKey: ["nfs", status, type] });
-    });
+  // 🎯 Invalidação por PREDICATE - cobre TODAS as variações de chave NF
+  queryClient.invalidateQueries({
+    predicate: (query) => {
+      if (!Array.isArray(query.queryKey)) return false;
+      const [firstKey] = query.queryKey;
+      return firstKey === 'nfs' || firstKey === 'solicitacoes';
+    }
   });
   
-  // Invalidar dashboard
+  // Dashboard sempre
   queryClient.invalidateQueries({ queryKey: ["dashboard"] });
   
   // Log detalhado para debug
@@ -102,21 +97,34 @@ function handleNFChange(payload: any, queryClient: QueryClient) {
 }
 
 function handleDocumentoChange(payload: any, queryClient: QueryClient) {
-  // Invalidar queries relacionadas a documentos financeiros
-  queryClient.invalidateQueries({ queryKey: ["documentos-financeiros"] });
-  queryClient.invalidateQueries({ queryKey: ["financeiro"] });
+  // 🎯 Invalidação por PREDICATE - cobre TODAS as variações de chave financeiro
+  queryClient.invalidateQueries({
+    predicate: (query) => {
+      if (!Array.isArray(query.queryKey)) return false;
+      const [firstKey] = query.queryKey;
+      return firstKey === 'documentos_financeiros' || firstKey === 'financeiro';
+    }
+  });
   
-  // Invalidar dashboard
+  // Dashboard sempre
   queryClient.invalidateQueries({ queryKey: ["dashboard"] });
   
   log('💰 Documento financeiro atualizado em tempo real');
 }
 
 function handleEventLogChange(payload: any, queryClient: QueryClient) {
-  // Invalidar eventos em tempo real
-  queryClient.invalidateQueries({ queryKey: ["realtime", "events"] });
+  // 🎯 Invalidação por PREDICATE - cobre logs e eventos
+  queryClient.invalidateQueries({
+    predicate: (query) => {
+      if (!Array.isArray(query.queryKey)) return false;
+      const [firstKey, secondKey] = query.queryKey;
+      return (firstKey === 'realtime' && secondKey === 'events') ||
+             firstKey === 'event-logs' || 
+             firstKey === 'system-logs';
+    }
+  });
   
-  // Invalidar dashboard para refletir mudanças recentes
+  // Dashboard sempre
   queryClient.invalidateQueries({ queryKey: ["dashboard"] });
   
   log('📝 Novo evento registrado no log');

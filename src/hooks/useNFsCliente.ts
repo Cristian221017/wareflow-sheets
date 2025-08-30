@@ -1,9 +1,7 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { NFStatus } from '@/types/nf';
-import { toast } from 'sonner';
-import { audit, auditError } from '@/utils/logger';
-import { solicitarCarregamentoComAgendamento, uploadAnexoSolicitacao } from '@/lib/nfApi';
+import { useAgendamentoUnificado } from './useAgendamentoUnificado';
 import { useAuth } from '@/contexts/AuthContext';
 
 // Hook para buscar NFs do cliente com dados de solicitação
@@ -63,73 +61,21 @@ export function useNFsCliente(status?: NFStatus) {
 
 // Hook para mutations do cliente (solicitar carregamento com agendamento)
 export function useClienteFluxoMutations() {
-  const queryClient = useQueryClient();
-  const { user } = useAuth();
-  
-  const solicitar = useMutation({
-    mutationFn: async (params: {
-      nfId: string;
-      dataAgendamento?: string;
-      observacoes?: string;
-      documentos?: File[];
-    }): Promise<void> => {
-      const { nfId, dataAgendamento, observacoes, documentos } = params;
-      
-      // Buscar informações do cliente para o upload
-      const { data: nfData } = await supabase
-        .from('notas_fiscais')
-        .select('cliente_id')
-        .eq('id', nfId)
-        .single();
-        
-      if (!nfData?.cliente_id) {
-        throw new Error('NF não encontrada ou sem cliente associado');
-      }
-      
-      let anexos: Array<{ name: string; path: string; size: number; contentType: string }> = [];
-      
-      // Upload dos documentos se existirem
-      if (documentos && documentos.length > 0) {
-        try {
-          const uploadPromises = documentos.map(file => 
-            uploadAnexoSolicitacao(nfData.cliente_id, nfId, file)
-          );
-          anexos = await Promise.all(uploadPromises);
-        } catch (uploadError) {
-          console.error('Erro no upload dos anexos:', uploadError);
-          toast.error('Erro ao fazer upload dos anexos');
-          throw uploadError;
-        }
-      }
-      
-      // Chamar a função de solicitação
-      await solicitarCarregamentoComAgendamento({
-        nfId,
-        dataAgendamento,
-        observacoes,
-        anexos
-      });
+  const { solicitarCarregamentoComAgendamento, isLoading } = useAgendamentoUnificado();
+
+  const solicitar = {
+    mutate: (params: { nfId: string; dataAgendamento?: string; observacoes?: string; documentos?: File[] }) => {
+      solicitarCarregamentoComAgendamento.mutate(params);
     },
-    onSuccess: () => {
-      toast.success('Carregamento solicitado com sucesso!');
-      audit('SC_CREATE', 'SOLICITACAO', { userId: user?.id });
-      
-      // Invalidar queries com escopo consistente  
-      queryClient.invalidateQueries({ queryKey: ['nfs'] });
-      queryClient.invalidateQueries({ queryKey: ['nfs', 'cliente'] });
-      queryClient.invalidateQueries({ queryKey: ['solicitacoes', 'cliente'] });
-      queryClient.invalidateQueries({ queryKey: ['solicitacoes', 'transportadora'] });
-      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+    mutateAsync: async (params: { nfId: string; dataAgendamento?: string; observacoes?: string; documentos?: File[] }): Promise<void> => {
+      await solicitarCarregamentoComAgendamento.mutateAsync(params);
+      return; // Forçar retorno void para compatibilidade
     },
-    onError: (error) => {
-      console.error('Erro detalhado:', error);
-      toast.error('Erro ao solicitar carregamento');
-      auditError('SC_CREATE_FAIL', 'SOLICITACAO', error, { userId: user?.id });
-    }
-  });
-  
+    isPending: isLoading
+  };
+
   return {
     solicitar,
-    isLoading: solicitar.isPending
+    isLoading
   };
 }

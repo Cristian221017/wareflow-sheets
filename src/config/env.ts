@@ -1,3 +1,5 @@
+// ⚠️ SEGURANÇA: Em produção real, estas chaves devem ser rotacionadas
+// e movidas para variáveis de ambiente VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY
 export const ENV = {
   MODE: import.meta.env.MODE,
   APP_ENV: 'production', // Configuração fixa para Lovable
