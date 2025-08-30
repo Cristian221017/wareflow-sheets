@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { log, audit, error } from "@/utils/logger";
 import { useAuth } from "@/contexts/AuthContext";
 import { useInvalidateAll } from "./useInvalidateAll";
+import { useAgendamentoUnificado } from "./useAgendamentoUnificado";
 import type { NFStatus, NotaFiscal } from "@/types/nf";
 
 const NF_QUERY_KEY = "nfs";
@@ -40,21 +41,17 @@ export function useFluxoMutations() {
   const queryClient = useQueryClient();
   const { user } = useAuth();
   const { invalidateAll } = useInvalidateAll();
+  const { solicitarCarregamentoComAgendamento } = useAgendamentoUnificado();
   
-  const solicitar = useMutation({
-    mutationFn: (data: { nfId: string; dadosAgendamento?: { dataAgendamento?: string; observacoes?: string; documentos?: Array<{nome: string; tamanho: number}> } }) => 
-      solicitarNF(data.nfId, data.dadosAgendamento),
-    onSuccess: (_, data) => {
-      audit('NF_SOLICITADA', 'NF', { nfId: data.nfId, dadosAgendamento: data.dadosAgendamento });
-      invalidateAll(); // USAR FUNÇÃO CENTRALIZADA
-      toast.success("Carregamento solicitado com sucesso!");
+  const solicitar = {
+    mutate: (data: { nfId: string; dataAgendamento?: string; observacoes?: string; documentos?: File[] }) => {
+      solicitarCarregamentoComAgendamento.mutate(data);
     },
-    onError: (err: Error, data) => {
-      error('❌ Erro na solicitação:', err);
-      audit('NF_SOLICITACAO_ERRO', 'NF', { nfId: data.nfId, error: err.message });
-      toast.error(err.message);
+    mutateAsync: async (data: { nfId: string; dataAgendamento?: string; observacoes?: string; documentos?: File[] }) => {
+      await solicitarCarregamentoComAgendamento.mutateAsync(data);
     },
-  });
+    isPending: solicitarCarregamentoComAgendamento.isPending,
+  };
 
   const confirmar = useMutation({
     mutationFn: confirmarNF,
@@ -84,9 +81,9 @@ export function useFluxoMutations() {
     },
   });
 
-  return { 
-    solicitar, 
-    confirmar, 
+  return {
+    solicitar,
+    confirmar,
     recusar,
     isAnyLoading: solicitar.isPending || confirmar.isPending || recusar.isPending
   };
