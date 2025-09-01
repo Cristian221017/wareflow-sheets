@@ -37,8 +37,18 @@ interface WMSContextType {
 const WMSContext = createContext<WMSContextType | undefined>(undefined);
 
 export function WMSProvider({ children }: { children: ReactNode }) {
-  const { user } = useAuth();
+  const auth = useAuth();
+  const { user, loading } = auth;
   const queryClient = useQueryClient();
+  
+  // Aguardar auth terminar de carregar antes de inicializar WMS
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
   
   const invalidateWithScope = (entityType: 'nfs' | 'documentos_financeiros', entityId?: string, userType?: string, userId?: string) => {
     if (entityType === 'nfs') {
