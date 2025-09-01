@@ -2,7 +2,7 @@ import { RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
-import { log } from '@/utils/logger';
+import { log } from '@/utils/optimizedLogger';
 
 interface RefreshButtonProps {
   /** Tipos de dados que devem ser invalidados */

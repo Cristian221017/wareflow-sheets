@@ -1,5 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
-import { log, warn, error, audit, auditError } from "@/utils/logger";
+import { log, warn, error as logError, audit, auditError } from '@/utils/optimizedLogger';
 import { getCurrentUserId } from "@/utils/authCache";
 import type { NFStatus } from "@/types/nf";
 

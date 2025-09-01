@@ -6,9 +6,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Activity, BarChart3, AlertTriangle, CheckCircle } from "lucide-react";
-import { log } from "@/utils/logger";
+import { log } from "@/utils/optimizedLogger";
 import { runSystemDiagnostic } from "@/utils/systemDiagnostic";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/SimplifiedAuthContext";
 
 interface IntegratedDashboardProps {
   onDeepLink?: (path: string) => void;

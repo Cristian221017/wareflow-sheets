@@ -1,5 +1,5 @@
-import { log, warn, error as logError } from '@/utils/logger';
-import { useAuth } from '@/contexts/AuthContext';
+import { log, warn, error as logError } from '@/utils/optimizedLogger';
+import { useAuth } from '@/contexts/SimplifiedAuthContext';
 import { useOptimizedDashboard } from '@/hooks/useOptimizedDashboard';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Package, FileText, Truck, BarChart3 } from 'lucide-react';

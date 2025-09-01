@@ -5,13 +5,13 @@ import './index.css'
 import { assertSupabaseEnv } from '@/config/env'
 import { EnvErrorPage } from '@/components/system/EnvErrorPage'
 
-// Removed security audit initialization to fix loading issues
+// Simple and clean initialization - no security audit or complex scripts
 
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 5 * 60 * 1000, // 5 minutos
-      gcTime: 10 * 60 * 1000, // 10 minutos
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      gcTime: 10 * 60 * 1000, // 10 minutes
       retry: 1,
       refetchOnWindowFocus: false,
     },
@@ -23,9 +23,11 @@ const root = createRoot(document.getElementById("root")!);
 if (!assertSupabaseEnv()) {
   root.render(<EnvErrorPage />);
 } else {
-  // Só importar e disponibilizar supabase quando ENV estiver válida
+  // Import supabase only when ENV is valid and make it available for debugging
   import('@/integrations/supabase/client').then(({ supabase }) => {
     (window as any).supabase = supabase;
+  }).catch(() => {
+    // Silent fail to prevent loading issues
   });
   
   root.render(

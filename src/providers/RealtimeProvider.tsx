@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useRealtimeManager } from "@/lib/realtimeManager";
-import { log } from "@/utils/logger";
+import { log } from '@/utils/optimizedLogger';
 
 interface RealtimeProviderProps {
   children: React.ReactNode;

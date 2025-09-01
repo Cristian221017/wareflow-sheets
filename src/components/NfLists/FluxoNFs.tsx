@@ -12,9 +12,9 @@ import { useNFsCliente, useClienteFluxoMutations } from "@/hooks/useNFsCliente";
 import { CarregamentoActionButton } from "@/components/WMS/CarregamentoActionButton";
 import { SolicitarCarregamentoDialog } from "@/components/WMS/SolicitarCarregamentoDialog";
 import { useAgendamentoUnificado } from "@/hooks/useAgendamentoUnificado";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/SimplifiedAuthContext";
 import type { NotaFiscal } from "@/types/nf";
-import { log } from "@/utils/logger";
+import { log } from "@/utils/optimizedLogger";
 import { toast } from "sonner";
 
 // Componente para mostrar estado vazio

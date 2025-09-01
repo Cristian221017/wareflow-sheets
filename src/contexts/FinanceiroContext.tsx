@@ -8,7 +8,7 @@ import { saveFinanceFilePathRPC } from '@/lib/financeiro/saveFinanceFilePathRPC'
 import { saveFinanceFilePathV2 } from '@/lib/financeiro/saveFinanceFilePathV2';
 import { useFeatureFlags } from '@/hooks/useFeatureFlags';
 import { notificationService } from '@/utils/notificationService';
-import { log, warn, error as logError, audit } from '@/utils/logger';
+import { log, warn, error as logError, audit } from '@/utils/optimizedLogger';
 import { formatDateForDatabase, isDateOverdue } from '@/utils/date';
 
 // Sanitização de path para uploads
