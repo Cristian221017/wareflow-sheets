@@ -29,6 +29,9 @@ export interface NotaFiscal {
   data_agendamento_entrega?: string | null;
   observacoes_solicitacao?: string | null;
   documentos_anexos?: any[] | null;
+  // Novos campos para embarque/entrega
+  data_embarque?: string | null;
+  data_entrega?: string | null;
 }
 
 export interface NFTransition {

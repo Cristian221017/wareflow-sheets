@@ -28,8 +28,10 @@ import {
   FileText,
   Calendar,
   DollarSign,
-  Trash2
+  Trash2,
+  RefreshCw
 } from 'lucide-react';
+import { RefreshButton } from '@/components/common/RefreshButton';
 import { toast } from 'sonner';
 import { useRef } from 'react';
 
@@ -282,10 +284,18 @@ export function FinanceiroTransportadoraTable() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Documentos Financeiros</CardTitle>
-          <CardDescription>
-            Gerencie CTEs e documentos financeiros
-          </CardDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>Documentos Financeiros</CardTitle>
+              <CardDescription>
+                Gerencie CTEs e documentos financeiros
+              </CardDescription>
+            </div>
+            <RefreshButton 
+              queryTypes={['documentos_financeiros', 'financeiro', 'dashboard']}
+              iconOnly
+            />
+          </div>
         </CardHeader>
         <CardContent className="space-y-4">
           {/* Filters */}

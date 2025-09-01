@@ -6,9 +6,11 @@ import { useLastVisit } from '@/hooks/useLastVisit';
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { CheckCircle, Printer, Download } from "lucide-react";
+import { CheckCircle, Printer, Download, Truck } from "lucide-react";
 import { NFFilters, type NFFilterState } from "@/components/NfLists/NFFilters";
 import { NFCard } from "@/components/NfLists/NFCard";
+import { ConfirmarEventoDialog } from "./ConfirmarEventoDialog";
+import { useNFEventosMutations } from "@/hooks/useNFEventos";
 import type { NotaFiscal } from "@/types/nf";
 import { log } from "@/utils/logger";
 import { toast } from "sonner";
@@ -19,6 +21,11 @@ export function PedidosConfirmadosTable() {
   const { markVisitForComponent } = useLastVisit();
   const isCliente = user?.type === "cliente";
   const isTransportadora = user?.role === "admin_transportadora" || user?.role === "operador";
+  const { confirmarEmbarque } = useNFEventosMutations();
+  
+  // Estados para dialog
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [selectedNF, setSelectedNF] = useState<NotaFiscal | null>(null);
   const { data: nfs, isLoading, isError } = isCliente ? useNFsCliente("CONFIRMADA") : useNFs("CONFIRMADA");
 
   // Estados para filtros
@@ -303,6 +310,34 @@ export function PedidosConfirmadosTable() {
     toast.success("Arquivo CSV exportado com sucesso!");
   };
 
+  // Função para abrir dialog de confirmar embarque
+  const handleConfirmarEmbarque = (nf: NotaFiscal) => {
+    setSelectedNF(nf);
+    setDialogOpen(true);
+  };
+
+  // Função para confirmar embarque
+  const handleEmbarqueConfirmado = async (data: {
+    data?: Date;
+    observacoes?: string;
+    anexos?: File[];
+  }) => {
+    if (!selectedNF) return;
+    
+    try {
+      await confirmarEmbarque.mutateAsync({
+        nfId: selectedNF.id,
+        data: data.data,
+        observacoes: data.observacoes,
+        anexos: data.anexos || []
+      });
+      setDialogOpen(false);
+      setSelectedNF(null);
+    } catch (error) {
+      console.error('Erro ao confirmar embarque:', error);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="text-center">
@@ -351,11 +386,41 @@ export function PedidosConfirmadosTable() {
             <div className="space-y-3">
               {filteredNfs.map((nf) => (
                 <div key={nf.id} className="space-y-3">
-                  <NFCard
-                    nf={nf}
-                    showApprovalInfo
-                    showSelection={false} // Confirmadas não precisam de seleção
-                  />
+                  <div className="flex items-start gap-4">
+                    <div className="flex-1">
+                      <NFCard
+                        nf={nf}
+                        showApprovalInfo
+                        showSelection={false} // Confirmadas não precisam de seleção
+                      />
+                    </div>
+                    
+                    {/* Botão Confirmar Embarque apenas para transportadora */}
+                    {isTransportadora && !(nf as any).data_embarque && (
+                      <div className="flex flex-col gap-2">
+                        <Button
+                          onClick={() => handleConfirmarEmbarque(nf)}
+                          variant="outline"
+                          size="sm"
+                          className="min-w-[140px]"
+                        >
+                          <Truck className="w-4 h-4 mr-2" />
+                          Confirmar Embarque
+                        </Button>
+                      </div>
+                    )}
+                    
+                    {/* Indicador de embarque confirmado */}
+                    {(nf as any).data_embarque && (
+                      <div className="flex flex-col items-center gap-1 p-2 bg-green-50 rounded-lg border border-green-200">
+                        <Truck className="w-5 h-5 text-green-600" />
+                        <span className="text-xs text-green-700 font-medium">Embarcado</span>
+                        <span className="text-xs text-green-600">
+                          {new Date((nf as any).data_embarque).toLocaleDateString('pt-BR')}
+                        </span>
+                      </div>
+                    )}
+                  </div>
                   
                   {/* Informações adicionais da solicitação original */}
                   {(nf.data_agendamento_entrega || nf.observacoes_solicitacao || nf.documentos_anexos?.length > 0) && (
@@ -406,6 +471,20 @@ export function PedidosConfirmadosTable() {
         <p className="font-medium mb-1">🔄 Atualizações em tempo real ativas</p>
         <p>As mudanças são refletidas automaticamente sem necessidade de recarregar a página</p>
       </div>
+
+      {/* Dialog para confirmar embarque */}
+      <ConfirmarEventoDialog
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        onConfirm={handleEmbarqueConfirmado}
+        title="Confirmar Embarque"
+        description="Registre os detalhes do embarque da mercadoria"
+        nfInfo={selectedNF ? {
+          numero_nf: selectedNF.numero_nf,
+          cliente_nome: selectedNF.cliente_id, // TODO: resolver nome do cliente
+        } : undefined}
+        isPending={confirmarEmbarque.isPending}
+      />
     </div>
   );
 }
