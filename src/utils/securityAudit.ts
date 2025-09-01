@@ -1,5 +1,5 @@
 // Security audit e fixes para problemas críticos do sistema
-import { error, warn } from '@/utils/productionLogger';
+import { error, warn } from '@/utils/optimizedLogger';
 import { SecureIdGenerator, memoryManager } from '@/utils/memoryManager';
 
 // 1. Substituir todos Math.random() por SecureIdGenerator

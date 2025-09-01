@@ -1,6 +1,6 @@
 // Gerenciador robusto de subscriptions realtime com cleanup adequado
 import { supabase } from "@/integrations/supabase/client";
-import { log, warn, error } from "@/utils/productionLogger";
+import { log, warn, error } from "@/utils/optimizedLogger";
 import { SecureIdGenerator, memoryManager } from "@/utils/memoryManager";
 import type { QueryClient } from "@tanstack/react-query";
 import type { RealtimeChannel } from "@supabase/supabase-js";

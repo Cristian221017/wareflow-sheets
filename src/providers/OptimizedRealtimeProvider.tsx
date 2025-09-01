@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useOptimizedRealtimeManager } from "@/lib/optimizedRealtimeManager";
-import { log } from "@/utils/productionLogger";
+import { log } from "@/utils/optimizedLogger";
 import { useMemoryCleanup } from "@/utils/memoryManager";
 
 interface OptimizedRealtimeProviderProps {

@@ -5,8 +5,7 @@ import './index.css'
 import { assertSupabaseEnv } from '@/config/env'
 import { EnvErrorPage } from '@/components/system/EnvErrorPage'
 
-// Initialize security audit
-import '@/utils/securityAudit';
+// Removed security audit initialization to fix loading issues
 
 const queryClient = new QueryClient({
   defaultOptions: {

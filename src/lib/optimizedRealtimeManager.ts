@@ -1,6 +1,6 @@
 // Gerenciador otimizado de realtime com memory management e error handling
 import { supabase } from "@/integrations/supabase/client";
-import { log, warn, error } from "@/utils/logger";
+import { log, warn, error } from "@/utils/optimizedLogger";
 import { memoryManager, SecureIdGenerator } from "@/utils/memoryManager";
 import type { QueryClient } from "@tanstack/react-query";
 import type { RealtimeChannel } from "@supabase/supabase-js";

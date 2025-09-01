@@ -1,6 +1,6 @@
 // Gerenciador centralizado de recursos para evitar memory leaks
 import React from 'react';
-import { log, warn } from './logger';
+import { log, warn } from './optimizedLogger';
 
 class MemoryManager {
   private timers = new Set<NodeJS.Timeout>();
