@@ -1,14 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { log, warn, error, audit, auditError } from "@/utils/logger";
+import { getCurrentUserId } from "@/utils/authCache";
 import type { NFStatus } from "@/types/nf";
-
-async function getCurrentUserId(): Promise<string> {
-  const { data, error } = await supabase.auth.getUser();
-  if (error || !data.user?.id) {
-    throw new Error('Usuário não autenticado');
-  }
-  return data.user.id;
-}
 
 export async function solicitarNF(nfId: string, dadosAgendamento?: {
   dataAgendamento?: string;

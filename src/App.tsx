@@ -19,6 +19,7 @@ import HealthPage from "./pages/HealthPage";
 import DiagnosticPage from "@/components/system/DiagnosticPage";
 import { AuthRefreshButton } from "@/components/system/AuthRefreshButton";
 import RealtimeProvider from "@/providers/RealtimeProvider";
+import { ErrorBoundary, RouteErrorBoundary } from "@/components/ErrorBoundary";
 
 // Protected Route Component
 function ProtectedRoute({ children, allowedRoles }: { children: React.ReactNode, allowedRoles: string[] }) {
@@ -73,23 +74,25 @@ function ProtectedRoute({ children, allowedRoles }: { children: React.ReactNode,
 
 function App() {
   return (
-    <TooltipProvider>
-      <AuthProvider>
-        <WMSProvider>
-          <FinanceiroProvider>
-            <RealtimeProvider>
-              <div className="min-h-screen bg-background">
-                <EnvBanner />
-                <AuthRefreshButton />
-                <Sonner />
-                
-                <BrowserRouter
-                  future={{
-                    v7_startTransition: true,
-                    v7_relativeSplatPath: true
-                  }}
-                >
-                  <Routes>
+    <ErrorBoundary>
+      <TooltipProvider>
+        <AuthProvider>
+          <WMSProvider>
+            <FinanceiroProvider>
+              <RealtimeProvider>
+                <div className="min-h-screen bg-background">
+                  <EnvBanner />
+                  <AuthRefreshButton />
+                  <Sonner />
+                  
+                  <BrowserRouter
+                    future={{
+                      v7_startTransition: true,
+                      v7_relativeSplatPath: true
+                    }}
+                  >
+                    <RouteErrorBoundary>
+                      <Routes>
                     <Route path="/" element={<Index />} />
                     <Route path="/health" element={<HealthPage />} />
                     <Route path="/system-admin" element={<SystemAdminLogin />} />
@@ -136,14 +139,16 @@ function App() {
                     />
                     <Route path="/debug/fluxo-nfs" element={<DebugFluxoNFs />} />
                     <Route path="*" element={<NotFound />} />
-                  </Routes>
-                </BrowserRouter>
-              </div>
-            </RealtimeProvider>
-          </FinanceiroProvider>
-        </WMSProvider>
-      </AuthProvider>
-    </TooltipProvider>
+                      </Routes>
+                    </RouteErrorBoundary>
+                  </BrowserRouter>
+                </div>
+              </RealtimeProvider>
+            </FinanceiroProvider>
+          </WMSProvider>
+        </AuthProvider>
+      </TooltipProvider>
+    </ErrorBoundary>
   );
 }
 

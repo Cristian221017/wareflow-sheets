@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { subscribeCentralizedChanges } from "@/lib/realtimeCentralized";
+import { useRealtimeManager } from "@/lib/realtimeManager";
 import { log } from "@/utils/logger";
 
 interface RealtimeProviderProps {
@@ -15,12 +15,12 @@ export default function RealtimeProvider({ children }: RealtimeProviderProps) {
   const queryClient = useQueryClient();
 
   useEffect(() => {
-    log('🌐 Iniciando Realtime Provider global');
-    const cleanup = subscribeCentralizedChanges(queryClient);
+    log('🌐 Iniciando Realtime Provider global otimizado');
+    const cleanup = useRealtimeManager(queryClient, 'global-provider');
     
     return () => {
       log('🌐 Limpando Realtime Provider global');
-      cleanup?.();
+      cleanup();
     };
   }, [queryClient]);
 

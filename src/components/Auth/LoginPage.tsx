@@ -8,7 +8,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { Warehouse, UserPlus, LogIn, Truck, User } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
 
 export function LoginPage() {
   const { login, signUp } = useAuth();
@@ -20,6 +19,31 @@ export function LoginPage() {
     name: '',
     confirmPassword: ''
   });
+
+  // Dados de desenvolvimento - apenas em modo dev
+  const quickFillData = import.meta.env.MODE === 'development' ? {
+    transportadora: {
+      email: 'admin@rodiviario.com.br',
+      password: 'trans123',
+      confirmPassword: 'trans123'
+    },
+    cliente: {
+      email: 'comercial@rodoveigatransportes.com.br',
+      password: 'cliente123',
+      confirmPassword: 'cliente123'
+    }
+  } : null;
+
+  const fillQuickData = (type: 'transportadora' | 'cliente') => {
+    if (!quickFillData) return;
+    
+    const data = quickFillData[type];
+    setFormData(prev => ({
+      ...prev,
+      ...data
+    }));
+    setActiveTab('signup');
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -49,242 +73,183 @@ export function LoginPage() {
         if (error) {
           toast.error(error);
         } else {
-          toast.success('Conta criada com sucesso! Verifique seu email para confirmar.');
-          setActiveTab('login');
+          toast.success('Cadastro realizado com sucesso!');
           setFormData(prev => ({ ...prev, password: '', confirmPassword: '', name: '' }));
         }
       }
     } catch (error) {
-      toast.error('Erro inesperado');
+      toast.error('Erro interno. Tente novamente.');
     } finally {
       setIsLoading(false);
     }
   };
 
-
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 to-secondary/5 p-4">
+    <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-blue-50 via-white to-green-50">
       <div className="w-full max-w-md space-y-6">
-        {/* Header */}
         <div className="text-center space-y-2">
-          <div className="flex justify-center mb-4">
-            <Warehouse className="w-12 h-12 text-primary" />
+          <div className="flex justify-center">
+            <div className="h-16 w-16 bg-gradient-to-br from-blue-600 to-green-600 rounded-xl flex items-center justify-center">
+              <Warehouse className="h-8 w-8 text-white" />
+            </div>
           </div>
-          <h1 className="text-3xl font-bold text-foreground">Sistema WMS</h1>
-          <p className="text-muted-foreground">Warehouse Management System</p>
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-green-600 bg-clip-text text-transparent">
+            WMS Sistema
+          </h1>
+          <p className="text-gray-600">
+            Sistema de Gerenciamento de Armazém
+          </p>
         </div>
 
-        {/* Auth Card */}
         <Card>
-          <CardHeader>
-            <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'login' | 'signup')}>
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="login">Entrar</TabsTrigger>
-                <TabsTrigger value="signup">Criar Conta</TabsTrigger>
-              </TabsList>
-              
-              <div className="mt-4">
-                <CardTitle>
-                  {activeTab === 'login' ? 'Acesso ao Sistema' : 'Criar Nova Conta'}
-                </CardTitle>
-                <CardDescription>
-                  {activeTab === 'login' 
-                    ? 'Entre com suas credenciais para acessar o sistema'
-                    : 'Crie sua conta para acessar o sistema WMS'
-                  }
-                </CardDescription>
-              </div>
-            </Tabs>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              {activeTab === 'signup' && (
-                <div className="space-y-2">
-                  <Label htmlFor="name">Nome Completo</Label>
-                  <Input
-                    id="name"
-                    type="text"
-                    placeholder="Seu nome completo"
-                    value={formData.name}
-                    onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                    required
-                  />
-                </div>
-              )}
-
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="seu@email.com"
-                  value={formData.email}
-                  onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-                  required
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="password">Senha</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  placeholder={activeTab === 'signup' ? 'Mínimo 6 caracteres' : 'Sua senha'}
-                  value={formData.password}
-                  onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
-                  required
-                  minLength={activeTab === 'signup' ? 6 : undefined}
-                />
-              </div>
-
-              {activeTab === 'signup' && (
-                <div className="space-y-2">
-                  <Label htmlFor="confirmPassword">Confirmar Senha</Label>
-                  <Input
-                    id="confirmPassword"
-                    type="password"
-                    placeholder="Confirme sua senha"
-                    value={formData.confirmPassword}
-                    onChange={(e) => setFormData(prev => ({ ...prev, confirmPassword: e.target.value }))}
-                    required
-                  />
-                </div>
-              )}
-
-              <Button 
-                type="submit" 
-                className="w-full" 
-                disabled={isLoading}
-              >
-                {isLoading ? (
-                  activeTab === 'login' ? 'Entrando...' : 'Criando conta...'
-                ) : (
-                  <>
-                    {activeTab === 'login' ? (
-                      <>
-                        <LogIn className="w-4 h-4 mr-2" />
-                        Entrar
-                      </>
-                    ) : (
-                      <>
-                        <UserPlus className="w-4 h-4 mr-2" />
-                        Criar Conta
-                      </>
-                    )}
-                  </>
-                )}
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
-
-        {activeTab === 'signup' && (
-          <Card className="border-amber-200 bg-amber-50">
-            <CardContent className="pt-6">
-              <div className="text-sm text-amber-800">
-                <p className="font-medium mb-2">Após criar sua conta:</p>
-                <ul className="list-disc list-inside space-y-1 text-xs">
-                  <li>Verifique seu email para confirmar a conta</li>
-                  <li>Aguarde a liberação do acesso por um administrador</li>
-                  <li>Você será associado a uma transportadora</li>
-                </ul>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Instructions for getting started */}
-        <Card className="border-blue-200 bg-blue-50">
-          <CardContent className="pt-6">
-            <div className="text-sm text-blue-800">
-              <p className="font-medium mb-2">Para começar a usar o sistema:</p>
-              <ol className="list-decimal list-inside space-y-1 text-xs">
-                <li>Clique em "Criar Conta" acima</li>
-                <li>Use seu email e defina uma senha</li>
-                <li>Confirme sua conta pelo email enviado</li>
-                <li>Entre normalmente com suas credenciais</li>
-                <li>Um administrador irá configurar suas permissões</li>
-              </ol>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Demo Accounts Section */}
-        <Card className="border-green-200 bg-green-50">
-          <CardHeader>
-            <CardTitle className="text-sm text-green-800">Contas Demo</CardTitle>
-            <CardDescription className="text-xs text-green-700">
-              Crie diferentes tipos de conta para testar o sistema
+          <CardHeader className="space-y-1 text-center">
+            <CardTitle className="text-2xl">Bem-vindo</CardTitle>
+            <CardDescription>
+              Faça login ou crie sua conta para continuar
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-2">
-              <Button 
-                variant="outline" 
-                className="w-full justify-start text-blue-700 border-blue-200 hover:bg-blue-50"
-                onClick={() => {
-                  setFormData(prev => ({ 
-                    ...prev, 
-                    email: 'admin@transportadora.com',
-                    name: 'Admin Transportadora',
-                    password: 'trans123',
-                    confirmPassword: 'trans123'
-                  }));
-                  setActiveTab('signup');
-                }}
-              >
-                <Truck className="w-4 h-4 mr-2" />
-                Admin Transportadora
-              </Button>
+            <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'login' | 'signup')}>
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="login" className="flex items-center gap-2">
+                  <LogIn className="w-4 h-4" />
+                  Login
+                </TabsTrigger>
+                <TabsTrigger value="signup" className="flex items-center gap-2">
+                  <UserPlus className="w-4 h-4" />
+                  Cadastro
+                </TabsTrigger>
+              </TabsList>
               
-              <Button 
-                variant="outline" 
-                className="w-full justify-start text-green-700 border-green-200 hover:bg-green-50"
-                onClick={() => {
-                  setFormData(prev => ({ 
-                    ...prev, 
-                    email: 'cliente@empresa.com',
-                    name: 'Cliente Empresa',
-                    password: 'cliente123',
-                    confirmPassword: 'cliente123'
-                  }));
-                  setActiveTab('signup');
-                }}
-              >
-                <UserPlus className="w-4 h-4 mr-2" />
-                Cliente Empresarial
-              </Button>
-              
-              <div className="mt-3 p-2 bg-green-100 rounded-md">
-                <p className="text-xs text-green-800 font-medium">Como usar:</p>
-                <ol className="text-xs text-green-700 mt-1 space-y-1">
-                  <li>1. Clique no tipo de conta desejado</li>
-                  <li>2. Clique em "Criar Conta" para registrar</li>
-                  <li>3. Após criação, faça login normalmente</li>
-                  <li>4. O sistema definirá as permissões automaticamente</li>
-                </ol>
+              <form onSubmit={handleSubmit} className="space-y-4 mt-4">
+                <TabsContent value="login" className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="email">Email</Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      placeholder="seu@email.com"
+                      value={formData.email}
+                      onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="password">Senha</Label>
+                    <Input
+                      id="password"
+                      type="password"
+                      placeholder="••••••••"
+                      value={formData.password}
+                      onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
+                      required
+                    />
+                  </div>
+                  <Button type="submit" className="w-full" disabled={isLoading}>
+                    {isLoading ? 'Entrando...' : 'Entrar'}
+                  </Button>
+                </TabsContent>
+
+                <TabsContent value="signup" className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="name">Nome Completo</Label>
+                    <Input
+                      id="name"
+                      type="text"
+                      placeholder="Seu nome completo"
+                      value={formData.name}
+                      onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="email">Email</Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      placeholder="seu@email.com"
+                      value={formData.email}
+                      onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="password">Senha</Label>
+                    <Input
+                      id="password"
+                      type="password"
+                      placeholder="••••••••"
+                      value={formData.password}
+                      onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="confirmPassword">Confirmar Senha</Label>
+                    <Input
+                      id="confirmPassword"
+                      type="password"
+                      placeholder="••••••••"
+                      value={formData.confirmPassword}
+                      onChange={(e) => setFormData(prev => ({ ...prev, confirmPassword: e.target.value }))}
+                      required
+                    />
+                  </div>
+                  <Button type="submit" className="w-full" disabled={isLoading}>
+                    {isLoading ? 'Criando conta...' : 'Criar Conta'}
+                  </Button>
+                </TabsContent>
+              </form>
+            </Tabs>
+            
+            <div className="mt-6 pt-4 border-t">
+              <div className="flex items-center justify-between text-sm text-gray-500">
+                <span>Esqueceu a senha?</span>
+                <Link to="/reset-password" className="text-blue-600 hover:underline">
+                  Redefinir
+                </Link>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        {/* Admin Access Link */}
-        <Card className="border-red-200 bg-red-50">
-          <CardContent className="pt-6">
-            <div className="text-center space-y-3">
-              <p className="text-sm text-red-800 mb-3">
-                Administrador do sistema?
-              </p>
-              
-              <Link to="/system-admin">
-                <Button variant="outline" className="w-full text-red-700 border-red-200 hover:bg-red-100">
-                  <User className="w-4 h-4 mr-2" />
-                  Acessar Painel de Administração
-                </Button>
-              </Link>
+        {/* Quick fill buttons apenas em desenvolvimento */}
+        {import.meta.env.MODE === 'development' && (
+          <div className="flex gap-2 mt-4">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => fillQuickData('transportadora')}
+              className="text-xs"
+            >
+              🚛 Fill Transportadora
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => fillQuickData('cliente')}
+              className="text-xs"
+            >
+              📦 Fill Cliente
+            </Button>
+          </div>
+        )}
+
+        <div className="text-center">
+          <div className="flex items-center justify-center space-x-4 text-sm text-gray-600">
+            <div className="flex items-center space-x-1">
+              <User className="w-4 h-4" />
+              <span>Clientes</span>
             </div>
-          </CardContent>
-        </Card>
+            <div className="w-px h-4 bg-gray-300"></div>
+            <div className="flex items-center space-x-1">
+              <Truck className="w-4 h-4" />
+              <span>Transportadoras</span>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

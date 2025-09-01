@@ -1,13 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { log, warn, error, audit, auditError } from '@/utils/logger';
-
-async function getCurrentUserId(): Promise<string> {
-  const { data, error } = await supabase.auth.getUser();
-  if (error || !data.user?.id) {
-    throw new Error('Usuário não autenticado');
-  }
-  return data.user.id;
-}
+import { getCurrentUserId } from '@/utils/authCache';
 
 export async function createDocumentoFinanceiro(
   clienteId: string,
