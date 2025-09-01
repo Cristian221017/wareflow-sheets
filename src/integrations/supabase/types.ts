@@ -175,11 +175,13 @@ export type Database = {
           last_sync: string | null
           numero_cte: string
           observacoes: string | null
+          pago_em: string | null
           status: string
           sync_status: string | null
           transportadora_id: string
           updated_at: string
           valor: number | null
+          valor_pago: number | null
         }
         Insert: {
           arquivo_boleto_path?: string | null
@@ -195,11 +197,13 @@ export type Database = {
           last_sync?: string | null
           numero_cte: string
           observacoes?: string | null
+          pago_em?: string | null
           status?: string
           sync_status?: string | null
           transportadora_id: string
           updated_at?: string
           valor?: number | null
+          valor_pago?: number | null
         }
         Update: {
           arquivo_boleto_path?: string | null
@@ -215,11 +219,13 @@ export type Database = {
           last_sync?: string | null
           numero_cte?: string
           observacoes?: string | null
+          pago_em?: string | null
           status?: string
           sync_status?: string | null
           transportadora_id?: string
           updated_at?: string
           valor?: number | null
+          valor_pago?: number | null
         }
         Relationships: []
       }
@@ -409,6 +415,47 @@ export type Database = {
         }
         Relationships: []
       }
+      nf_eventos: {
+        Row: {
+          anexos: Json
+          created_at: string
+          created_by: string | null
+          data_evento: string
+          id: string
+          nf_id: string
+          observacoes: string | null
+          tipo: string
+        }
+        Insert: {
+          anexos?: Json
+          created_at?: string
+          created_by?: string | null
+          data_evento?: string
+          id?: string
+          nf_id: string
+          observacoes?: string | null
+          tipo: string
+        }
+        Update: {
+          anexos?: Json
+          created_at?: string
+          created_by?: string | null
+          data_evento?: string
+          id?: string
+          nf_id?: string
+          observacoes?: string | null
+          tipo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "nf_eventos_nf_id_fkey"
+            columns: ["nf_id"]
+            isOneToOne: false
+            referencedRelation: "notas_fiscais"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notas_fiscais: {
         Row: {
           approved_at: string | null
@@ -417,6 +464,8 @@ export type Database = {
           cnpj_fornecedor: string
           created_at: string
           data_agendamento_entrega: string | null
+          data_embarque: string | null
+          data_entrega: string | null
           data_recebimento: string
           documentos_anexos: Json | null
           edi_id: string | null
@@ -452,6 +501,8 @@ export type Database = {
           cnpj_fornecedor: string
           created_at?: string
           data_agendamento_entrega?: string | null
+          data_embarque?: string | null
+          data_entrega?: string | null
           data_recebimento: string
           documentos_anexos?: Json | null
           edi_id?: string | null
@@ -487,6 +538,8 @@ export type Database = {
           cnpj_fornecedor?: string
           created_at?: string
           data_agendamento_entrega?: string | null
+          data_embarque?: string | null
+          data_entrega?: string | null
           data_recebimento?: string
           documentos_anexos?: Json | null
           edi_id?: string | null
@@ -1297,6 +1350,24 @@ export type Database = {
         Args: { p_nf_id: string; p_user_id: string }
         Returns: undefined
       }
+      nf_confirmar_embarque: {
+        Args: {
+          p_anexos?: Json
+          p_data?: string
+          p_nf_id: string
+          p_observacoes?: string
+        }
+        Returns: undefined
+      }
+      nf_confirmar_entrega: {
+        Args: {
+          p_anexos?: Json
+          p_data?: string
+          p_nf_id: string
+          p_observacoes?: string
+        }
+        Returns: undefined
+      }
       nf_create: {
         Args: {
           p_cliente_cnpj: string
@@ -1323,6 +1394,8 @@ export type Database = {
           cnpj_fornecedor: string
           created_at: string
           data_agendamento_entrega: string | null
+          data_embarque: string | null
+          data_entrega: string | null
           data_recebimento: string
           documentos_anexos: Json | null
           edi_id: string | null
@@ -1401,11 +1474,13 @@ export type Database = {
           last_sync: string | null
           numero_cte: string
           observacoes: string | null
+          pago_em: string | null
           status: string
           sync_status: string | null
           transportadora_id: string
           updated_at: string
           valor: number | null
+          valor_pago: number | null
         }
       }
       set_financeiro_file_path_v2: {
@@ -1424,11 +1499,13 @@ export type Database = {
           last_sync: string | null
           numero_cte: string
           observacoes: string | null
+          pago_em: string | null
           status: string
           sync_status: string | null
           transportadora_id: string
           updated_at: string
           valor: number | null
+          valor_pago: number | null
         }
       }
       setup_demo_user: {

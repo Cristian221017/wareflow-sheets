@@ -17,6 +17,8 @@ import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
 import DebugFluxoNFs from "./pages/DebugFluxoNFs";
 import HealthPage from "./pages/HealthPage";
+import MercadoriasEmbarcadas from "@/pages/MercadoriasEmbarcadas";
+import MercadoriasEntregues from "@/pages/MercadoriasEntregues";
 import DiagnosticPage from "@/components/system/DiagnosticPage";
 import { AuthRefreshButton } from "@/components/system/AuthRefreshButton";
 import React from 'react';
@@ -189,8 +191,31 @@ function App() {
                                   </ProtectedRoute>
                                 } 
                               />
-                              
-                              <Route path="/debug/fluxo-nfs" element={
+              
+              {/* Novas rotas de embarque/entrega */}
+              <Route 
+                path="/transportadora/embarques" 
+                element={
+                  <ProtectedRoute allowedRoles={['admin_transportadora', 'operador']}>
+                    <RouteSpecificErrorBoundary routeName="MercadoriasEmbarcadas">
+                      <MercadoriasEmbarcadas />
+                    </RouteSpecificErrorBoundary>
+                  </ProtectedRoute>
+                } 
+              />
+              
+              <Route 
+                path="/transportadora/entregas" 
+                element={
+                  <ProtectedRoute allowedRoles={['admin_transportadora', 'operador']}>
+                    <RouteSpecificErrorBoundary routeName="MercadoriasEntregues">
+                      <MercadoriasEntregues />
+                    </RouteSpecificErrorBoundary>
+                  </ProtectedRoute>
+                } 
+              />
+              
+              <Route path="/debug/fluxo-nfs" element={
                                 <RouteSpecificErrorBoundary routeName="DebugFluxo">
                                   <DebugFluxoNFs />
                                 </RouteSpecificErrorBoundary>

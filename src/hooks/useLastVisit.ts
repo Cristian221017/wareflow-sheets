@@ -6,6 +6,8 @@ type VisitKey =
   | 'pedidos-liberados'
   | 'solicitacoes-pendentes'
   | 'nfs-armazenadas'
+  | 'nfs-embarcadas'
+  | 'nfs-entregues'
   | 'documentos_financeiros';
 
 export function useLastVisit() {
