@@ -15,6 +15,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   
   // Ref para evitar problemas de closure no onAuthStateChange
   const userRef = useRef<User | null>(null);
+  const loadingRef = useRef(false);
   
   // Sincronizar ref com state
   useEffect(() => {
@@ -51,35 +52,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        log('🔄 Auth state changed:', event, session?.user?.id, 'hasCurrentUser:', !!user);
+        log('🔄 Auth state changed:', event, session?.user?.id, 'hasCurrentUser:', !!userRef.current);
         setSession(session);
         
         if (session?.user) {
-          // Evitar reload desnecessário se é o mesmo usuário
-          const currentUser = userRef.current;
-          if (currentUser?.id === session.user.id && event !== 'SIGNED_IN') {
-            log('🔄 Same user, skipping profile reload for event:', event);
-            return;
+          // Evitar múltiplas execuções simultâneas
+          if (!loadingRef.current) {
+            await loadUserProfile(session.user);
+          } else {
+            log('🔄 LoadUserProfile já em execução, ignorando evento:', event);
           }
-          
-          // Load profile directly without setTimeout race condition
-          loadUserProfile(session.user);
         } else {
           log('🔄 No session, clearing user state');
+          userRef.current = null;
           setUser(null);
+          loadingRef.current = false;
           setLoading(false);
         }
       }
     );
 
-    // Check for existing session
+    // Check for existing session (apenas uma vez)
     supabase.auth.getSession().then(({ data: { session } }) => {
       log('Initial session check:', session?.user?.id);
-      setSession(session);
       
-      if (session?.user) {
+      if (session?.user && !loadingRef.current && !userRef.current) {
         loadUserProfile(session.user);
-      } else {
+      } else if (!session) {
         setLoading(false);
       }
     });
@@ -90,6 +89,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []); // Sem dependências para evitar loops
 
   const loadUserProfile = async (supabaseUser: SupabaseUser) => {
+    // Evitar execuções simultâneas
+    if (loadingRef.current) {
+      log('🔄 LoadUserProfile já em execução, ignorando...');
+      return;
+    }
+
+    loadingRef.current = true;
+    
     try {
       // Não mostrar loading se user já existe (apenas revalidação)
       const currentUser = userRef.current;
@@ -105,6 +112,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       log('User profile loaded successfully:', userData);
       audit('LOGIN_SUCCESS', 'AUTH', { userId: supabaseUser.id, userEmail: userData.email });
+      
+      userRef.current = userData;
       setUser(userData);
       
       if (!isRevalidation) {
@@ -126,8 +135,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       };
       
       warn('Using fallback user data:', { fallbackUser });
+      userRef.current = fallbackUser;
       setUser(fallbackUser);
       setLoading(false);
+    } finally {
+      loadingRef.current = false;
     }
   };
 

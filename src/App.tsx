@@ -21,8 +21,8 @@ import { AuthRefreshButton } from "@/components/system/AuthRefreshButton";
 import RealtimeProvider from "@/providers/RealtimeProvider";
 import { EmergencyTest } from "@/components/Emergency/EmergencyTest";
 
-// 🚨 MODO EMERGÊNCIA ATIVADO - Para diagnóstico de problemas críticos
-const EMERGENCY_MODE = true;
+// Modo de emergência desativado
+const EMERGENCY_MODE = import.meta.env.VITE_EMERGENCY_MODE === 'true';
 
 
 
