@@ -5,6 +5,9 @@ import './index.css'
 import { assertSupabaseEnv } from '@/config/env'
 import { EnvErrorPage } from '@/components/system/EnvErrorPage'
 
+// Initialize security audit
+import '@/utils/securityAudit';
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {

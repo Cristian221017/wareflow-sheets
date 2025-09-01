@@ -7,12 +7,22 @@ export const ENV = {
 };
 
 export function assertSupabaseEnv() {
-  if (!ENV.SUPABASE_URL || !ENV.SUPABASE_ANON) {
-    console.error('❌ ENV inválida: configuração Supabase não encontrada');
-    console.error('Verifique se VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY estão configuradas corretamente');
-    return false;
+  const isValid = !!(ENV.SUPABASE_URL && ENV.SUPABASE_ANON);
+  
+  if (!isValid && typeof window !== 'undefined') {
+    // Usar productionLogger se disponível, fallback para console em emergências
+    try {
+      const { error } = require('@/utils/productionLogger');
+      error('❌ ENV inválida: configuração Supabase não encontrada');
+      error('Verifique se VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY estão configuradas');
+    } catch {
+      // Fallback para console apenas se logger não estiver disponível
+      console.error('❌ ENV inválida: configuração Supabase não encontrada');
+      console.error('Verifique se VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY estão configuradas');
+    }
   }
-  return true;
+  
+  return isValid;
 }
 
 // Não lançar erro aqui. Deixe o App decidir o que renderizar (tela de erro amigável).

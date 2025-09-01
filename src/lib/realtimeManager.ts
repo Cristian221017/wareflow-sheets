@@ -1,6 +1,7 @@
 // Gerenciador robusto de subscriptions realtime com cleanup adequado
 import { supabase } from "@/integrations/supabase/client";
-import { log, warn, error } from "@/utils/logger";
+import { log, warn, error } from "@/utils/productionLogger";
+import { SecureIdGenerator, memoryManager } from "@/utils/memoryManager";
 import type { QueryClient } from "@tanstack/react-query";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 
@@ -84,7 +85,7 @@ class RealtimeManager {
       
       warn(`⚠️ Tentando reconectar em ${delay}ms (tentativa ${this.reconnectAttempts})`);
       
-      setTimeout(() => {
+      memoryManager.setTimeout(() => {
         this.cleanup();
         if (this.subscribers.size > 0) {
           this.createChannel();
@@ -196,7 +197,7 @@ export const realtimeManager = new RealtimeManager();
 
 // Hook para usar em componentes React
 export function useRealtimeManager(queryClient: QueryClient, subscriberId?: string) {
-  const id = subscriberId || Math.random().toString(36).substr(2, 9);
+  const id = subscriberId || SecureIdGenerator.generate('realtime');
   
   const cleanup = realtimeManager.subscribe(id, queryClient);
   
