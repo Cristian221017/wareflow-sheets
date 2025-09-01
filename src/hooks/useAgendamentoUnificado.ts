@@ -13,6 +13,11 @@ interface AgendamentoData {
   documentos?: File[];
 }
 
+interface AgendarResult {
+  nfNumero: string;
+  anexosCount: number;
+}
+
 /**
  * Hook UNIFICADO para solicitação de carregamento com agendamento
  * Funciona igual para CLIENTE e TRANSPORTADORA
@@ -24,7 +29,7 @@ export function useAgendamentoUnificado() {
   const { user } = useAuth();
   const { invalidateAll } = useInvalidateAll();
 
-  const solicitarCarregamentoComAgendamento = useMutation({
+  const solicitarCarregamentoComAgendamento = useMutation<AgendarResult, Error, AgendamentoData>({
     mutationFn: async (data: AgendamentoData) => {
       if (!user) throw new Error('Usuário não autenticado');
       

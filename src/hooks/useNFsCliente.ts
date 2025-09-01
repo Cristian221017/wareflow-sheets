@@ -4,6 +4,19 @@ import { NFStatus } from '@/types/nf';
 import { useAgendamentoUnificado } from './useAgendamentoUnificado';
 import { useAuth } from '@/contexts/AuthContext';
 
+// Interfaces para tipagem explícita
+interface AgendamentoParams {
+  nfId: string;
+  dataAgendamento?: string;
+  observacoes?: string;
+  documentos?: File[];
+}
+
+interface AgendarResult {
+  nfNumero: string;
+  anexosCount: number;
+}
+
 // Hook para buscar NFs do cliente com dados de solicitação
 export function useNFsCliente(status?: NFStatus) {
   const { user } = useAuth();
@@ -64,12 +77,12 @@ export function useClienteFluxoMutations() {
   const { solicitarCarregamentoComAgendamento, isLoading } = useAgendamentoUnificado();
 
   const solicitar = {
-    mutate: (params: { nfId: string; dataAgendamento?: string; observacoes?: string; documentos?: File[] }) => {
+    mutate: (params: AgendamentoParams) => {
       solicitarCarregamentoComAgendamento.mutate(params);
     },
-    mutateAsync: async (params: { nfId: string; dataAgendamento?: string; observacoes?: string; documentos?: File[] }): Promise<void> => {
+    mutateAsync: async (params: AgendamentoParams): Promise<void> => {
       await solicitarCarregamentoComAgendamento.mutateAsync(params);
-      return; // Forçar retorno void para compatibilidade
+      // Retorna void para manter compatibilidade com componentes existentes
     },
     isPending: isLoading
   };
