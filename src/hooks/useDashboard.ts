@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import type { DashboardRPCResult, RealtimeStatsRPCResult } from "@/types/api";
 
 export interface DashboardStats {
   userType: 'transportadora' | 'cliente';
@@ -18,7 +19,7 @@ export function useDashboard() {
   return useQuery({
     queryKey: ["dashboard", "current-user"],
     queryFn: async (): Promise<DashboardStats | null> => {
-      const { data, error } = await supabase.rpc("get_current_user_dashboard" as any);
+      const { data, error } = await (supabase.rpc as any)("get_current_user_dashboard", {});
       
       if (error) {
         console.error('❌ Erro no dashboard RPC:', error);
@@ -30,7 +31,7 @@ export function useDashboard() {
         return null;
       }
       
-      const stats = data[0];
+      const stats = data[0] as DashboardRPCResult;
       console.log('📊 Dashboard stats recebidos:', stats);
       
       const dashboardStats: DashboardStats = {
@@ -67,13 +68,13 @@ export function useRealtimeEvents() {
   return useQuery({
     queryKey: ["realtime", "events"],
     queryFn: async (): Promise<RealtimeEvent[]> => {
-      const { data, error } = await supabase.rpc("get_realtime_stats" as any);
+      const { data, error } = await (supabase.rpc as any)("get_realtime_stats", {});
       
       if (error) {
         return [];
       }
       
-      const events: RealtimeEvent[] = Array.isArray(data) ? data.map((event: any) => ({
+      const events: RealtimeEvent[] = Array.isArray(data) ? data.map((event: RealtimeStatsRPCResult) => ({
         entityType: event.entity_type,
         entityId: event.entity_id,
         lastUpdate: event.last_update,

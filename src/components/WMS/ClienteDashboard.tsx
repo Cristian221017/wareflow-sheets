@@ -1,43 +1,30 @@
 import { log, warn, error as logError } from '@/utils/logger';
 import { useAuth } from '@/contexts/AuthContext';
-import { useAllNFs } from '@/hooks/useNFs';
+import { useOptimizedDashboard } from '@/hooks/useOptimizedDashboard';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-
 import { Package, FileText, Truck, BarChart3 } from 'lucide-react';
+
 export function ClienteDashboard() {
-  const { armazenadas, solicitadas, confirmadas, isLoading } = useAllNFs();
+  const {
+    totalNFs,
+    nfsArmazenadas,
+    nfsSolicitadas,
+    nfsConfirmadas,
+    totalPeso,
+    totalVolume,
+    recentActivity,
+    getStatusCount,
+    isLoading,
+    hasData
+  } = useOptimizedDashboard();
   const { user } = useAuth();
 
-  // Debug: Log current NF data
-  log('🔍 ClienteDashboard Debug:', {
-    armazenadas: armazenadas.length,
-    solicitadas: solicitadas.length, 
-    confirmadas: confirmadas.length,
-    armazenadasData: armazenadas,
-    user: user?.email
+  // Debug otimizado - apenas informações essenciais
+  log('🔍 ClienteDashboard Optimized:', {
+    user: user?.email,
+    hasData,
+    counts: { nfsArmazenadas, nfsSolicitadas, nfsConfirmadas }
   });
-
-  // Combinando todas as NFs para estatísticas  
-  const allNFs = [...armazenadas, ...solicitadas, ...confirmadas];
-  
-  // Estatísticas básicas
-  const totalNFs = armazenadas.length; // Apenas disponíveis para liberação
-  const nfsArmazenadas = armazenadas.length;
-  const nfsSolicitadas = solicitadas.length;
-  const nfsConfirmadas = confirmadas.length;
-
-  // Estatísticas calculadas - apenas das disponíveis para liberação
-  const totalPeso = armazenadas.reduce((sum, nf) => sum + Number(nf.peso), 0);
-  const totalVolume = armazenadas.reduce((sum, nf) => sum + Number(nf.volume), 0);
-
-  const getStatusCount = (status: string) => {
-    switch (status) {
-      case 'ARMAZENADA': return armazenadas.length;
-      case 'SOLICITADA': return solicitadas.length;
-      case 'CONFIRMADA': return confirmadas.length;
-      default: return 0;
-    }
-  };
 
   if (isLoading) {
     return (
@@ -162,7 +149,7 @@ export function ClienteDashboard() {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {allNFs.slice(0, 5).map((nf) => (
+              {recentActivity.map((nf) => (
                 <div key={nf.id} className="flex items-center justify-between py-2 border-b border-border/50 last:border-0">
                   <div>
                     <p className="text-sm font-medium">{nf.numero_nf}</p>

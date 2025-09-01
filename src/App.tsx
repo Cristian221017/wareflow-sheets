@@ -18,7 +18,9 @@ import DebugFluxoNFs from "./pages/DebugFluxoNFs";
 import HealthPage from "./pages/HealthPage";
 import DiagnosticPage from "@/components/system/DiagnosticPage";
 import { AuthRefreshButton } from "@/components/system/AuthRefreshButton";
+import React from 'react';
 import RealtimeProvider from "@/providers/RealtimeProvider";
+import OptimizedRealtimeProvider from "@/providers/OptimizedRealtimeProvider";
 import { ErrorBoundary, RouteErrorBoundary } from "@/components/ErrorBoundary";
 
 // Protected Route Component
@@ -85,7 +87,7 @@ function App() {
           <AuthProvider>
             <WMSProvider>
               <FinanceiroProvider>
-                <RealtimeProvider>
+                <OptimizedRealtimeProvider>
                   <div className="min-h-screen bg-background">
                     <EnvBanner />
                     <AuthRefreshButton />
@@ -142,7 +144,7 @@ function App() {
                       </Routes>
                     </RouteErrorBoundary>
                   </div>
-                </RealtimeProvider>
+                </OptimizedRealtimeProvider>
               </FinanceiroProvider>
             </WMSProvider>
           </AuthProvider>
