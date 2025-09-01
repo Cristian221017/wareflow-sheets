@@ -1434,6 +1434,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      user_exists_in_system: {
+        Args: { _user_id: string }
+        Returns: boolean
+      }
       validate_data_integrity: {
         Args: Record<PropertyKey, never>
         Returns: {
