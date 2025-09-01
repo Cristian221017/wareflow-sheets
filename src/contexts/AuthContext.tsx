@@ -143,113 +143,90 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const getUserData = async (supabaseUser: SupabaseUser): Promise<User> => {
-    log('🔍 Starting getUserData for:', supabaseUser.email);
+    console.log(`🔍 [OPTIMIZED] Loading user profile for: ${supabaseUser.id}`);
+    console.log(`🔍 [OPTIMIZED] Email: ${supabaseUser.email}`);
     
-    // First check system user (admin/transportadora roles) with individual timeouts
+    log('🔍 Starting optimized getUserData for:', supabaseUser.email);
+    
     try {
-      console.log('🔍 [DEBUG] Starting system user queries for:', supabaseUser.email);
-      console.log('🔍 [DEBUG] User ID:', supabaseUser.id);
+      // Single query to get all user data at once using LEFT JOINs
+      const { data: result, error } = await supabase
+        .from('profiles')
+        .select(`
+          id,
+          name,
+          email,
+          user_id,
+          user_transportadoras (
+            role,
+            transportadora_id,
+            is_active
+          ),
+          user_clientes (
+            cliente_id,
+            clientes (
+              id,
+              razao_social,
+              cnpj,
+              email_nota_fiscal,
+              email_solicitacao_liberacao,
+              email_liberacao_autorizada,
+              transportadora_id,
+              status
+            )
+          )
+        `)
+        .eq('user_id', supabaseUser.id)
+        .maybeSingle();
       
-      log('🔍 Checking system user tables...');
+      if (error) {
+        console.error('❌ [OPTIMIZED] Error loading user data:', error);
+        throw error;
+      }
       
-      // Execute queries as promises for withTimeout
-      const systemUserQuery = async () => {
-        console.log('🔍 [DEBUG] Executing profiles query...');
-        const profilePromise = supabase
-          .from('profiles')
-          .select('*')
-          .eq('user_id', supabaseUser.id)
-          .maybeSingle();
-        
-        console.log('🔍 [DEBUG] Executing user_transportadoras query...');
-        const rolePromise = supabase
-          .from('user_transportadoras')
-          .select('role, is_active, transportadora_id')
-          .eq('user_id', supabaseUser.id)
-          .eq('is_active', true)
-          .maybeSingle();
-
-        const startTime = Date.now();
-        const result = await Promise.all([profilePromise, rolePromise]);
-        const duration = Date.now() - startTime;
-        console.log('🔍 [DEBUG] System queries completed in:', duration + 'ms');
-        
-        return result;
-      };
-
-      const [profileResult, roleResult] = await withTimeout(
-        systemUserQuery(),
-        8000, // Aumentar timeout para 8s para debug
-        'System user queries timeout após 8s'
-      );
-
-      console.log('🔍 [DEBUG] Profile result raw:', profileResult);
-      console.log('🔍 [DEBUG] Role result raw:', roleResult);
-
-      const profile = profileResult.data;
-      const userRole = roleResult.data;
-
-      log('🔍 Profile result:', profile);
-      log('🔍 Role result:', userRole);
-
-      // If user has a system role (admin/transportadora)
-      if (userRole && userRole.role) {
+      console.log('🔍 [OPTIMIZED] Query result:', result);
+      
+      if (!result) {
+        console.log('🔍 [OPTIMIZED] No profile found, using fallback');
+        const fallbackUser: User = {
+          id: supabaseUser.id,
+          name: supabaseUser.email?.split('@')[0] || 'Usuário',
+          email: supabaseUser.email || '',
+          type: 'cliente'
+        };
+        console.log('🔍 [OPTIMIZED] Fallback user created:', fallbackUser);
+        return fallbackUser;
+      }
+      
+      // Check if user has transportadora role
+      const userTransportadora = Array.isArray(result.user_transportadoras) ? result.user_transportadoras[0] : result.user_transportadoras;
+      
+      if (userTransportadora && userTransportadora.is_active) {
+        console.log('🔍 [OPTIMIZED] System user found');
         const userData: User = {
           id: supabaseUser.id,
-          name: profile?.name || supabaseUser.email || 'Usuário',
-          email: profile?.email || supabaseUser.email || '',
-          type: 'transportadora', // Always transportadora for system users
-          role: userRole.role,
-          transportadoraId: userRole.transportadora_id
+          name: result.name || supabaseUser.email || 'Usuário',
+          email: result.email || supabaseUser.email || '',
+          type: 'transportadora',
+          role: userTransportadora.role,
+          transportadoraId: userTransportadora.transportadora_id
         };
-
-        console.log('🔍 [DEBUG] System user found:', userData);
-        log('🔍 System user detected:', userData);
+        
+        console.log('🔍 [OPTIMIZED] System user data:', userData);
         return userData;
       }
-    } catch (error) {
-      console.error('❌ [DEBUG] System user query error:', error);
-      logError('Error checking system user:', error);
-    }
-
-    // Check if user is linked as cliente with timeout
-    try {
-      console.log('🔍 [DEBUG] Starting cliente query for:', supabaseUser.email);
-      log('🔍 Checking cliente table via email...');
       
-      const clienteQuery = async () => {
-        console.log('🔍 [DEBUG] Executing clientes query...');
-        const startTime = Date.now();
+      // Check if user has cliente link
+      const userCliente = Array.isArray(result.user_clientes) ? result.user_clientes[0] : result.user_clientes;
+      
+      if (userCliente && userCliente.clientes && userCliente.clientes.status === 'ativo') {
+        console.log('🔍 [OPTIMIZED] Cliente user found');
+        const clienteData = userCliente.clientes;
         
-        const result = await supabase
-          .from('clientes')
-          .select('*')
-          .eq('email', supabaseUser.email)
-          .eq('status', 'ativo')
-          .maybeSingle();
-          
-        const duration = Date.now() - startTime;
-        console.log('🔍 [DEBUG] Cliente query completed in:', duration + 'ms');
-        
-        return result;
-      };
-
-      const clienteResult = await withTimeout(
-        clienteQuery(),
-        5000, // Aumentar timeout para 5s
-        'Cliente query timeout após 5s'
-      );
-
-      console.log('🔍 [DEBUG] Cliente result raw:', clienteResult);
-      const { data: clienteData, error: clienteError } = clienteResult;
-
-      log('🔍 Cliente data via email query:', clienteData);
-
-      if (clienteData && !clienteError) {
         const userData: User = {
-          id: supabaseUser.id, // SEMPRE Auth UID
+          id: supabaseUser.id,
           name: clienteData.razao_social,
-          email: clienteData.email,
+          email: result.email || supabaseUser.email || '',
           type: 'cliente',
           cnpj: clienteData.cnpj,
           emailNotaFiscal: clienteData.email_nota_fiscal,
@@ -258,30 +235,38 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           clienteId: clienteData.id,
           transportadoraId: clienteData.transportadora_id
         };
-
-        console.log('🔍 [DEBUG] Cliente user found:', userData);
-        log('🔍 Cliente user detected:', userData);
+        
+        console.log('🔍 [OPTIMIZED] Cliente user data:', userData);
         return userData;
       }
+      
+      // Fallback - profile exists but no links
+      console.log('🔍 [OPTIMIZED] Profile found but no links, using basic user');
+      const userData: User = {
+        id: supabaseUser.id,
+        name: result.name || supabaseUser.email?.split('@')[0] || 'Usuário',
+        email: result.email || supabaseUser.email || '',
+        type: 'cliente'
+      };
+      
+      console.log('🔍 [OPTIMIZED] Basic user data:', userData);
+      return userData;
+      
     } catch (error) {
-      console.error('❌ [DEBUG] Cliente query error:', error);
-      logError('Error checking cliente table:', error);
+      console.error('❌ [OPTIMIZED] Failed to load user profile:', error);
+      logError('Error loading optimized user data:', error);
+      
+      // Return fallback user on error
+      const fallbackUser: User = {
+        id: supabaseUser.id,
+        name: supabaseUser.email?.split('@')[0] || 'Usuário',
+        email: supabaseUser.email || '',
+        type: 'cliente'
+      };
+      
+      warn('Using fallback user data:', { fallbackUser });
+      return fallbackUser;
     }
-
-    // Fallback - user authenticated but not linked to any table
-    warn('🔍 User authenticated but not linked to any table - creating fallback user');
-    
-    const fallbackUser: User = {
-      id: supabaseUser.id,
-      name: supabaseUser.email?.split('@')[0] || 'Usuário',
-      email: supabaseUser.email || '',
-      type: 'cliente',
-      role: undefined,
-      transportadoraId: undefined
-    };
-
-    log('🔍 Fallback user created:', fallbackUser);
-    return fallbackUser;
   };
 
   const login = async (email: string, password: string): Promise<boolean> => {

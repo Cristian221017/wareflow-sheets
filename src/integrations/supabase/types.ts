@@ -1216,6 +1216,13 @@ export type Database = {
           user_name: string
         }[]
       }
+      get_user_data_optimized: {
+        Args: { p_email: string; p_user_id: string }
+        Returns: {
+          user_data: Json
+          user_type: string
+        }[]
+      }
       get_user_transportadora: {
         Args: { _user_id: string }
         Returns: string
