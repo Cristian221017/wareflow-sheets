@@ -109,8 +109,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       log('Loading user profile for:', supabaseUser.id, 'isRevalidation:', isRevalidation);
       
-      // Get user data without artificial timeout race condition
-      const userData = await getUserData(supabaseUser);
+      // Add timeout to prevent infinite loading - 15 second max
+      const userData = await Promise.race([
+        getUserData(supabaseUser),
+        new Promise<never>((_, reject) => 
+          setTimeout(() => reject(new Error('LoadUserProfile timeout after 15s')), 15000)
+        )
+      ]);
       
       log('User profile loaded successfully:', userData);
       audit('LOGIN_SUCCESS', 'AUTH', { userId: supabaseUser.id, userEmail: userData.email });
@@ -147,20 +152,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const getUserData = async (supabaseUser: SupabaseUser): Promise<User> => {
     log('🔍 Starting getUserData for:', supabaseUser.email);
     
-    // First check system user (admin/transportadora roles)
+    // First check system user (admin/transportadora roles) with individual timeouts
     try {
-      const [profileResult, roleResult] = await Promise.all([
-        supabase
-          .from('profiles')
-          .select('*')
-          .eq('user_id', supabaseUser.id)
-          .maybeSingle(),
-        supabase
-          .from('user_transportadoras')
-          .select('role, is_active, transportadora_id')
-          .eq('user_id', supabaseUser.id)
-          .eq('is_active', true)
-          .maybeSingle()
+      log('🔍 Checking system user tables...');
+      
+      // Profile query with timeout
+      const profilePromise = supabase
+        .from('profiles')
+        .select('*')
+        .eq('user_id', supabaseUser.id)
+        .maybeSingle();
+      
+      // Role query with timeout  
+      const rolePromise = supabase
+        .from('user_transportadoras')
+        .select('role, is_active, transportadora_id')
+        .eq('user_id', supabaseUser.id)
+        .eq('is_active', true)
+        .maybeSingle();
+
+      const [profileResult, roleResult] = await Promise.race([
+        Promise.all([profilePromise, rolePromise]),
+        new Promise<never>((_, reject) => 
+          setTimeout(() => reject(new Error('System user queries timeout')), 8000)
+        )
       ]);
 
       const profile = profileResult.data;
@@ -187,18 +202,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       logError('Error checking system user:', error);
     }
 
-    // Check if user is linked via user_clientes (proper relationship) - use direct query
+    // Check if user is linked as cliente with timeout
     try {
-      // Since user_clientes is not in types, use the existing RPC or direct email match
-      log('🔍 Checking for user_clientes link via email...');
+      log('🔍 Checking cliente table via email...');
       
-      // Get cliente data using email match (this should work for linked users)
-      const { data: clienteData, error: clienteError } = await supabase
+      const clientePromise = supabase
         .from('clientes')
         .select('*')
         .eq('email', supabaseUser.email)
         .eq('status', 'ativo')
         .maybeSingle();
+
+      const { data: clienteData, error: clienteError } = await Promise.race([
+        clientePromise,
+        new Promise<never>((_, reject) => 
+          setTimeout(() => reject(new Error('Cliente query timeout')), 8000)
+        )
+      ]);
 
       log('🔍 Cliente data via email query:', clienteData);
 
