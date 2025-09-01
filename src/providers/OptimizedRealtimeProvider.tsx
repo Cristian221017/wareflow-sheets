@@ -20,16 +20,15 @@ export default function OptimizedRealtimeProvider({ children }: OptimizedRealtim
   const { addCleanup } = useMemoryCleanup();
 
   useEffect(() => {
-    log('🌐 Iniciando OptimizedRealtimeProvider');
+    log('🌐 OptimizedRealtimeProvider desabilitado temporariamente para debug');
     
-    const cleanup = useOptimizedRealtimeManager(queryClient, 'global-optimized-provider');
-    
-    // Registrar cleanup
-    const removeCleanup = addCleanup(cleanup);
+    // Desabilitar realtime temporariamente para evitar loops de erro
+    // const cleanup = useOptimizedRealtimeManager(queryClient, 'global-optimized-provider');
+    // const removeCleanup = addCleanup(cleanup);
     
     return () => {
       log('🌐 Limpando OptimizedRealtimeProvider');
-      removeCleanup();
+      // removeCleanup();
     };
   }, [queryClient, addCleanup]);
 

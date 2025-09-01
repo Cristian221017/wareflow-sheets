@@ -96,6 +96,13 @@ class OptimizedLogger {
   }
 
   private async processBatch(logs: LogEntry[]): Promise<void> {
+    // Desabilitar logs para Supabase temporariamente para evitar loops de erro 401
+    if (this.isDevelopment) {
+      console.log('📝 Batch de logs processado localmente:', logs.length, 'entradas');
+    }
+    return;
+    
+    /* Código original comentado temporariamente
     const promises = logs.map(async (entry) => {
       try {
         const finalMessage = entry.count > 1 
@@ -106,7 +113,7 @@ class OptimizedLogger {
           p_entity_type: 'FRONTEND',
           p_action: 'LOG',
           p_status: entry.level,
-          p_message: finalMessage.slice(0, 500), // Limite de caracteres
+          p_message: finalMessage.slice(0, 500),
           p_meta: entry.meta || {}
         });
       } catch (error) {
@@ -115,6 +122,7 @@ class OptimizedLogger {
     });
 
     await Promise.allSettled(promises);
+    */
   }
 
   // Métodos públicos simplificados
