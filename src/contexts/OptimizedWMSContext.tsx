@@ -6,7 +6,7 @@ import { toast } from 'sonner';
 import type { NotaFiscal } from '@/types/wms';
 import { log, error as logError } from '@/utils/productionLogger';
 import { handleError } from '@/utils/centralizedErrorHandler';
-import { useSecureAuth } from '@/hooks/useSecureAuth';
+import { useAuth } from '@/contexts/SimplifiedAuthContext';
 
 interface OptimizedWMSContextType {
   // Data via React Query (sem duplicação de estado)
@@ -35,7 +35,7 @@ interface OptimizedWMSContextType {
 const OptimizedWMSContext = createContext<OptimizedWMSContextType | undefined>(undefined);
 
 export function OptimizedWMSProvider({ children }: { children: ReactNode }) {
-  const { user, loading: authLoading } = useSecureAuth();
+  const { user, loading: authLoading } = useAuth();
   const queryClient = useQueryClient();
   
   // Aguardar auth terminar

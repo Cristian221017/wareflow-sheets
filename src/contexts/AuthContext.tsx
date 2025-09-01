@@ -3,7 +3,6 @@ import { supabase } from '@/integrations/supabase/client';
 import type { User as SupabaseUser, Session } from '@supabase/supabase-js';
 import type { User } from '@/types/auth';
 import { log, warn, error as logError, audit, auditError } from '@/utils/logger';
-import { withAuthRetry, withTimeout } from '@/utils/withRetry';
 
 interface AuthContextType {
   user: User | null;
@@ -107,8 +106,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       log('Loading user profile for:', supabaseUser.id, 'isRevalidation:', isRevalidation);
       
-      // Timeout otimizado com retry - máximo 3 segundos por tentativa
-      const userData = await withAuthRetry(() => getUserData(supabaseUser));
+      // Simplificar o carregamento sem retry complexo
+      const userData = await getUserData(supabaseUser);
       
       log('User profile loaded successfully:', userData);
       audit('LOGIN_SUCCESS', 'AUTH', { userId: supabaseUser.id, userEmail: userData.email });
