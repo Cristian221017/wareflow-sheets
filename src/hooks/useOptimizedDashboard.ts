@@ -1,8 +1,8 @@
 // Dashboard otimizado com memoização e cálculos eficientes
 import { useMemo } from 'react';
 import { useAllNFs } from './useNFs';
-import { log } from '@/utils/logger';
-import { useAuth } from '@/contexts/AuthContext';
+import { log } from '@/utils/optimizedLogger';
+import { useAuth } from '@/contexts/SimplifiedAuthContext';
 
 export interface OptimizedDashboardStats {
   totalNFs: number;

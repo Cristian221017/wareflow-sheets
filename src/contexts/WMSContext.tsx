@@ -1,12 +1,12 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from './AuthContext';
+import { useAuth } from '@/contexts/SimplifiedAuthContext';
 import { NotaFiscal, PedidoLiberacao, PedidoLiberado } from '@/types/wms';
 import { toast } from 'sonner';
 import { solicitarNF, confirmarNF, recusarNF } from "@/lib/nfApi";
 import { useQueryClient } from '@tanstack/react-query';
 import { notificationService } from '@/utils/notificationService';
-import { log, warn, error as logError, auditError } from '@/utils/logger';
+import { log, warn, error as logError, auditError } from '@/utils/optimizedLogger';
 
 interface WMSContextType {
   // Data

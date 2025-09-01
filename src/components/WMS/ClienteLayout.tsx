@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogTrigger, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/SimplifiedAuthContext';
 import { useWMS } from '@/contexts/WMSContext';
 import { useNotifications } from '@/hooks/useNotifications';
 import { useLastVisit } from '@/hooks/useLastVisit';

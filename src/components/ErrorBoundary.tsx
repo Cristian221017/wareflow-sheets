@@ -1,6 +1,6 @@
 // Error Boundary React para capturar erros não tratados
 import React from 'react';
-import { error as logError } from '@/utils/productionLogger';
+import { error as logError } from '@/utils/optimizedLogger';
 import { SecureIdGenerator } from '@/utils/memoryManager';
 import { Button } from '@/components/ui/button';
 import { AlertTriangle, RefreshCw, Home } from 'lucide-react';

@@ -2,7 +2,8 @@ import { createContext, useContext, useEffect, useState, useCallback } from 'rea
 import { User as SupabaseUser, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { User, AuthContextType } from '@/types/auth';
-import { log, error as logError } from '@/utils/logger';
+import { log, warn, error as logError } from '@/utils/optimizedLogger';
+import { ENV } from '@/config/env';
 
 const SimplifiedAuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -14,7 +15,10 @@ export function SimplifiedAuthProvider({ children }: { children: React.ReactNode
   // Função simples e direta para carregar dados do usuário
   const loadUserData = useCallback(async (supabaseUser: SupabaseUser): Promise<User> => {
     try {
-      log(`🔍 [Simple] Loading user for: ${supabaseUser.email}`);
+      // Logs essenciais apenas
+      if (supabaseUser.email?.includes('test') || ENV.MODE === 'development') {
+        log(`🔍 [Simple] Loading user for: ${supabaseUser.email}`);
+      }
       
       // Usar a função RPC otimizada, mas com timeout curto
       const { data: result, error } = await Promise.race([
@@ -28,22 +32,28 @@ export function SimplifiedAuthProvider({ children }: { children: React.ReactNode
       ]);
       
       if (error) {
-        log('⚠️ RPC error, using fallback approach:', error.message);
+        if (ENV.MODE === 'development') {
+          log('⚠️ RPC error, using fallback approach:', error.message);
+        }
         return await loadUserDataFallback(supabaseUser);
       }
       
-      if (result && Array.isArray(result) && result.length > 0) {
-        const userData = result[0].user_data;
-        log(`✅ [Simple] User loaded successfully: ${userData.type}`);
-        return userData as User;
+        if (result && Array.isArray(result) && result.length > 0) {
+          const userData = result[0].user_data;
+          if (ENV.MODE === 'development') {
+            log(`✅ [Simple] User loaded successfully: ${userData.type}`);
+          }
+          return userData as User;
+        }
+      
+      return await loadUserDataFallback(supabaseUser);
+      
+      } catch (error) {
+        if (ENV.MODE === 'development') {
+          log('⚠️ Loading error, using fallback:', error);
+        }
+        return await loadUserDataFallback(supabaseUser);
       }
-      
-      return await loadUserDataFallback(supabaseUser);
-      
-    } catch (error) {
-      log('⚠️ Loading error, using fallback:', error);
-      return await loadUserDataFallback(supabaseUser);
-    }
   }, []);
 
   // Fallback simples usando queries diretas
@@ -115,7 +125,10 @@ export function SimplifiedAuthProvider({ children }: { children: React.ReactNode
 
   // Handler para mudanças de autenticação
   const handleAuthStateChange = useCallback(async (event: string, session: Session | null) => {
-    log(`🔄 [Simple] Auth event: ${event}`);
+    // Reduzir verbosidade dos logs - só logar eventos críticos
+    if (event === 'SIGNED_OUT' || event === 'SIGNED_IN') {
+      log(`🔄 [Simple] Auth event: ${event}`);
+    }
     
     try {
       setSession(session);

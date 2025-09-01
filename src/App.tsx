@@ -5,7 +5,7 @@ import { WMSProvider } from "@/contexts/WMSContext";
 import { SimplifiedAuthProvider, useAuth } from "@/contexts/SimplifiedAuthContext";
 import { FinanceiroProvider } from "@/contexts/FinanceiroContext";
 import EnvBanner from "@/components/system/EnvBanner";
-import { log } from "@/utils/productionLogger";
+import { log } from '@/utils/optimizedLogger';
 import Index from "./pages/Index";
 import SuperAdminPortal from "./pages/SuperAdminPortal";
 import TransportadoraPortal from "./pages/TransportadoraPortal";
@@ -39,7 +39,12 @@ function ProtectedRoute({ children, allowedRoles }: { children: React.ReactNode,
   }
 
   if (!isAuthenticated) {
-    log('❌ Not authenticated, redirecting to /');
+    // Só logar se não for retry ou loop de redirecionamento
+    if (!sessionStorage.getItem('auth-redirect-logged')) {
+      log('❌ Not authenticated, redirecting to /');
+      sessionStorage.setItem('auth-redirect-logged', 'true');
+      setTimeout(() => sessionStorage.removeItem('auth-redirect-logged'), 5000);
+    }
     return <Navigate to="/" replace />;
   }
 
@@ -56,17 +61,23 @@ function ProtectedRoute({ children, allowedRoles }: { children: React.ReactNode,
     return user.role && allowedRoles.includes(user.role);
   })();
 
-  log('🔒 ProtectedRoute Check:', {
-    user: user?.email,
-    userRole: user?.role,
-    userType: user?.type,
-    allowedRoles,
-    hasAccess,
-    loading
-  });
+  // Remover logs excessivos em ProtectedRoute
+  // log('🔒 ProtectedRoute Check:', {
+  //   user: user?.email,
+  //   userRole: user?.role,
+  //   userType: user?.type,
+  //   allowedRoles,
+  //   hasAccess,
+  //   loading
+  // });
 
   if (!hasAccess) {
-    log('❌ Access denied, redirecting to /');
+    // Só logar se não for retry
+    if (!sessionStorage.getItem('access-denied-logged')) {
+      log('❌ Access denied, redirecting to /');
+      sessionStorage.setItem('access-denied-logged', 'true');
+      setTimeout(() => sessionStorage.removeItem('access-denied-logged'), 5000);
+    }
     return <Navigate to="/" replace />;
   }
 

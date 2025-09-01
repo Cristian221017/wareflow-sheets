@@ -1,8 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { solicitarNF, confirmarNF, recusarNF, fetchNFsByStatus } from "@/lib/nfApi";
 import { toast } from "sonner";
-import { log, audit, error } from "@/utils/logger";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from '@/contexts/SimplifiedAuthContext';
+import { log, audit, error as logError } from '@/utils/optimizedLogger';
 import { useInvalidateAll } from "./useInvalidateAll";
 import { useAgendamentoUnificado } from "./useAgendamentoUnificado";
 import type { NFStatus, NotaFiscal } from "@/types/nf";
@@ -61,7 +61,7 @@ export function useFluxoMutations() {
       toast.success("Carregamento confirmado com sucesso!");
     },
     onError: (err: Error, nfId) => {
-      error('❌ Erro na confirmação:', err);
+      logError('❌ Erro na confirmação:', err);
       audit('NF_CONFIRMACAO_ERRO', 'NF', { nfId, error: err.message });
       toast.error(err.message);
     },
@@ -75,7 +75,7 @@ export function useFluxoMutations() {
       toast.success("Carregamento recusado. NF retornada para armazenadas.");
     },
     onError: (err: Error, nfId) => {
-      error('❌ Erro na recusa:', err);
+      logError('❌ Erro na recusa:', err);
       audit('NF_RECUSA_ERRO', 'NF', { nfId, error: err.message });
       toast.error(err.message);
     },
