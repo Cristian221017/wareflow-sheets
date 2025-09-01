@@ -19,12 +19,6 @@ import HealthPage from "./pages/HealthPage";
 import DiagnosticPage from "@/components/system/DiagnosticPage";
 import { AuthRefreshButton } from "@/components/system/AuthRefreshButton";
 import RealtimeProvider from "@/providers/RealtimeProvider";
-import { EmergencyTest } from "@/components/Emergency/EmergencyTest";
-
-// Modo de emergência desativado
-const EMERGENCY_MODE = import.meta.env.VITE_EMERGENCY_MODE === 'true';
-
-
 
 // Protected Route Component
 function ProtectedRoute({ children, allowedRoles }: { children: React.ReactNode, allowedRoles: string[] }) {
@@ -77,90 +71,75 @@ function ProtectedRoute({ children, allowedRoles }: { children: React.ReactNode,
   return <>{children}</>;
 }
 
-const App = () => {
-  // 🚨 Se modo emergência estiver ativo, mostrar diagnóstico
-  if (EMERGENCY_MODE) {
-    return <EmergencyTest />;
-  }
-  
-  // App normal
+function App() {
   return (
-    <AuthProvider>
-      <WMSProvider>
-        <FinanceiroProvider>
-          <TooltipProvider>
-            <EnvBanner />
-            <AuthRefreshButton />
-            <Sonner />
+    <TooltipProvider>
+      <AuthProvider>
+        <WMSProvider>
+          <FinanceiroProvider>
             <RealtimeProvider>
-              <BrowserRouter>
-              <Routes>
-                <Route path="/" element={<Index />} />
-                <Route
-                  path="/health"
-                  element={
-                    <pre style={{ padding: 16 }}>
-                      {JSON.stringify({
-                        env: 'production',
-                        mode: 'production',
-                        supabaseUrl: 'configured'
-                      }, null, 2)}
-                    </pre>
-                  }
-                />
-                <Route path="/system-admin" element={<SystemAdminLogin />} />
-                <Route path="/reset-password" element={<ResetPassword />} />
-                <Route 
-                  path="/admin" 
-                  element={
-                    <ProtectedRoute allowedRoles={['super_admin']}>
-                      <SuperAdminPortal />
-                    </ProtectedRoute>
-                  } 
-                />
-                <Route 
-                  path="/admin/diagnostic" 
-                  element={
-                    <ProtectedRoute allowedRoles={['super_admin']}>
-                      <DiagnosticPage />
-                    </ProtectedRoute>
-                  } 
-                />
-                <Route 
-                  path="/transportadora" 
-                  element={
-                    <ProtectedRoute allowedRoles={['admin_transportadora', 'operador']}>
-                      <TransportadoraPortal />
-                    </ProtectedRoute>
-                  } 
-                />
-                <Route 
-                  path="/transportadora/diagnostic" 
-                  element={
-                    <ProtectedRoute allowedRoles={['admin_transportadora', 'operador']}>
-                      <DiagnosticPage />
-                    </ProtectedRoute>
-                  } 
-                />
-                <Route 
-                  path="/cliente" 
-                  element={
-                    <ProtectedRoute allowedRoles={['cliente']}>
-                      <ClientePortal />
-                    </ProtectedRoute>
-                  } 
-                />
-                <Route path="/debug/fluxo-nfs" element={<DebugFluxoNFs />} />
-                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-              </BrowserRouter>
+              <div className="min-h-screen bg-background">
+                <EnvBanner />
+                <AuthRefreshButton />
+                <Sonner />
+                
+                <BrowserRouter>
+                  <Routes>
+                    <Route path="/" element={<Index />} />
+                    <Route path="/health" element={<HealthPage />} />
+                    <Route path="/system-admin" element={<SystemAdminLogin />} />
+                    <Route path="/reset-password" element={<ResetPassword />} />
+                    <Route 
+                      path="/admin" 
+                      element={
+                        <ProtectedRoute allowedRoles={['super_admin']}>
+                          <SuperAdminPortal />
+                        </ProtectedRoute>
+                      } 
+                    />
+                    <Route 
+                      path="/admin/diagnostic" 
+                      element={
+                        <ProtectedRoute allowedRoles={['super_admin']}>
+                          <DiagnosticPage />
+                        </ProtectedRoute>
+                      } 
+                    />
+                    <Route 
+                      path="/transportadora" 
+                      element={
+                        <ProtectedRoute allowedRoles={['admin_transportadora', 'operador']}>
+                          <TransportadoraPortal />
+                        </ProtectedRoute>
+                      } 
+                    />
+                    <Route 
+                      path="/transportadora/diagnostic" 
+                      element={
+                        <ProtectedRoute allowedRoles={['admin_transportadora', 'operador']}>
+                          <DiagnosticPage />
+                        </ProtectedRoute>
+                      } 
+                    />
+                    <Route 
+                      path="/cliente" 
+                      element={
+                        <ProtectedRoute allowedRoles={['cliente']}>
+                          <ClientePortal />
+                        </ProtectedRoute>
+                      } 
+                    />
+                    <Route path="/debug/fluxo-nfs" element={<DebugFluxoNFs />} />
+                    <Route path="*" element={<NotFound />} />
+                  </Routes>
+                </BrowserRouter>
+              </div>
             </RealtimeProvider>
-          </TooltipProvider>
-        </FinanceiroProvider>
-      </WMSProvider>
-    </AuthProvider>
+          </FinanceiroProvider>
+        </WMSProvider>
+      </AuthProvider>
+    </TooltipProvider>
   );
-};
+}
 
 export default App;
