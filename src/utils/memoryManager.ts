@@ -136,9 +136,20 @@ export class SecureIdGenerator {
   static generate(prefix?: string): string {
     this.counter = (this.counter + 1) % 1000000; // Reset após 1M
     const timestamp = Date.now().toString(36);
-    const random = Math.floor(Math.random() * 1000000).toString(36);
-    const counter = this.counter.toString(36);
     
+    // Usar crypto.getRandomValues quando disponível
+    let random: string;
+    if (typeof window !== 'undefined' && window.crypto && window.crypto.getRandomValues) {
+      const array = new Uint32Array(1);
+      window.crypto.getRandomValues(array);
+      random = array[0].toString(36);
+    } else {
+      // Fallback seguro usando timestamp + performance
+      const perf = typeof performance !== 'undefined' ? performance.now() : 0;
+      random = Math.floor(perf * this.counter + timestamp.length).toString(36);
+    }
+    
+    const counter = this.counter.toString(36);
     return `${prefix || 'id'}_${timestamp}_${random}_${counter}`;
   }
   

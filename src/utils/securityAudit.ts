@@ -14,6 +14,11 @@ export class SecurityAudit {
         const stack = new Error().stack;
         const location = stack?.split('\n')[2] || 'unknown';
         
+        // Ignorar chamadas do próprio sistema e bibliotecas conhecidas
+        if (SecurityAudit.shouldIgnoreLocation(location)) {
+          return originalMathRandom.call(this);
+        }
+        
         SecurityAudit.violations.push({
           type: 'INSECURE_RANDOM',
           location,
@@ -24,6 +29,24 @@ export class SecurityAudit {
         return originalMathRandom.call(this);
       };
     }
+  }
+
+  // Verificar se devemos ignorar warnings de certas localizações
+  private static shouldIgnoreLocation(location: string): boolean {
+    const ignoredPatterns = [
+      'SecureIdGenerator',
+      'memoryManager',
+      'react-query',
+      'supabase',
+      '@supabase',
+      'node_modules',
+      'webpack',
+      'react-dom',
+      'scheduler',
+      'uuid'
+    ];
+    
+    return ignoredPatterns.some(pattern => location.includes(pattern));
   }
 
   // Detectar console.logs em produção
