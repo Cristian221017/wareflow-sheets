@@ -1,3 +1,4 @@
+// FASE 1: MIGRAÇÃO GRADUAL - Implementa novo sistema mantendo o antigo
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
@@ -6,7 +7,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { FinanceiroProvider } from "@/contexts/FinanceiroContext";
 import { useAuth } from "@/contexts/AuthContext";
 import EnvBanner from "@/components/system/EnvBanner";
-import { log } from "@/utils/logger";
+import { log } from "@/utils/productionLogger"; // MIGRAÇÃO: logger otimizado
 import Index from "./pages/Index";
 import SuperAdminPortal from "./pages/SuperAdminPortal";
 import TransportadoraPortal from "./pages/TransportadoraPortal";
@@ -22,6 +23,16 @@ import React from 'react';
 import RealtimeProvider from "@/providers/RealtimeProvider";
 import OptimizedRealtimeProvider from "@/providers/OptimizedRealtimeProvider";
 import { ErrorBoundary, RouteErrorBoundary } from "@/components/ErrorBoundary";
+
+// NOVA IMPLEMENTAÇÃO: Error Boundaries estratégicos
+import { 
+  AuthErrorBoundary, 
+  DataContextErrorBoundary, 
+  RouteSpecificErrorBoundary 
+} from "@/components/CriticalErrorBoundaries";
+
+// NOVA IMPLEMENTAÇÃO: Migração gradual de auth
+import { SecureAuthWrapper } from "@/components/SecureAuthWrapper";
 
 // Protected Route Component
 function ProtectedRoute({ children, allowedRoles }: { children: React.ReactNode, allowedRoles: string[] }) {
@@ -84,70 +95,122 @@ function App() {
             v7_relativeSplatPath: true
           }}
         >
-          <AuthProvider>
-            <WMSProvider>
-              <FinanceiroProvider>
-                <OptimizedRealtimeProvider>
-                  <div className="min-h-screen bg-background">
-                    <EnvBanner />
-                    <AuthRefreshButton />
-                    <Sonner />
-                    
-                    <RouteErrorBoundary>
-                      <Routes>
-                    <Route path="/" element={<Index />} />
-                    <Route path="/health" element={<HealthPage />} />
-                    <Route path="/system-admin" element={<SystemAdminLogin />} />
-                    <Route path="/reset-password" element={<ResetPassword />} />
-                    <Route 
-                      path="/admin" 
-                      element={
-                        <ProtectedRoute allowedRoles={['super_admin']}>
-                          <SuperAdminPortal />
-                        </ProtectedRoute>
-                      } 
-                    />
-                    <Route 
-                      path="/admin/diagnostic" 
-                      element={
-                        <ProtectedRoute allowedRoles={['super_admin']}>
-                          <DiagnosticPage />
-                        </ProtectedRoute>
-                      } 
-                    />
-                    <Route 
-                      path="/transportadora" 
-                      element={
-                        <ProtectedRoute allowedRoles={['admin_transportadora', 'operador']}>
-                          <TransportadoraPortal />
-                        </ProtectedRoute>
-                      } 
-                    />
-                    <Route 
-                      path="/transportadora/diagnostic" 
-                      element={
-                        <ProtectedRoute allowedRoles={['admin_transportadora', 'operador']}>
-                          <DiagnosticPage />
-                        </ProtectedRoute>
-                      } 
-                    />
-                    <Route 
-                      path="/cliente" 
-                      element={
-                        <ProtectedRoute allowedRoles={['cliente']}>
-                          <ClientePortal />
-                        </ProtectedRoute>
-                      } 
-                    />
-                    <Route path="/debug/fluxo-nfs" element={<DebugFluxoNFs />} />
-                    <Route path="*" element={<NotFound />} />
-                      </Routes>
-                    </RouteErrorBoundary>
-                  </div>
-                </OptimizedRealtimeProvider>
-              </FinanceiroProvider>
-            </WMSProvider>
-          </AuthProvider>
+          {/* MIGRAÇÃO GRADUAL: AuthProvider legado + SecureAuthWrapper */}
+          <AuthErrorBoundary>
+            <AuthProvider>
+              <SecureAuthWrapper mode="hybrid">
+                <DataContextErrorBoundary>
+                  <WMSProvider>
+                    <FinanceiroProvider>
+                      <OptimizedRealtimeProvider>
+                        <div className="min-h-screen bg-background">
+                          <EnvBanner />
+                          <AuthRefreshButton />
+                          <Sonner />
+                          
+                          <RouteErrorBoundary>
+                            <Routes>
+                              {/* Cada rota com Error Boundary específico */}
+                              <Route path="/" element={
+                                <RouteSpecificErrorBoundary routeName="Index">
+                                  <Index />
+                                </RouteSpecificErrorBoundary>
+                              } />
+                              
+                              <Route path="/health" element={
+                                <RouteSpecificErrorBoundary routeName="Health">
+                                  <HealthPage />
+                                </RouteSpecificErrorBoundary>
+                              } />
+                              
+                              <Route path="/system-admin" element={
+                                <RouteSpecificErrorBoundary routeName="SystemAdmin">
+                                  <SystemAdminLogin />
+                                </RouteSpecificErrorBoundary>
+                              } />
+                              
+                              <Route path="/reset-password" element={
+                                <RouteSpecificErrorBoundary routeName="ResetPassword">
+                                  <ResetPassword />
+                                </RouteSpecificErrorBoundary>
+                              } />
+                              
+                              <Route 
+                                path="/admin" 
+                                element={
+                                  <ProtectedRoute allowedRoles={['super_admin']}>
+                                    <RouteSpecificErrorBoundary routeName="SuperAdminPortal">
+                                      <SuperAdminPortal />
+                                    </RouteSpecificErrorBoundary>
+                                  </ProtectedRoute>
+                                } 
+                              />
+                              
+                              <Route 
+                                path="/admin/diagnostic" 
+                                element={
+                                  <ProtectedRoute allowedRoles={['super_admin']}>
+                                    <RouteSpecificErrorBoundary routeName="AdminDiagnostic">
+                                      <DiagnosticPage />
+                                    </RouteSpecificErrorBoundary>
+                                  </ProtectedRoute>
+                                } 
+                              />
+                              
+                              <Route 
+                                path="/transportadora" 
+                                element={
+                                  <ProtectedRoute allowedRoles={['admin_transportadora', 'operador']}>
+                                    <RouteSpecificErrorBoundary routeName="TransportadoraPortal">
+                                      <TransportadoraPortal />
+                                    </RouteSpecificErrorBoundary>
+                                  </ProtectedRoute>
+                                } 
+                              />
+                              
+                              <Route 
+                                path="/transportadora/diagnostic" 
+                                element={
+                                  <ProtectedRoute allowedRoles={['admin_transportadora', 'operador']}>
+                                    <RouteSpecificErrorBoundary routeName="TransportadoraDiagnostic">
+                                      <DiagnosticPage />
+                                    </RouteSpecificErrorBoundary>
+                                  </ProtectedRoute>
+                                } 
+                              />
+                              
+                              <Route 
+                                path="/cliente" 
+                                element={
+                                  <ProtectedRoute allowedRoles={['cliente']}>
+                                    <RouteSpecificErrorBoundary routeName="ClientePortal">
+                                      <ClientePortal />
+                                    </RouteSpecificErrorBoundary>
+                                  </ProtectedRoute>
+                                } 
+                              />
+                              
+                              <Route path="/debug/fluxo-nfs" element={
+                                <RouteSpecificErrorBoundary routeName="DebugFluxo">
+                                  <DebugFluxoNFs />
+                                </RouteSpecificErrorBoundary>
+                              } />
+                              
+                              <Route path="*" element={
+                                <RouteSpecificErrorBoundary routeName="NotFound">
+                                  <NotFound />
+                                </RouteSpecificErrorBoundary>
+                              } />
+                            </Routes>
+                          </RouteErrorBoundary>
+                        </div>
+                      </OptimizedRealtimeProvider>
+                    </FinanceiroProvider>
+                  </WMSProvider>
+                </DataContextErrorBoundary>
+              </SecureAuthWrapper>
+            </AuthProvider>
+          </AuthErrorBoundary>
         </BrowserRouter>
       </TooltipProvider>
     </ErrorBoundary>

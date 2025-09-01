@@ -10,7 +10,7 @@ export function assertSupabaseEnv() {
   const isValid = !!(ENV.SUPABASE_URL && ENV.SUPABASE_ANON);
   
   if (!isValid && typeof window !== 'undefined') {
-    // Usar productionLogger se disponível, fallback para console em emergências
+    // Usar productionLogger - MIGRAÇÃO CRÍTICA IMPLEMENTADA
     try {
       const { error } = require('@/utils/productionLogger');
       error('❌ ENV inválida: configuração Supabase não encontrada');
