@@ -143,118 +143,46 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const getUserData = async (supabaseUser: SupabaseUser): Promise<User> => {
-    console.log(`🔍 [OPTIMIZED] Loading user profile for: ${supabaseUser.id}`);
-    console.log(`🔍 [OPTIMIZED] Email: ${supabaseUser.email}`);
+    console.log(`🔍 [FAST] Loading user profile for: ${supabaseUser.id}`);
+    console.log(`🔍 [FAST] Email: ${supabaseUser.email}`);
     
-    log('🔍 Starting optimized getUserData for:', supabaseUser.email);
+    log('🔍 Using optimized function for:', supabaseUser.email);
     
     try {
-      // Single query to get all user data at once using LEFT JOINs
+      // Use the optimized database function instead of complex queries
       const { data: result, error } = await supabase
-        .from('profiles')
-        .select(`
-          id,
-          name,
-          email,
-          user_id,
-          user_transportadoras (
-            role,
-            transportadora_id,
-            is_active
-          ),
-          user_clientes (
-            cliente_id,
-            clientes (
-              id,
-              razao_social,
-              cnpj,
-              email_nota_fiscal,
-              email_solicitacao_liberacao,
-              email_liberacao_autorizada,
-              transportadora_id,
-              status
-            )
-          )
-        `)
-        .eq('user_id', supabaseUser.id)
-        .maybeSingle();
+        .rpc('get_user_data_optimized' as any, {
+          p_user_id: supabaseUser.id,
+          p_email: supabaseUser.email || ''
+        });
       
       if (error) {
-        console.error('❌ [OPTIMIZED] Error loading user data:', error);
+        console.error('❌ [FAST] RPC error:', error);
         throw error;
       }
       
-      console.log('🔍 [OPTIMIZED] Query result:', result);
+      console.log('🔍 [FAST] RPC result:', result);
       
-      if (!result) {
-        console.log('🔍 [OPTIMIZED] No profile found, using fallback');
+      if (!result || !Array.isArray(result) || result.length === 0) {
+        console.log('🔍 [FAST] No data returned, using fallback');
         const fallbackUser: User = {
           id: supabaseUser.id,
           name: supabaseUser.email?.split('@')[0] || 'Usuário',
           email: supabaseUser.email || '',
           type: 'cliente'
         };
-        console.log('🔍 [OPTIMIZED] Fallback user created:', fallbackUser);
+        console.log('🔍 [FAST] Fallback user created:', fallbackUser);
         return fallbackUser;
       }
       
-      // Check if user has transportadora role
-      const userTransportadora = Array.isArray(result.user_transportadoras) ? result.user_transportadoras[0] : result.user_transportadoras;
+      const userData = result[0].user_data;
+      console.log('🔍 [FAST] User data parsed:', userData);
       
-      if (userTransportadora && userTransportadora.is_active) {
-        console.log('🔍 [OPTIMIZED] System user found');
-        const userData: User = {
-          id: supabaseUser.id,
-          name: result.name || supabaseUser.email || 'Usuário',
-          email: result.email || supabaseUser.email || '',
-          type: 'transportadora',
-          role: userTransportadora.role,
-          transportadoraId: userTransportadora.transportadora_id
-        };
-        
-        console.log('🔍 [OPTIMIZED] System user data:', userData);
-        return userData;
-      }
-      
-      // Check if user has cliente link
-      const userCliente = Array.isArray(result.user_clientes) ? result.user_clientes[0] : result.user_clientes;
-      
-      if (userCliente && userCliente.clientes && userCliente.clientes.status === 'ativo') {
-        console.log('🔍 [OPTIMIZED] Cliente user found');
-        const clienteData = userCliente.clientes;
-        
-        const userData: User = {
-          id: supabaseUser.id,
-          name: clienteData.razao_social,
-          email: result.email || supabaseUser.email || '',
-          type: 'cliente',
-          cnpj: clienteData.cnpj,
-          emailNotaFiscal: clienteData.email_nota_fiscal,
-          emailSolicitacaoLiberacao: clienteData.email_solicitacao_liberacao,
-          emailLiberacaoAutorizada: clienteData.email_liberacao_autorizada,
-          clienteId: clienteData.id,
-          transportadoraId: clienteData.transportadora_id
-        };
-        
-        console.log('🔍 [OPTIMIZED] Cliente user data:', userData);
-        return userData;
-      }
-      
-      // Fallback - profile exists but no links
-      console.log('🔍 [OPTIMIZED] Profile found but no links, using basic user');
-      const userData: User = {
-        id: supabaseUser.id,
-        name: result.name || supabaseUser.email?.split('@')[0] || 'Usuário',
-        email: result.email || supabaseUser.email || '',
-        type: 'cliente'
-      };
-      
-      console.log('🔍 [OPTIMIZED] Basic user data:', userData);
-      return userData;
+      return userData as User;
       
     } catch (error) {
-      console.error('❌ [OPTIMIZED] Failed to load user profile:', error);
-      logError('Error loading optimized user data:', error);
+      console.error('❌ [FAST] Failed to load user profile:', error);
+      logError('Error loading user data via RPC:', error);
       
       // Return fallback user on error
       const fallbackUser: User = {
