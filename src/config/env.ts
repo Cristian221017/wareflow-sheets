@@ -6,7 +6,16 @@ export const ENV = {
   APP_NAME: import.meta.env.VITE_APP_NAME ?? 'WMS Sistema',
 };
 
-if (!ENV.SUPABASE_URL || !ENV.SUPABASE_ANON) {
-  console.error('❌ ENV inválida: configuração Supabase não encontrada');
+export function assertSupabaseEnv() {
+  if (!ENV.SUPABASE_URL || !ENV.SUPABASE_ANON) {
+    console.error('❌ ENV inválida: configuração Supabase não encontrada');
+    console.error('Verifique se VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY estão configuradas corretamente');
+    return false;
+  }
+  return true;
+}
+
+// Guard imediato - falha na inicialização se env crítico não estiver definido
+if (!assertSupabaseEnv()) {
   throw new Error('Missing Supabase configuration - set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY');
 }
