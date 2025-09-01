@@ -10,8 +10,15 @@ export interface DocumentoFinanceiro {
   arquivoBoletoPath?: string;
   arquivoCtePath?: string;
   dataPagamento?: string;
+  pagoEm?: string; // Nova coluna
+  valorPago?: number; // Nova coluna
   createdAt: string;
   updatedAt: string;
+  // Campos expandidos para joins
+  cliente?: {
+    razao_social: string;
+    nome_fantasia?: string;
+  };
 }
 
 export interface DocumentoFinanceiroFormData {

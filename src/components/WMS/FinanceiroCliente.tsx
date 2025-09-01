@@ -9,6 +9,8 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Download, Search, FileText, Receipt, RotateCcw } from 'lucide-react';
+import { FinanceiroClienteDashboard } from '@/components/WMS/FinanceiroClienteDashboard';
+import { RefreshButton } from '@/components/common/RefreshButton';
 import { toast } from 'sonner';
 import { useDateUtils } from '@/hooks/useDateUtils';
 
