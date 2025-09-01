@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTrigger, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useAuth } from '@/contexts/AuthContext';
@@ -85,6 +85,10 @@ export function SuperAdminLayout() {
                     </Button>
                   </DialogTrigger>
                   <DialogContent className="max-w-[95vw] max-h-[90vh] overflow-y-auto">
+                    <DialogHeader>
+                      <DialogTitle>Nova Transportadora</DialogTitle>
+                      <DialogDescription>Cadastrar uma nova transportadora no sistema</DialogDescription>
+                    </DialogHeader>
                     <FormCadastroTransportadora />
                   </DialogContent>
                 </Dialog>
@@ -97,6 +101,10 @@ export function SuperAdminLayout() {
                     </Button>
                   </DialogTrigger>
                   <DialogContent className="max-w-[95vw] max-h-[90vh] overflow-y-auto">
+                    <DialogHeader>
+                      <DialogTitle>Novo Usuário Super Admin</DialogTitle>
+                      <DialogDescription>Cadastrar um novo usuário administrador</DialogDescription>
+                    </DialogHeader>
                     <FormCadastroUsuario 
                       userType="super_admin" 
                       onSuccess={() => setIsUserDialogOpen(false)} 
@@ -158,6 +166,10 @@ export function SuperAdminLayout() {
                   </Button>
                 </DialogTrigger>
                 <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+                  <DialogHeader>
+                    <DialogTitle>Nova Transportadora</DialogTitle>
+                    <DialogDescription>Cadastrar uma nova transportadora no sistema</DialogDescription>
+                  </DialogHeader>
                   <FormCadastroTransportadora />
                 </DialogContent>
               </Dialog>
@@ -170,6 +182,10 @@ export function SuperAdminLayout() {
                   </Button>
                 </DialogTrigger>
                 <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                  <DialogHeader>
+                    <DialogTitle>Novo Usuário Super Admin</DialogTitle>
+                    <DialogDescription>Cadastrar um novo usuário administrador</DialogDescription>
+                  </DialogHeader>
                   <FormCadastroUsuario 
                     userType="super_admin" 
                     onSuccess={() => setIsUserDialogOpen(false)} 

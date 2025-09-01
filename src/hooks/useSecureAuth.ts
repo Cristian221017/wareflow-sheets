@@ -40,93 +40,59 @@ export function useSecureAuth() {
     }
   }, []);
 
-  // Optimized user data loading
+  // Optimized user data loading using RPC function
   const loadUserData = useCallback(async (supabaseUser: SupabaseUser): Promise<User | null> => {
     const operationId = SecureIdGenerator.generate('auth_load');
     
     try {
-      return await retryOperation(
-        async () => {
-          // System user check (admin/transportadora) - batched queries
-          const [profileResult, roleResult] = await Promise.all([
-            supabase
-              .from('profiles')
-              .select('*')
-              .eq('user_id', supabaseUser.id)
-              .maybeSingle(),
-            supabase
-              .from('user_transportadoras')
-              .select('role, is_active, transportadora_id')
-              .eq('user_id', supabaseUser.id)
-              .eq('is_active', true)
-              .maybeSingle()
-          ]);
-
-          if (roleResult.data?.role) {
-            return {
-              id: supabaseUser.id,
-              name: profileResult.data?.name || supabaseUser.email || 'Usuário',
-              email: profileResult.data?.email || supabaseUser.email || '',
-              type: 'transportadora' as const,
-              role: roleResult.data.role,
-              transportadoraId: roleResult.data.transportadora_id
-            };
-          }
-
-          // Cliente check
-          const { data: clienteData } = await supabase
-            .from('clientes')
-            .select('*')
-            .eq('email', supabaseUser.email)
-            .eq('status', 'ativo')
-            .maybeSingle();
-
-          if (clienteData) {
-            return {
-              id: supabaseUser.id,
-              name: clienteData.razao_social,
-              email: clienteData.email,
-              type: 'cliente' as const,
-              cnpj: clienteData.cnpj,
-              emailNotaFiscal: clienteData.email_nota_fiscal,
-              emailSolicitacaoLiberacao: clienteData.email_solicitacao_liberacao,
-              emailLiberacaoAutorizada: clienteData.email_liberacao_autorizada,
-              clienteId: clienteData.id,
-              transportadoraId: clienteData.transportadora_id
-            };
-          }
-
-          // Fallback user
-          warn('🔍 Usuário não vinculado - criando fallback');
-          return {
-            id: supabaseUser.id,
-            name: supabaseUser.email?.split('@')[0] || 'Usuário',
-            email: supabaseUser.email || '',
-            type: 'cliente' as const,
-            role: undefined,
-            transportadoraId: undefined
-          };
-        },
-        {
-          component: 'SecureAuth',
-          action: 'loadUserData',
-          userId: supabaseUser.id,
-          metadata: { operationId, sessionId: sessionId.current }
-        },
-        2
-      );
+      console.log(`🔍 [SecureAuth] Loading user profile for: ${supabaseUser.id}`);
+      console.log(`🔍 [SecureAuth] Email: ${supabaseUser.email}`);
+      
+      // Use the optimized RPC function instead of multiple queries
+      const { data: result, error } = await supabase
+        .rpc('get_user_data_optimized' as any, {
+          p_user_id: supabaseUser.id,
+          p_email: supabaseUser.email || ''
+        });
+      
+      if (error) {
+        console.error('❌ [SecureAuth] RPC error:', error);
+        throw error;
+      }
+      
+      console.log('🔍 [SecureAuth] RPC result:', result);
+      
+      if (!result || !Array.isArray(result) || result.length === 0) {
+        console.log('🔍 [SecureAuth] No data returned, using fallback');
+        const fallbackUser: User = {
+          id: supabaseUser.id,
+          name: supabaseUser.email?.split('@')[0] || 'Usuário',
+          email: supabaseUser.email || '',
+          type: 'cliente'
+        };
+        console.log('🔍 [SecureAuth] Fallback user created:', fallbackUser);
+        return fallbackUser;
+      }
+      
+      const userData = result[0].user_data;
+      console.log('🔍 [SecureAuth] User data parsed:', userData);
+      
+      return userData as User;
+      
     } catch (error) {
-      handleError(
-        error as Error,
-        {
-          component: 'SecureAuth',
-          action: 'loadUserData',
-          userId: supabaseUser.id,
-          metadata: { operationId, sessionId: sessionId.current }
-        },
-        'high'
-      );
-      return null;
+      console.error('❌ [SecureAuth] Failed to load user profile:', error);
+      logError('Error loading user data via RPC:', error);
+      
+      // Return fallback user on error
+      const fallbackUser: User = {
+        id: supabaseUser.id,
+        name: supabaseUser.email?.split('@')[0] || 'Usuário',
+        email: supabaseUser.email || '',
+        type: 'cliente'
+      };
+      
+      warn('Using fallback user data:', { fallbackUser });
+      return fallbackUser;
     }
   }, []);
 
