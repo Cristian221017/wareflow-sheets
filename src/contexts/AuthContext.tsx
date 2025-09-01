@@ -147,16 +147,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     
     // First check system user (admin/transportadora roles) with individual timeouts
     try {
+      console.log('🔍 [DEBUG] Starting system user queries for:', supabaseUser.email);
+      console.log('🔍 [DEBUG] User ID:', supabaseUser.id);
+      
       log('🔍 Checking system user tables...');
       
       // Execute queries as promises for withTimeout
       const systemUserQuery = async () => {
+        console.log('🔍 [DEBUG] Executing profiles query...');
         const profilePromise = supabase
           .from('profiles')
           .select('*')
           .eq('user_id', supabaseUser.id)
           .maybeSingle();
         
+        console.log('🔍 [DEBUG] Executing user_transportadoras query...');
         const rolePromise = supabase
           .from('user_transportadoras')
           .select('role, is_active, transportadora_id')
@@ -164,14 +169,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           .eq('is_active', true)
           .maybeSingle();
 
-        return Promise.all([profilePromise, rolePromise]);
+        const startTime = Date.now();
+        const result = await Promise.all([profilePromise, rolePromise]);
+        const duration = Date.now() - startTime;
+        console.log('🔍 [DEBUG] System queries completed in:', duration + 'ms');
+        
+        return result;
       };
 
       const [profileResult, roleResult] = await withTimeout(
         systemUserQuery(),
-        5000,
-        'System user queries timeout após 5s'
+        8000, // Aumentar timeout para 8s para debug
+        'System user queries timeout após 8s'
       );
+
+      console.log('🔍 [DEBUG] Profile result raw:', profileResult);
+      console.log('🔍 [DEBUG] Role result raw:', roleResult);
 
       const profile = profileResult.data;
       const userRole = roleResult.data;
@@ -190,32 +203,44 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           transportadoraId: userRole.transportadora_id
         };
 
+        console.log('🔍 [DEBUG] System user found:', userData);
         log('🔍 System user detected:', userData);
         return userData;
       }
     } catch (error) {
+      console.error('❌ [DEBUG] System user query error:', error);
       logError('Error checking system user:', error);
     }
 
     // Check if user is linked as cliente with timeout
     try {
+      console.log('🔍 [DEBUG] Starting cliente query for:', supabaseUser.email);
       log('🔍 Checking cliente table via email...');
       
       const clienteQuery = async () => {
-        return supabase
+        console.log('🔍 [DEBUG] Executing clientes query...');
+        const startTime = Date.now();
+        
+        const result = await supabase
           .from('clientes')
           .select('*')
           .eq('email', supabaseUser.email)
           .eq('status', 'ativo')
           .maybeSingle();
+          
+        const duration = Date.now() - startTime;
+        console.log('🔍 [DEBUG] Cliente query completed in:', duration + 'ms');
+        
+        return result;
       };
 
       const clienteResult = await withTimeout(
         clienteQuery(),
-        3000,
-        'Cliente query timeout após 3s'
+        5000, // Aumentar timeout para 5s
+        'Cliente query timeout após 5s'
       );
 
+      console.log('🔍 [DEBUG] Cliente result raw:', clienteResult);
       const { data: clienteData, error: clienteError } = clienteResult;
 
       log('🔍 Cliente data via email query:', clienteData);
@@ -234,10 +259,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           transportadoraId: clienteData.transportadora_id
         };
 
+        console.log('🔍 [DEBUG] Cliente user found:', userData);
         log('🔍 Cliente user detected:', userData);
         return userData;
       }
     } catch (error) {
+      console.error('❌ [DEBUG] Cliente query error:', error);
       logError('Error checking cliente table:', error);
     }
 
