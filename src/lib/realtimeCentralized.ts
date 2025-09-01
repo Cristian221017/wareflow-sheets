@@ -5,71 +5,134 @@ import type { RealtimeChannel } from "@supabase/supabase-js";
 
 const CENTRAL_CHANNEL_NAME = "wms-central-realtime";
 
-// D) Guard para evitar múltiplas subscriptions centralizadas
-let activeCentralChannel: RealtimeChannel | null = null;
+// Singleton para evitar múltiplas subscriptions e controle de retry
+let channelSingleton: RealtimeChannel | null = null;
+let retryCount = 0;
+const MAX_RETRY = 5;
+let visibilityListener: (() => void) | null = null;
+let authListener: { data: { subscription: { unsubscribe: () => void } } } | null = null;
 
 export function subscribeCentralizedChanges(queryClient: QueryClient): () => void {
-  // Guard: se já existe uma subscription ativa, retorna cleanup vazio
-  if (activeCentralChannel) {
+  // Se já existe e está ativo, retorna cleanup que não faz nada
+  if (channelSingleton) {
     log('🔒 Subscription centralizada já ativa, ignorando nova tentativa');
     return () => {}; 
   }
-  log('🔄 Iniciando subscription realtime centralizada');
   
-  const channel: RealtimeChannel = supabase
-    .channel(CENTRAL_CHANNEL_NAME)
-    .on(
-      "postgres_changes",
-      { 
-        event: "*", 
-        schema: "public", 
-        table: "notas_fiscais" 
-      },
-      (payload) => {
-        log('📡 Mudança detectada em notas_fiscais:', payload);
-        handleNFChange(payload, queryClient);
-      }
-    )
-    .on(
-      "postgres_changes",
-      { 
-        event: "*", 
-        schema: "public", 
-        table: "documentos_financeiros" 
-      },
-      (payload) => {
-        log('📡 Mudança detectada em documentos_financeiros:', payload);
-        handleDocumentoChange(payload, queryClient);
-      }
-    )
-    .on(
-      "postgres_changes",
-      { 
-        event: "*", 
-        schema: "public", 
-        table: "event_log" 
-      },
-      (payload) => {
-        log('📡 Mudança detectada em event_log:', payload);
-        handleEventLogChange(payload, queryClient);
-      }
-    )
-    .subscribe((status) => {
-      log('📡 Status da subscription centralizada:', status);
-      if (status === 'SUBSCRIBED') {
-        log('✅ Subscription realtime centralizada ativa');
-        activeCentralChannel = channel;
-      } else if (status === 'CHANNEL_ERROR') {
-        warn('❌ Erro na subscription realtime centralizada');
-        activeCentralChannel = null;
-      }
+  log('🔄 Iniciando subscription realtime centralizada resiliente');
+  
+  const createChannel = () => {
+    const channel = supabase.channel(CENTRAL_CHANNEL_NAME, {
+      config: { broadcast: { ack: true } }
     });
+
+    // Handlers para invalidação
+    const handleNF = (payload: any) => {
+      log('📡 Mudança detectada em notas_fiscais:', payload);
+      handleNFChange(payload, queryClient);
+    };
+
+    const handleSolicitacao = (payload: any) => {
+      log('📡 Mudança detectada em solicitacoes_carregamento:', payload);
+      handleNFChange(payload, queryClient); // Same invalidation as NF
+    };
+
+    const handleFinanceiro = (payload: any) => {
+      log('📡 Mudança detectada em documentos_financeiros:', payload);
+      handleDocumentoChange(payload, queryClient);
+    };
+
+    const handleEventLog = (payload: any) => {
+      log('📡 Mudança detectada em event_log:', payload);
+      handleEventLogChange(payload, queryClient);
+    };
+
+    // Subscribe to all relevant tables
+    channel
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'notas_fiscais' }, handleNF)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'solicitacoes_carregamento' }, handleSolicitacao)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'documentos_financeiros' }, handleFinanceiro)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'event_log' }, handleEventLog)
+      .subscribe((status) => {
+        log('📡 Status da subscription centralizada:', status);
+        
+        if (status === 'SUBSCRIBED') {
+          log('✅ Subscription realtime centralizada ativa');
+          retryCount = 0; // Reset retry counter on success
+        } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
+          warn('❌ Erro/fechamento do canal realtime, status:', status);
+          
+          // Attempt reconnection with exponential backoff
+          if (retryCount < MAX_RETRY) {
+            const delay = Math.min(1000 * Math.pow(2, retryCount), 15000);
+            retryCount += 1;
+            
+            log(`🔄 Tentativa de reconexão ${retryCount}/${MAX_RETRY} em ${delay}ms`);
+            
+            setTimeout(() => {
+              // Force recreation of channel
+              if (channelSingleton) {
+                supabase.removeChannel(channelSingleton);
+                channelSingleton = null;
+              }
+              subscribeCentralizedChanges(queryClient);
+            }, delay);
+          } else {
+            warn('❌ Máximo de tentativas de reconexão atingido');
+          }
+        }
+      });
+
+    return channel;
+  };
+
+  channelSingleton = createChannel();
+
+  // Handle visibility change - resubscribe when tab comes back into focus
+  visibilityListener = () => {
+    if (document.visibilityState === 'visible' && channelSingleton?.state !== 'joined') {
+      log('👁️ Tab voltou ao foco, verificando conexão realtime...');
+      if (channelSingleton) {
+        supabase.removeChannel(channelSingleton);
+        channelSingleton = null;
+      }
+      subscribeCentralizedChanges(queryClient);
+    }
+  };
+  document.addEventListener('visibilitychange', visibilityListener);
+
+  // Handle auth state changes - resubscribe on token refresh
+  authListener = supabase.auth.onAuthStateChange((event, session) => {
+    if (event === 'TOKEN_REFRESHED' || event === 'SIGNED_IN') {
+      log('🔑 Token atualizado, renovando subscription realtime...');
+      if (channelSingleton) {
+        supabase.removeChannel(channelSingleton);
+        channelSingleton = null;
+      }
+      subscribeCentralizedChanges(queryClient);
+    }
+  });
 
   // Retorna função de cleanup
   return () => {
     log('🔌 Desconectando subscription realtime centralizada');
-    supabase.removeChannel(channel);
-    activeCentralChannel = null;
+    
+    if (visibilityListener) {
+      document.removeEventListener('visibilitychange', visibilityListener);
+      visibilityListener = null;
+    }
+    
+    if (authListener) {
+      authListener.data.subscription.unsubscribe();
+      authListener = null;
+    }
+    
+    if (channelSingleton) {
+      supabase.removeChannel(channelSingleton);
+      channelSingleton = null;
+    }
+    
+    retryCount = 0;
   };
 }
 
