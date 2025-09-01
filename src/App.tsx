@@ -74,23 +74,23 @@ function ProtectedRoute({ children, allowedRoles }: { children: React.ReactNode,
 
 function App() {
   return (
-    <ErrorBoundary>
+    <ErrorBoundary>  
       <TooltipProvider>
-        <AuthProvider>
-          <WMSProvider>
-            <FinanceiroProvider>
-              <RealtimeProvider>
-                <div className="min-h-screen bg-background">
-                  <EnvBanner />
-                  <AuthRefreshButton />
-                  <Sonner />
-                  
-                  <BrowserRouter
-                    future={{
-                      v7_startTransition: true,
-                      v7_relativeSplatPath: true
-                    }}
-                  >
+        <BrowserRouter
+          future={{
+            v7_startTransition: true,
+            v7_relativeSplatPath: true
+          }}
+        >
+          <AuthProvider>
+            <WMSProvider>
+              <FinanceiroProvider>
+                <RealtimeProvider>
+                  <div className="min-h-screen bg-background">
+                    <EnvBanner />
+                    <AuthRefreshButton />
+                    <Sonner />
+                    
                     <RouteErrorBoundary>
                       <Routes>
                     <Route path="/" element={<Index />} />
@@ -141,12 +141,12 @@ function App() {
                     <Route path="*" element={<NotFound />} />
                       </Routes>
                     </RouteErrorBoundary>
-                  </BrowserRouter>
-                </div>
-              </RealtimeProvider>
-            </FinanceiroProvider>
-          </WMSProvider>
-        </AuthProvider>
+                  </div>
+                </RealtimeProvider>
+              </FinanceiroProvider>
+            </WMSProvider>
+          </AuthProvider>
+        </BrowserRouter>
       </TooltipProvider>
     </ErrorBoundary>
   );

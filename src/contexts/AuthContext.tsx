@@ -149,23 +149,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       log('🔍 Checking system user tables...');
       
-      // Profile query with timeout
-      const profilePromise = supabase
-        .from('profiles')
-        .select('*')
-        .eq('user_id', supabaseUser.id)
-        .maybeSingle();
-      
-      // Role query with timeout  
-      const rolePromise = supabase
-        .from('user_transportadoras')
-        .select('role, is_active, transportadora_id')
-        .eq('user_id', supabaseUser.id)
-        .eq('is_active', true)
-        .maybeSingle();
+      // Execute queries as promises for withTimeout
+      const systemUserQuery = async () => {
+        const profilePromise = supabase
+          .from('profiles')
+          .select('*')
+          .eq('user_id', supabaseUser.id)
+          .maybeSingle();
+        
+        const rolePromise = supabase
+          .from('user_transportadoras')
+          .select('role, is_active, transportadora_id')
+          .eq('user_id', supabaseUser.id)
+          .eq('is_active', true)
+          .maybeSingle();
+
+        return Promise.all([profilePromise, rolePromise]);
+      };
 
       const [profileResult, roleResult] = await withTimeout(
-        Promise.all([profilePromise, rolePromise]),
+        systemUserQuery(),
         5000,
         'System user queries timeout após 5s'
       );
@@ -198,18 +201,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       log('🔍 Checking cliente table via email...');
       
-      const clientePromise = supabase
-        .from('clientes')
-        .select('*')
-        .eq('email', supabaseUser.email)
-        .eq('status', 'ativo')
-        .maybeSingle();
+      const clienteQuery = async () => {
+        return supabase
+          .from('clientes')
+          .select('*')
+          .eq('email', supabaseUser.email)
+          .eq('status', 'ativo')
+          .maybeSingle();
+      };
 
-      const { data: clienteData, error: clienteError } = await withTimeout(
-        clientePromise,
+      const clienteResult = await withTimeout(
+        clienteQuery(),
         3000,
         'Cliente query timeout após 3s'
       );
+
+      const { data: clienteData, error: clienteError } = clienteResult;
 
       log('🔍 Cliente data via email query:', clienteData);
 
@@ -223,7 +230,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           emailNotaFiscal: clienteData.email_nota_fiscal,
           emailSolicitacaoLiberacao: clienteData.email_solicitacao_liberacao,
           emailLiberacaoAutorizada: clienteData.email_liberacao_autorizada,
-          emailNotificacaoBoleto: clienteData.email_notificacao_boleto,
           clienteId: clienteData.id,
           transportadoraId: clienteData.transportadora_id
         };
@@ -279,6 +285,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           data: {
             name,
           },
+          emailRedirectTo: `${window.location.origin}/`
         },
       });
 
