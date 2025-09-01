@@ -98,9 +98,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     loadingRef.current = true;
     
     try {
-      // Não mostrar loading se user já existe (apenas revalidação)
+      // Mostrar loading apenas no primeiro carregamento
       const currentUser = userRef.current;
       const isRevalidation = !!currentUser;
+      
+      // Se não é revalidação, mostrar loading
       if (!isRevalidation) {
         setLoading(true);
       }
@@ -116,9 +118,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       userRef.current = userData;
       setUser(userData);
       
-      if (!isRevalidation) {
-        setLoading(false);
-      }
+      // SEMPRE definir loading como false após sucesso
+      setLoading(false);
 
     } catch (error) {
       logError('Error loading user profile:', error);
