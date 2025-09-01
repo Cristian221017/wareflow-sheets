@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef } from "react";
-import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNFsCliente, useClienteFluxoMutations } from "@/hooks/useNFsCliente";
 import { useSolicitacoesTransportadora, useSolicitacoesMutations } from "@/hooks/useSolicitacoes";
@@ -11,14 +10,12 @@ import { Clock, CheckCircle, X, Printer, Download } from "lucide-react";
 import { NFFilters, type NFFilterState } from "@/components/NfLists/NFFilters";
 import { NFCard } from "@/components/NfLists/NFCard";
 import { NFBulkActions } from "@/components/NfLists/NFBulkActions";
-import { subscribeCentralizedChanges } from "@/lib/realtimeCentralized";
 import type { NotaFiscal } from "@/types/nf";
 import { log } from "@/utils/logger";
 import { toast } from "sonner";
 
 export function ClienteSolicitacaoCarregamento() {
   const { user } = useAuth();
-  const queryClient = useQueryClient();
   const once = useRef(false);
   const { markVisitForComponent } = useLastVisit();
   const isCliente = user?.type === "cliente";
@@ -45,15 +42,13 @@ export function ClienteSolicitacaoCarregamento() {
   });
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
-  // Configurar realtime centralizado
+  // Apenas marcar a visita (limpa badges imediatamente). Realtime é global.
   useEffect(() => {
     if (once.current) return;
     once.current = true;
-    log("🔄 Configurando realtime centralizado para ClienteSolicitacaoCarregamento");
-    // Mark visit for instant notification clearing
+    log("👀 Visit ClienteSolicitacaoCarregamento");
     markVisitForComponent('solicitacoes-pendentes');
-    return subscribeCentralizedChanges(queryClient);
-  }, [queryClient, markVisitForComponent]);
+  }, [markVisitForComponent]);
 
   // Função para imprimir relatório
   const handleImprimir = () => {

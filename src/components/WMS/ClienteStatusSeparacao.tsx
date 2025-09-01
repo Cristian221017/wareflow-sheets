@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef } from "react";
-import { useQueryClient } from "@tanstack/react-query";
 import { useNFs } from "@/hooks/useNFs";
 import { useNFsCliente, useClienteFluxoMutations } from "@/hooks/useNFsCliente";
 import { useAuth } from "@/contexts/AuthContext";
@@ -13,7 +12,6 @@ import { AlertCircle, CheckCircle, Clock, Package, Pause, Truck, BarChart3, Eye,
 import { NFFilters, type NFFilterState } from "@/components/NfLists/NFFilters";
 import { NFCard } from "@/components/NfLists/NFCard";
 import { NFBulkActions } from "@/components/NfLists/NFBulkActions";
-import { subscribeCentralizedChanges } from "@/lib/realtimeCentralized";
 import type { NotaFiscal } from "@/types/nf";
 import { log } from "@/utils/logger";
 import { toast } from "sonner";
@@ -52,7 +50,6 @@ const statusConfig = {
 
 export function ClienteStatusSeparacao() {
   const { user } = useAuth();
-  const queryClient = useQueryClient();
   const once = useRef(false);
   const { markVisitForComponent } = useLastVisit();
   const isCliente = user?.type === "cliente";
@@ -74,14 +71,13 @@ export function ClienteStatusSeparacao() {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
   // Configurar realtime centralizado
+  // Apenas marcar a visita (limpa badges imediatamente). Realtime é global.
   useEffect(() => {
     if (once.current) return;
     once.current = true;
-    log("🔄 Configurando realtime centralizado para ClienteStatusSeparacao");
-    // Mark visit for instant notification clearing
+    log("👀 Visit ClienteStatusSeparacao");
     markVisitForComponent('nfs-armazenadas');
-    return subscribeCentralizedChanges(queryClient);
-  }, [queryClient, markVisitForComponent]);
+  }, [markVisitForComponent]);
 
   if (isLoading) {
     return (

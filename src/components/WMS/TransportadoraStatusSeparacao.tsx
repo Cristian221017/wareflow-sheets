@@ -10,8 +10,6 @@ import { NFCard } from '@/components/NfLists/NFCard';
 import { NFBulkActions } from '@/components/NfLists/NFBulkActions';
 import { useNFs } from '@/hooks/useNFs';
 import { StatusSeparacaoManager } from './StatusSeparacaoManager';
-import { subscribeCentralizedChanges } from '@/lib/realtimeCentralized';
-import { useQueryClient } from '@tanstack/react-query';
 import { log, warn } from '@/utils/logger';
 import { toast } from 'sonner';
 
@@ -48,6 +46,7 @@ const statusConfig = {
 
 export function TransportadoraStatusSeparacao() {
   const { data: nfs = [], isLoading, error } = useNFs('ARMAZENADA');
+
   const [filters, setFilters] = useState<NFFilterState>({
     searchNF: '',
     searchPedido: '',
@@ -60,19 +59,8 @@ export function TransportadoraStatusSeparacao() {
     statusSeparacao: 'all',
   });
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const queryClient = useQueryClient();
 
-  // Setup realtime
-  useEffect(() => {
-    log("🔄 Configurando realtime centralizado para TransportadoraStatusSeparacao");
-    
-    const unsubscribe = subscribeCentralizedChanges(queryClient);
-
-    return () => {
-      log("🔌 Desconectando realtime - TransportadoraStatusSeparacao");
-      unsubscribe?.();
-    };
-  }, [queryClient]);
+  // Realtime é global via RealtimeProvider - não precisa de subscription local
 
   // Apply filters
   const applyFilters = (nfs: NotaFiscal[]) => {

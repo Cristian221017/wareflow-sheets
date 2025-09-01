@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef } from "react";
-import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNFs } from "@/hooks/useNFs";
 import { useNFsCliente } from "@/hooks/useNFsCliente";
@@ -10,14 +9,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CheckCircle, Printer, Download } from "lucide-react";
 import { NFFilters, type NFFilterState } from "@/components/NfLists/NFFilters";
 import { NFCard } from "@/components/NfLists/NFCard";
-import { subscribeCentralizedChanges } from "@/lib/realtimeCentralized";
 import type { NotaFiscal } from "@/types/nf";
 import { log } from "@/utils/logger";
 import { toast } from "sonner";
 
 export function PedidosConfirmadosTable() {
   const { user } = useAuth();
-  const queryClient = useQueryClient();
   const once = useRef(false);
   const { markVisitForComponent } = useLastVisit();
   const isCliente = user?.type === "cliente";
@@ -38,14 +35,13 @@ export function PedidosConfirmadosTable() {
   });
 
   // Configurar realtime centralizado
+  // Apenas marcar a visita (limpa badges imediatamente). Realtime é global.
   useEffect(() => {
     if (once.current) return;
     once.current = true;
-    log("🔄 Configurando realtime centralizado para PedidosConfirmadosTable");
-    // Mark visit for instant notification clearing
+    log("👀 Visit PedidosConfirmadosTable");
     markVisitForComponent('nfs-confirmadas');
-    return subscribeCentralizedChanges(queryClient);
-  }, [queryClient, markVisitForComponent]);
+  }, [markVisitForComponent]);
 
   if (isLoading) {
     return (
