@@ -2,12 +2,9 @@ import { createRoot } from 'react-dom/client'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import App from './App.tsx'
 import './index.css'
-import { supabase } from '@/integrations/supabase/client'
+import { assertSupabaseEnv } from '@/config/env'
+import { EnvErrorPage } from '@/components/system/EnvErrorPage'
 
-// Disponibilizar supabase globalmente
-(window as any).supabase = supabase;
-
-// Criar instância do Query Client
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -19,8 +16,19 @@ const queryClient = new QueryClient({
   },
 });
 
-createRoot(document.getElementById("root")!).render(
-  <QueryClientProvider client={queryClient}>
-    <App />
-  </QueryClientProvider>
-);
+const root = createRoot(document.getElementById("root")!);
+
+if (!assertSupabaseEnv()) {
+  root.render(<EnvErrorPage />);
+} else {
+  // Só importar e disponibilizar supabase quando ENV estiver válida
+  import('@/integrations/supabase/client').then(({ supabase }) => {
+    (window as any).supabase = supabase;
+  });
+  
+  root.render(
+    <QueryClientProvider client={queryClient}>
+      <App />
+    </QueryClientProvider>
+  );
+}

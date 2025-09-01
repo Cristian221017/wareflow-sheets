@@ -15,7 +15,4 @@ export function assertSupabaseEnv() {
   return true;
 }
 
-// Guard imediato - falha na inicialização se env crítico não estiver definido
-if (!assertSupabaseEnv()) {
-  throw new Error('Missing Supabase configuration - set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY');
-}
+// Não lançar erro aqui. Deixe o App decidir o que renderizar (tela de erro amigável).

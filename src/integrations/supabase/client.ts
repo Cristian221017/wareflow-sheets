@@ -3,21 +3,25 @@ import { createClient } from '@supabase/supabase-js';
 import type { Database } from './database.types';
 import { ENV, assertSupabaseEnv } from '@/config/env';
 
-// Verificação adicional de segurança
-if (!assertSupabaseEnv()) {
-  console.error('❌ Supabase client não pode ser inicializado - variáveis de ambiente ausentes');
+let supabaseUnsafe: ReturnType<typeof createClient<Database>> | null = null;
+
+if (assertSupabaseEnv()) {
+  supabaseUnsafe = createClient<Database>(ENV.SUPABASE_URL!, ENV.SUPABASE_ANON!, {
+    auth: {
+      storage: localStorage,
+      persistSession: true,
+      autoRefreshToken: true,
+    }
+  });
 }
 
-const SUPABASE_URL = ENV.SUPABASE_URL;
-const SUPABASE_ANON_KEY = ENV.SUPABASE_ANON;
-
-// Import the supabase client like this:
-// import { supabase } from "@/integrations/supabase/client";
-
-export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_ANON_KEY, {
-  auth: {
-    storage: localStorage,
-    persistSession: true,
-    autoRefreshToken: true,
+// Exporta um proxy que falha SOMENTE no uso se o ambiente estiver inválido
+export const supabase = new Proxy({} as ReturnType<typeof createClient<Database>>, {
+  get(_target, prop) {
+    if (!supabaseUnsafe) {
+      throw new Error('Supabase não configurado: defina VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY no ambiente.');
+    }
+    // @ts-ignore
+    return supabaseUnsafe[prop];
   }
 });
