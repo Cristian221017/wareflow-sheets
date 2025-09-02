@@ -8,7 +8,7 @@ import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useAuth } from '@/contexts/AuthContext';
 import { SuperAdminTransportadoras } from './SuperAdminTransportadoras';
-import { SuperAdminUsuarios } from './SuperAdminUsuarios';
+import { AdminScopedUserManagement } from './AdminScopedUserManagement';
 import { SuperAdminDashboard } from './SuperAdminDashboard';
 import { DeploymentSafetyDashboard } from './DeploymentSafetyDashboard';
 import { FormCadastroUsuario } from './FormCadastroUsuario';
@@ -236,7 +236,7 @@ export function SuperAdminLayout() {
           </TabsContent>
 
           <TabsContent value="usuarios">
-            <SuperAdminUsuarios />
+            <AdminScopedUserManagement />
           </TabsContent>
 
           <TabsContent value="deployment">
