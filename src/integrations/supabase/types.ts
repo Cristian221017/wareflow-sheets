@@ -779,26 +779,32 @@ export type Database = {
       }
       profiles: {
         Row: {
+          cpf: string | null
           created_at: string
           email: string
           id: string
           name: string
+          setor: string | null
           updated_at: string
           user_id: string
         }
         Insert: {
+          cpf?: string | null
           created_at?: string
           email: string
           id?: string
           name: string
+          setor?: string | null
           updated_at?: string
           user_id: string
         }
         Update: {
+          cpf?: string | null
           created_at?: string
           email?: string
           id?: string
           name?: string
+          setor?: string | null
           updated_at?: string
           user_id?: string
         }
@@ -1524,6 +1530,10 @@ export type Database = {
       }
       user_exists_in_system: {
         Args: { _user_id: string }
+        Returns: boolean
+      }
+      validate_cpf: {
+        Args: { cpf_input: string }
         Returns: boolean
       }
       validate_data_integrity: {
