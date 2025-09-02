@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { solicitarNF, confirmarNF, recusarNF, fetchNFsByStatus } from "@/lib/nfApi";
+import { solicitarNF, confirmarNF, recusarNF, fetchNFsByStatus, deleteNF } from "@/lib/nfApi";
 import { toast } from "sonner";
 import { log, audit, error } from "@/utils/logger";
 import { useAuth } from "@/contexts/AuthContext";
@@ -81,10 +81,25 @@ export function useFluxoMutations() {
     },
   });
 
+  const excluir = useMutation({
+    mutationFn: deleteNF,
+    onSuccess: (_, nfId) => {
+      audit('NF_EXCLUIDA', 'NF', { nfId });
+      invalidateAll(); // USAR FUNÇÃO CENTRALIZADA
+      toast.success("Nota fiscal excluída com sucesso!");
+    },
+    onError: (err: Error, nfId) => {
+      error('❌ Erro na exclusão:', err);
+      audit('NF_EXCLUSAO_ERRO', 'NF', { nfId, error: err.message });
+      toast.error(err.message);
+    },
+  });
+
   return {
     solicitar,
     confirmar,
     recusar,
-    isAnyLoading: solicitar.isPending || confirmar.isPending || recusar.isPending
+    excluir,
+    isAnyLoading: solicitar.isPending || confirmar.isPending || recusar.isPending || excluir.isPending
   };
 }

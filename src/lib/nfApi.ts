@@ -201,6 +201,24 @@ export async function uploadAnexoSolicitacao(
 }
 
 // Função para baixar URL assinada do anexo
+export async function deleteNF(nfId: string): Promise<void> {
+  const userId = await getCurrentUserId();
+  log('🗑️ Excluindo NF:', { nfId, userId });
+  
+  const { error: rpcError } = await (supabase as any).rpc("nf_delete", { 
+    p_nf_id: nfId, 
+    p_user_id: userId 
+  });
+  
+  if (rpcError) {
+    auditError('NF_DELETE_FAIL', 'NF', rpcError, { nfId, userId });
+    throw new Error(`Erro ao excluir nota fiscal: ${rpcError.message}`);
+  }
+  
+  audit('NF_DELETED', 'NF', { nfId, userId });
+  log('✅ NF excluída com sucesso');
+}
+
 export async function getAnexoUrl(path: string): Promise<string> {
   const { data, error } = await supabase.storage
     .from('solicitacoes-anexos')

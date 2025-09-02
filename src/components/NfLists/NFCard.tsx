@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Clock, Package, CheckCircle, Truck, User, Download } from "lucide-react";
+import { Clock, Package, CheckCircle, Truck, User, Download, Trash2 } from "lucide-react";
 import type { NotaFiscal } from "@/types/nf";
 import { getAnexoUrl } from "@/lib/nfApi";
 import { toast } from "sonner";
@@ -15,6 +15,8 @@ interface NFCardProps {
   isSelected?: boolean;
   onSelect?: (id: string, selected: boolean) => void;
   showSelection?: boolean;
+  onDelete?: (nfId: string) => void;
+  canDelete?: boolean;
 }
 
 export function NFCard({ 
@@ -24,7 +26,9 @@ export function NFCard({
   showApprovalInfo, 
   isSelected = false,
   onSelect,
-  showSelection = false 
+  showSelection = false,
+  onDelete,
+  canDelete = false
 }: NFCardProps) {
   const formatDate = (dateString?: string | null) => {
     if (!dateString) return "-";
@@ -255,9 +259,22 @@ export function NFCard({
         )}
 
         {/* Ações */}
-        {actions && (
-          <div className="pt-2 border-t">
-            {actions}
+        {(actions || canDelete) && (
+          <div className="pt-2 border-t flex justify-between items-center gap-2">
+            <div className="flex-1">
+              {actions}
+            </div>
+            {canDelete && onDelete && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onDelete(nf.id)}
+                className="text-destructive hover:text-destructive hover:bg-destructive/10"
+              >
+                <Trash2 className="w-4 h-4 mr-1" />
+                Excluir
+              </Button>
+            )}
           </div>
         )}
       </CardContent>

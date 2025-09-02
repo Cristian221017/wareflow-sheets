@@ -34,6 +34,7 @@ import {
 import { RefreshButton } from '@/components/common/RefreshButton';
 import { toast } from 'sonner';
 import { useRef } from 'react';
+import { DoubleConfirmDialog } from '@/components/ui/double-confirm-dialog';
 
 const getStatusColor = (status: string, dataVencimento: string) => {
   const vencido = isVencido(dataVencimento, status);
@@ -191,13 +192,20 @@ export function FinanceiroTransportadoraTable() {
     }
   };
 
+  const [deleteDoc, setDeleteDoc] = useState<DocumentoFinanceiro | null>(null);
+
   const handleDelete = async (documento: DocumentoFinanceiro) => {
-    if (window.confirm(`Tem certeza que deseja excluir o documento CTE ${documento.numeroCte}?`)) {
-      try {
-        await deleteDocumentoFinanceiro(documento.id);
-      } catch (error) {
-        toast.error('Erro ao excluir documento');
-      }
+    setDeleteDoc(documento);
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteDoc) return;
+    
+    try {
+      await deleteDocumentoFinanceiro(deleteDoc.id);
+      toast.success('Documento excluído com sucesso!');
+    } catch (error) {
+      toast.error('Erro ao excluir documento');
     }
   };
 
@@ -736,6 +744,17 @@ export function FinanceiroTransportadoraTable() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Importar componente de dupla confirmação */}
+      <DoubleConfirmDialog
+        open={!!deleteDoc}
+        onOpenChange={(open) => !open && setDeleteDoc(null)}
+        title="Excluir Documento Financeiro"
+        description={`Tem certeza que deseja excluir o documento CTE ${deleteDoc?.numeroCte}? Esta ação não pode ser desfeita e todos os dados relacionados serão permanentemente removidos.`}
+        confirmText="Excluir Documento"
+        onConfirm={confirmDelete}
+        variant="destructive"
+      />
     </div>
   );
 }

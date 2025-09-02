@@ -1385,6 +1385,10 @@ export type Database = {
         }
         Returns: string
       }
+      nf_delete: {
+        Args: { p_nf_id: string; p_user_id: string }
+        Returns: undefined
+      }
       nf_listar_do_cliente: {
         Args: { p_status?: string }
         Returns: {
