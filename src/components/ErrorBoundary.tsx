@@ -1,7 +1,6 @@
 // Error Boundary React para capturar erros não tratados
 import React from 'react';
-import { error as logError } from '@/utils/productionLogger';
-import { SecureIdGenerator } from '@/utils/memoryManager';
+import { error as logError } from '@/utils/logger';
 import { Button } from '@/components/ui/button';
 import { AlertTriangle, RefreshCw, Home } from 'lucide-react';
 
@@ -25,7 +24,7 @@ export class ErrorBoundary extends React.Component<Props, State> {
     super(props);
     this.state = { 
       hasError: false,
-      errorId: SecureIdGenerator.generate('error')
+      errorId: Math.random().toString(36).substring(7)
     };
   }
 
@@ -33,7 +32,7 @@ export class ErrorBoundary extends React.Component<Props, State> {
     return { 
       hasError: true, 
       error,
-      errorId: SecureIdGenerator.generate('error')
+      errorId: Math.random().toString(36).substring(7)
     };
   }
 
@@ -64,7 +63,7 @@ export class ErrorBoundary extends React.Component<Props, State> {
       this.setState({ 
         hasError: false, 
         error: undefined,
-        errorId: SecureIdGenerator.generate('error')
+        errorId: Math.random().toString(36).substring(7)
       });
     } else {
       // Após máximo de retries, recarregar página

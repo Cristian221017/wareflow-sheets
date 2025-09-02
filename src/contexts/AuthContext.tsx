@@ -2,8 +2,7 @@ import React, { createContext, useContext, useState, useEffect, useRef } from 'r
 import { supabase } from '@/integrations/supabase/client';
 import type { User as SupabaseUser, Session } from '@supabase/supabase-js';
 import type { User } from '@/types/auth';
-import { log, warn, error as logError, audit, auditError } from '@/utils/logger';
-import { withAuthRetry, withTimeout } from '@/utils/withRetry';
+import { log, warn, error as logError } from '@/utils/logger';
 
 interface AuthContextType {
   user: User | null;
@@ -107,11 +106,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       log('Loading user profile for:', supabaseUser.id, 'isRevalidation:', isRevalidation);
       
-      // Timeout otimizado com retry - máximo 3 segundos por tentativa
-      const userData = await withAuthRetry(() => getUserData(supabaseUser));
+      // Load user data with fallback
+      const userData = await getUserData(supabaseUser);
       
       log('User profile loaded successfully:', userData);
-      audit('LOGIN_SUCCESS', 'AUTH', { userId: supabaseUser.id, userEmail: userData.email });
       
       userRef.current = userData;
       setUser(userData);
@@ -121,7 +119,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     } catch (error) {
       logError('Error loading user profile:', error);
-      audit('LOGIN_FAILURE', 'AUTH', { userId: supabaseUser.id, error: String(error) });
       
       // Create fallback user data
       const fallbackUser: User = {
