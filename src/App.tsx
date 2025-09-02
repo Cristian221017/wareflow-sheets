@@ -89,7 +89,7 @@ function ProtectedRoute({ children, allowedRoles }: { children: React.ReactNode,
 function App() {
   return (
     <ErrorBoundary>  
-      <TooltipProvider>
+      {/* <TooltipProvider> - TEMPORARIAMENTE DESABILITADO PARA FIX */}
         <BrowserRouter
           future={{
             v7_startTransition: true,
@@ -202,7 +202,7 @@ function App() {
             </WMSProvider>
           </SimplifiedAuthProvider>
         </BrowserRouter>
-      </TooltipProvider>
+      {/* </TooltipProvider> - TEMPORARIAMENTE DESABILITADO PARA FIX */}
     </ErrorBoundary>
   );
 }
