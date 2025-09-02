@@ -181,7 +181,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.error('❌ [FAST] Failed to load user profile:', error);
       logError('Error loading user data via RPC:', error);
       
-      // Return fallback user on error
+      // Return fallback user on error (ignore browser extension errors)
       const fallbackUser: User = {
         id: supabaseUser.id,
         name: supabaseUser.email?.split('@')[0] || 'Usuário',
