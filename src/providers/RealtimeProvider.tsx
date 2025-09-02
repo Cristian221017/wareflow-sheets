@@ -1,14 +1,28 @@
-// Provider desabilitado para evitar memory leaks
-import React from "react";
+import { useEffect } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { useRealtimeManager } from "@/lib/realtimeManager";
+import { log } from "@/utils/logger";
 
 interface RealtimeProviderProps {
   children: React.ReactNode;
 }
 
 /**
- * Provider global para realtime - DESABILITADO para evitar memory leaks
+ * Provider global para realtime - garante que a subscription funcione em QUALQUER tela
+ * Elimina o problema de realtime parar de funcionar quando navega para fora do Dashboard
  */
 export default function RealtimeProvider({ children }: RealtimeProviderProps) {
-  // Completamente desabilitado
+  const queryClient = useQueryClient();
+
+  useEffect(() => {
+    log('🌐 Iniciando Realtime Provider global otimizado');
+    const cleanup = useRealtimeManager(queryClient, 'global-provider');
+    
+    return () => {
+      log('🌐 Limpando Realtime Provider global');
+      cleanup();
+    };
+  }, [queryClient]);
+
   return <>{children}</>;
 }

@@ -420,7 +420,7 @@ export function FinanceiroTransportadoraTable() {
                       <TableCell>{getClienteNome(documento.clienteId)}</TableCell>
                       <TableCell>
                         <div className="flex items-center gap-1">
-                          <span>{new Date(documento.dataVencimento).toLocaleDateString('pt-BR')}</span>
+                          {new Date(documento.dataVencimento).toLocaleDateString('pt-BR')}
                           {docVencido && (
                             <Badge variant="destructive" className="text-xs">Vencido</Badge>
                           )}

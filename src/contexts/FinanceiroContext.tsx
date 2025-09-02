@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { useAuth } from '@/contexts/SimplifiedAuthContext';
+import { useAuth } from './AuthContext';
 import { DocumentoFinanceiro, DocumentoFinanceiroFormData, FileUploadData } from '@/types/financeiro';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';

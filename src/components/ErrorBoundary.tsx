@@ -1,5 +1,7 @@
 // Error Boundary React para capturar erros não tratados
 import React from 'react';
+import { error as logError } from '@/utils/productionLogger';
+import { SecureIdGenerator } from '@/utils/memoryManager';
 import { Button } from '@/components/ui/button';
 import { AlertTriangle, RefreshCw, Home } from 'lucide-react';
 
@@ -23,7 +25,7 @@ export class ErrorBoundary extends React.Component<Props, State> {
     super(props);
     this.state = { 
       hasError: false,
-      errorId: `error_${Date.now()}`
+      errorId: SecureIdGenerator.generate('error')
     };
   }
 
@@ -31,16 +33,29 @@ export class ErrorBoundary extends React.Component<Props, State> {
     return { 
       hasError: true, 
       error,
-      errorId: `error_${Date.now()}`
+      errorId: SecureIdGenerator.generate('error')
     };
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    if (import.meta.env.MODE === 'development') {
-      console.error('ErrorBoundary caught error:', error);
-    }
+    // Log do erro
+    logError('🚨 ErrorBoundary capturou erro:', {
+      error: error.message,
+      stack: error.stack,
+      componentStack: errorInfo.componentStack,
+      errorId: this.state.errorId
+    });
 
+    // Callback customizado
     this.props.onError?.(error, errorInfo);
+
+    // Em produção, enviar para serviço de monitoramento
+    if (import.meta.env.MODE === 'production') {
+      // Sentry.captureException(error, {
+      //   contexts: { react: errorInfo },
+      //   tags: { errorBoundary: true, errorId: this.state.errorId }
+      // });
+    }
   }
 
   handleRetry = () => {
@@ -49,9 +64,10 @@ export class ErrorBoundary extends React.Component<Props, State> {
       this.setState({ 
         hasError: false, 
         error: undefined,
-        errorId: `error_${Date.now()}`
+        errorId: SecureIdGenerator.generate('error')
       });
     } else {
+      // Após máximo de retries, recarregar página
       window.location.reload();
     }
   };
@@ -120,7 +136,42 @@ const DefaultErrorFallback: React.FC<{ error: Error; retry: () => void }> = ({ e
 
 // Error Boundary específico para rotas
 export const RouteErrorBoundary: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <ErrorBoundary>
+  <ErrorBoundary
+    onError={(error, errorInfo) => {
+      logError('🛣️ Erro na rota:', { error: error.message, componentStack: errorInfo.componentStack });
+    }}
+  >
+    {children}
+  </ErrorBoundary>
+);
+
+// Error Boundary para componentes críticos
+export const CriticalErrorBoundary: React.FC<{ children: React.ReactNode; componentName?: string }> = ({ 
+  children, 
+  componentName = 'Componente crítico' 
+}) => (
+  <ErrorBoundary
+    onError={(error, errorInfo) => {
+      logError(`🔥 Erro crítico em ${componentName}:`, { 
+        error: error.message, 
+        componentStack: errorInfo.componentStack 
+      });
+    }}
+    fallback={({ error, retry }) => (
+      <div className="bg-red-50 border border-red-200 rounded-lg p-4 m-4">
+        <div className="flex items-center gap-2 text-red-700 mb-2">
+          <AlertTriangle className="h-5 w-5" />
+          <span className="font-medium">Erro em {componentName}</span>
+        </div>
+        <p className="text-red-600 text-sm mb-3">
+          {error.message}
+        </p>
+        <Button size="sm" onClick={retry} variant="outline">
+          Recarregar Componente
+        </Button>
+      </div>
+    )}
+  >
     {children}
   </ErrorBoundary>
 );

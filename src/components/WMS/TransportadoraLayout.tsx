@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogTrigger, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useNotifications } from '@/hooks/useNotifications';
@@ -116,10 +116,6 @@ export function TransportadoraLayout() {
                   </Button>
                 </DialogTrigger>
                 <DialogContent className="max-w-[95vw] sm:max-w-4xl max-h-[90vh] overflow-y-auto">
-                  <DialogHeader>
-                    <DialogTitle>Nova Nota Fiscal</DialogTitle>
-                    <DialogDescription>Cadastrar uma nova nota fiscal no sistema</DialogDescription>
-                  </DialogHeader>
                   <FormNotaFiscal />
                 </DialogContent>
               </Dialog>
@@ -132,10 +128,6 @@ export function TransportadoraLayout() {
                   </Button>
                 </DialogTrigger>
                 <DialogContent className="max-w-[95vw] sm:max-w-4xl max-h-[90vh] overflow-y-auto">
-                  <DialogHeader>
-                    <DialogTitle>Novo Documento Financeiro</DialogTitle>
-                    <DialogDescription>Cadastrar um novo documento financeiro</DialogDescription>
-                  </DialogHeader>
                   <FormDocumentoFinanceiro onSuccess={() => setIsDocumentoDialogOpen(false)} />
                 </DialogContent>
               </Dialog>
@@ -148,10 +140,6 @@ export function TransportadoraLayout() {
                   </Button>
                 </DialogTrigger>
                 <DialogContent className="max-w-[95vw] sm:max-w-6xl max-h-[90vh] overflow-y-auto">
-                  <DialogHeader>
-                    <DialogTitle>Configurações de Integração</DialogTitle>
-                    <DialogDescription>Configurar integrações do sistema</DialogDescription>
-                  </DialogHeader>
                   <IntegrationConfig />
                 </DialogContent>
               </Dialog>
@@ -163,16 +151,12 @@ export function TransportadoraLayout() {
                     Cadastro Usuários
                   </Button>
                 </DialogTrigger>
-                      <DialogContent className="max-w-[95vw] sm:max-w-2xl max-h-[90vh] overflow-y-auto">
-                        <DialogHeader>
-                          <DialogTitle>Novo Usuário Transportadora</DialogTitle>
-                          <DialogDescription>Cadastrar um novo usuário para a transportadora</DialogDescription>
-                        </DialogHeader>
-                        <FormCadastroUsuario 
-                          userType="admin_transportadora" 
-                          onSuccess={() => setIsCadastroUserDialogOpen(false)} 
-                        />
-                      </DialogContent>
+                <DialogContent className="max-w-[95vw] sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+                  <FormCadastroUsuario 
+                    userType="admin_transportadora" 
+                    onSuccess={() => setIsCadastroUserDialogOpen(false)} 
+                  />
+                </DialogContent>
               </Dialog>
 
               <Button onClick={logout} variant="outline">
@@ -210,10 +194,6 @@ export function TransportadoraLayout() {
                         </DropdownMenuItem>
                       </DialogTrigger>
                       <DialogContent className="max-w-[95vw] max-h-[90vh] overflow-y-auto">
-                        <DialogHeader>
-                          <DialogTitle>Nova Nota Fiscal</DialogTitle>
-                          <DialogDescription>Cadastrar uma nova nota fiscal no sistema</DialogDescription>
-                        </DialogHeader>
                         <FormNotaFiscal />
                       </DialogContent>
                     </Dialog>
@@ -226,10 +206,6 @@ export function TransportadoraLayout() {
                         </DropdownMenuItem>
                       </DialogTrigger>
                       <DialogContent className="max-w-[95vw] max-h-[90vh] overflow-y-auto">
-                        <DialogHeader>
-                          <DialogTitle>Novo Documento Financeiro</DialogTitle>
-                          <DialogDescription>Cadastrar um novo documento financeiro</DialogDescription>
-                        </DialogHeader>
                         <FormDocumentoFinanceiro onSuccess={() => setIsDocumentoDialogOpen(false)} />
                       </DialogContent>
                     </Dialog>
@@ -242,10 +218,6 @@ export function TransportadoraLayout() {
                         </DropdownMenuItem>
                       </DialogTrigger>
                       <DialogContent className="max-w-[95vw] max-h-[90vh] overflow-y-auto">
-                        <DialogHeader>
-                          <DialogTitle>Configurações de Integração</DialogTitle>
-                          <DialogDescription>Configurar integrações do sistema</DialogDescription>
-                        </DialogHeader>
                         <IntegrationConfig />
                       </DialogContent>
                     </Dialog>
@@ -258,10 +230,6 @@ export function TransportadoraLayout() {
                         </DropdownMenuItem>
                       </DialogTrigger>
                       <DialogContent className="max-w-[95vw] max-h-[90vh] overflow-y-auto">
-                        <DialogHeader>
-                          <DialogTitle>Novo Usuário Transportadora</DialogTitle>
-                          <DialogDescription>Cadastrar um novo usuário para a transportadora</DialogDescription>
-                        </DialogHeader>
                         <FormCadastroUsuario 
                           userType="admin_transportadora" 
                           onSuccess={() => setIsCadastroUserDialogOpen(false)} 

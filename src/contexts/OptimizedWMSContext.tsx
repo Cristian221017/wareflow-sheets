@@ -4,9 +4,9 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import type { NotaFiscal } from '@/types/wms';
-import { log, error } from '@/utils/logger';
+import { log, error as logError } from '@/utils/productionLogger';
 import { handleError } from '@/utils/centralizedErrorHandler';
-import { useAuth } from '@/contexts/SimplifiedAuthContext';
+import { useSecureAuth } from '@/hooks/useSecureAuth';
 
 interface OptimizedWMSContextType {
   // Data via React Query (sem duplicação de estado)
@@ -35,7 +35,7 @@ interface OptimizedWMSContextType {
 const OptimizedWMSContext = createContext<OptimizedWMSContextType | undefined>(undefined);
 
 export function OptimizedWMSProvider({ children }: { children: ReactNode }) {
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading } = useSecureAuth();
   const queryClient = useQueryClient();
   
   // Aguardar auth terminar
@@ -97,7 +97,11 @@ export function OptimizedWMSProvider({ children }: { children: ReactNode }) {
           integration_metadata: nf.integration_metadata || {}
         })) as NotaFiscal[];
       } catch (queryError) {
-        handleError(queryError as Error);
+        handleError(
+          queryError as Error,
+          { component: 'OptimizedWMS', action: 'fetchNFs', userId: user.id },
+          'medium'
+        );
         throw queryError;
       }
     },
@@ -169,7 +173,11 @@ export function OptimizedWMSProvider({ children }: { children: ReactNode }) {
       });
     },
     onError: (error: Error) => {
-      handleError(error);
+      handleError(
+        error,
+        { component: 'OptimizedWMS', action: 'addNF', userId: user?.id },
+        'high'
+      );
       toast.error(error.message || 'Erro ao cadastrar Nota Fiscal');
     }
   });
@@ -196,7 +204,11 @@ export function OptimizedWMSProvider({ children }: { children: ReactNode }) {
       });
     },
     onError: (error: Error) => {
-      handleError(error);
+      handleError(
+        error,
+        { component: 'OptimizedWMS', action: 'deleteNF', userId: user?.id },
+        'medium'
+      );
       toast.error(error.message || 'Erro ao excluir Nota Fiscal');
     }
   });

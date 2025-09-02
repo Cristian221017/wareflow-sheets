@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogTrigger, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { useAuth } from '@/contexts/SimplifiedAuthContext';
+import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
+import { useAuth } from '@/contexts/AuthContext';
 import { useWMS } from '@/contexts/WMSContext';
 import { useNotifications } from '@/hooks/useNotifications';
 import { useLastVisit } from '@/hooks/useLastVisit';
@@ -192,10 +192,6 @@ export function ClienteLayout() {
                     </Button>
                   </DialogTrigger>
                   <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-                    <DialogHeader>
-                      <DialogTitle>Novo Usuário Cliente</DialogTitle>
-                      <DialogDescription>Cadastrar um novo usuário para o cliente</DialogDescription>
-                    </DialogHeader>
                     <FormCadastroUsuario 
                       userType="cliente" 
                       onSuccess={() => setIsUserDialogOpen(false)} 
@@ -241,10 +237,6 @@ export function ClienteLayout() {
                           </Button>
                         </DialogTrigger>
                         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-                          <DialogHeader>
-                            <DialogTitle>Novo Usuário Cliente</DialogTitle>
-                            <DialogDescription>Cadastrar um novo usuário para o cliente</DialogDescription>
-                          </DialogHeader>
                           <FormCadastroUsuario 
                             userType="cliente" 
                             onSuccess={() => setIsUserDialogOpen(false)} 

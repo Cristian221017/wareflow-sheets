@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { NFStatus } from '@/types/nf';
 import { useAgendamentoUnificado } from './useAgendamentoUnificado';
-import { useAuth } from '@/contexts/SimplifiedAuthContext';
+import { useAuth } from '@/contexts/AuthContext';
 
 // Interfaces para tipagem explícita
 interface AgendamentoParams {

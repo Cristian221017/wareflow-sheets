@@ -2,7 +2,7 @@
 import { useMemo } from 'react';
 import { useAllNFs } from './useNFs';
 import { log } from '@/utils/logger';
-import { useAuth } from '@/contexts/SimplifiedAuthContext';
+import { useAuth } from '@/contexts/AuthContext';
 
 export interface OptimizedDashboardStats {
   totalNFs: number;

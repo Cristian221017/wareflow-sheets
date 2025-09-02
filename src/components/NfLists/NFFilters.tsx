@@ -5,7 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Search, Filter, X } from 'lucide-react';
-import { useAuth } from '@/contexts/SimplifiedAuthContext';
+import { useAuth } from '@/contexts/AuthContext';
 
 export interface NFFilterState {
   searchNF: string;

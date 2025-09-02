@@ -1,4 +1,4 @@
-import { useAuth } from '@/contexts/SimplifiedAuthContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { useEffect } from 'react';
 import { LoginPage } from '@/components/Auth/LoginPage';

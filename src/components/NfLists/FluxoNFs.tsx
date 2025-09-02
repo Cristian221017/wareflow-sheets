@@ -12,7 +12,7 @@ import { useNFsCliente, useClienteFluxoMutations } from "@/hooks/useNFsCliente";
 import { CarregamentoActionButton } from "@/components/WMS/CarregamentoActionButton";
 import { SolicitarCarregamentoDialog } from "@/components/WMS/SolicitarCarregamentoDialog";
 import { useAgendamentoUnificado } from "@/hooks/useAgendamentoUnificado";
-import { useAuth } from "@/contexts/SimplifiedAuthContext";
+import { useAuth } from "@/contexts/AuthContext";
 import type { NotaFiscal } from "@/types/nf";
 import { log } from "@/utils/logger";
 import { toast } from "sonner";
