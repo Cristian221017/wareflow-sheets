@@ -4,235 +4,92 @@ import App from './App.tsx'
 import './index.css'
 import { assertSupabaseEnv } from '@/config/env'
 import { EnvErrorPage } from '@/components/system/EnvErrorPage'
-import { systemStabilizer } from '@/utils/systemStabilizer'
-import { criticalSystemDiagnostic } from '@/utils/criticalSystemDiagnostic'
-import { advancedDebugLogger } from '@/utils/advancedDebugLogger'
 import { emergencyDebugger } from '@/utils/emergencyDebugger'
 
-// Initialize system stabilizer FIRST - critical for stability
-systemStabilizer.initialize();
+// 🚨 EMERGENCY MODE - ALL SUPPRESSIONS DISABLED TO REVEAL ERRORS
+console.log('🚨 EMERGENCY MODE ACTIVATED - Console suppressions disabled');
+console.log('🔍 All errors will now be visible to diagnose the critical issue');
 
-// Initialize critical system diagnostic
-criticalSystemDiagnostic.initialize();
-
-// Initialize advanced debug logger
-advancedDebugLogger.log('INFO', 'STARTUP', 'Application starting - all loggers initialized');
-
-// ULTRA-AGGRESSIVE ERROR SUPPRESSION - Complete silence of non-critical issues
-
-// 1. TOTAL SENTRY AND EXTERNAL ERROR SERVICE LOCKDOWN
-(window as any).__SENTRY__ = undefined;
-(window as any).Sentry = undefined;
-(window as any).__NEXT_DATA__ = undefined;
-(window as any).gtag = undefined;
-(window as any).ga = undefined;
-(window as any).fbq = undefined;
-
-// 2. COMPLETE FETCH BLOCKING for error services
-const originalFetch = window.fetch;
-window.fetch = function(...args) {
-  const url = args[0]?.toString() || '';
-  const blockedDomains = [
-    'sentry.io', 'bugsnag', 'rollbar', 'logrocket', 'datadog',
-    'honeybadger', 'airbrake', 'trackjs', 'raygun', 'errorception'
-  ];
-  
-  if (blockedDomains.some(domain => url.includes(domain))) {
-    return Promise.reject(new Error('External error reporting service permanently blocked'));
-  }
-  return originalFetch.apply(this, args);
+// Store original console methods for emergency restore
+(window as any)._debugConsole = {
+  log: console.log,
+  warn: console.warn,
+  error: console.error,
+  info: console.info,
+  debug: console.debug
 };
 
-// 3. TARGETED CONSOLE FILTERING - Allow important logs through
-const originalWarn = console.warn;
-const originalError = console.error;
-const originalLog = console.log;
-
-console.warn = (...args) => {
-  const message = String(args[0] || '');
-  // Only suppress specific known non-critical warnings
-  const suppressedMessages = [
-    'We\'re hiring!', '⠀', 'Unrecognized feature', 'sandbox attribute',
-    'deferred DOM Node', 'ResizeObserver'
-  ];
-  
-  if (!suppressedMessages.some(msg => message.includes(msg))) {
-    originalWarn.apply(console, args);
-  }
-};
-
-console.error = (...args) => {
-  const message = String(args[0] || '');
-  // Only suppress specific known non-critical errors
-  const suppressedErrors = [
-    'Failed to load resource: the server responded with a status of 429',
-    'deferred DOM Node', 'ResizeObserver', 'External error reporting',
-    'We\'re hiring!', '⠀'
-  ];
-  
-  if (!suppressedErrors.some(err => message.includes(err))) {
-    originalError.apply(console, args);
-  }
-};
-
-console.log = (...args) => {
-  const message = String(args[0] || '');
-  // Block ASCII art and hiring messages
-  if (!message.includes('⠀') && !message.includes('We\'re hiring!')) {
-    originalLog.apply(console, args);
-  }
-};
-
-// 4. TOTAL PROMISE REJECTION SUPPRESSION
-window.addEventListener('unhandledrejection', (event) => {
-  const reason = event.reason?.toString() || '';
-  const suppressedReasons = [
-    'deferred DOM Node', 'Non-Error promise rejection',
-    'External error reporting', 'listener indicated an asynchronous response',
-    'message channel closed', 'AbortError', 'The user aborted a request',
-    'NetworkError', 'Failed to fetch', '429', 'Too Many Requests'
-  ];
-  
-  if (suppressedReasons.some(r => reason.includes(r))) {
-    event.preventDefault();
-  }
-});
-
-// 5. COMPLETE ERROR EVENT SUPPRESSION
-window.addEventListener('error', (event) => {
-  const message = event.message || '';
-  const suppressedMessages = [
-    'deferred DOM Node', 'ResizeObserver', 'Script error',
-    'favicon.ico', 'manifest.json', 'NetworkError'
-  ];
-  
-  if (suppressedMessages.some(msg => message.includes(msg))) {
-    event.preventDefault();
-    event.stopPropagation();
-  }
-});
-
-// 6. IFRAME POSTMESSAGE ERROR SUPPRESSION
-window.addEventListener('message', (event) => {
-  // Suppress cross-origin postMessage errors
-  if (event.origin !== window.location.origin) {
-    event.preventDefault();
-    event.stopPropagation();
-  }
-}, true);
-
-// Make debug tools available globally for console access
+// Global debugging tools available
 if (typeof window !== 'undefined') {
-  (window as any).debugLogger = advancedDebugLogger;
-  (window as any).systemStabilizer = systemStabilizer;
-  (window as any).criticalDiagnostic = criticalSystemDiagnostic;
   (window as any).emergencyDebugger = emergencyDebugger;
+  (window as any).restoreConsole = () => emergencyDebugger.restoreConsole();
   
-  // Add helpful console commands
-  (window as any).debugCommands = {
-    // Get current debug report
-    getReport: () => advancedDebugLogger.getDebugReport(),
-    
-    // Get all logs
-    getAllLogs: () => advancedDebugLogger.getAllLogs(),
-    
-    // Get errors only
-    getErrors: () => advancedDebugLogger.getLogsByLevel('ERROR'),
-    
-    // Get critical errors only
-    getCritical: () => advancedDebugLogger.getLogsByLevel('CRITICAL'),
-    
-    // Export logs to file
-    exportLogs: () => advancedDebugLogger.exportLogs(),
-    
-    // Clear all logs
-    clearLogs: () => advancedDebugLogger.clearLogs(),
-    
-    // Get system health
-    getHealth: () => criticalSystemDiagnostic.getLastHealthReport(),
-    
-    // Run auto-fix
-    autoFix: () => criticalSystemDiagnostic.autoFixCriticalIssues(),
-    
-    // Get stabilizer status
-    getStabilizerStatus: () => systemStabilizer.getStatus(),
-    
-    // Help command
-    help: () => {
-      console.log(`
-🔍 DEBUG COMMANDS AVAILABLE:
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-📊 LOGS & REPORTS:
-  debugCommands.getReport()       - Get full debug report
-  debugCommands.getAllLogs()      - Get all captured logs
-  debugCommands.getErrors()       - Get error logs only
-  debugCommands.getCritical()     - Get critical logs only
-  debugCommands.exportLogs()      - Download logs as JSON
-  debugCommands.clearLogs()       - Clear all logs
-
-🩺 SYSTEM HEALTH:
-  debugCommands.getHealth()       - Get system health status
-  debugCommands.autoFix()         - Run automatic fixes
-  debugCommands.getStabilizerStatus() - Get stabilizer status
-
-🌐 DIRECT ACCESS:
-  debugLogger.*                   - Advanced debug logger
-  systemStabilizer.*              - System stabilizer
-  criticalDiagnostic.*            - Critical diagnostic
-
-📍 WEB INTERFACES:
-  Visit /debug-logs               - Full debug interface
-  Visit /system-status            - System status dashboard
-
-💡 TIP: Run debugCommands.getReport() to see what's happening!
-      `);
-    }
-  };
-  
-  // Display help on load
-  console.log('🔍 Debug tools loaded! Type debugCommands.help() for available commands.');
+  console.log('✅ Emergency debugger available: restoreConsole()');
 }
 
+// Create QueryClient with default options
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 5 * 60 * 1000, // 5 minutes
-      gcTime: 10 * 60 * 1000, // 10 minutes
-      retry: 1,
+      staleTime: 1000 * 60 * 5, // 5 minutes
+      gcTime: 1000 * 60 * 10, // 10 minutes  
+      retry: 2,
       refetchOnWindowFocus: false,
     },
   },
 });
 
-const rootElement = document.getElementById("root");
-if (!rootElement) {
-  console.error("Root element not found");
-  throw new Error("Root element not found");
+// Simple initialization - catch any errors here
+console.log('🔍 Finding root element...');
+const container = document.getElementById('root');
+if (!container) {
+  console.error('❌ CRITICAL: Root element not found!');
+  throw new Error('Root element with id="root" not found in DOM');
 }
 
-const root = createRoot(rootElement);
+console.log('✅ Root element found, creating React root...');
+const root = createRoot(container);
 
+// Check Supabase environment
+console.log('🔍 Checking Supabase environment...');
 if (!assertSupabaseEnv()) {
-  advancedDebugLogger.log('ERROR', 'STARTUP', 'Supabase environment not configured', { 
-    hasUrl: !!import.meta.env.VITE_SUPABASE_URL,
-    hasKey: !!import.meta.env.VITE_SUPABASE_ANON_KEY 
-  });
+  console.error('❌ Supabase environment not configured');
   root.render(<EnvErrorPage />);
 } else {
-  advancedDebugLogger.log('INFO', 'STARTUP', 'Supabase environment OK, starting app');
+  console.log('✅ Supabase environment OK, loading app...');
   
-  // Import supabase only when ENV is valid and make it available for debugging
-  import('@/integrations/supabase/client').then(({ supabase }) => {
-    (window as any).supabase = supabase;
-    advancedDebugLogger.log('DEBUG', 'STARTUP', 'Supabase client loaded and exposed to window');
+  // Dynamic import to catch any import errors
+  import('@/integrations/supabase/client').then((supabaseModule) => {
+    console.log('✅ Supabase client loaded successfully');
+    
+    // Make available for debugging
+    (window as any).supabase = supabaseModule.supabase;
+    
+    console.log('🚀 Rendering React app...');
+    root.render(
+      <QueryClientProvider client={queryClient}>
+        <App />
+      </QueryClientProvider>
+    );
+    console.log('✅ React app rendered successfully');
+    
   }).catch((error) => {
-    advancedDebugLogger.log('ERROR', 'STARTUP', 'Failed to load Supabase client', { error: String(error) });
+    console.error('❌ CRITICAL: Failed to load Supabase client:', error);
+    console.error('Error details:', error.message);
+    console.error('Stack:', error.stack);
+    
+    root.render(
+      <div className="min-h-screen flex items-center justify-center bg-red-50">
+        <div className="text-center p-8 bg-white rounded-lg shadow-lg max-w-md">
+          <h1 className="text-xl font-bold text-red-600 mb-4">Erro Crítico</h1>
+          <p className="text-gray-700 mb-4">Falha ao carregar cliente Supabase:</p>
+          <pre className="text-sm text-red-500 bg-red-50 p-2 rounded">
+            {error.message}
+          </pre>
+        </div>
+      </div>
+    );
   });
-  
-  root.render(
-    <QueryClientProvider client={queryClient}>
-      <App />
-    </QueryClientProvider>
-  );
 }
+
+console.log('🔍 Main.tsx execution completed');
