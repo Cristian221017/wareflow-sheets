@@ -41,6 +41,12 @@ export function WMSProvider({ children }: { children: ReactNode }) {
   const { user, loading } = auth;
   const queryClient = useQueryClient();
   
+  // State hooks must be called unconditionally at the top level
+  const [notasFiscais, setNotasFiscais] = useState<NotaFiscal[]>([]);
+  const [pedidosLiberacao, setPedidosLiberacao] = useState<PedidoLiberacao[]>([]);
+  const [pedidosLiberados, setPedidosLiberados] = useState<PedidoLiberado[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  
   // Aguardar auth terminar de carregar antes de inicializar WMS
   if (loading) {
     return (
@@ -81,10 +87,6 @@ export function WMSProvider({ children }: { children: ReactNode }) {
       }
     }
   };
-  const [notasFiscais, setNotasFiscais] = useState<NotaFiscal[]>([]);
-  const [pedidosLiberacao, setPedidosLiberacao] = useState<PedidoLiberacao[]>([]);
-  const [pedidosLiberados, setPedidosLiberados] = useState<PedidoLiberado[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
 
   // Load data
   const loadData = async () => {
