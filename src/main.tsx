@@ -5,10 +5,10 @@ import './index.css'
 import { assertSupabaseEnv } from '@/config/env'
 import { EnvErrorPage } from '@/components/system/EnvErrorPage'
 import { emergencyDebugger } from '@/utils/emergencyDebugger'
+import { superLogger } from '@/utils/superDebugLogger'
 
-// 🚨 EMERGENCY MODE - ALL SUPPRESSIONS DISABLED TO REVEAL ERRORS
-console.log('🚨 EMERGENCY MODE ACTIVATED - Console suppressions disabled');
-console.log('🔍 All errors will now be visible to diagnose the critical issue');
+// 🚨 SUPER DEBUGGING MODE - MÁXIMO DETALHAMENTO
+superLogger.log('MAIN_INIT', 'START', 'Iniciando sistema com super debug');
 
 // Store original console methods for emergency restore
 (window as any)._debugConsole = {
@@ -24,72 +24,126 @@ if (typeof window !== 'undefined') {
   (window as any).emergencyDebugger = emergencyDebugger;
   (window as any).restoreConsole = () => emergencyDebugger.restoreConsole();
   
-  console.log('✅ Emergency debugger available: restoreConsole()');
+  superLogger.log('EMERGENCY_TOOLS', 'SUCCESS', 'Emergency tools available');
 }
 
 // Create QueryClient with default options
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 1000 * 60 * 5, // 5 minutes
-      gcTime: 1000 * 60 * 10, // 10 minutes  
-      retry: 2,
-      refetchOnWindowFocus: false,
+superLogger.log('QUERY_CLIENT', 'START', 'Creating QueryClient');
+let queryClient: QueryClient;
+try {
+  queryClient = new QueryClient({
+    defaultOptions: {
+      queries: {
+        staleTime: 1000 * 60 * 5, // 5 minutes
+        gcTime: 1000 * 60 * 10, // 10 minutes  
+        retry: 2,
+        refetchOnWindowFocus: false,
+      },
     },
-  },
-});
+  });
+  superLogger.log('QUERY_CLIENT', 'SUCCESS', 'QueryClient created');
+} catch (error) {
+  superLogger.log('QUERY_CLIENT', 'ERROR', null, error);
+  throw error;
+}
 
 // Simple initialization - catch any errors here
-console.log('🔍 Finding root element...');
+superLogger.log('DOM_CHECK', 'START', 'Finding root element');
 const container = document.getElementById('root');
 if (!container) {
-  console.error('❌ CRITICAL: Root element not found!');
+  superLogger.log('DOM_CHECK', 'ERROR', 'Root element not found');
   throw new Error('Root element with id="root" not found in DOM');
 }
+superLogger.log('DOM_CHECK', 'SUCCESS', 'Root element found');
 
-console.log('✅ Root element found, creating React root...');
-const root = createRoot(container);
-
-// Check Supabase environment
-console.log('🔍 Checking Supabase environment...');
-if (!assertSupabaseEnv()) {
-  console.error('❌ Supabase environment not configured');
-  root.render(<EnvErrorPage />);
-} else {
-  console.log('✅ Supabase environment OK, loading app...');
-  
-  // Dynamic import to catch any import errors
-  import('@/integrations/supabase/client').then((supabaseModule) => {
-    console.log('✅ Supabase client loaded successfully');
-    
-    // Make available for debugging
-    (window as any).supabase = supabaseModule.supabase;
-    
-    console.log('🚀 Rendering React app...');
-    root.render(
-      <QueryClientProvider client={queryClient}>
-        <App />
-      </QueryClientProvider>
-    );
-    console.log('✅ React app rendered successfully');
-    
-  }).catch((error) => {
-    console.error('❌ CRITICAL: Failed to load Supabase client:', error);
-    console.error('Error details:', error.message);
-    console.error('Stack:', error.stack);
-    
-    root.render(
-      <div className="min-h-screen flex items-center justify-center bg-red-50">
-        <div className="text-center p-8 bg-white rounded-lg shadow-lg max-w-md">
-          <h1 className="text-xl font-bold text-red-600 mb-4">Erro Crítico</h1>
-          <p className="text-gray-700 mb-4">Falha ao carregar cliente Supabase:</p>
-          <pre className="text-sm text-red-500 bg-red-50 p-2 rounded">
-            {error.message}
-          </pre>
-        </div>
-      </div>
-    );
-  });
+superLogger.log('REACT_ROOT', 'START', 'Creating React root');
+let root: any;
+try {
+  root = createRoot(container);
+  superLogger.log('REACT_ROOT', 'SUCCESS', 'React root created');
+} catch (error) {
+  superLogger.log('REACT_ROOT', 'ERROR', null, error);
+  throw error;
 }
 
-console.log('🔍 Main.tsx execution completed');
+// Check Supabase environment
+superLogger.log('SUPABASE_ENV', 'START', 'Checking Supabase environment');
+try {
+  const envCheck = assertSupabaseEnv();
+  if (!envCheck) {
+    superLogger.log('SUPABASE_ENV', 'ERROR', 'Environment variables missing');
+    root.render(<EnvErrorPage />);
+  } else {
+    superLogger.log('SUPABASE_ENV', 'SUCCESS', 'Environment OK');
+    
+    // Dynamic import to catch any import errors
+    superLogger.log('SUPABASE_CLIENT', 'START', 'Loading Supabase client');
+    import('@/integrations/supabase/client').then((supabaseModule) => {
+      superLogger.log('SUPABASE_CLIENT', 'SUCCESS', 'Supabase client loaded');
+      
+      // Make available for debugging
+      (window as any).supabase = supabaseModule.supabase;
+      
+      superLogger.log('APP_RENDER', 'START', 'Rendering React app');
+      try {
+        root.render(
+          <QueryClientProvider client={queryClient}>
+            <App />
+          </QueryClientProvider>
+        );
+        superLogger.log('APP_RENDER', 'SUCCESS', 'React app rendered');
+        
+        // Log final report after a delay
+        setTimeout(() => {
+          const report = superLogger.getReport();
+          console.log('🎯 SUPER DEBUG REPORT:', report);
+        }, 2000);
+        
+      } catch (error) {
+        superLogger.log('APP_RENDER', 'ERROR', null, error);
+        
+        root.render(
+          <div className="min-h-screen flex items-center justify-center bg-red-50">
+            <div className="text-center p-8 bg-white rounded-lg shadow-lg max-w-md">
+              <h1 className="text-xl font-bold text-red-600 mb-4">❌ Erro na Renderização do App</h1>
+              <pre className="text-sm text-red-500 bg-red-50 p-2 rounded mb-4">
+                {error.message}
+              </pre>
+              <button 
+                onClick={() => console.log('🎯 SUPER DEBUG REPORT:', superLogger.getReport())}
+                className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+              >
+                Ver Logs Completos
+              </button>
+            </div>
+          </div>
+        );
+      }
+      
+    }).catch((error) => {
+      superLogger.log('SUPABASE_CLIENT', 'ERROR', null, error);
+      
+      root.render(
+        <div className="min-h-screen flex items-center justify-center bg-red-50">
+          <div className="text-center p-8 bg-white rounded-lg shadow-lg max-w-md">
+            <h1 className="text-xl font-bold text-red-600 mb-4">❌ Erro ao Carregar Supabase</h1>
+            <pre className="text-sm text-red-500 bg-red-50 p-2 rounded mb-4">
+              {error.message}
+            </pre>
+            <button 
+              onClick={() => console.log('🎯 SUPER DEBUG REPORT:', superLogger.getReport())}
+              className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+            >
+              Ver Logs Completos
+            </button>
+          </div>
+        </div>
+      );
+    });
+  }
+} catch (error) {
+  superLogger.log('SUPABASE_ENV', 'ERROR', null, error);
+  throw error;
+}
+
+superLogger.log('MAIN_COMPLETE', 'SUCCESS', 'Main.tsx execution completed');

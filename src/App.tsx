@@ -1,11 +1,11 @@
 import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { WMSProvider } from "@/contexts/WMSContext";
 import { SimplifiedAuthProvider, useAuth } from "@/contexts/SimplifiedAuthContext";
 import { FinanceiroProvider } from "@/contexts/FinanceiroContext";
 import EnvBanner from "@/components/system/EnvBanner";
 import { log } from '@/utils/productionOptimizedLogger';
+import { superLogger } from '@/utils/superDebugLogger';
 import Index from "./pages/Index";
 import SuperAdminPortal from "./pages/SuperAdminPortal";
 import TransportadoraPortal from "./pages/TransportadoraPortal";
@@ -25,11 +25,16 @@ import React from 'react';
 import OptimizedRealtimeProvider from "@/providers/OptimizedRealtimeProvider";
 import { ErrorBoundary, RouteErrorBoundary } from "@/components/ErrorBoundary";
 
+superLogger.log('APP_COMPONENT', 'START', 'App component starting');
+
 // Protected Route Component
 function ProtectedRoute({ children, allowedRoles }: { children: React.ReactNode, allowedRoles: string[] }) {
+  superLogger.log('PROTECTED_ROUTE', 'START', { allowedRoles });
+  
   const { user, isAuthenticated, loading } = useAuth();
 
   if (loading) {
+    superLogger.log('PROTECTED_ROUTE', 'SUCCESS', 'Showing loading state');
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center space-y-4">
@@ -41,6 +46,7 @@ function ProtectedRoute({ children, allowedRoles }: { children: React.ReactNode,
   }
 
   if (!isAuthenticated) {
+    superLogger.log('PROTECTED_ROUTE', 'SUCCESS', 'Redirecting to login - not authenticated');
     // Só logar se não for retry ou loop de redirecionamento
     if (!sessionStorage.getItem('auth-redirect-logged')) {
       log('❌ Not authenticated, redirecting to /');
@@ -63,17 +69,8 @@ function ProtectedRoute({ children, allowedRoles }: { children: React.ReactNode,
     return user.role && allowedRoles.includes(user.role);
   })();
 
-  // Remover logs excessivos em ProtectedRoute
-  // log('🔒 ProtectedRoute Check:', {
-  //   user: user?.email,
-  //   userRole: user?.role,
-  //   userType: user?.type,
-  //   allowedRoles,
-  //   hasAccess,
-  //   loading
-  // });
-
   if (!hasAccess) {
+    superLogger.log('PROTECTED_ROUTE', 'SUCCESS', 'Redirecting to login - access denied');
     // Só logar se não for retry
     if (!sessionStorage.getItem('access-denied-logged')) {
       log('❌ Access denied, redirecting to /');
@@ -83,13 +80,17 @@ function ProtectedRoute({ children, allowedRoles }: { children: React.ReactNode,
     return <Navigate to="/" replace />;
   }
 
+  superLogger.log('PROTECTED_ROUTE', 'SUCCESS', 'Access granted');
   return <>{children}</>;
 }
 
 function App() {
-  return (
-    <ErrorBoundary>  
-      {/* <TooltipProvider> - TEMPORARIAMENTE DESABILITADO PARA FIX */}
+  superLogger.log('APP_RENDER', 'START', 'Starting App render');
+  
+  try {
+    return (
+      <ErrorBoundary>  
+        {/* TooltipProvider temporariamente desabilitado */}
         <BrowserRouter
           future={{
             v7_startTransition: true,
@@ -202,9 +203,14 @@ function App() {
             </WMSProvider>
           </SimplifiedAuthProvider>
         </BrowserRouter>
-      {/* </TooltipProvider> - TEMPORARIAMENTE DESABILITADO PARA FIX */}
-    </ErrorBoundary>
-  );
+      </ErrorBoundary>
+    );
+  } catch (error) {
+    superLogger.log('APP_RENDER', 'ERROR', null, error);
+    throw error;
+  }
 }
+
+superLogger.log('APP_COMPONENT', 'SUCCESS', 'App component defined');
 
 export default App;
