@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { createContext, useContext, useEffect, useState, ReactNode, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './AuthContext';
 import { NotaFiscal, PedidoLiberacao, PedidoLiberado } from '@/types/wms';
@@ -56,7 +56,7 @@ export function WMSProvider({ children }: { children: ReactNode }) {
     );
   }
   
-  const invalidateWithScope = (entityType: 'nfs' | 'documentos_financeiros', entityId?: string, userType?: string, userId?: string) => {
+  const invalidateWithScope = useCallback((entityType: 'nfs' | 'documentos_financeiros', entityId?: string, userType?: string, userId?: string) => {
     if (entityType === 'nfs') {
       // Invalidar queries com escopo por persona
       const scope = user?.type === 'cliente' ? user?.clienteId : user?.transportadoraId;
@@ -86,10 +86,10 @@ export function WMSProvider({ children }: { children: ReactNode }) {
         queryClient.invalidateQueries({ queryKey: ['documentos_financeiros', 'transportadora', user.transportadoraId] });
       }
     }
-  };
+  }, [user, queryClient]);
 
   // Load data
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       setIsLoading(true);
       
@@ -191,7 +191,7 @@ export function WMSProvider({ children }: { children: ReactNode }) {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []); // Empty dependency array since loadData doesn't depend on external variables
 
   // Add Nota Fiscal
   const addNotaFiscal = async (nfData: Omit<NotaFiscal, 'id' | 'createdAt'>) => {
@@ -410,7 +410,7 @@ export function WMSProvider({ children }: { children: ReactNode }) {
     if (user) {
       loadData();
     }
-  }, [user]);
+  }, [user, loadData]);
 
   // Legacy API functions for compatibility
   const addPedidoLiberacao = async (data: any) => {
