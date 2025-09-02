@@ -8,160 +8,283 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-interface EmailRequest {
+interface NotificationEmailRequest {
   to: string;
   subject: string;
-  type: 'cliente_cadastrado' | 'transportadora_cadastrada' | 'boleto_cadastrado' | 'nf_cadastrada' | 'solicitacao_carregamento' | 'confirmacao_autorizada' | 'usuario_cadastrado';
+  type: 'nf_cadastrada' | 'solicitacao_carregamento' | 'confirmacao_autorizada' | 'boleto_cadastrado' | 'cliente_cadastrado' | 'embarque_confirmado' | 'entrega_confirmada';
   data: {
     nome: string;
-    email: string;
-    senha?: string;
     numeroDocumento?: string;
-    transportadora?: string;
     cliente?: string;
-    role?: string;
+    transportadora?: string;
+    email?: string;
+    senha?: string;
   };
 }
 
+function getEmailTemplate(type: string, data: any): string {
+  const baseStyle = `
+    <style>
+      body { font-family: Arial, sans-serif; line-height: 1.6; margin: 0; padding: 20px; background-color: #f4f4f4; }
+      .container { max-width: 600px; margin: 0 auto; background-color: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+      .header { background-color: #2563eb; color: white; padding: 20px; border-radius: 8px 8px 0 0; text-align: center; }
+      .content { padding: 20px; }
+      .footer { background-color: #f8f9fa; padding: 15px; border-radius: 0 0 8px 8px; text-align: center; color: #666; font-size: 12px; }
+      .highlight { background-color: #e3f2fd; padding: 10px; border-radius: 4px; margin: 10px 0; }
+      .button { display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 4px; margin: 10px 0; }
+    </style>
+  `;
+
+  switch (type) {
+    case 'nf_cadastrada':
+      return `
+        ${baseStyle}
+        <div class="container">
+          <div class="header">
+            <h2>Nova Nota Fiscal Cadastrada</h2>
+          </div>
+          <div class="content">
+            <h3>Olá, ${data.nome}!</h3>
+            <p>Uma nova Nota Fiscal foi cadastrada em nosso sistema:</p>
+            <div class="highlight">
+              <strong>Número da NF:</strong> ${data.numeroDocumento}<br>
+              <strong>Cliente:</strong> ${data.cliente}<br>
+              <strong>Status:</strong> Armazenada
+            </div>
+            <p>A mercadoria está sendo processada em nosso armazém. Você será notificado quando houver atualizações no status.</p>
+          </div>
+          <div class="footer">
+            Sistema WMS - Gestão de Armazém
+          </div>
+        </div>
+      `;
+
+    case 'solicitacao_carregamento':
+      return `
+        ${baseStyle}
+        <div class="container">
+          <div class="header">
+            <h2>Ordem de Carregamento Solicitada</h2>
+          </div>
+          <div class="content">
+            <h3>Prezado(a) ${data.nome},</h3>
+            <p>Uma nova ordem de carregamento foi solicitada:</p>
+            <div class="highlight">
+              <strong>Número do Pedido:</strong> ${data.numeroDocumento}<br>
+              <strong>Cliente:</strong> ${data.cliente}<br>
+              <strong>Status:</strong> Aguardando confirmação
+            </div>
+            <p>Nossa equipe está analisando a solicitação. Você receberá uma confirmação em breve.</p>
+          </div>
+          <div class="footer">
+            Sistema WMS - Gestão de Armazém
+          </div>
+        </div>
+      `;
+
+    case 'confirmacao_autorizada':
+      return `
+        ${baseStyle}
+        <div class="container">
+          <div class="header">
+            <h2>🎉 Pedido Confirmado e Autorizado</h2>
+          </div>
+          <div class="content">
+            <h3>Excelente notícia, ${data.nome}!</h3>
+            <p>Seu pedido foi confirmado e autorizado para carregamento:</p>
+            <div class="highlight">
+              <strong>Número do Pedido:</strong> ${data.numeroDocumento}<br>
+              <strong>Transportadora:</strong> ${data.transportadora}<br>
+              <strong>Status:</strong> Confirmado
+            </div>
+            <p>Sua mercadoria será carregada e embarcada em breve. Acompanhe o status no sistema.</p>
+          </div>
+          <div class="footer">
+            Sistema WMS - Gestão de Armazém
+          </div>
+        </div>
+      `;
+
+    case 'boleto_cadastrado':
+      return `
+        ${baseStyle}
+        <div class="container">
+          <div class="header">
+            <h2>Novo Boleto Cadastrado</h2>
+          </div>
+          <div class="content">
+            <h3>Prezado(a) ${data.nome},</h3>
+            <p>Um novo documento financeiro foi cadastrado para sua empresa:</p>
+            <div class="highlight">
+              <strong>Número CTE:</strong> ${data.numeroDocumento}<br>
+              <strong>Cliente:</strong> ${data.cliente}<br>
+              <strong>Status:</strong> Em aberto
+            </div>
+            <p>Acesse o sistema para visualizar os detalhes do documento financeiro e realizar o pagamento.</p>
+            <a href="#" class="button">Acessar Sistema Financeiro</a>
+          </div>
+          <div class="footer">
+            Sistema WMS - Gestão Financeira
+          </div>
+        </div>
+      `;
+
+    case 'cliente_cadastrado':
+      return `
+        ${baseStyle}
+        <div class="container">
+          <div class="header">
+            <h2>🎉 Bem-vindo ao Sistema WMS!</h2>
+          </div>
+          <div class="content">
+            <h3>Olá, ${data.nome}!</h3>
+            <p>Seja bem-vindo ao nosso Sistema de Gestão de Armazém (WMS)!</p>
+            <p>Sua conta foi criada com sucesso. Aqui estão seus dados de acesso:</p>
+            <div class="highlight">
+              <strong>Email:</strong> ${data.email}<br>
+              ${data.senha ? `<strong>Senha Temporária:</strong> ${data.senha}<br>` : ''}
+              <strong>Status:</strong> Ativo
+            </div>
+            <p>Com nosso sistema você poderá:</p>
+            <ul>
+              <li>Acompanhar suas notas fiscais</li>
+              <li>Solicitar carregamentos</li>
+              <li>Visualizar documentos financeiros</li>
+              <li>Receber notificações em tempo real</li>
+            </ul>
+            ${!data.senha ? '<p>Para criar sua senha de acesso, use a opção "Esqueci minha senha" na tela de login.</p>' : ''}
+            <p>Recomendamos alterar sua senha no primeiro acesso por questões de segurança.</p>
+          </div>
+          <div class="footer">
+            Sistema WMS - Gestão de Armazém<br>
+            Suporte: contato@wms.com.br
+          </div>
+        </div>
+      `;
+
+    case 'embarque_confirmado':
+      return `
+        ${baseStyle}
+        <div class="container">
+          <div class="header">
+            <h2>🚚 Embarque Confirmado</h2>
+          </div>
+          <div class="content">
+            <h3>Prezado(a) ${data.nome},</h3>
+            <p>Temos uma ótima notícia! Seu pedido foi embarcado:</p>
+            <div class="highlight">
+              <strong>Número do Documento:</strong> ${data.numeroDocumento}<br>
+              <strong>Status:</strong> Embarcado<br>
+              <strong>Data de Embarque:</strong> ${new Date().toLocaleDateString('pt-BR')}
+            </div>
+            <p>Sua mercadoria está em transporte. Você receberá uma nova notificação quando a entrega for confirmada.</p>
+          </div>
+          <div class="footer">
+            Sistema WMS - Gestão de Armazém
+          </div>
+        </div>
+      `;
+
+    case 'entrega_confirmada':
+      return `
+        ${baseStyle}
+        <div class="container">
+          <div class="header">
+            <h2>✅ Entrega Confirmada</h2>
+          </div>
+          <div class="content">
+            <h3>Parabéns, ${data.nome}!</h3>
+            <p>Sua mercadoria foi entregue com sucesso:</p>
+            <div class="highlight">
+              <strong>Número do Documento:</strong> ${data.numeroDocumento}<br>
+              <strong>Status:</strong> Entregue<br>
+              <strong>Data de Entrega:</strong> ${new Date().toLocaleDateString('pt-BR')}
+            </div>
+            <p>Obrigado por confiar em nossos serviços. Caso tenha alguma dúvida ou feedback, entre em contato conosco.</p>
+          </div>
+          <div class="footer">
+            Sistema WMS - Gestão de Armazém<br>
+            Agradecemos sua preferência!
+          </div>
+        </div>
+      `;
+
+    default:
+      return `
+        ${baseStyle}
+        <div class="container">
+          <div class="header">
+            <h2>Notificação do Sistema</h2>
+          </div>
+          <div class="content">
+            <h3>Olá, ${data.nome || 'Cliente'}!</h3>
+            <p>Você recebeu uma nova notificação do sistema.</p>
+            <p>Para mais detalhes, acesse nossa plataforma.</p>
+          </div>
+          <div class="footer">
+            Sistema WMS
+          </div>
+        </div>
+      `;
+  }
+}
+
 const handler = async (req: Request): Promise<Response> => {
+  console.log("📧 Email notification function called");
+  
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { to, subject, type, data }: EmailRequest = await req.json();
+    const { to, subject, type, data }: NotificationEmailRequest = await req.json();
 
-    console.log('Enviando email:', { to, subject, type });
+    console.log("📧 Sending email:", { to, subject, type });
 
-    let htmlContent = '';
-
-    switch (type) {
-      case 'cliente_cadastrado':
-        htmlContent = `
-          <h1>Bem-vindo ao Sistema WMS!</h1>
-          <p>Olá <strong>${data.nome}</strong>,</p>
-          <p>Seu cadastro como cliente foi realizado com sucesso!</p>
-          <p><strong>Dados de acesso:</strong></p>
-          <ul>
-            <li>Email: ${data.email}</li>
-            ${data.senha ? `<li>Senha temporária: <strong>${data.senha}</strong></li>` : '<li>Use a funcionalidade "Esqueci minha senha" para criar sua senha</li>'}
-          </ul>
-          <p>Acesse o sistema através do link: <a href="${Deno.env.get('SUPABASE_URL')?.replace('supabase.co', 'vercel.app')}/cliente">Portal do Cliente</a></p>
-          <p>Atenciosamente,<br>Equipe WMS</p>
-        `;
-        break;
-
-      case 'transportadora_cadastrada':
-        htmlContent = `
-          <h1>Bem-vindo ao Sistema WMS!</h1>
-          <p>Olá <strong>${data.nome}</strong>,</p>
-          <p>Sua transportadora foi cadastrada com sucesso no sistema!</p>
-          <p><strong>Dados de acesso:</strong></p>
-          <ul>
-            <li>Email: ${data.email}</li>
-            ${data.senha ? `<li>Senha temporária: <strong>${data.senha}</strong></li>` : '<li>Use a funcionalidade "Esqueci minha senha" para criar sua senha</li>'}
-          </ul>
-          <p>Acesse o sistema através do link: <a href="${Deno.env.get('SUPABASE_URL')?.replace('supabase.co', 'vercel.app')}/transportadora">Portal da Transportadora</a></p>
-          <p>Atenciosamente,<br>Equipe WMS</p>
-        `;
-        break;
-
-      case 'boleto_cadastrado':
-        htmlContent = `
-          <h1>Novo Boleto Cadastrado</h1>
-          <p>Olá <strong>${data.nome}</strong>,</p>
-          <p>Foi cadastrado um novo boleto no sistema:</p>
-          <ul>
-            <li>Número do CTE: <strong>${data.numeroDocumento}</strong></li>
-            <li>Cliente: ${data.cliente}</li>
-          </ul>
-          <p>Acesse o sistema para visualizar os detalhes.</p>
-          <p>Atenciosamente,<br>Equipe WMS</p>
-        `;
-        break;
-
-      case 'nf_cadastrada':
-        htmlContent = `
-          <h1>Nova Nota Fiscal Cadastrada</h1>
-          <p>Olá <strong>${data.nome}</strong>,</p>
-          <p>A Nota Fiscal <strong>${data.numeroDocumento}</strong> foi cadastrada em nome de ${data.cliente}.</p>
-          <p>Acesse o sistema para visualizar os detalhes.</p>
-          <p>Atenciosamente,<br>Equipe WMS</p>
-        `;
-        break;
-
-      case 'solicitacao_carregamento':
-        htmlContent = `
-          <h1>Ordem de Carregamento</h1>
-          <p>Olá <strong>${data.nome}</strong>,</p>
-          <p>Foi solicitada a ordem de carregamento do pedido <strong>${data.numeroDocumento}</strong> para ${data.cliente}.</p>
-          <p>Acesse o sistema para visualizar os detalhes.</p>
-          <p>Atenciosamente,<br>Equipe WMS</p>
-        `;
-        break;
-
-      case 'confirmacao_autorizada':
-        htmlContent = `
-          <h1>Pedido Confirmado</h1>
-          <p>Olá <strong>${data.nome}</strong>,</p>
-          <p>O pedido <strong>${data.numeroDocumento}</strong> foi confirmado para a transportadora ${data.transportadora}.</p>
-          <p>Acesse o sistema para visualizar os detalhes.</p>
-          <p>Atenciosamente,<br>Equipe WMS</p>
-        `;
-        break;
-
-      case 'usuario_cadastrado':
-        const roleNames = {
-          'admin_transportadora': 'Administrador da Transportadora',
-          'operador': 'Operador',
-          'cliente': 'Cliente'
-        } as const;
-        
-        htmlContent = `
-          <h1>Bem-vindo ao Sistema WMS!</h1>
-          <p>Olá <strong>${data.nome}</strong>,</p>
-          <p>Sua conta foi criada com sucesso no Sistema WMS!</p>
-          <p><strong>Dados de acesso:</strong></p>
-          <ul>
-            <li>Email: ${data.email}</li>
-            <li>Tipo de usuário: ${roleNames[data.role as keyof typeof roleNames] || data.role}</li>
-            ${data.senha ? `<li>Senha temporária: <strong>${data.senha}</strong></li>` : '<li>Use a funcionalidade "Esqueci minha senha" para criar sua senha</li>'}
-          </ul>
-          <p>Acesse o sistema através do link: <a href="${Deno.env.get('SUPABASE_URL')?.replace('supabase.co', 'vercel.app')}/${data.role === 'cliente' ? 'cliente' : 'transportadora'}">Portal do Sistema</a></p>
-          <p>Atenciosamente,<br>Equipe WMS</p>
-        `;
-        break;
-
-      default:
-        throw new Error('Tipo de email não reconhecido');
+    // Validate required fields
+    if (!to || !subject || !type || !data) {
+      throw new Error("Missing required fields: to, subject, type, data");
     }
 
+    // Generate HTML content based on notification type
+    const htmlContent = getEmailTemplate(type, data);
+
+    // Send email using Resend
     const emailResponse = await resend.emails.send({
-      from: "Sistema WMS <onboarding@resend.dev>",
+      from: "Sistema WMS <noreply@resend.dev>", // Change this to your verified domain
       to: [to],
       subject: subject,
       html: htmlContent,
     });
 
-    console.log("Email enviado com sucesso:", emailResponse);
+    console.log("✅ Email sent successfully:", emailResponse);
 
-    return new Response(JSON.stringify(emailResponse), {
+    return new Response(JSON.stringify({
+      success: true,
+      messageId: emailResponse.data?.id,
+      message: "Email enviado com sucesso"
+    }), {
       status: 200,
       headers: {
         "Content-Type": "application/json",
         ...corsHeaders,
       },
     });
+
   } catch (error: any) {
-    console.error("Erro ao enviar email:", error);
-    return new Response(
-      JSON.stringify({ error: error.message }),
-      {
-        status: 500,
-        headers: { "Content-Type": "application/json", ...corsHeaders },
-      }
-    );
+    console.error("❌ Error in send-notification-email function:", error);
+    
+    return new Response(JSON.stringify({ 
+      error: error.message,
+      success: false 
+    }), {
+      status: 500,
+      headers: { 
+        "Content-Type": "application/json", 
+        ...corsHeaders 
+      },
+    });
   }
 };
 
