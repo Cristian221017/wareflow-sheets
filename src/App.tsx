@@ -20,6 +20,7 @@ import RealtimeProvider from "@/providers/RealtimeProvider";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { DiagnosticPage } from "@/components/system/DiagnosticPage";
 import { SystemHealthDashboard } from "@/components/system/SystemHealthDashboard";
+import { ApiStatusIndicator } from "@/components/system/ApiStatusIndicator";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
@@ -107,6 +108,7 @@ function App() {
                 <RealtimeProvider>
                   <div className="min-h-screen bg-background">
                     <Sonner />
+                    <ApiStatusIndicator />
                     
                     <Routes>
                       <Route path="/" element={<Index />} />

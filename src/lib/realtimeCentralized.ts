@@ -16,6 +16,9 @@ export function subscribeCentralizedChanges(queryClient: QueryClient): () => voi
   }
   log('🔄 Iniciando subscription realtime centralizada');
   
+  // Contador de erros para reduzir spam
+  let errorCount = 0;
+  
   const channel: RealtimeChannel = supabase
     .channel(CENTRAL_CHANNEL_NAME)
     .on(
@@ -55,13 +58,21 @@ export function subscribeCentralizedChanges(queryClient: QueryClient): () => voi
       }
     )
     .subscribe((status) => {
-      log('📡 Status da subscription centralizada:', status);
       if (status === 'SUBSCRIBED') {
+        log('📡 Status da subscription centralizada:', status);
         log('✅ Subscription realtime centralizada ativa');
         activeCentralChannel = channel;
-      } else if (status === 'CHANNEL_ERROR') {
-        warn('❌ Erro na subscription realtime centralizada');
+        errorCount = 0; // Reset contador
+      } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+        errorCount++;
+        // Só logar os primeiros 3 erros, depois a cada 10
+        if (errorCount <= 3 || errorCount % 10 === 0) {
+          log('📡 Status da subscription centralizada:', status);
+          warn('❌ Erro na subscription realtime centralizada');
+        }
         activeCentralChannel = null;
+      } else {
+        log('📡 Status da subscription centralizada:', status);
       }
     });
 

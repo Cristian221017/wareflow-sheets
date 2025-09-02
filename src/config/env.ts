@@ -1,8 +1,8 @@
 export const ENV = {
   MODE: import.meta.env.MODE,
   APP_ENV: import.meta.env.VITE_APP_ENV ?? 'production',
-  SUPABASE_URL: 'https://vyqnnnyamoovzxmuvtkl.supabase.co',
-  SUPABASE_ANON: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ5cW5ubnlhbW9vdnp4bXV2dGtsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU0NjQyMDksImV4cCI6MjA3MTA0MDIwOX0.T-2Pp7rIkBAyzg0-7pV__PT5ssDAxFkZZeyIYOS3shY',
+  SUPABASE_URL: import.meta.env.VITE_SUPABASE_URL ?? 'https://vyqnnnyamoovzxmuvtkl.supabase.co',
+  SUPABASE_ANON: import.meta.env.VITE_SUPABASE_ANON_KEY ?? import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ5cW5ubnlhbW9vdnp4bXV2dGtsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTY1NjE2NTcsImV4cCI6MjA3MjEzNzY1N30.XP44ayoBGhVnm_LCsrzRqhgxbUArLpkfGlZkVHwzDqI',
   APP_NAME: import.meta.env.VITE_APP_NAME ?? 'WMS Sistema',
 };
 

@@ -112,7 +112,9 @@ function correlationId(): string {
   try { return crypto.randomUUID(); } catch { return `${Date.now()}-${Math.random().toString(36).slice(2,8)}`; }
 }
 
-// Persistência resiliente no banco
+// Persistência resiliente no banco com debounce para evitar spam
+const logAttempts = new Map<string, { count: number; lastAttempt: number }>();
+
 async function persistLog(
   level: "INFO" | "WARN" | "ERROR",
   message: string,
@@ -120,6 +122,15 @@ async function persistLog(
   action = "LOG",
   entity_type = "FRONTEND",
 ) {
+  // Throttle para evitar spam de logs da mesma mensagem
+  const logKey = `${level}-${action}-${message.slice(0, 100)}`;
+  const now = Date.now();
+  const attempt = logAttempts.get(logKey);
+  
+  if (attempt && (now - attempt.lastAttempt < 30000) && attempt.count > 3) {
+    return; // Skip se já tentou mais de 3 vezes nos últimos 30 segundos
+  }
+
   const payload = {
     p_entity_type: entity_type,
     p_action: action,
@@ -131,9 +142,32 @@ async function persistLog(
   try {
     // chama RPC diretamente (não depende de tipos gerados)
     const { error } = await (supabase.rpc as any)("log_system_event", payload);
-    if (error && !isProd) console.warn("[logger] log_system_event error:", error.message);
+    
+    if (error) {
+      // Só mostrar erro no console se não é erro de API key repetido
+      if (!isProd && !error.message?.includes('Invalid API key')) {
+        console.warn("[logger] log_system_event error:", error.message);
+      }
+      
+      // Track tentativas falhadas
+      logAttempts.set(logKey, {
+        count: (attempt?.count ?? 0) + 1,
+        lastAttempt: now
+      });
+    } else {
+      // Limpar contador se sucesso
+      logAttempts.delete(logKey);
+    }
   } catch (e: any) {
-    if (!isProd) console.warn("[logger] persistLog failed:", e?.message || e);
+    if (!isProd && !e?.message?.includes('Invalid API key')) {
+      console.warn("[logger] persistLog failed:", e?.message || e);
+    }
+    
+    // Track tentativas falhadas
+    logAttempts.set(logKey, {
+      count: (attempt?.count ?? 0) + 1,
+      lastAttempt: now
+    });
   }
 }
 
@@ -173,6 +207,20 @@ export const error = (...args: any[]) => {
   inMemoryLogger.addLog("ERROR", message, merged);
   void persistLog("ERROR", message, merged);
 };
+
+// Cleanup das tentativas antigas a cada 5 minutos
+if (typeof window !== 'undefined') {
+  setInterval(() => {
+    const now = Date.now();
+    const cutoff = now - (5 * 60 * 1000); // 5 minutos
+    
+    for (const [key, attempt] of logAttempts.entries()) {
+      if (attempt.lastAttempt < cutoff) {
+        logAttempts.delete(key);
+      }
+    }
+  }, 5 * 60 * 1000); // Executar a cada 5 minutos
+}
 
 // Funcionalidades adicionais para debugging
 export const debug = (...args: any[]) => {
