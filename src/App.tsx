@@ -19,6 +19,7 @@ import MercadoriasEmbarcadas from "@/pages/MercadoriasEmbarcadas";
 import MercadoriasEntregues from "@/pages/MercadoriasEntregues";
 import DiagnosticPage from "@/components/system/DiagnosticPage";
 import SystemStatus from "@/components/system/SystemStatus";
+import DebugLogViewer from "@/components/system/DebugLogViewer";
 import { AuthRefreshButton } from "@/components/system/AuthRefreshButton";
 import React from 'react';
 import OptimizedRealtimeProvider from "@/providers/OptimizedRealtimeProvider";
@@ -170,6 +171,15 @@ function App() {
                           element={
                             <ProtectedRoute allowedRoles={['super_admin']}>
                               <DiagnosticPage />
+                            </ProtectedRoute>
+                          } 
+                        />
+                        
+                        <Route 
+                          path="/debug-logs" 
+                          element={
+                            <ProtectedRoute allowedRoles={['super_admin']}>
+                              <DebugLogViewer />
                             </ProtectedRoute>
                           } 
                         />

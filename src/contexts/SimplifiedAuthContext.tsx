@@ -12,12 +12,12 @@ export function SimplifiedAuthProvider({ children }: { children: React.ReactNode
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Função simples e direta para carregar dados do usuário
   const loadUserData = useCallback(async (supabaseUser: SupabaseUser): Promise<User> => {
     try {
       // Logs essenciais apenas
       if (supabaseUser.email?.includes('test') || ENV.MODE === 'development') {
         log(`🔍 [Simple] Loading user for: ${supabaseUser.email}`);
+        (window as any).debugLogger?.log('DEBUG', 'AUTH', `Loading user data for: ${supabaseUser.email}`);
       }
       
       // Usar a função RPC otimizada, mas com timeout curto
@@ -34,6 +34,7 @@ export function SimplifiedAuthProvider({ children }: { children: React.ReactNode
       if (error) {
         if (ENV.MODE === 'development') {
           log('⚠️ RPC error, using fallback approach:', error.message);
+          (window as any).debugLogger?.log('WARN', 'AUTH', 'RPC error, using fallback', { error: error.message });
         }
         return await loadUserDataFallback(supabaseUser);
       }
@@ -42,6 +43,7 @@ export function SimplifiedAuthProvider({ children }: { children: React.ReactNode
           const userData = result[0].user_data;
           if (ENV.MODE === 'development') {
             log(`✅ [Simple] User loaded successfully: ${userData.type}`);
+            (window as any).debugLogger?.log('INFO', 'AUTH', `User loaded via RPC: ${userData.type}`, { userData });
           }
           return userData as User;
         }
@@ -51,6 +53,7 @@ export function SimplifiedAuthProvider({ children }: { children: React.ReactNode
       } catch (error) {
         if (ENV.MODE === 'development') {
           log('⚠️ Loading error, using fallback:', error);
+          (window as any).debugLogger?.log('ERROR', 'AUTH', 'User loading error', { error: String(error) });
         }
         return await loadUserDataFallback(supabaseUser);
       }
