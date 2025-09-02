@@ -38,23 +38,35 @@ export class ErrorBoundary extends React.Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    // Log do erro
-    logError('🚨 ErrorBoundary capturou erro:', {
-      error: error.message,
-      stack: error.stack,
-      componentStack: errorInfo.componentStack,
-      errorId: this.state.errorId
-    });
+    // Filtrar erros comuns que não são críticos
+    const isCommonError = error.message.includes('deferred DOM Node') ||
+                         error.message.includes('ResizeObserver') ||
+                         error.message.includes('Non-Error promise rejection');
+    
+    if (!isCommonError) {
+      // Log do erro apenas se for significativo
+      logError('🚨 ErrorBoundary capturou erro:', {
+        error: error.message,
+        stack: error.stack?.substring(0, 500), // Limitar tamanho do stack
+        componentStack: errorInfo.componentStack?.substring(0, 300),
+        errorId: this.state.errorId
+      });
+    }
 
     // Callback customizado
     this.props.onError?.(error, errorInfo);
 
-    // Em produção, enviar para serviço de monitoramento
-    if (import.meta.env.MODE === 'production') {
-      // Sentry.captureException(error, {
-      //   contexts: { react: errorInfo },
-      //   tags: { errorBoundary: true, errorId: this.state.errorId }
-      // });
+    // Em produção, evitar envios excessivos para serviços de monitoramento
+    if (import.meta.env.MODE === 'production' && !isCommonError) {
+      // Rate limiting para evitar spam de erros
+      const errorKey = `error_${error.message.substring(0, 50)}`;
+      const lastSent = localStorage.getItem(errorKey);
+      const now = Date.now();
+      
+      if (!lastSent || now - parseInt(lastSent) > 300000) { // 5 minutos
+        localStorage.setItem(errorKey, now.toString());
+        // Aqui enviaria para serviço quando habilitado
+      }
     }
   }
 

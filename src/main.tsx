@@ -18,7 +18,30 @@ const queryClient = new QueryClient({
   },
 });
 
-const root = createRoot(document.getElementById("root")!);
+// Suppress console warnings for production
+if (import.meta.env.MODE === 'production') {
+  const originalWarn = console.warn;
+  console.warn = (...args) => {
+    const message = args[0];
+    if (typeof message === 'string') {
+      // Suppress specific warnings
+      if (message.includes('Unrecognized feature') || 
+          message.includes('sandbox attribute') ||
+          message.includes('deferred DOM Node')) {
+        return;
+      }
+    }
+    originalWarn.apply(console, args);
+  };
+}
+
+const rootElement = document.getElementById("root");
+if (!rootElement) {
+  console.error("Root element not found");
+  throw new Error("Root element not found");
+}
+
+const root = createRoot(rootElement);
 
 if (!assertSupabaseEnv()) {
   root.render(<EnvErrorPage />);
