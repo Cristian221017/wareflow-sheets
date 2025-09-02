@@ -55,7 +55,6 @@ export function CarregamentoActionButton({
   };
 
   const handleDesfazerSolicitacao = async () => {
-    // Implementar função para desfazer solicitação em versão futura
     toast.info('Funcionalidade de desfazer solicitação será implementada');
   };
 

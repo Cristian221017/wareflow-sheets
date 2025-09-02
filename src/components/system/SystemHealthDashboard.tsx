@@ -1,4 +1,4 @@
-// Dashboard completo de saúde do sistema
+import { log, error as logError } from '@/utils/logger';
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -25,7 +25,7 @@ export function SystemHealthDashboard() {
       const result = await monitor.runHealthCheck();
       setHealth(result);
     } catch (error) {
-      console.error('Health check failed:', error);
+      logError('Health check failed:', error);
       monitor.addError({
         type: 'ui',
         severity: 'medium',

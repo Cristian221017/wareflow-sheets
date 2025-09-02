@@ -107,7 +107,7 @@ export function SuperAdminTransportadoras() {
           .eq('id', editingTransportadora.id);
 
         if (error) {
-          console.error('Error updating transportadora:', error);
+          logError('Error updating transportadora:', error);
           toast.error('Erro ao atualizar transportadora');
           return;
         }
@@ -120,7 +120,7 @@ export function SuperAdminTransportadoras() {
           .insert([formData]);
 
         if (error) {
-          console.error('Error creating transportadora:', error);
+          logError('Error creating transportadora:', error);
           toast.error('Erro ao criar transportadora');
           return;
         }
@@ -133,7 +133,7 @@ export function SuperAdminTransportadoras() {
       resetForm();
       loadTransportadoras();
     } catch (error) {
-      console.error('Error in handleSubmit:', error);
+      logError('Error in handleSubmit:', error);
       toast.error('Erro inesperado');
     }
   };

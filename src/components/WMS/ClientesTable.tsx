@@ -8,6 +8,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { useState, useEffect } from 'react';
 import { FormCadastroCliente } from './FormCadastroCliente';
+import { DeleteClientDialog } from './DeleteClientDialog';
 import { clientPasswordManager } from '@/utils/clientPasswordManager';
 import {
   Table,
@@ -50,6 +51,8 @@ export function ClientesTable() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingCliente, setEditingCliente] = useState<Cliente | null>(null);
   const [resettingPassword, setResettingPassword] = useState<string | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [clienteToDelete, setClienteToDelete] = useState<{ id: string; name: string } | null>(null);
 
   const loadClientes = async () => {
     if (!user?.transportadoraId) return;
@@ -133,65 +136,73 @@ export function ClientesTable() {
   };
 
   const handleDeleteCliente = async (clienteId: string, clienteName: string) => {
-    if (window.confirm(`Tem certeza que deseja excluir o cliente "${clienteName}"? Esta ação não pode ser desfeita.`)) {
-      try {
-        // Primeiro, excluir dados relacionados em ordem para evitar conflitos de foreign key
-        
-        // 1. Excluir pedidos liberados
-        const { error: pedidosLiberadosError } = await supabase
-          .from('pedidos_liberados')
-          .delete()
-          .eq('cliente_id', clienteId);
-        
-        if (pedidosLiberadosError) {
-          logError('Erro ao excluir pedidos liberados:', pedidosLiberadosError);
-        }
+    setClienteToDelete({ id: clienteId, name: clienteName });
+    setDeleteDialogOpen(true);
+  };
 
-        // 2. Excluir pedidos de liberação
-        const { error: pedidosLiberacaoError } = await supabase
-          .from('pedidos_liberacao')
-          .delete()
-          .eq('cliente_id', clienteId);
-        
-        if (pedidosLiberacaoError) {
-          logError('Erro ao excluir pedidos de liberação:', pedidosLiberacaoError);
-        }
+  const confirmDeleteCliente = async () => {
+    if (!clienteToDelete) return;
 
-        // 3. Excluir notas fiscais
-        const { error: notasError } = await supabase
-          .from('notas_fiscais')
-          .delete()
-          .eq('cliente_id', clienteId);
-        
-        if (notasError) {
-          logError('Erro ao excluir notas fiscais:', notasError);
-        }
-
-        // 4. Finalmente, excluir o cliente
-        const { error } = await supabase
-          .from('clientes')
-          .delete()
-          .eq('id', clienteId);
-
-        if (error) {
-          logError('Erro ao excluir cliente:', error);
-          throw error;
-        }
-
-        await loadClientes();
-        showToast({
-          title: 'Sucesso',
-          description: 'Cliente e todos os dados relacionados foram excluídos com sucesso',
-          variant: 'default',
-        });
-      } catch (error) {
-        logError('Erro ao excluir cliente:', error);
-        showToast({
-          title: 'Erro',
-          description: 'Não foi possível excluir o cliente. Verifique se você tem permissões adequadas.',
-          variant: 'destructive',
-        });
+    try {
+      // Primeiro, excluir dados relacionados em ordem para evitar conflitos de foreign key
+      
+      // 1. Excluir pedidos liberados
+      const { error: pedidosLiberadosError } = await supabase
+        .from('pedidos_liberados')
+        .delete()
+        .eq('cliente_id', clienteToDelete.id);
+      
+      if (pedidosLiberadosError) {
+        logError('Erro ao excluir pedidos liberados:', pedidosLiberadosError);
       }
+
+      // 2. Excluir pedidos de liberação
+      const { error: pedidosLiberacaoError } = await supabase
+        .from('pedidos_liberacao')
+        .delete()
+        .eq('cliente_id', clienteToDelete.id);
+      
+      if (pedidosLiberacaoError) {
+        logError('Erro ao excluir pedidos de liberação:', pedidosLiberacaoError);
+      }
+
+      // 3. Excluir notas fiscais
+      const { error: notasError } = await supabase
+        .from('notas_fiscais')
+        .delete()
+        .eq('cliente_id', clienteToDelete.id);
+      
+      if (notasError) {
+        logError('Erro ao excluir notas fiscais:', notasError);
+      }
+
+      // 4. Finalmente, excluir o cliente
+      const { error } = await supabase
+        .from('clientes')
+        .delete()
+        .eq('id', clienteToDelete.id);
+
+      if (error) {
+        logError('Erro ao excluir cliente:', error);
+        throw error;
+      }
+
+      await loadClientes();
+      showToast({
+        title: 'Sucesso',
+        description: 'Cliente e todos os dados relacionados foram excluídos com sucesso',
+        variant: 'default',
+      });
+      
+      setDeleteDialogOpen(false);
+      setClienteToDelete(null);
+    } catch (error) {
+      logError('Erro ao excluir cliente:', error);
+      showToast({
+        title: 'Erro',
+        description: 'Não foi possível excluir o cliente. Verifique se você tem permissões adequadas.',
+        variant: 'destructive',
+      });
     }
   };
 
@@ -213,156 +224,165 @@ export function ClientesTable() {
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <div>
-            <CardTitle className="flex items-center gap-2">
-              <Users className="w-5 h-5" />
-              Gestão de Clientes
-            </CardTitle>
-            <CardDescription>
-              Gerencie os clientes cadastrados na sua transportadora
-            </CardDescription>
+    <>
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <Users className="w-5 h-5" />
+                Gestão de Clientes
+              </CardTitle>
+              <CardDescription>
+                Gerencie os clientes cadastrados na sua transportadora
+              </CardDescription>
+            </div>
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+              <DialogTrigger asChild>
+                <Button className="bg-info text-info-foreground hover:bg-info/80">
+                  <Plus className="w-4 h-4 mr-2" />
+                  Novo Cliente
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-[95vw] sm:max-w-4xl max-h-[90vh] overflow-y-auto">
+                <FormCadastroCliente 
+                  onSuccess={() => {
+                    loadClientes();
+                    setIsDialogOpen(false);
+                  }}
+                />
+              </DialogContent>
+            </Dialog>
           </div>
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger asChild>
-              <Button className="bg-info text-info-foreground hover:bg-info/80">
-                <Plus className="w-4 h-4 mr-2" />
-                Novo Cliente
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-[95vw] sm:max-w-4xl max-h-[90vh] overflow-y-auto">
-              <FormCadastroCliente 
-                onSuccess={() => {
-                  loadClientes();
-                  setIsDialogOpen(false);
-                }}
-              />
-            </DialogContent>
-          </Dialog>
-        </div>
-      </CardHeader>
-      <CardContent>
-        <div className="overflow-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Razão Social</TableHead>
-                <TableHead>Nome Fantasia</TableHead>
-                <TableHead>CNPJ</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Telefone</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Data Cadastro</TableHead>
-                <TableHead>Ações</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {clientes.length === 0 ? (
+        </CardHeader>
+        <CardContent>
+          <div className="overflow-auto">
+            <Table>
+              <TableHeader>
                 <TableRow>
-                  <TableCell colSpan={8} className="text-center py-6 text-muted-foreground">
-                    Nenhum cliente cadastrado
-                  </TableCell>
+                  <TableHead>Razão Social</TableHead>
+                  <TableHead>Nome Fantasia</TableHead>
+                  <TableHead>CNPJ</TableHead>
+                  <TableHead>Email</TableHead>
+                  <TableHead>Telefone</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Data Cadastro</TableHead>
+                  <TableHead>Ações</TableHead>
                 </TableRow>
-              ) : (
-                clientes.map((cliente) => (
-                  <TableRow key={cliente.id}>
-                    <TableCell className="font-medium">{cliente.razao_social}</TableCell>
-                    <TableCell>{cliente.nome_fantasia || '-'}</TableCell>
-                    <TableCell>{cliente.cnpj}</TableCell>
-                    <TableCell>{cliente.email}</TableCell>
-                    <TableCell>{cliente.telefone || '-'}</TableCell>
-                    <TableCell>
-                      <Badge 
-                        variant={cliente.status === 'ativo' ? 'default' : 'secondary'}
-                        className={cliente.status === 'ativo' 
-                          ? 'bg-success text-success-foreground' 
-                          : 'bg-muted text-muted-foreground'
-                        }
-                      >
-                        {cliente.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      {new Date(cliente.created_at).toLocaleDateString('pt-BR')}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Dialog>
-                          <DialogTrigger asChild>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => setEditingCliente(cliente)}
-                              title="Editar cliente"
-                            >
-                              <Edit className="w-4 h-4" />
-                            </Button>
-                          </DialogTrigger>
-                          <DialogContent className="max-w-[95vw] sm:max-w-4xl max-h-[90vh] overflow-y-auto">
-                            <FormCadastroCliente 
-                              clienteToEdit={{
-                                id: cliente.id,
-                                name: cliente.razao_social,
-                                email: cliente.email,
-                                cnpj: cliente.cnpj,
-                                emailNotaFiscal: cliente.email_nota_fiscal || '',
-                                emailSolicitacaoLiberacao: cliente.email_solicitacao_liberacao || '',
-                                emailLiberacaoAutorizada: cliente.email_liberacao_autorizada || '',
-                                emailNotificacaoBoleto: cliente.email_notificacao_boleto || '',
-                              }}
-                              onSuccess={() => {
-                                loadClientes();
-                                setEditingCliente(null);
-                              }}
-                            />
-                          </DialogContent>
-                        </Dialog>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => toggleClienteStatus(cliente.id, cliente.status)}
-                          title={cliente.status === 'ativo' ? 'Inativar cliente' : 'Ativar cliente'}
-                        >
-                          {cliente.status === 'ativo' ? (
-                            <UserX className="w-4 h-4" />
-                          ) : (
-                            <UserCheck className="w-4 h-4" />
-                          )}
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleResetClientPassword(cliente)}
-                          disabled={resettingPassword === cliente.id}
-                          title="Resetar senha do cliente"
-                          className="text-orange-600 hover:text-orange-700"
-                        >
-                          {resettingPassword === cliente.id ? (
-                            <div className="animate-spin w-4 h-4 border-2 border-current border-t-transparent rounded-full" />
-                          ) : (
-                            <KeyRound className="w-4 h-4" />
-                          )}
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleDeleteCliente(cliente.id, cliente.razao_social)}
-                          title="Excluir cliente"
-                          className="text-destructive hover:text-destructive"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </div>
+              </TableHeader>
+              <TableBody>
+                {clientes.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={8} className="text-center py-6 text-muted-foreground">
+                      Nenhum cliente cadastrado
                     </TableCell>
                   </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </div>
-      </CardContent>
-    </Card>
+                ) : (
+                  clientes.map((cliente) => (
+                    <TableRow key={cliente.id}>
+                      <TableCell className="font-medium">{cliente.razao_social}</TableCell>
+                      <TableCell>{cliente.nome_fantasia || '-'}</TableCell>
+                      <TableCell>{cliente.cnpj}</TableCell>
+                      <TableCell>{cliente.email}</TableCell>
+                      <TableCell>{cliente.telefone || '-'}</TableCell>
+                      <TableCell>
+                        <Badge 
+                          variant={cliente.status === 'ativo' ? 'default' : 'secondary'}
+                          className={cliente.status === 'ativo' 
+                            ? 'bg-success text-success-foreground' 
+                            : 'bg-muted text-muted-foreground'
+                          }
+                        >
+                          {cliente.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        {new Date(cliente.created_at).toLocaleDateString('pt-BR')}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <Dialog>
+                            <DialogTrigger asChild>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setEditingCliente(cliente)}
+                                title="Editar cliente"
+                              >
+                                <Edit className="w-4 h-4" />
+                              </Button>
+                            </DialogTrigger>
+                            <DialogContent className="max-w-[95vw] sm:max-w-4xl max-h-[90vh] overflow-y-auto">
+                              <FormCadastroCliente 
+                                clienteToEdit={{
+                                  id: cliente.id,
+                                  name: cliente.razao_social,
+                                  email: cliente.email,
+                                  cnpj: cliente.cnpj,
+                                  emailNotaFiscal: cliente.email_nota_fiscal || '',
+                                  emailSolicitacaoLiberacao: cliente.email_solicitacao_liberacao || '',
+                                  emailLiberacaoAutorizada: cliente.email_liberacao_autorizada || '',
+                                  emailNotificacaoBoleto: cliente.email_notificacao_boleto || '',
+                                }}
+                                onSuccess={() => {
+                                  loadClientes();
+                                  setEditingCliente(null);
+                                }}
+                              />
+                            </DialogContent>
+                          </Dialog>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => toggleClienteStatus(cliente.id, cliente.status)}
+                            title={cliente.status === 'ativo' ? 'Inativar cliente' : 'Ativar cliente'}
+                          >
+                            {cliente.status === 'ativo' ? (
+                              <UserX className="w-4 h-4" />
+                            ) : (
+                              <UserCheck className="w-4 h-4" />
+                            )}
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleResetClientPassword(cliente)}
+                            disabled={resettingPassword === cliente.id}
+                            title="Resetar senha do cliente"
+                            className="text-orange-600 hover:text-orange-700"
+                          >
+                            {resettingPassword === cliente.id ? (
+                              <div className="animate-spin w-4 h-4 border-2 border-current border-t-transparent rounded-full" />
+                            ) : (
+                              <KeyRound className="w-4 h-4" />
+                            )}
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleDeleteCliente(cliente.id, cliente.razao_social)}
+                            title="Excluir cliente"
+                            className="text-destructive hover:text-destructive"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        </CardContent>
+      </Card>
+
+      <DeleteClientDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        clienteName={clienteToDelete?.name || ''}
+        onConfirm={confirmDeleteCliente}
+      />
+    </>
   );
 }

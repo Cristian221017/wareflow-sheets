@@ -5,6 +5,7 @@ import { Calendar, FileText, Download, Clock, CheckCircle, X } from "lucide-reac
 import { useSolicitacoesCliente } from "@/hooks/useSolicitacoes";
 import { getAnexoUrl } from "@/lib/nfApi";
 import { toast } from "sonner";
+import { error as logError } from "@/utils/logger";
 
 export function MinhasSolicitacoes() {
   const { data: solicitacoes, isLoading } = useSolicitacoesCliente();
@@ -46,7 +47,7 @@ export function MinhasSolicitacoes() {
       
       toast.success('Download iniciado!');
     } catch (error) {
-      console.error('❌ Erro ao baixar anexo:', error);
+      logError('❌ Erro ao baixar anexo:', error);
       toast.error('Erro ao baixar anexo');
     }
   };

@@ -1,3 +1,4 @@
+import { log, error as logError } from '@/utils/logger';
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -48,7 +49,7 @@ export default function ResetPassword() {
           }
         }
       } catch (error) {
-        console.error('Auth callback error:', error);
+        logError('Auth callback error:', error);
         toast.error('Erro ao processar link de redefinição');
         navigate('/');
       }

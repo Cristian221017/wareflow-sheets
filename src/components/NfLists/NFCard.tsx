@@ -6,6 +6,7 @@ import { Clock, Package, CheckCircle, Truck, User, Download, Trash2 } from "luci
 import type { NotaFiscal } from "@/types/nf";
 import { getAnexoUrl } from "@/lib/nfApi";
 import { toast } from "sonner";
+import { error as logError } from "@/utils/logger";
 
 interface NFCardProps {
   nf: NotaFiscal;
@@ -225,7 +226,7 @@ export function NFCard({
                               
                               toast.success('Download iniciado!');
                             } catch (error) {
-                              console.error('❌ Erro no download:', error);
+                              logError('❌ Erro no download:', error);
                               toast.error('Erro ao baixar anexo');
                             }
                           }}
