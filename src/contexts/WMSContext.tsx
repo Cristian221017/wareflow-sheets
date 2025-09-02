@@ -7,9 +7,6 @@ import { solicitarNF, confirmarNF, recusarNF } from "@/lib/nfApi";
 import { useQueryClient } from '@tanstack/react-query';
 import { notificationService } from '@/utils/notificationService';
 import { log, warn, error as logError, auditError } from '@/utils/optimizedLogger';
-import { superLogger } from '@/utils/superDebugLogger';
-
-superLogger.log('WMS_CONTEXT', 'START', 'Initializing WMSContext');
 
 interface WMSContextType {
   // Data
@@ -40,22 +37,15 @@ interface WMSContextType {
 const WMSContext = createContext<WMSContextType | undefined>(undefined);
 
 export function WMSProvider({ children }: { children: ReactNode }) {
-  superLogger.log('WMS_PROVIDER', 'START', 'WMSProvider initializing');
-  
   const auth = useAuth();
-  superLogger.log('WMS_AUTH', 'SUCCESS', 'Auth hook called');
-  
   const { user, loading } = auth;
   const queryClient = useQueryClient();
-  superLogger.log('WMS_QUERY_CLIENT', 'SUCCESS', 'QueryClient hook called');
   
   // CRÍTICO: Todos os hooks DEVEM estar antes de qualquer conditional return
   const [notasFiscais, setNotasFiscais] = useState<NotaFiscal[]>([]);
   const [pedidosLiberacao, setPedidosLiberacao] = useState<PedidoLiberacao[]>([]);
   const [pedidosLiberados, setPedidosLiberados] = useState<PedidoLiberado[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  
-  superLogger.log('WMS_STATE', 'SUCCESS', 'All state hooks initialized');
   
   const invalidateWithScope = (entityType: 'nfs' | 'documentos_financeiros', entityId?: string, userType?: string, userId?: string) => {
     if (entityType === 'nfs') {

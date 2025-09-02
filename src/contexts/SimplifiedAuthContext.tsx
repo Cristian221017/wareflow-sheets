@@ -4,24 +4,15 @@ import { supabase } from '@/integrations/supabase/client';
 import { User, AuthContextType } from '@/types/auth';
 import { log, warn, error as logError } from '@/utils/productionOptimizedLogger';
 import { ENV } from '@/config/env';
-import { superLogger } from '@/utils/superDebugLogger';
-
-superLogger.log('SIMPLIFIED_AUTH_CONTEXT', 'START', 'Initializing SimplifiedAuthContext');
 
 const SimplifiedAuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function SimplifiedAuthProvider({ children }: { children: React.ReactNode }) {
-  superLogger.log('SIMPLIFIED_AUTH_PROVIDER', 'START', 'Initializing provider');
-  
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
 
-  superLogger.log('SIMPLIFIED_AUTH_STATE', 'SUCCESS', 'State initialized');
-
   const loadUserData = useCallback(async (supabaseUser: SupabaseUser): Promise<User> => {
-    superLogger.log('LOAD_USER_DATA', 'START', { email: supabaseUser.email });
-    
     try {
       // Logs essenciais apenas
       if (supabaseUser.email?.includes('test') || ENV.MODE === 'development') {
@@ -41,7 +32,6 @@ export function SimplifiedAuthProvider({ children }: { children: React.ReactNode
       ]);
       
       if (error) {
-        superLogger.log('LOAD_USER_DATA', 'ERROR', { error: error.message }, error);
         if (ENV.MODE === 'development') {
           log('⚠️ RPC error, using fallback approach:', error.message);
           (window as any).debugLogger?.log('WARN', 'AUTH', 'RPC error, using fallback', { error: error.message });
@@ -51,7 +41,6 @@ export function SimplifiedAuthProvider({ children }: { children: React.ReactNode
       
         if (result && Array.isArray(result) && result.length > 0) {
           const userData = result[0].user_data;
-          superLogger.log('LOAD_USER_DATA', 'SUCCESS', { userType: userData.type });
           if (ENV.MODE === 'development') {
             log(`✅ [Simple] User loaded successfully: ${userData.type}`);
             (window as any).debugLogger?.log('INFO', 'AUTH', `User loaded via RPC: ${userData.type}`, { userData });
