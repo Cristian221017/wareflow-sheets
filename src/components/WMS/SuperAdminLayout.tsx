@@ -40,7 +40,7 @@ export function SuperAdminLayout() {
   const tabs = [
     { value: "dashboard", label: "Dashboard", icon: BarChart3 },
     { value: "transportadoras", label: "Transportadoras", icon: Building2 },
-    { value: "usuarios", label: "Usuários", icon: Users },
+    { value: "usuarios", label: "Super Admins", icon: Users },
     { value: "deployment", label: "Deployment Seguro", icon: Shield },
     { value: "manutencao", label: "Manutenção", icon: Wrench },
     { value: "logs", label: "Logs", icon: FileText },

@@ -30,7 +30,7 @@ interface AdminUser {
   name: string;
   email: string;
   created_at: string;
-  role: 'super_admin' | 'admin_transportadora' | 'operador';
+  role: 'super_admin';
   is_active: boolean;
   transportadora_id?: string;
   transportadora_nome?: string;
@@ -53,12 +53,12 @@ export function AdminScopedUserManagement() {
     name: string;
     email: string; 
     transportadora_id: string;
-    role: 'super_admin' | 'admin_transportadora' | 'operador';
+    role: 'super_admin';
   }>({
     name: '',
     email: '',
     transportadora_id: '',
-    role: 'operador'
+    role: 'super_admin'
   });
   const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false);
   const [passwordChangeUser, setPasswordChangeUser] = useState<AdminUser | null>(null);
@@ -71,7 +71,7 @@ export function AdminScopedUserManagement() {
     try {
       setLoading(true);
       
-      // Carregar apenas usuários administrativos (que têm role em user_transportadoras)
+      // Carregar apenas usuários super_admin (admins de transportadoras ficam na aba de transportadoras)
       const { data: adminUsersData, error: adminError } = await supabase
         .from('user_transportadoras')
         .select(`
@@ -88,6 +88,7 @@ export function AdminScopedUserManagement() {
             razao_social
           )
         `)
+        .eq('role', 'super_admin')
         .order('created_at', { ascending: false });
 
       if (adminError) {
@@ -191,7 +192,7 @@ export function AdminScopedUserManagement() {
 
       toast.success('Usuário administrativo criado com sucesso!');
       setIsCreateModalOpen(false);
-      setFormData({ name: '', email: '', transportadora_id: '', role: 'operador' });
+              setFormData({ name: '', email: '', transportadora_id: '', role: 'super_admin' });
       loadData();
     } catch (error) {
       logError('Erro em handleCreateUser:', error);
@@ -239,7 +240,7 @@ export function AdminScopedUserManagement() {
       toast.success('Usuário atualizado com sucesso!');
       setIsEditModalOpen(false);
       setSelectedUser(null);
-      setFormData({ name: '', email: '', transportadora_id: '', role: 'operador' });
+      setFormData({ name: '', email: '', transportadora_id: '', role: 'super_admin' });
       loadData();
     } catch (error) {
       logError('Erro em handleUpdateUser:', error);
@@ -348,24 +349,24 @@ export function AdminScopedUserManagement() {
         <div>
           <h2 className="text-2xl font-bold flex items-center gap-2">
             <Shield className="w-6 h-6" />
-            Usuários Administrativos
+            Super Admins
           </h2>
           <p className="text-muted-foreground">
-            Gerencie usuários com acesso ao painel administrativo
+            Gerencie usuários Super Admin do sistema
           </p>
         </div>
         <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
           <DialogTrigger asChild>
             <Button>
               <UserPlus className="w-4 h-4 mr-2" />
-              Novo Usuário Admin
+              Novo Super Admin
             </Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Criar Novo Usuário Administrativo</DialogTitle>
+              <DialogTitle>Criar Novo Super Admin</DialogTitle>
               <DialogDescription>
-                Crie um novo usuário com acesso ao painel administrativo
+                Crie um novo usuário Super Admin do sistema
               </DialogDescription>
             </DialogHeader>
             
@@ -414,15 +415,13 @@ export function AdminScopedUserManagement() {
                 <Label htmlFor="role">Perfil *</Label>
                 <Select 
                   value={formData.role} 
-                  onValueChange={(value: 'super_admin' | 'admin_transportadora' | 'operador') => 
+                  onValueChange={(value: 'super_admin') => 
                     setFormData(prev => ({ ...prev, role: value }))}
                 >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="operador">Operador</SelectItem>
-                    <SelectItem value="admin_transportadora">Admin Transportadora</SelectItem>
                     <SelectItem value="super_admin">Super Admin</SelectItem>
                   </SelectContent>
                 </Select>
@@ -461,10 +460,10 @@ export function AdminScopedUserManagement() {
         <CardHeader>
           <CardTitle className="flex items-center space-x-2">
             <Users className="w-5 h-5" />
-            <span>Usuários Administrativos</span>
+            <span>Super Admins</span>
           </CardTitle>
           <CardDescription>
-            {filteredUsers.length} usuário(s) administrativo(s) encontrado(s)
+            {filteredUsers.length} super admin(s) encontrado(s)
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -476,7 +475,7 @@ export function AdminScopedUserManagement() {
           ) : filteredUsers.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               <Users className="w-12 h-12 mx-auto mb-4 opacity-50" />
-              <p>Nenhum usuário administrativo encontrado</p>
+              <p>Nenhum super admin encontrado</p>
             </div>
           ) : (
             <Table>
@@ -571,9 +570,9 @@ export function AdminScopedUserManagement() {
                           </DialogTrigger>
                           <DialogContent>
                             <DialogHeader>
-                              <DialogTitle>Editar Usuário Administrativo</DialogTitle>
+                              <DialogTitle>Editar Super Admin</DialogTitle>
                               <DialogDescription>
-                                Atualize as informações do usuário administrativo
+                                Atualize as informações do Super Admin
                               </DialogDescription>
                             </DialogHeader>
                             
@@ -618,23 +617,21 @@ export function AdminScopedUserManagement() {
                                 </Select>
                               </div>
 
-                              <div className="space-y-2">
-                                <Label htmlFor="edit-role">Perfil *</Label>
-                                <Select 
-                                  value={formData.role} 
-                                  onValueChange={(value: 'super_admin' | 'admin_transportadora' | 'operador') => 
-                                    setFormData(prev => ({ ...prev, role: value }))}
-                                >
-                                  <SelectTrigger>
-                                    <SelectValue />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value="operador">Operador</SelectItem>
-                                    <SelectItem value="admin_transportadora">Admin Transportadora</SelectItem>
-                                    <SelectItem value="super_admin">Super Admin</SelectItem>
-                                  </SelectContent>
-                                </Select>
-                              </div>
+                                <div className="space-y-2">
+                                  <Label htmlFor="edit-role">Perfil *</Label>
+                                  <Select 
+                                    value={formData.role} 
+                                    onValueChange={(value: 'super_admin') => 
+                                      setFormData(prev => ({ ...prev, role: value }))}
+                                  >
+                                    <SelectTrigger>
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="super_admin">Super Admin</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </div>
                             </div>
 
                             <DialogFooter>
