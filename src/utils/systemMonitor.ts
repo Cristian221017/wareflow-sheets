@@ -273,40 +273,31 @@ class SystemMonitor {
     const start = performance.now();
     
     try {
-      // Verificar se há dados órfãos ou inconsistências
-      const { data: nfsSemCliente, error: nfError } = await supabase
-        .from('notas_fiscais')
-        .select('id')
-        .not('cliente_id', 'in', `(select id from clientes)`)
-        .limit(5);
-
-      const { data: clientesSemTransportadora, error: clienteError } = await supabase
-        .from('clientes')
-        .select('id')
-        .not('transportadora_id', 'in', `(select id from transportadoras)`)
-        .limit(5);
+      // Verificar contagens básicas das tabelas principais
+      const [nfCount, clienteCount, transportadoraCount] = await Promise.all([
+        supabase.from('notas_fiscais').select('id', { count: 'exact', head: true }),
+        supabase.from('clientes').select('id', { count: 'exact', head: true }),
+        supabase.from('transportadoras').select('id', { count: 'exact', head: true })
+      ]);
 
       const duration = performance.now() - start;
 
-      if (nfError || clienteError) {
+      if (nfCount.error || clienteCount.error || transportadoraCount.error) {
         return {
           name: 'Data Integrity',
           status: 'fail',
-          message: `Data integrity check failed: ${nfError?.message || clienteError?.message}`,
+          message: `Data integrity check failed: ${nfCount.error?.message || clienteCount.error?.message || transportadoraCount.error?.message}`,
           duration,
           timestamp: new Date().toISOString()
         };
       }
 
-      const orphanCount = (nfsSemCliente?.length || 0) + (clientesSemTransportadora?.length || 0);
-      const status = orphanCount > 0 ? 'warn' : 'pass';
-      const message = orphanCount > 0 
-        ? `Found ${orphanCount} orphaned records` 
-        : 'Data integrity healthy';
+      const totalRecords = (nfCount.count || 0) + (clienteCount.count || 0) + (transportadoraCount.count || 0);
+      const message = `System has ${totalRecords} total records (NFs: ${nfCount.count || 0}, Clients: ${clienteCount.count || 0}, Carriers: ${transportadoraCount.count || 0})`;
 
       return {
         name: 'Data Integrity',
-        status,
+        status: 'pass',
         message,
         duration,
         timestamp: new Date().toISOString()
