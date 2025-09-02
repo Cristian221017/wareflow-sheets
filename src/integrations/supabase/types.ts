@@ -1538,12 +1538,7 @@ export type Database = {
       }
       validate_data_integrity: {
         Args: Record<PropertyKey, never>
-        Returns: {
-          details: Json
-          issues_found: number
-          status: string
-          validation_id: string
-        }[]
+        Returns: Json
       }
       validate_user_has_links: {
         Args: { user_uuid: string }
