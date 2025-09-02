@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { log, error as logError } from '@/utils/logger';
 import { MoreHorizontal, Download, Trash2, Edit, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -73,7 +74,7 @@ export function FinanceiroTable({
         await downloadArquivo(documento.id, tipo);
       }
     } catch (error) {
-      console.error(`Erro ao fazer download do ${tipo}:`, error);
+      logError(`Erro ao fazer download do ${tipo}:`, error);
     }
   };
 

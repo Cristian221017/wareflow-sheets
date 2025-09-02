@@ -8,6 +8,7 @@ import { Clock, CheckCircle, X, Printer, Download, FileText } from 'lucide-react
 import { toast } from 'sonner';
 import type { NotaFiscal } from '@/types/nf';
 import { useState } from 'react';
+import { log, error as logError } from '@/utils/logger';
 import { getAnexoUrl } from '@/lib/nfApi';
 
 export function SolicitacoesPendentesTable() {
@@ -71,7 +72,7 @@ export function SolicitacoesPendentesTable() {
   }
 
   const validSolicitadas = solicitadas || [];
-  console.log('🔍 SolicitacoesPendentesTable - dados recebidos:', {
+  log('🔍 SolicitacoesPendentesTable - dados recebidos:', {
     total: validSolicitadas.length,
     samples: validSolicitadas.slice(0, 2).map(s => ({ 
       id: s.id, 

@@ -133,7 +133,7 @@ export function ClientesTable() {
   };
 
   const handleDeleteCliente = async (clienteId: string, clienteName: string) => {
-    if (window.confirm(`Tem certeza que deseja excluir o cliente "${clienteName}"? Esta ação excluirá todos os dados relacionados (notas fiscais, pedidos) e não pode ser desfeita.`)) {
+    if (window.confirm(`Tem certeza que deseja excluir o cliente "${clienteName}"? Esta ação não pode ser desfeita.`)) {
       try {
         // Primeiro, excluir dados relacionados em ordem para evitar conflitos de foreign key
         

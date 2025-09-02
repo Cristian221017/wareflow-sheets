@@ -12,7 +12,7 @@ import { NFCard } from "@/components/NfLists/NFCard";
 import { ConfirmarEventoDialog } from "./ConfirmarEventoDialog";
 import { useNFEventosMutations } from "@/hooks/useNFEventos";
 import type { NotaFiscal } from "@/types/nf";
-import { log } from "@/utils/logger";
+import { log, error as logError } from "@/utils/logger";
 import { toast } from "sonner";
 
 export function PedidosConfirmadosTable() {
@@ -334,7 +334,7 @@ export function PedidosConfirmadosTable() {
       setDialogOpen(false);
       setSelectedNF(null);
     } catch (error) {
-      console.error('Erro ao confirmar embarque:', error);
+      logError('Erro ao confirmar embarque:', error);
     }
   };
 
@@ -481,7 +481,7 @@ export function PedidosConfirmadosTable() {
         description="Registre os detalhes do embarque da mercadoria"
         nfInfo={selectedNF ? {
           numero_nf: selectedNF.numero_nf,
-          cliente_nome: selectedNF.cliente_id, // TODO: resolver nome do cliente
+          cliente_nome: `Cliente ID: ${selectedNF.cliente_id}`, // Cliente identifier
         } : undefined}
         isPending={confirmarEmbarque.isPending}
       />

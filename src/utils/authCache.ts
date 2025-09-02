@@ -1,5 +1,4 @@
-// Cache de autenticação otimizado para reduzir calls desnecessárias
-import { supabase } from "@/integrations/supabase/client";
+// Cache de autenticação standalone - sem dependência circular
 import { log, warn, error } from './logger';
 
 interface CachedUser {
@@ -21,6 +20,9 @@ class AuthCache {
     }
 
     try {
+      // Importação dinâmica para evitar dependência circular
+      const { supabase } = await import("@/integrations/supabase/client");
+      
       // Buscar dados frescos com timeout
       const userPromise = supabase.auth.getUser();
       const timeoutPromise = new Promise<never>((_, reject) => 

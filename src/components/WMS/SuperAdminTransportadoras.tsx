@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { log, error as logError } from '@/utils/logger';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -80,14 +81,14 @@ export function SuperAdminTransportadoras() {
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('Error loading transportadoras:', error);
+        logError('Error loading transportadoras:', error);
         toast.error('Erro ao carregar transportadoras');
         return;
       }
 
       setTransportadoras((data || []) as Transportadora[]);
     } catch (error) {
-      console.error('Error in loadTransportadoras:', error);
+      logError('Error in loadTransportadoras:', error);
       toast.error('Erro inesperado');
     } finally {
       setLoading(false);
@@ -198,7 +199,7 @@ export function SuperAdminTransportadoras() {
       setIsDeleteDialogOpen(false);
       setTransportadoraToDelete(null);
     } catch (error) {
-      console.error('Erro ao excluir transportadora:', error);
+      logError('Erro ao excluir transportadora:', error);
       toast.error('Erro ao excluir transportadora');
     }
   };
@@ -228,7 +229,7 @@ export function SuperAdminTransportadoras() {
       setIsStatusDialogOpen(false);
       setTransportadoraToToggle(null);
     } catch (error) {
-      console.error('Erro ao alterar status da transportadora:', error);
+      logError('Erro ao alterar status da transportadora:', error);
       toast.error('Erro ao alterar status da transportadora');
     }
   };

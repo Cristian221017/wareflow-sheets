@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { log, error as logError } from '@/utils/logger';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -69,7 +70,7 @@ export function SuperAdminUsuarios() {
         .order('created_at', { ascending: false });
 
       if (profilesError) {
-        console.error('Error loading profiles:', profilesError);
+        logError('Error loading profiles:', profilesError);
         toast.error('Erro ao carregar usuários');
       }
 
@@ -79,7 +80,7 @@ export function SuperAdminUsuarios() {
         .select('*');
 
       if (utError) {
-        console.error('Error loading user transportadora relations:', utError);
+        logError('Error loading user transportadora relations:', utError);
       }
 
       // Load transportadoras for names
@@ -88,7 +89,7 @@ export function SuperAdminUsuarios() {
         .select('id, razao_social');
 
       if (allTranspError) {
-        console.error('Error loading all transportadoras:', allTranspError);
+        logError('Error loading all transportadoras:', allTranspError);
       }
 
       // Combine the data safely
@@ -127,13 +128,13 @@ export function SuperAdminUsuarios() {
         .order('razao_social');
 
       if (transpError) {
-        console.error('Error loading transportadoras:', transpError);
+        logError('Error loading transportadoras:', transpError);
         toast.error('Erro ao carregar transportadoras');
       } else {
         setTransportadoras(transportadorasData || []);
       }
     } catch (error) {
-      console.error('Error in loadData:', error);
+      logError('Error in loadData:', error);
       toast.error('Erro inesperado');
     } finally {
       setLoading(false);
@@ -164,7 +165,7 @@ export function SuperAdminUsuarios() {
           .eq('transportadora_id', assignmentData.transportadora_id);
 
         if (error) {
-          console.error('Error updating assignment:', error);
+          logError('Error updating assignment:', error);
           toast.error('Erro ao atualizar atribuição');
           return;
         }
@@ -180,7 +181,7 @@ export function SuperAdminUsuarios() {
           }]);
 
         if (error) {
-          console.error('Error creating assignment:', error);
+          logError('Error creating assignment:', error);
           toast.error('Erro ao criar atribuição');
           return;
         }
@@ -192,7 +193,7 @@ export function SuperAdminUsuarios() {
       setAssignmentData({ transportadora_id: '', role: 'operador' });
       loadData();
     } catch (error) {
-      console.error('Error in handleAssignUser:', error);
+      logError('Error in handleAssignUser:', error);
       toast.error('Erro inesperado');
     }
   };
@@ -206,7 +207,7 @@ export function SuperAdminUsuarios() {
         .eq('transportadora_id', transportadoraId);
 
       if (error) {
-        console.error('Error toggling user status:', error);
+        logError('Error toggling user status:', error);
         toast.error('Erro ao alterar status do usuário');
         return;
       }
@@ -214,7 +215,7 @@ export function SuperAdminUsuarios() {
       toast.success(`Usuário ${!currentStatus ? 'ativado' : 'desativado'} com sucesso!`);
       loadData();
     } catch (error) {
-      console.error('Error in handleToggleUserStatus:', error);
+      logError('Error in handleToggleUserStatus:', error);
       toast.error('Erro inesperado');
     }
   };
@@ -241,7 +242,7 @@ export function SuperAdminUsuarios() {
         await loadData();
         toast.success('Usuário excluído com sucesso');
       } catch (error) {
-        console.error('Erro ao excluir usuário:', error);
+        logError('Erro ao excluir usuário:', error);
         toast.error('Erro ao excluir usuário');
       }
     }
