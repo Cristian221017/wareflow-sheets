@@ -305,13 +305,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         email: clienteData.email,
         cnpj: clienteData.cnpj || '',
         transportadora_id: clienteData.transportadoraId || '',
-        status: 'ativo'
+        status: 'ativo',
+        email_nota_fiscal: clienteData.emailNotaFiscal || null,
+        email_solicitacao_liberacao: clienteData.emailSolicitacaoLiberacao || null,
+        email_liberacao_autorizada: clienteData.emailLiberacaoAutorizada || null,
+        email_notificacao_boleto: clienteData.emailNotificacaoBoleto || null
       })
       .select()
       .single();
 
     if (error) {
       throw new Error(error.message);
+    }
+
+    // Enviar email de boas-vindas ao cliente
+    try {
+      const { notificationService } = await import('@/utils/notificationService');
+      await notificationService.enviarNotificacaoClienteCadastrado(
+        clienteData.email,
+        clienteData.name,
+        clienteData.senha
+      );
+    } catch (emailError) {
+      console.warn('⚠️ Erro ao enviar email de boas-vindas:', emailError);
     }
 
     return { id: data.id };

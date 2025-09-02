@@ -122,6 +122,26 @@ export function FinanceiroProvider({ children }: { children: ReactNode }) {
         throw new Error('Erro ao cadastrar documento financeiro');
       }
 
+      // Enviar notificação por email se houver email configurado
+      try {
+        const { data: clienteData } = await supabase
+          .from('clientes')
+          .select('razao_social, email')
+          .eq('id', data.clienteId)
+          .single();
+        
+        if (clienteData?.email) {
+          const { notificationService } = await import('@/utils/notificationService');
+          await notificationService.enviarNotificacaoBoletoCadastrado(
+            clienteData.email,
+            data.numeroCte,
+            clienteData.razao_social
+          );
+        }
+      } catch (emailError) {
+        console.warn('⚠️ Erro ao enviar notificação de boleto:', emailError);
+      }
+
       await fetchDocumentosFinanceiros();
       return { id: (insertedData as any).id };
     } catch (err) {

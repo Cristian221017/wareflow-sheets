@@ -88,5 +88,69 @@ export const notificationService = {
     } catch (error) {
       console.error('❌ Erro ao enviar email:', error);
     }
+  },
+
+  enviarNotificacaoClienteCadastrado: async (email: string, nome: string, senha?: string) => {
+    console.log(`📧 Enviando email de boas-vindas para ${email}`);
+    
+    try {
+      await supabase.functions.invoke('send-notification-email', {
+        body: {
+          to: email,
+          subject: `Bem-vindo ao Sistema WMS - ${nome}`,
+          type: 'cliente_cadastrado',
+          data: {
+            nome: nome,
+            email: email,
+            senha: senha
+          }
+        }
+      });
+      console.log(`✅ Email de boas-vindas enviado com sucesso para ${email}`);
+    } catch (error) {
+      console.error('❌ Erro ao enviar email de boas-vindas:', error);
+    }
+  },
+
+  enviarNotificacaoEmbarque: async (emailRastreabilidade: string, numeroDocumento: string, cliente: string) => {
+    console.log(`📧 Enviando email de embarque para ${emailRastreabilidade}`);
+    
+    try {
+      await supabase.functions.invoke('send-notification-email', {
+        body: {
+          to: emailRastreabilidade,
+          subject: `Embarque Confirmado - ${numeroDocumento}`,
+          type: 'embarque_confirmado',
+          data: {
+            nome: cliente,
+            numeroDocumento: numeroDocumento
+          }
+        }
+      });
+      console.log(`✅ Email de embarque enviado com sucesso para ${emailRastreabilidade}`);
+    } catch (error) {
+      console.error('❌ Erro ao enviar email de embarque:', error);
+    }
+  },
+
+  enviarNotificacaoEntrega: async (emailRastreabilidade: string, numeroDocumento: string, cliente: string) => {
+    console.log(`📧 Enviando email de entrega para ${emailRastreabilidade}`);
+    
+    try {
+      await supabase.functions.invoke('send-notification-email', {
+        body: {
+          to: emailRastreabilidade,
+          subject: `Entrega Confirmada - ${numeroDocumento}`,
+          type: 'entrega_confirmada',
+          data: {
+            nome: cliente,
+            numeroDocumento: numeroDocumento
+          }
+        }
+      });
+      console.log(`✅ Email de entrega enviado com sucesso para ${emailRastreabilidade}`);
+    } catch (error) {
+      console.error('❌ Erro ao enviar email de entrega:', error);
+    }
   }
 };
