@@ -140,9 +140,9 @@ export default function Index() {
                 variant="outline"
                 className="w-full" 
                 size="sm"
-                onClick={() => navigate('/diagnostic')}
+                onClick={() => navigate('/system-maintenance')}
               >
-                Diagnóstico do Sistema
+                Manutenção do Sistema
               </Button>
             </CardContent>
           </Card>

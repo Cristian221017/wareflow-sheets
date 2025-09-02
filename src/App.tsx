@@ -1,5 +1,3 @@
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { WMSProvider } from "@/contexts/WMSContext";
 import { AuthProvider } from "@/contexts/AuthContext";
@@ -21,6 +19,10 @@ import React from 'react';
 import RealtimeProvider from "@/providers/RealtimeProvider";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { DiagnosticPage } from "@/components/system/DiagnosticPage";
+import { SystemHealthDashboard } from "@/components/system/SystemHealthDashboard";
+import SystemMaintenancePage from "@/pages/SystemMaintenancePage";
+import { Toaster as Sonner } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
 
 // Protected Route Component
 function ProtectedRoute({ children, allowedRoles }: { children: React.ReactNode, allowedRoles: string[] }) {
@@ -94,6 +96,8 @@ function App() {
                       <Route path="/" element={<Index />} />
                       <Route path="/health" element={<HealthPage />} />
                       <Route path="/diagnostic" element={<DiagnosticPage />} />
+                      <Route path="/system-health" element={<SystemHealthDashboard />} />
+                      <Route path="/system-maintenance" element={<SystemMaintenancePage />} />
                       <Route path="/system-admin" element={<SystemAdminLogin />} />
                       <Route path="/reset-password" element={<ResetPassword />} />
                       
