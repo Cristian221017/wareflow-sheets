@@ -128,66 +128,92 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const getUserData = async (supabaseUser: SupabaseUser): Promise<User> => {
-    console.log(`🔍 Loading user profile for: ${supabaseUser.id}`);
-    console.log(`🔍 Email: ${supabaseUser.email}`);
+    console.log(`🔍 [DETAILED] Loading user profile for: ${supabaseUser.id}`);
+    console.log(`🔍 [DETAILED] Email: ${supabaseUser.email}`);
     
     try {
-      // Buscar primeiro em transportadoras
-      const { data: transportadoraData } = await supabase
+      // Step 1: Check profiles table first
+      console.log('🔍 [STEP 1] Checking profiles table...');
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('user_id', supabaseUser.id)
+        .single();
+        
+      console.log('🔍 [STEP 1] Profile result:', { profileData, profileError });
+
+      // Step 2: Check direct transportadora by email (no joins)
+      console.log('🔍 [STEP 2] Checking transportadoras by email...');
+      const { data: transportadoraData, error: transportadoraError } = await supabase
         .from('transportadoras')
         .select('id, razao_social, email')
-        .eq('email', supabaseUser.email || '')
-        .single();
+        .eq('email', supabaseUser.email || '');
+        
+      console.log('🔍 [STEP 2] Transportadora by email result:', { transportadoraData, transportadoraError });
 
-      if (transportadoraData) {
-        console.log('✅ Found user in transportadoras:', transportadoraData);
+      if (transportadoraData && transportadoraData.length > 0) {
+        const transportadora = transportadoraData[0];
+        console.log('✅ [STEP 2] Found transportadora by email:', transportadora);
+        
         return {
           id: supabaseUser.id,
-          name: transportadoraData.razao_social,
-          email: transportadoraData.email,
+          name: transportadora.razao_social,
+          email: transportadora.email,
           type: 'transportadora',
           role: 'admin_transportadora',
-          transportadoraId: transportadoraData.id
+          transportadoraId: transportadora.id
         };
       }
 
-      // Buscar em clientes
-      const { data: clienteData } = await supabase
+      // Step 3: Check direct cliente by email (no joins)
+      console.log('🔍 [STEP 3] Checking clientes by email...');
+      const { data: clienteData, error: clienteError } = await supabase
         .from('clientes')
-        .select('id, razao_social, email')
-        .eq('email', supabaseUser.email || '')
-        .single();
+        .select('id, razao_social, email, transportadora_id')
+        .eq('email', supabaseUser.email || '');
+        
+      console.log('🔍 [STEP 3] Cliente by email result:', { clienteData, clienteError });
 
-      if (clienteData) {
-        console.log('✅ Found user in clientes:', clienteData);
+      if (clienteData && clienteData.length > 0) {
+        const cliente = clienteData[0];
+        console.log('✅ [STEP 3] Found cliente by email:', cliente);
+        
         return {
           id: supabaseUser.id,
-          name: clienteData.razao_social,
-          email: clienteData.email,
+          name: cliente.razao_social,
+          email: cliente.email,
           type: 'cliente',
-          clienteId: clienteData.id
+          clienteId: cliente.id,
+          transportadoraId: cliente.transportadora_id
         };
       }
 
-      // Fallback - usuário básico
-      console.log('⚠️ User not found in any table, creating fallback');
-      return {
+      // Step 4: Fallback - create basic user
+      console.log('⚠️ [STEP 4] No matches found, creating fallback user');
+      const fallbackUser = {
         id: supabaseUser.id,
-        name: supabaseUser.email?.split('@')[0] || 'Usuário',
+        name: profileData?.name || supabaseUser.email?.split('@')[0] || 'Usuário',
         email: supabaseUser.email || '',
-        type: 'cliente'
+        type: 'cliente' as const
       };
+      
+      console.log('⚠️ [STEP 4] Fallback user created:', fallbackUser);
+      return fallbackUser;
 
     } catch (error) {
-      console.error('❌ Failed to load user profile:', error);
+      console.error('❌ [ERROR] Failed to load user profile:', error);
+      logError('Complete user profile loading failed:', error);
       
       // Retorna usuário básico em caso de erro
-      return {
+      const errorFallback = {
         id: supabaseUser.id,
         name: supabaseUser.email?.split('@')[0] || 'Usuário',
         email: supabaseUser.email || '',
-        type: 'cliente'
+        type: 'cliente' as const
       };
+      
+      console.log('❌ [ERROR] Error fallback user:', errorFallback);
+      return errorFallback;
     }
   };
 

@@ -117,13 +117,21 @@ export default function Index() {
                 Acesso ao Sistema
               </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-2">
               <Button 
                 className="w-full" 
                 size="lg"
                 onClick={() => navigate('/system-admin')}
               >
                 Fazer Login
+              </Button>
+              <Button 
+                variant="outline"
+                className="w-full" 
+                size="sm"
+                onClick={() => navigate('/diagnostic')}
+              >
+                Diagnóstico do Sistema
               </Button>
             </CardContent>
           </Card>

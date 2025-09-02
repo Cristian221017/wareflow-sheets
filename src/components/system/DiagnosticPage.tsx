@@ -1,161 +1,207 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Activity, Database, Wifi, User } from 'lucide-react';
-import { ENV } from '@/config/env';
-import { supabase } from '@/integrations/supabase/client';
+import { Badge } from '@/components/ui/badge';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { useAuth } from '@/contexts/AuthContext';
+import { systemDiagnostic, type DiagnosticResult } from '@/utils/systemDiagnostic';
+import { RefreshCw, AlertTriangle, CheckCircle, XCircle, Copy } from 'lucide-react';
+import { toast } from 'sonner';
 
-export default function DiagnosticPage() {
+export function DiagnosticPage() {
   const { user } = useAuth();
-  const [realtimeStatus, setRealtimeStatus] = useState<'connecting' | 'connected' | 'disconnected'>('connecting');
-  const [dbStatus, setDbStatus] = useState<'checking' | 'ok' | 'error'>('checking');
+  const [results, setResults] = useState<DiagnosticResult[]>([]);
+  const [isRunning, setIsRunning] = useState(false);
 
-  useEffect(() => {
-    // Test database connection
-    const testDb = async () => {
-      try {
-        const { data, error } = await supabase.from('profiles').select('id').limit(1);
-        setDbStatus(error ? 'error' : 'ok');
-      } catch {
-        setDbStatus('error');
-      }
-    };
-
-    // Test realtime connection
-    const channel = supabase.channel('diagnostic-test')
-      .on('broadcast', { event: 'test' }, () => {
-        setRealtimeStatus('connected');
-      })
-      .subscribe((status) => {
-        if (status === 'SUBSCRIBED') {
-          setRealtimeStatus('connected');
-        } else if (status === 'CLOSED') {
-          setRealtimeStatus('disconnected');
-        }
-      });
-
-    testDb();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, []);
-
-  const diagnostics = [
-    {
-      title: 'Environment',
-      icon: <Activity className="w-5 h-5" />,
-      status: ENV.APP_ENV,
-      details: {
-        'App Name': ENV.APP_NAME,
-        'Mode': ENV.MODE,
-        'Environment': ENV.APP_ENV,
-        'Build': 'Latest'
-      }
-    },
-    {
-      title: 'Database',
-      icon: <Database className="w-5 h-5" />,
-      status: dbStatus,
-      details: {
-        'Supabase URL': ENV.SUPABASE_URL,
-        'Connection': dbStatus === 'ok' ? 'Active' : 'Error',
-        'Auth': user ? 'Authenticated' : 'Anonymous'
-      }
-    },
-    {
-      title: 'Realtime',
-      icon: <Wifi className="w-5 h-5" />,
-      status: realtimeStatus,
-      details: {
-        'Status': realtimeStatus,
-        'WebSocket': realtimeStatus === 'connected' ? 'Active' : 'Inactive'
-      }
-    },
-    {
-      title: 'User Session',
-      icon: <User className="w-5 h-5" />,
-      status: user ? 'authenticated' : 'anonymous',
-      details: {
-        'User ID': user?.id?.substring(0, 8) + '...' || 'N/A',
-        'Email': user?.email || 'N/A',
-        'Role': user?.role || 'N/A',
-        'Type': user?.type || 'N/A'
-      }
+  const runDiagnostic = async () => {
+    setIsRunning(true);
+    try {
+      const diagnosticResults = await systemDiagnostic.runFullDiagnostic(user?.id);
+      setResults(diagnosticResults);
+    } catch (error) {
+      console.error('Diagnostic failed:', error);
+      toast.error('Falha ao executar diagnóstico');
+    } finally {
+      setIsRunning(false);
     }
-  ];
+  };
+
+  const copyResults = () => {
+    const resultsText = JSON.stringify(results, null, 2);
+    navigator.clipboard.writeText(resultsText);
+    toast.success('Resultados copiados para área de transferência');
+  };
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'PASS':
+        return <CheckCircle className="h-4 w-4 text-green-500" />;
+      case 'FAIL':
+        return <XCircle className="h-4 w-4 text-red-500" />;
+      case 'WARN':
+        return <AlertTriangle className="h-4 w-4 text-yellow-500" />;
+      default:
+        return null;
+    }
+  };
 
   const getStatusBadge = (status: string) => {
-    if (status === 'ok' || status === 'connected' || status === 'authenticated' || status === 'prod') {
-      return <Badge variant="default" className="bg-green-500">OK</Badge>;
-    }
-    if (status === 'staging') {
-      return <Badge variant="secondary" className="bg-yellow-500">STAGING</Badge>;
-    }
-    if (status === 'error' || status === 'disconnected') {
-      return <Badge variant="destructive">ERROR</Badge>;
-    }
-    return <Badge variant="outline">{status.toUpperCase()}</Badge>;
+    const variant = status === 'PASS' ? 'default' : status === 'FAIL' ? 'destructive' : 'secondary';
+    return <Badge variant={variant}>{status}</Badge>;
   };
+
+  // Run diagnostic on component mount
+  useEffect(() => {
+    runDiagnostic();
+  }, []);
+
+  const passCount = results.filter(r => r.status === 'PASS').length;
+  const failCount = results.filter(r => r.status === 'FAIL').length;
+  const warnCount = results.filter(r => r.status === 'WARN').length;
 
   return (
     <div className="container mx-auto p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">System Diagnostics</h1>
-          <p className="text-muted-foreground">Monitor system health and configuration</p>
+          <h1 className="text-3xl font-bold">Diagnóstico do Sistema</h1>
+          <p className="text-muted-foreground">
+            Verificação completa do estado do sistema WMS
+          </p>
         </div>
-        <Button 
-          onClick={() => window.location.reload()} 
-          variant="outline"
-        >
-          Refresh
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            onClick={copyResults}
+            variant="outline"
+            disabled={results.length === 0}
+          >
+            <Copy className="h-4 w-4 mr-2" />
+            Copiar Resultados
+          </Button>
+          <Button
+            onClick={runDiagnostic}
+            disabled={isRunning}
+          >
+            <RefreshCw className={`h-4 w-4 mr-2 ${isRunning ? 'animate-spin' : ''}`} />
+            {isRunning ? 'Executando...' : 'Executar Diagnóstico'}
+          </Button>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {diagnostics.map((diagnostic, diagIndex) => (
-          <Card key={`${diagnostic.title}-${diagIndex}`}>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium flex items-center gap-2">
-                {diagnostic.icon}
-                {diagnostic.title}
-              </CardTitle>
-              {getStatusBadge(diagnostic.status)}
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                {Object.entries(diagnostic.details).map(([key, value]) => (
-                  <div key={key} className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">{key}:</span>
-                    <span className="font-mono">{value}</span>
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">Total de Testes</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{results.length}</div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-green-600">Sucessos</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-green-600">{passCount}</div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-red-600">Falhas</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-red-600">{failCount}</div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-yellow-600">Avisos</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-yellow-600">{warnCount}</div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Current User Info */}
+      {user && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Informações do Usuário Atual</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+              <div><strong>ID:</strong> {user.id}</div>
+              <div><strong>Email:</strong> {user.email}</div>
+              <div><strong>Nome:</strong> {user.name}</div>
+              <div><strong>Tipo:</strong> {user.type}</div>
+              {user.role && <div><strong>Role:</strong> {user.role}</div>}
+              {user.transportadoraId && <div><strong>Transportadora ID:</strong> {user.transportadoraId}</div>}
+              {user.clienteId && <div><strong>Cliente ID:</strong> {user.clienteId}</div>}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Detailed Results */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Resultados Detalhados</CardTitle>
+          <CardDescription>
+            Resultados de todos os testes executados no sistema
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {results.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              {isRunning ? 'Executando diagnóstico...' : 'Nenhum resultado disponível'}
+            </div>
+          ) : (
+            <ScrollArea className="h-[600px]">
+              <div className="space-y-4">
+                {results.map((result, index) => (
+                  <div key={index} className="border rounded-lg p-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        {getStatusIcon(result.status)}
+                        <span className="font-medium">{result.test}</span>
+                        {getStatusBadge(result.status)}
+                      </div>
+                      <span className="text-xs text-muted-foreground">
+                        {new Date(result.timestamp).toLocaleTimeString()}
+                      </span>
+                    </div>
+                    
+                    <p className="text-sm text-muted-foreground mb-2">
+                      {result.message}
+                    </p>
+                    
+                    {result.error && (
+                      <div className="bg-red-50 border border-red-200 rounded p-2 mb-2">
+                        <p className="text-xs text-red-600 font-mono">
+                          <strong>Erro:</strong> {result.error}
+                        </p>
+                      </div>
+                    )}
+                    
+                    {result.data && (
+                      <details className="text-xs">
+                        <summary className="cursor-pointer text-muted-foreground hover:text-foreground">
+                          Ver dados detalhados
+                        </summary>
+                        <pre className="bg-muted p-2 rounded mt-2 overflow-x-auto">
+                          {JSON.stringify(result.data, null, 2)}
+                        </pre>
+                      </details>
+                    )}
                   </div>
                 ))}
               </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Configuration Details</CardTitle>
-          <CardDescription>Current environment configuration</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <pre className="bg-muted p-4 rounded-lg overflow-auto text-sm">
-{JSON.stringify({
-  environment: ENV.APP_ENV,
-  mode: ENV.MODE,
-  appName: ENV.APP_NAME,
-  supabaseUrl: ENV.SUPABASE_URL,
-  timestamp: new Date().toISOString(),
-  userAgent: navigator.userAgent,
-  viewport: `${window.innerWidth}x${window.innerHeight}`
-}, null, 2)}
-          </pre>
+            </ScrollArea>
+          )}
         </CardContent>
       </Card>
     </div>

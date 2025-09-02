@@ -1,110 +1,213 @@
 import { supabase } from '@/integrations/supabase/client';
-import { log, warn, error } from '@/utils/logger';
+import { log, error as logError } from './logger';
 
 export interface DiagnosticResult {
-  success: boolean;
+  timestamp: string;
+  test: string;
+  status: 'PASS' | 'FAIL' | 'WARN';
   message: string;
-  details?: Record<string, any>;
+  data?: any;
+  error?: string;
 }
 
-/**
- * Função para diagnóstico rápido de problemas no sistema
- */
-export async function runSystemDiagnostic(transportadoraId?: string): Promise<DiagnosticResult> {
-  log('🔍 Iniciando diagnóstico do sistema...');
-  
-  const result: DiagnosticResult = {
-    success: true,
-    message: 'Sistema funcionando normalmente',
-    details: {}
-  };
+export class SystemDiagnostic {
+  private results: DiagnosticResult[] = [];
 
-  try {
-    // 1. Verificar conexão com Supabase
-    const { data: authData, error: authError } = await supabase.auth.getUser();
-    if (authError) {
-      result.success = false;
-      result.message = 'Erro na autenticação';
-      result.details!.authError = authError.message;
-      return result;
+  private addResult(test: string, status: 'PASS' | 'FAIL' | 'WARN', message: string, data?: any, error?: string) {
+    this.results.push({
+      timestamp: new Date().toISOString(),
+      test,
+      status,
+      message,
+      data,
+      error
+    });
+    
+    const icon = status === 'PASS' ? '✅' : status === 'FAIL' ? '❌' : '⚠️';
+    log(`${icon} [DIAGNOSTIC] ${test}: ${message}`, data);
+  }
+
+  async runFullDiagnostic(userId?: string): Promise<DiagnosticResult[]> {
+    this.results = [];
+    log('🔍 Starting full system diagnostic...');
+
+    // 1. Test Supabase Connection
+    await this.testSupabaseConnection();
+    
+    // 2. Test Authentication
+    await this.testAuthentication();
+    
+    // 3. Test User Profile Loading
+    if (userId) {
+      await this.testUserProfileLoading(userId);
+    }
+    
+    // 4. Test Database Tables
+    await this.testDatabaseTables();
+
+    // 5. Test Client Data Loading
+    if (userId) {
+      await this.testClientDataLoading(userId);
     }
 
-    const userId = authData.user?.id;
-    if (!userId) {
-      result.success = false;
-      result.message = 'Usuário não autenticado';
-      return result;
+    log('🏁 Diagnostic complete. Results:', this.results);
+    return this.results;
+  }
+
+  private async testSupabaseConnection() {
+    try {
+      const { data, error } = await supabase.from('profiles').select('count').limit(1);
+      
+      if (error) {
+        this.addResult('supabase_connection', 'FAIL', 'Connection failed', null, error.message);
+      } else {
+        this.addResult('supabase_connection', 'PASS', 'Connection successful');
+      }
+    } catch (err: any) {
+      this.addResult('supabase_connection', 'FAIL', 'Connection exception', null, err.message);
     }
+  }
 
-    // 2. Testar função RPC do dashboard
-    const { data: dashboardData, error: dashboardError } = await supabase.rpc('get_current_user_dashboard' as any);
-    if (dashboardError) {
-      result.success = false;
-      result.message = 'Erro na função RPC do dashboard';
-      result.details!.rpcError = dashboardError.message;
-      return result;
+  private async testAuthentication() {
+    try {
+      const { data: { session }, error } = await supabase.auth.getSession();
+      
+      if (error) {
+        this.addResult('authentication', 'FAIL', 'Auth session error', null, error.message);
+        return;
+      }
+
+      if (!session) {
+        this.addResult('authentication', 'WARN', 'No active session');
+        return;
+      }
+
+      this.addResult('authentication', 'PASS', 'User authenticated', {
+        userId: session.user.id,
+        email: session.user.email,
+        lastSignIn: session.user.last_sign_in_at
+      });
+
+    } catch (err: any) {
+      this.addResult('authentication', 'FAIL', 'Auth exception', null, err.message);
     }
+  }
 
-    result.details!.dashboardStats = dashboardData?.[0] || null;
+  private async testUserProfileLoading(userId: string) {
+    try {
+      // Test profiles table
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('user_id', userId)
+        .single();
 
-    // 3. Verificar acesso a tabelas principais se transportadoraId disponível
-    if (transportadoraId) {
-      // Test notas_fiscais access
-      const { data: nfsTest, error: nfsError } = await supabase
-        .from('notas_fiscais')
-        .select('id, status')
-        .eq('transportadora_id', transportadoraId)
+      if (profileError) {
+        this.addResult('user_profile', 'FAIL', 'Profile loading failed', null, profileError.message);
+      } else {
+        this.addResult('user_profile', 'PASS', 'Profile loaded successfully', profile);
+      }
+
+    } catch (err: any) {
+      this.addResult('user_profile', 'FAIL', 'Profile loading exception', null, err.message);
+    }
+  }
+
+  private async testDatabaseTables() {
+    // Test each table individually with proper typing
+    try {
+      const { data: profilesData, error: profilesError } = await supabase
+        .from('profiles')
+        .select('*')
         .limit(1);
 
-      if (nfsError) {
-        warn('⚠️ Problemas de acesso a notas_fiscais:', nfsError);
-        result.details!.nfsError = nfsError.message;
+      if (profilesError) {
+        this.addResult('table_profiles', 'FAIL', 'Table profiles access failed', null, profilesError.message);
       } else {
-        result.details!.nfsAccessOk = true;
-        result.details!.nfsCount = nfsTest?.length || 0;
+        this.addResult('table_profiles', 'PASS', 'Table profiles accessible', { recordCount: profilesData?.length || 0 });
       }
+    } catch (err: any) {
+      this.addResult('table_profiles', 'FAIL', 'Table profiles exception', null, err.message);
+    }
 
-      // Test solicitacoes_carregamento access
-      const { data: solicitacoesTest, error: solicitacoesError } = await (supabase as any)
-        .from('solicitacoes_carregamento')
-        .select('id, status')
-        .eq('transportadora_id', transportadoraId)
+    try {
+      const { data: transportadorasData, error: transportadorasError } = await supabase
+        .from('transportadoras')
+        .select('*')
         .limit(1);
 
-      if (solicitacoesError) {
-        warn('⚠️ Problemas de acesso a solicitacoes_carregamento:', solicitacoesError);
-        result.details!.solicitacoesError = solicitacoesError.message;
+      if (transportadorasError) {
+        this.addResult('table_transportadoras', 'FAIL', 'Table transportadoras access failed', null, transportadorasError.message);
       } else {
-        result.details!.solicitacoesAccessOk = true;
-        result.details!.solicitacoesCount = solicitacoesTest?.length || 0;
+        this.addResult('table_transportadoras', 'PASS', 'Table transportadoras accessible', { recordCount: transportadorasData?.length || 0 });
       }
+    } catch (err: any) {
+      this.addResult('table_transportadoras', 'FAIL', 'Table transportadoras exception', null, err.message);
     }
 
-    // 4. Verificar se há dados órfãos ou problemas de relação
-    if (transportadoraId) {
-      const { data: orphanedCheck } = await (supabase as any)
-        .from('solicitacoes_carregamento')
-        .select(`
-          id, nf_id,
-          notas_fiscais:nf_id(id, numero_nf)
-        `)
-        .eq('transportadora_id', transportadoraId)
-        .limit(5);
+    try {
+      const { data: clientesData, error: clientesError } = await supabase
+        .from('clientes')
+        .select('*')
+        .limit(1);
 
-      const orphanedSolicitacoes = (orphanedCheck || []).filter((s: any) => !s.notas_fiscais);
-      if (orphanedSolicitacoes.length > 0) {
-        warn('⚠️ Solicitações órfãs detectadas:', orphanedSolicitacoes.length);
-        result.details!.orphanedSolicitacoes = orphanedSolicitacoes.length;
+      if (clientesError) {
+        this.addResult('table_clientes', 'FAIL', 'Table clientes access failed', null, clientesError.message);
+      } else {
+        this.addResult('table_clientes', 'PASS', 'Table clientes accessible', { recordCount: clientesData?.length || 0 });
       }
+    } catch (err: any) {
+      this.addResult('table_clientes', 'FAIL', 'Table clientes exception', null, err.message);
     }
+  }
 
-    log('✅ Diagnóstico do sistema concluído:', result);
-    return result;
+  private async testClientDataLoading(userId: string) {
+    try {
+      // Test direct email matching
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user?.email) {
+        this.addResult('client_data', 'WARN', 'No user email for client matching');
+        return;
+      }
 
-  } catch (err) {
-    error('❌ Erro no diagnóstico do sistema:', err);
-    result.success = false;
-    result.message = `Erro crítico: ${String(err)}`;
-    return result;
+      // Test transportadora by email
+      const { data: transportadoraByEmail, error: transportadoraEmailError } = await supabase
+        .from('transportadoras')
+        .select('*')
+        .eq('email', user.email);
+
+      if (transportadoraEmailError) {
+        this.addResult('transportadora_email_match', 'FAIL', 'Transportadora email lookup failed', null, transportadoraEmailError.message);
+      } else if (transportadoraByEmail && transportadoraByEmail.length > 0) {
+        this.addResult('transportadora_email_match', 'PASS', 'Transportadora found by email', transportadoraByEmail[0]);
+      } else {
+        this.addResult('transportadora_email_match', 'WARN', 'No transportadora found by email');
+      }
+
+      // Test cliente by email
+      const { data: clienteByEmail, error: clienteEmailError } = await supabase
+        .from('clientes')
+        .select('*')
+        .eq('email', user.email);
+
+      if (clienteEmailError) {
+        this.addResult('cliente_email_match', 'FAIL', 'Cliente email lookup failed', null, clienteEmailError.message);
+      } else if (clienteByEmail && clienteByEmail.length > 0) {
+        this.addResult('cliente_email_match', 'PASS', 'Cliente found by email', clienteByEmail[0]);
+      } else {
+        this.addResult('cliente_email_match', 'WARN', 'No cliente found by email');
+      }
+
+    } catch (err: any) {
+      this.addResult('client_data', 'FAIL', 'Client data loading exception', null, err.message);
+    }
+  }
+
+  getResults(): DiagnosticResult[] {
+    return this.results;
   }
 }
+
+// Singleton instance
+export const systemDiagnostic = new SystemDiagnostic();

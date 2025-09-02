@@ -7,7 +7,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Activity, BarChart3, AlertTriangle, CheckCircle } from "lucide-react";
 import { log } from "@/utils/logger";
-import { runSystemDiagnostic } from "@/utils/systemDiagnostic";
 import { useAuth } from "@/contexts/AuthContext";
 
 interface IntegratedDashboardProps {

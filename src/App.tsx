@@ -20,6 +20,7 @@ import MercadoriasEntregues from "@/pages/MercadoriasEntregues";
 import React from 'react';
 import RealtimeProvider from "@/providers/RealtimeProvider";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { DiagnosticPage } from "@/components/system/DiagnosticPage";
 
 // Protected Route Component
 function ProtectedRoute({ children, allowedRoles }: { children: React.ReactNode, allowedRoles: string[] }) {
@@ -92,6 +93,7 @@ function App() {
                     <Routes>
                       <Route path="/" element={<Index />} />
                       <Route path="/health" element={<HealthPage />} />
+                      <Route path="/diagnostic" element={<DiagnosticPage />} />
                       <Route path="/system-admin" element={<SystemAdminLogin />} />
                       <Route path="/reset-password" element={<ResetPassword />} />
                       
