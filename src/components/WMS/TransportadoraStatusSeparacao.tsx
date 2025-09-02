@@ -10,6 +10,7 @@ import { NFCard } from '@/components/NfLists/NFCard';
 import { NFBulkActions } from '@/components/NfLists/NFBulkActions';
 import { useNFs } from '@/hooks/useNFs';
 import { StatusSeparacaoManager } from './StatusSeparacaoManager';
+import { NFDeleteManager } from './NFDeleteManager';
 import { log, warn } from '@/utils/logger';
 import { toast } from 'sonner';
 
@@ -338,27 +339,29 @@ export function TransportadoraStatusSeparacao() {
   const nfsParaLiberacao = filteredNfs.filter(nf => nf.status_separacao === 'separacao_concluida');
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Mercadorias Armazenadas</h1>
-          <p className="text-muted-foreground">
-            Gerencie o status de separação das mercadorias armazenadas ({totalNfs} itens)
-          </p>
-        </div>
-        {filteredNfs.length > 0 && (
-          <div className="flex gap-2">
-            <Button onClick={handleImprimir} variant="outline" size="sm">
-              <Printer className="w-4 h-4 mr-2" />
-              Imprimir
-            </Button>
-            <Button onClick={handleExportar} variant="outline" size="sm">
-              <Download className="w-4 h-4 mr-2" />
-              Exportar CSV
-            </Button>
+    <NFDeleteManager>
+      {({ canDelete, onDelete }) => (
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold tracking-tight">Mercadorias Armazenadas</h1>
+              <p className="text-muted-foreground">
+                Gerencie o status de separação das mercadorias armazenadas ({totalNfs} itens)
+              </p>
+            </div>
+            {filteredNfs.length > 0 && (
+              <div className="flex gap-2">
+                <Button onClick={handleImprimir} variant="outline" size="sm">
+                  <Printer className="w-4 h-4 mr-2" />
+                  Imprimir
+                </Button>
+                <Button onClick={handleExportar} variant="outline" size="sm">
+                  <Download className="w-4 h-4 mr-2" />
+                  Exportar CSV
+                </Button>
+              </div>
+            )}
           </div>
-        )}
-      </div>
 
       <NFFilters filters={filters} onFiltersChange={setFilters} />
 
@@ -430,6 +433,8 @@ export function TransportadoraStatusSeparacao() {
                         nf={nf}
                         onSelect={() => {}}
                         isSelected={false}
+                        canDelete={canDelete}
+                        onDelete={onDelete}
                       />
                     </div>
                     <div className="ml-4">
@@ -462,10 +467,12 @@ export function TransportadoraStatusSeparacao() {
         </Card>
       )}
 
-      {/* Realtime footer */}
-      <div className="text-xs text-muted-foreground text-center py-2">
-        ⚡ Dados atualizados em tempo real
-      </div>
-    </div>
+          {/* Realtime footer */}
+          <div className="text-xs text-muted-foreground text-center py-2">
+            ⚡ Dados atualizados em tempo real
+          </div>
+        </div>
+      )}
+    </NFDeleteManager>
   );
 }

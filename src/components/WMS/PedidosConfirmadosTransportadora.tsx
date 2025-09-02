@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useNFs } from '@/hooks/useNFs';
 import { NFCard } from '@/components/NfLists/NFCard';
+import { NFDeleteManager } from './NFDeleteManager';
 import { NFFilters, type NFFilterState } from '@/components/NfLists/NFFilters';
 import { useAuth } from '@/contexts/AuthContext';
 import { CheckCircle, Printer, Download } from 'lucide-react';
@@ -223,68 +224,74 @@ export function PedidosConfirmadosTransportadora() {
   };
 
   return (
-    <div className="space-y-6">
-      {/* Filtros */}
-      <NFFilters
-        filters={filters}
-        onFiltersChange={setFilters}
-        showClientFilter={true}
-      />
-      
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="flex items-center gap-2">
-                <CheckCircle className="w-5 h-5 text-success" />
-                Carregamentos Confirmados
-              </CardTitle>
-              <CardDescription>
-                Carregamentos aprovados e prontos para retirada ({filteredConfirmadas.length} 
-                {validConfirmadas.length !== filteredConfirmadas.length && ` de ${validConfirmadas.length}`} itens)
-              </CardDescription>
-            </div>
-            {filteredConfirmadas.length > 0 && (
-              <div className="flex gap-2">
-                <Button onClick={handleImprimir} variant="outline" size="sm">
-                  <Printer className="w-4 h-4 mr-2" />
-                  Imprimir
-                </Button>
-                <Button onClick={handleExportar} variant="outline" size="sm">
-                  <Download className="w-4 h-4 mr-2" />
-                  Exportar CSV
-                </Button>
+    <NFDeleteManager>
+      {({ canDelete, onDelete }) => (
+        <div className="space-y-6">
+          {/* Filtros */}
+          <NFFilters
+            filters={filters}
+            onFiltersChange={setFilters}
+            showClientFilter={true}
+          />
+          
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="flex items-center gap-2">
+                    <CheckCircle className="w-5 h-5 text-success" />
+                    Carregamentos Confirmados
+                  </CardTitle>
+                  <CardDescription>
+                    Carregamentos aprovados e prontos para retirada ({filteredConfirmadas.length} 
+                    {validConfirmadas.length !== filteredConfirmadas.length && ` de ${validConfirmadas.length}`} itens)
+                  </CardDescription>
+                </div>
+                {filteredConfirmadas.length > 0 && (
+                  <div className="flex gap-2">
+                    <Button onClick={handleImprimir} variant="outline" size="sm">
+                      <Printer className="w-4 h-4 mr-2" />
+                      Imprimir
+                    </Button>
+                    <Button onClick={handleExportar} variant="outline" size="sm">
+                      <Download className="w-4 h-4 mr-2" />
+                      Exportar CSV
+                    </Button>
+                  </div>
+                )}
               </div>
-            )}
-          </div>
-        </CardHeader>
-        <CardContent>
-          {filteredConfirmadas.length > 0 ? (
-            <div className="space-y-3">
-              {filteredConfirmadas.map((nf) => (
-                <NFCard
-                  key={nf.id}
-                  nf={nf}
-                  showApprovalInfo
-                  showSelection={false}
-                />
-              ))}
-            </div>
-          ) : validConfirmadas.length > 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              <CheckCircle className="w-12 h-12 mx-auto mb-4 opacity-50" />
-              <p>Nenhum carregamento encontrado com os filtros aplicados</p>
-              <p className="text-sm mt-1">Tente ajustar os filtros para ver mais resultados</p>
-            </div>
-          ) : (
-            <div className="text-center py-8 text-muted-foreground">
-              <CheckCircle className="w-12 h-12 mx-auto mb-4 opacity-50" />
-              <p>Nenhum carregamento confirmado</p>
-              <p className="text-sm mt-1">Os carregamentos aprovados aparecerão aqui</p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-    </div>
+            </CardHeader>
+            <CardContent>
+              {filteredConfirmadas.length > 0 ? (
+                <div className="space-y-3">
+                  {filteredConfirmadas.map((nf) => (
+                    <NFCard
+                      key={nf.id}
+                      nf={nf}
+                      showApprovalInfo
+                      showSelection={false}
+                      canDelete={canDelete}
+                      onDelete={onDelete}
+                    />
+                  ))}
+                </div>
+              ) : validConfirmadas.length > 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  <CheckCircle className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                  <p>Nenhum carregamento encontrado com os filtros aplicados</p>
+                  <p className="text-sm mt-1">Tente ajustar os filtros para ver mais resultados</p>
+                </div>
+              ) : (
+                <div className="text-center py-8 text-muted-foreground">
+                  <CheckCircle className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                  <p>Nenhum carregamento confirmado</p>
+                  <p className="text-sm mt-1">Os carregamentos aprovados aparecerão aqui</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      )}
+    </NFDeleteManager>
   );
 }

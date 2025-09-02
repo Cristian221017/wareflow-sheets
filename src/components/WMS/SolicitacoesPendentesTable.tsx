@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useSolicitacoesTransportadora, useSolicitacoesMutations } from '@/hooks/useSolicitacoes';
 import { NFCard } from '@/components/NfLists/NFCard';
+import { NFDeleteManager } from './NFDeleteManager';
 import { NFFilters, type NFFilterState } from '@/components/NfLists/NFFilters';
 import { Clock, CheckCircle, X, Printer, Download, FileText } from 'lucide-react';
 import { toast } from 'sonner';
@@ -248,91 +249,97 @@ export function SolicitacoesPendentesTable() {
   };
 
   return (
-    <div className="space-y-6">
-      {/* Filtros */}
-      <NFFilters
-        filters={filters}
-        onFiltersChange={setFilters}
-        showClientFilter={true}
-      />
-      
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="flex items-center gap-2">
-                <Clock className="w-5 h-5 text-warning" />
-                Solicitações Pendentes
-              </CardTitle>
-              <CardDescription>
-                Solicitações de carregamento enviadas pelos clientes aguardando aprovação ({filteredSolicitadas.length}
-                {validSolicitadas.length !== filteredSolicitadas.length && ` de ${validSolicitadas.length}`} itens)
-              </CardDescription>
-            </div>
-            {filteredSolicitadas.length > 0 && (
-              <div className="flex gap-2">
-                <Button onClick={handleImprimir} variant="outline" size="sm">
-                  <Printer className="w-4 h-4 mr-2" />
-                  Imprimir
-                </Button>
-                <Button onClick={handleExportar} variant="outline" size="sm">
-                  <Download className="w-4 h-4 mr-2" />
-                  Exportar CSV
-                </Button>
-              </div>
-            )}
-          </div>
-        </CardHeader>
-        <CardContent>
-          {filteredSolicitadas.length > 0 ? (
-            <div className="space-y-3">
-              {filteredSolicitadas.map((nf) => (
-                <div key={nf.id} className="flex items-center justify-between p-4 border rounded-lg">
-                  <div className="flex-1">
-                    <NFCard
-                      nf={nf}
-                      showRequestInfo
-                      showSelection={false}
-                    />
-                  </div>
-                  <div className="ml-4 flex gap-2">
-                    <Button
-                      size="sm"
-                      disabled={aprovar.isPending || recusar.isPending}
-                      onClick={() => aprovar.mutate(nf.id)}
-                      className="bg-success text-success-foreground hover:bg-success/80"
-                    >
-                      <CheckCircle className="w-3 h-3 mr-1" />
-                      {aprovar.isPending ? "Aprovando..." : "Aprovar"}
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="destructive"
-                      disabled={aprovar.isPending || recusar.isPending}
-                      onClick={() => recusar.mutate(nf.id)}
-                    >
-                      <X className="w-3 h-3 mr-1" />
-                      {recusar.isPending ? "Recusando..." : "Recusar"}
-                    </Button>
-                  </div>
+    <NFDeleteManager>
+      {({ canDelete, onDelete }) => (
+        <div className="space-y-6">
+          {/* Filtros */}
+          <NFFilters
+            filters={filters}
+            onFiltersChange={setFilters}
+            showClientFilter={true}
+          />
+          
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="flex items-center gap-2">
+                    <Clock className="w-5 h-5 text-warning" />
+                    Solicitações Pendentes
+                  </CardTitle>
+                  <CardDescription>
+                    Solicitações de carregamento enviadas pelos clientes aguardando aprovação ({filteredSolicitadas.length}
+                    {validSolicitadas.length !== filteredSolicitadas.length && ` de ${validSolicitadas.length}`} itens)
+                  </CardDescription>
                 </div>
-              ))}
-            </div>
-          ) : validSolicitadas.length > 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              <Clock className="w-12 h-12 mx-auto mb-4 opacity-50" />
-              <p>Nenhuma solicitação encontrada com os filtros aplicados</p>
-              <p className="text-sm mt-1">Tente ajustar os filtros para ver mais resultados</p>
-            </div>
-          ) : (
-            <div className="text-center py-8 text-muted-foreground">
-              <Clock className="w-12 h-12 mx-auto mb-4 opacity-50" />
-              <p>Nenhuma solicitação pendente</p>
-              <p className="text-sm mt-1">As solicitações de carregamento aparecerão aqui</p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-    </div>
+                {filteredSolicitadas.length > 0 && (
+                  <div className="flex gap-2">
+                    <Button onClick={handleImprimir} variant="outline" size="sm">
+                      <Printer className="w-4 h-4 mr-2" />
+                      Imprimir
+                    </Button>
+                    <Button onClick={handleExportar} variant="outline" size="sm">
+                      <Download className="w-4 h-4 mr-2" />
+                      Exportar CSV
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </CardHeader>
+            <CardContent>
+              {filteredSolicitadas.length > 0 ? (
+                <div className="space-y-3">
+                  {filteredSolicitadas.map((nf) => (
+                    <div key={nf.id} className="flex items-center justify-between p-4 border rounded-lg">
+                      <div className="flex-1">
+                        <NFCard
+                          nf={nf}
+                          showRequestInfo
+                          showSelection={false}
+                          canDelete={canDelete}
+                          onDelete={onDelete}
+                        />
+                      </div>
+                      <div className="ml-4 flex gap-2">
+                        <Button
+                          size="sm"
+                          disabled={aprovar.isPending || recusar.isPending}
+                          onClick={() => aprovar.mutate(nf.id)}
+                          className="bg-success text-success-foreground hover:bg-success/80"
+                        >
+                          <CheckCircle className="w-3 h-3 mr-1" />
+                          {aprovar.isPending ? "Aprovando..." : "Aprovar"}
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          disabled={aprovar.isPending || recusar.isPending}
+                          onClick={() => recusar.mutate(nf.id)}
+                        >
+                          <X className="w-3 h-3 mr-1" />
+                          {recusar.isPending ? "Recusando..." : "Recusar"}
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : validSolicitadas.length > 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  <Clock className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                  <p>Nenhuma solicitação encontrada com os filtros aplicados</p>
+                  <p className="text-sm mt-1">Tente ajustar os filtros para ver mais resultados</p>
+                </div>
+              ) : (
+                <div className="text-center py-8 text-muted-foreground">
+                  <Clock className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                  <p>Nenhuma solicitação pendente</p>
+                  <p className="text-sm mt-1">As solicitações de carregamento aparecerão aqui</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      )}
+    </NFDeleteManager>
   );
 }
