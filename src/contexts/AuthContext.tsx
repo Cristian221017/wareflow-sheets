@@ -93,95 +93,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
     
     loadingRef.current = true;
+    setLoading(true); // SEMPRE mostrar loading durante carregamento
     
     try {
-      // Mostrar loading apenas no primeiro carregamento
-      const currentUser = userRef.current;
-      const isRevalidation = !!currentUser;
+      log('Loading user profile for:', supabaseUser.id);
       
-      // Se não é revalidação, mostrar loading
-      if (!isRevalidation) {
-        setLoading(true);
-      }
-      
-      log('Loading user profile for:', supabaseUser.id, 'isRevalidation:', isRevalidation);
-      
-      // Load user data with fallback
+      // Load user data
       const userData = await getUserData(supabaseUser);
       
-      log('User profile loaded successfully:', userData);
+      log('✅ User profile loaded successfully:', userData);
       
       userRef.current = userData;
       setUser(userData);
-      
-      // SEMPRE definir loading como false após sucesso
-      setLoading(false);
 
     } catch (error) {
-      logError('Error loading user profile:', error);
+      logError('❌ Error loading user profile:', error);
       
       // Create fallback user data
-      const fallbackUser: User = {
-        id: supabaseUser.id,
-        name: supabaseUser.email || 'Usuário',
-        email: supabaseUser.email || '',
-        type: 'cliente',
-        role: undefined,
-        transportadoraId: undefined
-      };
-      
-      warn('Using fallback user data:', { fallbackUser });
-      userRef.current = fallbackUser;
-      setUser(fallbackUser);
-      setLoading(false);
-    } finally {
-      loadingRef.current = false;
-    }
-  };
-
-  const getUserData = async (supabaseUser: SupabaseUser): Promise<User> => {
-    console.log(`🔍 [FAST] Loading user profile for: ${supabaseUser.id}`);
-    console.log(`🔍 [FAST] Email: ${supabaseUser.email}`);
-    
-    log('🔍 Using optimized function for:', supabaseUser.email);
-    
-    try {
-      // Use the optimized database function instead of complex queries
-      const { data: result, error } = await supabase
-        .rpc('get_user_data_optimized' as any, {
-          p_user_id: supabaseUser.id,
-          p_email: supabaseUser.email || ''
-        });
-      
-      if (error) {
-        console.error('❌ [FAST] RPC error:', error);
-        throw error;
-      }
-      
-      console.log('🔍 [FAST] RPC result:', result);
-      
-      if (!result || !Array.isArray(result) || result.length === 0) {
-        console.log('🔍 [FAST] No data returned, using fallback');
-        const fallbackUser: User = {
-          id: supabaseUser.id,
-          name: supabaseUser.email?.split('@')[0] || 'Usuário',
-          email: supabaseUser.email || '',
-          type: 'cliente'
-        };
-        console.log('🔍 [FAST] Fallback user created:', fallbackUser);
-        return fallbackUser;
-      }
-      
-      const userData = result[0].user_data;
-      console.log('🔍 [FAST] User data parsed:', userData);
-      
-      return userData as User;
-      
-    } catch (error) {
-      console.error('❌ [FAST] Failed to load user profile:', error);
-      logError('Error loading user data via RPC:', error);
-      
-      // Return fallback user on error (ignore browser extension errors)
       const fallbackUser: User = {
         id: supabaseUser.id,
         name: supabaseUser.email?.split('@')[0] || 'Usuário',
@@ -190,7 +118,76 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       };
       
       warn('Using fallback user data:', { fallbackUser });
-      return fallbackUser;
+      userRef.current = fallbackUser;
+      setUser(fallbackUser);
+    } finally {
+      // GARANTIR que loading sempre seja false
+      setLoading(false);
+      loadingRef.current = false;
+    }
+  };
+
+  const getUserData = async (supabaseUser: SupabaseUser): Promise<User> => {
+    console.log(`🔍 Loading user profile for: ${supabaseUser.id}`);
+    console.log(`🔍 Email: ${supabaseUser.email}`);
+    
+    try {
+      // Buscar primeiro em transportadoras
+      const { data: transportadoraData } = await supabase
+        .from('transportadoras')
+        .select('id, razao_social, email')
+        .eq('email', supabaseUser.email || '')
+        .single();
+
+      if (transportadoraData) {
+        console.log('✅ Found user in transportadoras:', transportadoraData);
+        return {
+          id: supabaseUser.id,
+          name: transportadoraData.razao_social,
+          email: transportadoraData.email,
+          type: 'transportadora',
+          role: 'admin_transportadora',
+          transportadoraId: transportadoraData.id
+        };
+      }
+
+      // Buscar em clientes
+      const { data: clienteData } = await supabase
+        .from('clientes')
+        .select('id, razao_social, email')
+        .eq('email', supabaseUser.email || '')
+        .single();
+
+      if (clienteData) {
+        console.log('✅ Found user in clientes:', clienteData);
+        return {
+          id: supabaseUser.id,
+          name: clienteData.razao_social,
+          email: clienteData.email,
+          type: 'cliente',
+          clienteId: clienteData.id
+        };
+      }
+
+      // Fallback - usuário básico
+      console.log('⚠️ User not found in any table, creating fallback');
+      return {
+        id: supabaseUser.id,
+        name: supabaseUser.email?.split('@')[0] || 'Usuário',
+        email: supabaseUser.email || '',
+        type: 'cliente'
+      };
+
+    } catch (error) {
+      console.error('❌ Failed to load user profile:', error);
+      
+      // Retorna usuário básico em caso de erro
+      return {
+        id: supabaseUser.id,
+        name: supabaseUser.email?.split('@')[0] || 'Usuário',
+        email: supabaseUser.email || '',
+        type: 'cliente'
+      };
     }
   };
 

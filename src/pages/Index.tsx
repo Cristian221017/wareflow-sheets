@@ -11,16 +11,20 @@ export default function Index() {
 
   // Redireciona usuários autenticados para seus portais
   useEffect(() => {
-    if (isAuthenticated && user) {
-      if (user.role === 'super_admin') {
-        navigate('/admin');
-      } else if (user.role === 'admin_transportadora' || user.role === 'operador') {
-        navigate('/transportadora');
-      } else if (user.type === 'cliente') {
-        navigate('/cliente');
-      }
+    if (!loading && isAuthenticated && user) {
+      const timer = setTimeout(() => {
+        if (user.role === 'super_admin') {
+          navigate('/admin', { replace: true });
+        } else if (user.role === 'admin_transportadora' || user.role === 'operador') {
+          navigate('/transportadora', { replace: true });
+        } else if (user.type === 'cliente') {
+          navigate('/cliente', { replace: true });
+        }
+      }, 100); // Pequeno delay para evitar loops
+      
+      return () => clearTimeout(timer);
     }
-  }, [isAuthenticated, user, navigate]);
+  }, [loading, isAuthenticated, user, navigate]);
 
   if (loading) {
     return (
