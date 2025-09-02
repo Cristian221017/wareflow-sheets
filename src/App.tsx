@@ -5,7 +5,7 @@ import { WMSProvider } from "@/contexts/WMSContext";
 import { SimplifiedAuthProvider, useAuth } from "@/contexts/SimplifiedAuthContext";
 import { FinanceiroProvider } from "@/contexts/FinanceiroContext";
 import EnvBanner from "@/components/system/EnvBanner";
-import { log } from '@/utils/optimizedLogger';
+import { log } from '@/utils/productionOptimizedLogger';
 import Index from "./pages/Index";
 import SuperAdminPortal from "./pages/SuperAdminPortal";
 import TransportadoraPortal from "./pages/TransportadoraPortal";
@@ -18,6 +18,7 @@ import HealthPage from "./pages/HealthPage";
 import MercadoriasEmbarcadas from "@/pages/MercadoriasEmbarcadas";
 import MercadoriasEntregues from "@/pages/MercadoriasEntregues";
 import DiagnosticPage from "@/components/system/DiagnosticPage";
+import SystemStatus from "@/components/system/SystemStatus";
 import { AuthRefreshButton } from "@/components/system/AuthRefreshButton";
 import React from 'react';
 import OptimizedRealtimeProvider from "@/providers/OptimizedRealtimeProvider";
@@ -169,6 +170,15 @@ function App() {
                           element={
                             <ProtectedRoute allowedRoles={['super_admin']}>
                               <DiagnosticPage />
+                            </ProtectedRoute>
+                          } 
+                        />
+                        
+                        <Route 
+                          path="/system-status" 
+                          element={
+                            <ProtectedRoute allowedRoles={['super_admin']}>
+                              <SystemStatus />
                             </ProtectedRoute>
                           } 
                         />

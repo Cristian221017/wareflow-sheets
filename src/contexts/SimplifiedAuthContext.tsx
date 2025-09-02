@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect, useState, useCallback } from 'rea
 import { User as SupabaseUser, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { User, AuthContextType } from '@/types/auth';
-import { log, warn, error as logError } from '@/utils/optimizedLogger';
+import { log, warn, error as logError } from '@/utils/productionOptimizedLogger';
 import { ENV } from '@/config/env';
 
 const SimplifiedAuthContext = createContext<AuthContextType | undefined>(undefined);

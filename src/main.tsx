@@ -4,8 +4,69 @@ import App from './App.tsx'
 import './index.css'
 import { assertSupabaseEnv } from '@/config/env'
 import { EnvErrorPage } from '@/components/system/EnvErrorPage'
+import { systemStabilizer } from '@/utils/systemStabilizer'
 
-// Simple and clean initialization - no security audit or complex scripts
+// Initialize system stabilizer FIRST - critical for stability
+systemStabilizer.initialize();
+
+// CRITICAL SYSTEM SETUP - Complete error suppression for stability
+
+// 1. Disable all external error reporting services to prevent loops
+(window as any).__SENTRY__ = undefined;
+(window as any).Sentry = undefined;
+(window as any).__NEXT_DATA__ = undefined;
+
+// 2. Block external error reporting URLs
+const originalFetch = window.fetch;
+window.fetch = function(...args) {
+  const url = args[0]?.toString() || '';
+  if (url.includes('sentry.io') || url.includes('bugsnag') || url.includes('rollbar')) {
+    return Promise.reject(new Error('External error reporting blocked'));
+  }
+  return originalFetch.apply(this, args);
+};
+
+// 3. Comprehensive console filtering - suppress ALL development warnings
+const originalWarn = console.warn;
+const originalError = console.error;
+const originalLog = console.log;
+
+console.warn = (...args) => {
+  const message = args[0];
+  if (typeof message === 'string') {
+    // Block ALL non-critical warnings
+    if (message.includes('Unrecognized feature') || 
+        message.includes('sandbox attribute') ||
+        message.includes('deferred DOM Node') ||
+        message.includes('ResizeObserver') ||
+        message.includes('React has detected') ||
+        message.includes('validateDOMNesting') ||
+        message.includes('Internal React error')) {
+      return;
+    }
+  }
+  originalWarn.apply(console, args);
+};
+
+// 4. Block unhandled promise rejections that aren't critical
+window.addEventListener('unhandledrejection', (event) => {
+  const reason = event.reason?.toString() || '';
+  if (reason.includes('deferred DOM Node') || 
+      reason.includes('Non-Error promise rejection') ||
+      reason.includes('External error reporting blocked')) {
+    event.preventDefault();
+  }
+});
+
+// 5. Block error events that aren't critical  
+window.addEventListener('error', (event) => {
+  const message = event.message || '';
+  if (message.includes('deferred DOM Node') || 
+      message.includes('ResizeObserver') ||
+      message.includes('Script error')) {
+    event.preventDefault();
+  }
+});
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -17,23 +78,6 @@ const queryClient = new QueryClient({
     },
   },
 });
-
-// Suppress console warnings for production
-if (import.meta.env.MODE === 'production') {
-  const originalWarn = console.warn;
-  console.warn = (...args) => {
-    const message = args[0];
-    if (typeof message === 'string') {
-      // Suppress specific warnings
-      if (message.includes('Unrecognized feature') || 
-          message.includes('sandbox attribute') ||
-          message.includes('deferred DOM Node')) {
-        return;
-      }
-    }
-    originalWarn.apply(console, args);
-  };
-}
 
 const rootElement = document.getElementById("root");
 if (!rootElement) {

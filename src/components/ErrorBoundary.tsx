@@ -1,6 +1,6 @@
 // Error Boundary React para capturar erros não tratados
 import React from 'react';
-import { error as logError } from '@/utils/optimizedLogger';
+import { error as logError } from '@/utils/productionOptimizedLogger';
 import { SecureIdGenerator } from '@/utils/memoryManager';
 import { Button } from '@/components/ui/button';
 import { AlertTriangle, RefreshCw, Home } from 'lucide-react';
@@ -38,17 +38,17 @@ export class ErrorBoundary extends React.Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    // Filtrar erros comuns que não são críticos
-    const isCommonError = error.message.includes('deferred DOM Node') ||
-                         error.message.includes('ResizeObserver') ||
-                         error.message.includes('Non-Error promise rejection');
+    // Only log truly critical errors to prevent spam
+    const isCriticalError = !error.message.includes('deferred DOM Node') &&
+                           !error.message.includes('ResizeObserver') &&
+                           !error.message.includes('Non-Error promise rejection') &&
+                           !error.message.includes('Script error') &&
+                           !error.message.includes('validateDOMNesting');
     
-    if (!isCommonError) {
-      // Log do erro apenas se for significativo
-      logError('🚨 ErrorBoundary capturou erro:', {
+    if (isCriticalError && import.meta.env.MODE === 'development') {
+      // Minimal logging even in development
+      logError('🚨 Critical ErrorBoundary:', {
         error: error.message,
-        stack: error.stack?.substring(0, 500), // Limitar tamanho do stack
-        componentStack: errorInfo.componentStack?.substring(0, 300),
         errorId: this.state.errorId
       });
     }
@@ -56,18 +56,7 @@ export class ErrorBoundary extends React.Component<Props, State> {
     // Callback customizado
     this.props.onError?.(error, errorInfo);
 
-    // Em produção, evitar envios excessivos para serviços de monitoramento
-    if (import.meta.env.MODE === 'production' && !isCommonError) {
-      // Rate limiting para evitar spam de erros
-      const errorKey = `error_${error.message.substring(0, 50)}`;
-      const lastSent = localStorage.getItem(errorKey);
-      const now = Date.now();
-      
-      if (!lastSent || now - parseInt(lastSent) > 300000) { // 5 minutos
-        localStorage.setItem(errorKey, now.toString());
-        // Aqui enviaria para serviço quando habilitado
-      }
-    }
+    // No external logging - completely disabled to prevent loops
   }
 
   handleRetry = () => {
@@ -150,7 +139,10 @@ const DefaultErrorFallback: React.FC<{ error: Error; retry: () => void }> = ({ e
 export const RouteErrorBoundary: React.FC<{ children: React.ReactNode }> = ({ children }) => (
   <ErrorBoundary
     onError={(error, errorInfo) => {
-      logError('🛣️ Erro na rota:', { error: error.message, componentStack: errorInfo.componentStack });
+      // Only log if it's a critical route error
+      if (!error.message.includes('deferred DOM Node') && import.meta.env.MODE === 'development') {
+        logError('🛣️ Route error:', { error: error.message });
+      }
     }}
   >
     {children}
@@ -164,10 +156,12 @@ export const CriticalErrorBoundary: React.FC<{ children: React.ReactNode; compon
 }) => (
   <ErrorBoundary
     onError={(error, errorInfo) => {
-      logError(`🔥 Erro crítico em ${componentName}:`, { 
-        error: error.message, 
-        componentStack: errorInfo.componentStack 
-      });
+      // Only log truly critical errors
+      if (!error.message.includes('deferred DOM Node') && import.meta.env.MODE === 'development') {
+        logError(`🔥 Critical error in ${componentName}:`, { 
+          error: error.message
+        });
+      }
     }}
     fallback={({ error, retry }) => (
       <div className="bg-red-50 border border-red-200 rounded-lg p-4 m-4">

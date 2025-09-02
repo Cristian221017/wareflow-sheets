@@ -5,8 +5,31 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>WMS Sistema</title>
     <meta name="description" content="Sistema de Gestão de Armazém" />
-    <!-- Suppress browser feature warnings -->
-    <meta http-equiv="Permissions-Policy" content="vr=(), ambient-light-sensor=(), battery=()" />
+    
+    <!-- Complete feature policy to suppress all warnings -->
+    <meta http-equiv="Permissions-Policy" content="
+      vr=(), 
+      ambient-light-sensor=(), 
+      battery=(), 
+      camera=(), 
+      microphone=(), 
+      geolocation=(), 
+      gyroscope=(), 
+      magnetometer=(), 
+      payment=(),
+      usb=(),
+      bluetooth=(),
+      midi=()
+    " />
+    
+    <!-- Prevent external error reporting -->
+    <meta http-equiv="Content-Security-Policy" content="
+      connect-src 'self' https://*.supabase.co https://supabase.co;
+      script-src 'self' 'unsafe-inline' 'unsafe-eval';
+      style-src 'self' 'unsafe-inline';
+      img-src 'self' data: https:;
+      font-src 'self' data:;
+    " />
   </head>
 
   <body>
