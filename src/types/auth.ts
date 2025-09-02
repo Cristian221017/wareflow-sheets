@@ -6,6 +6,8 @@ export interface User {
   email: string;
   type: UserType;
   cnpj?: string;
+  cpf?: string;
+  setor?: string;
   emailNotaFiscal?: string;
   emailSolicitacaoLiberacao?: string;
   emailLiberacaoAutorizada?: string;
@@ -19,7 +21,7 @@ export interface User {
 export interface AuthContextType {
   user: User | null;
   login: (email: string, password: string) => Promise<boolean>;
-  signUp: (email: string, password: string, name: string) => Promise<{ error?: string }>;
+  signUp: (email: string, password: string, name: string, cpf: string, setor: string) => Promise<{ error?: string }>;
   logout: () => void;
   isAuthenticated: boolean;
   loading: boolean;

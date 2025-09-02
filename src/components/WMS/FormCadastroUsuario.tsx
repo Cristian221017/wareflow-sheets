@@ -25,8 +25,10 @@ export function FormCadastroUsuario({ userType = 'super_admin', onSuccess }: For
   const [formData, setFormData] = useState({
     name: '',
     email: '',
+    cpf: '',
     password: '',
     confirmPassword: '',
+    setor: '',
     role: 'operador' as 'super_admin' | 'admin_transportadora' | 'operador' | 'cliente',
     transportadora_id: ''
   });
@@ -67,6 +69,16 @@ export function FormCadastroUsuario({ userType = 'super_admin', onSuccess }: For
       return;
     }
 
+    if (!formData.cpf) {
+      toast.error('CPF é obrigatório');
+      return;
+    }
+
+    if (!formData.setor) {
+      toast.error('Setor é obrigatório');
+      return;
+    }
+
     if (!formData.transportadora_id && formData.role !== 'super_admin') {
       toast.error('Selecione uma transportadora');
       return;
@@ -104,7 +116,9 @@ export function FormCadastroUsuario({ userType = 'super_admin', onSuccess }: For
         .upsert([{
           user_id: authData.user.id,
           name: formData.name,
-          email: formData.email
+          email: formData.email,
+          cpf: formData.cpf,
+          setor: formData.setor
         }]);
 
       if (profileError) {
@@ -169,8 +183,10 @@ export function FormCadastroUsuario({ userType = 'super_admin', onSuccess }: For
       setFormData({
         name: '',
         email: '',
+        cpf: '',
         password: '',
         confirmPassword: '',
+        setor: '',
         role: 'operador',
         transportadora_id: ''
       });
@@ -206,6 +222,7 @@ export function FormCadastroUsuario({ userType = 'super_admin', onSuccess }: For
                 value={formData.name}
                 onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
                 required
+                placeholder="Nome completo do usuário"
               />
             </div>
             
@@ -217,6 +234,32 @@ export function FormCadastroUsuario({ userType = 'super_admin', onSuccess }: For
                 value={formData.email}
                 onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
                 required
+                placeholder="email@exemplo.com"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="cpf">CPF *</Label>
+              <Input
+                id="cpf"
+                value={formData.cpf}
+                onChange={(e) => setFormData(prev => ({ ...prev, cpf: e.target.value }))}
+                required
+                placeholder="000.000.000-00"
+                maxLength={14}
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="setor">Setor *</Label>
+              <Input
+                id="setor"
+                value={formData.setor}
+                onChange={(e) => setFormData(prev => ({ ...prev, setor: e.target.value }))}
+                required
+                placeholder="Ex: Logística, Comercial, Financeiro"
               />
             </div>
           </div>
@@ -231,6 +274,7 @@ export function FormCadastroUsuario({ userType = 'super_admin', onSuccess }: For
                 onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
                 required
                 minLength={6}
+                placeholder="Mínimo 6 caracteres"
               />
             </div>
             
@@ -243,6 +287,7 @@ export function FormCadastroUsuario({ userType = 'super_admin', onSuccess }: For
                 onChange={(e) => setFormData(prev => ({ ...prev, confirmPassword: e.target.value }))}
                 required
                 minLength={6}
+                placeholder="Confirme a senha"
               />
             </div>
           </div>

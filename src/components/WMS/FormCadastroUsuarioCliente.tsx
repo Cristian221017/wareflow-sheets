@@ -21,8 +21,10 @@ import { toast } from 'sonner';
 const formSchema = z.object({
   name: z.string().min(1, 'Nome é obrigatório'),
   email: z.string().email('Email inválido'),
+  cpf: z.string().min(11, 'CPF deve ter 11 dígitos').max(14, 'CPF inválido'),
   password: z.string().min(6, 'Senha deve ter pelo menos 6 caracteres'),
   confirmPassword: z.string().min(6, 'Confirmação deve ter pelo menos 6 caracteres'),
+  setor: z.string().min(1, 'Setor é obrigatório'),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "As senhas não coincidem",
   path: ["confirmPassword"],
@@ -42,8 +44,10 @@ export function FormCadastroUsuarioCliente({ onSuccess }: FormCadastroUsuarioCli
     defaultValues: {
       name: '',
       email: '',
+      cpf: '',
       password: '',
       confirmPassword: '',
+      setor: '',
     },
   });
 
@@ -83,7 +87,9 @@ export function FormCadastroUsuarioCliente({ onSuccess }: FormCadastroUsuarioCli
         .upsert([{
           user_id: authData.user.id,
           name: values.name,
-          email: values.email
+          email: values.email,
+          cpf: values.cpf,
+          setor: values.setor
         }]);
 
       if (profileError) {
@@ -121,7 +127,7 @@ export function FormCadastroUsuarioCliente({ onSuccess }: FormCadastroUsuarioCli
                 name="name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Nome Completo</FormLabel>
+                    <FormLabel>Nome Completo *</FormLabel>
                     <FormControl>
                       <Input placeholder="Nome completo do usuário" {...field} />
                     </FormControl>
@@ -135,9 +141,39 @@ export function FormCadastroUsuarioCliente({ onSuccess }: FormCadastroUsuarioCli
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Email</FormLabel>
+                    <FormLabel>Email *</FormLabel>
                     <FormControl>
                       <Input type="email" placeholder="email@exemplo.com" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="cpf"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>CPF *</FormLabel>
+                    <FormControl>
+                      <Input placeholder="000.000.000-00" maxLength={14} {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="setor"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Setor *</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Ex: Logística, Comercial, Financeiro" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -151,9 +187,9 @@ export function FormCadastroUsuarioCliente({ onSuccess }: FormCadastroUsuarioCli
                 name="password"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Senha</FormLabel>
+                    <FormLabel>Senha *</FormLabel>
                     <FormControl>
-                      <Input type="password" placeholder="Senha do usuário" {...field} />
+                      <Input type="password" placeholder="Mínimo 6 caracteres" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -165,7 +201,7 @@ export function FormCadastroUsuarioCliente({ onSuccess }: FormCadastroUsuarioCli
                 name="confirmPassword"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Confirmar Senha</FormLabel>
+                    <FormLabel>Confirmar Senha *</FormLabel>
                     <FormControl>
                       <Input type="password" placeholder="Confirme a senha" {...field} />
                     </FormControl>

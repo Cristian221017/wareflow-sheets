@@ -17,7 +17,9 @@ export function LoginPage() {
     email: '',
     password: '',
     name: '',
-    confirmPassword: ''
+    confirmPassword: '',
+    cpf: '',
+    setor: ''
   });
 
   // Dados de desenvolvimento - apenas em modo dev
@@ -69,12 +71,22 @@ export function LoginPage() {
           return;
         }
 
-        const { error } = await signUp(formData.email, formData.password, formData.name);
+        if (!formData.cpf) {
+          toast.error('CPF é obrigatório!');
+          return;
+        }
+
+        if (!formData.setor) {
+          toast.error('Setor é obrigatório!');
+          return;
+        }
+
+        const { error } = await signUp(formData.email, formData.password, formData.name, formData.cpf, formData.setor);
         if (error) {
           toast.error(error);
         } else {
           toast.success('Cadastro realizado com sucesso!');
-          setFormData(prev => ({ ...prev, password: '', confirmPassword: '', name: '' }));
+          setFormData(prev => ({ ...prev, password: '', confirmPassword: '', name: '', cpf: '', setor: '' }));
         }
       }
     } catch (error) {
@@ -162,10 +174,11 @@ export function LoginPage() {
                       required
                     />
                   </div>
+                  
                   <div className="space-y-2">
-                    <Label htmlFor="email">Email</Label>
+                    <Label htmlFor="signup-email">Email</Label>
                     <Input
-                      id="email"
+                      id="signup-email"
                       type="email"
                       placeholder="seu@email.com"
                       value={formData.email}
@@ -173,28 +186,59 @@ export function LoginPage() {
                       required
                     />
                   </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="cpf">CPF</Label>
+                      <Input
+                        id="cpf"
+                        type="text"
+                        placeholder="000.000.000-00"
+                        value={formData.cpf}
+                        onChange={(e) => setFormData(prev => ({ ...prev, cpf: e.target.value }))}
+                        maxLength={14}
+                        required
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="setor">Setor</Label>
+                      <Input
+                        id="setor"
+                        type="text"
+                        placeholder="Ex: Logística"
+                        value={formData.setor}
+                        onChange={(e) => setFormData(prev => ({ ...prev, setor: e.target.value }))}
+                        required
+                      />
+                    </div>
+                  </div>
+                  
                   <div className="space-y-2">
-                    <Label htmlFor="password">Senha</Label>
+                    <Label htmlFor="signup-password">Senha</Label>
                     <Input
-                      id="password"
+                      id="signup-password"
                       type="password"
-                      placeholder="••••••••"
+                      placeholder="Mínimo 6 caracteres"
                       value={formData.password}
                       onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
                       required
+                      minLength={6}
                     />
                   </div>
+                  
                   <div className="space-y-2">
                     <Label htmlFor="confirmPassword">Confirmar Senha</Label>
                     <Input
                       id="confirmPassword"
                       type="password"
-                      placeholder="••••••••"
+                      placeholder="Confirme sua senha"
                       value={formData.confirmPassword}
                       onChange={(e) => setFormData(prev => ({ ...prev, confirmPassword: e.target.value }))}
                       required
                     />
                   </div>
+                  
                   <Button type="submit" className="w-full" disabled={isLoading}>
                     {isLoading ? 'Criando conta...' : 'Criar Conta'}
                   </Button>

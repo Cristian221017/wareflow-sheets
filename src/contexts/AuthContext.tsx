@@ -7,7 +7,7 @@ import { log, warn, error as logError } from '@/utils/logger';
 interface AuthContextType {
   user: User | null;
   login: (email: string, password: string) => Promise<boolean>;
-  signUp: (email: string, password: string, name: string) => Promise<{ error?: string }>;
+  signUp: (email: string, password: string, name: string, cpf: string, setor: string) => Promise<{ error?: string }>;
   logout: () => void;
   isAuthenticated: boolean;
   loading: boolean;
@@ -267,7 +267,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const signUp = async (email: string, password: string, name: string): Promise<{ error?: string }> => {
+  const signUp = async (email: string, password: string, name: string, cpf: string, setor: string): Promise<{ error?: string }> => {
     try {
       const { data, error } = await supabase.auth.signUp({
         email,
@@ -275,6 +275,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         options: {
           data: {
             name,
+            cpf,
+            setor
           },
           emailRedirectTo: `${window.location.origin}/`
         },
