@@ -17,7 +17,10 @@ export function AuthRefreshButton() {
       const success = await forceRefreshAuth();
       if (success) {
         toast.success('Sessão atualizada! Recarregando página...');
-        setTimeout(() => window.location.reload(), 1000);
+        setTimeout(() => {
+          const reload = () => window.location.reload();
+          reload();
+        }, 1000);
       } else {
         toast.error('Erro ao atualizar sessão');
       }
@@ -46,7 +49,10 @@ export function AuthRefreshButton() {
     try {
       await clearAuthState();
       toast.success('Cache limpo! Redirecionando...');
-      setTimeout(() => window.location.href = '/', 1000);
+      setTimeout(() => {
+        const navigate = () => window.location.href = '/';
+        navigate();
+      }, 1000);
     } catch (error) {
       toast.error('Erro ao limpar cache');
     }

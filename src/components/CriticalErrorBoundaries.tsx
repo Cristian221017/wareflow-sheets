@@ -54,7 +54,10 @@ export const DataContextErrorBoundary: React.FC<{ children: React.ReactNode }> =
             </button>
             
             <button 
-              onClick={() => window.location.href = '/'}
+              onClick={() => {
+                const navigate = () => window.location.href = '/';
+                navigate();
+              }}
               className="w-full bg-gray-500 hover:bg-gray-600 text-white font-medium py-2 px-4 rounded-md transition-colors"
             >
               Ir para Início

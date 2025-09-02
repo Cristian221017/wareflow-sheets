@@ -275,7 +275,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             cpf,
             setor
           },
-          emailRedirectTo: `${window.location.origin}/`
+          emailRedirectTo: `https://vyqnnnyamoovzxmuvtkl.supabase.co/`
         },
       });
 

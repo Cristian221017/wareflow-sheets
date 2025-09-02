@@ -143,7 +143,7 @@ export function AdminScopedUserManagement() {
         email: formData.email,
         password: Math.random().toString(36).slice(-8), // Senha temporária
         options: {
-          emailRedirectTo: `${window.location.origin}/`
+          emailRedirectTo: `https://vyqnnnyamoovzxmuvtkl.supabase.co/`
         }
       });
 

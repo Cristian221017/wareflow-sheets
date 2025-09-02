@@ -59,7 +59,7 @@ export function FormCadastroUsuarioCliente({ onSuccess }: FormCadastroUsuarioCli
         email: values.email,
         password: values.password,
         options: {
-          emailRedirectTo: `${window.location.origin}/cliente`,
+          emailRedirectTo: `https://vyqnnnyamoovzxmuvtkl.supabase.co/cliente`,
           data: {
             name: values.name,
             role: 'cliente'

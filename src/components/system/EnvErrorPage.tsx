@@ -5,7 +5,8 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export function EnvErrorPage() {
   const handleRefresh = () => {
-    window.location.reload();
+    const reload = () => window.location.reload();
+    reload();
   };
 
   return (

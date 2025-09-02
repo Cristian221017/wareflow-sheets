@@ -67,7 +67,7 @@ export function FormCadastroTransportadora() {
         email: formData.email,
         password: formData.senha_admin,
         options: {
-          emailRedirectTo: `${window.location.origin}/`,
+          emailRedirectTo: `https://vyqnnnyamoovzxmuvtkl.supabase.co/`,
           data: {
             name: `Admin - ${formData.razao_social}`,
             role: 'admin_transportadora'

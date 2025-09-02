@@ -117,7 +117,10 @@ const DefaultErrorFallback: React.FC<{ error: Error; retry: () => void }> = ({ e
           
           <Button 
             variant="outline" 
-            onClick={() => window.location.href = '/'}
+            onClick={() => {
+              const navigate = () => window.location.href = '/';
+              navigate();
+            }}
             className="flex items-center gap-2"
           >
             <Home className="h-4 w-4" />
