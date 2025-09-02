@@ -1,15 +1,17 @@
 // System Status Component - Shows current system health
 import React, { useState, useEffect } from 'react';
 import { systemStabilizer } from '@/utils/systemStabilizer';
+import { criticalSystemDiagnostic } from '@/utils/criticalSystemDiagnostic';
 import productionLogger from '@/utils/productionOptimizedLogger';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { CheckCircle, AlertCircle, Activity, Trash2 } from 'lucide-react';
+import { CheckCircle, AlertCircle, Activity, Trash2, RefreshCw, Wrench } from 'lucide-react';
 
 export const SystemStatus: React.FC = () => {
   const [status, setStatus] = useState<any>(null);
   const [loggerStats, setLoggerStats] = useState<any>(null);
+  const [healthReport, setHealthReport] = useState<any>(null);
 
   useEffect(() => {
     updateStatus();
@@ -20,6 +22,12 @@ export const SystemStatus: React.FC = () => {
   const updateStatus = () => {
     setStatus(systemStabilizer.getStatus());
     setLoggerStats(productionLogger.getBufferStats());
+    setHealthReport(criticalSystemDiagnostic.getLastHealthReport());
+  };
+
+  const runAutoFix = () => {
+    criticalSystemDiagnostic.autoFixCriticalIssues();
+    setTimeout(updateStatus, 1000); // Refresh after auto-fix
   };
 
   const clearLogs = () => {
@@ -37,6 +45,14 @@ export const SystemStatus: React.FC = () => {
         <CardTitle className="flex items-center gap-2">
           <Activity className="h-5 w-5" />
           Status do Sistema
+          {healthReport && (
+            <Badge variant={
+              healthReport.overallHealth === 'HEALTHY' ? 'default' :
+              healthReport.overallHealth === 'WARNING' ? 'secondary' : 'destructive'
+            }>
+              {healthReport.overallHealth}
+            </Badge>
+          )}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -115,9 +131,28 @@ export const SystemStatus: React.FC = () => {
           </div>
         </div>
 
+        {healthReport && healthReport.issues && healthReport.issues.length > 0 && (
+          <div className="border-t pt-4">
+            <h4 className="font-medium mb-2 text-red-600">Problemas Detectados</h4>
+            <div className="space-y-1 text-sm">
+              {healthReport.issues.map((issue: string, index: number) => (
+                <div key={index} className="flex items-center gap-2">
+                  <AlertCircle className="h-3 w-3 text-red-500" />
+                  <span className="text-red-600">{issue}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         <div className="flex gap-2 pt-4 border-t">
           <Button size="sm" onClick={updateStatus} variant="outline">
+            <RefreshCw className="h-3 w-3 mr-1" />
             Atualizar Status
+          </Button>
+          <Button size="sm" onClick={runAutoFix} variant="outline">
+            <Wrench className="h-3 w-3 mr-1" />
+            Auto-Fix
           </Button>
           <Button size="sm" onClick={clearLogs} variant="outline">
             <Trash2 className="h-3 w-3 mr-1" />

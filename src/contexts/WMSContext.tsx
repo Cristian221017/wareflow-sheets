@@ -41,20 +41,11 @@ export function WMSProvider({ children }: { children: ReactNode }) {
   const { user, loading } = auth;
   const queryClient = useQueryClient();
   
-  // State hooks must be called unconditionally at the top level
+  // CRÍTICO: Todos os hooks DEVEM estar antes de qualquer conditional return
   const [notasFiscais, setNotasFiscais] = useState<NotaFiscal[]>([]);
   const [pedidosLiberacao, setPedidosLiberacao] = useState<PedidoLiberacao[]>([]);
   const [pedidosLiberados, setPedidosLiberados] = useState<PedidoLiberado[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  
-  // Aguardar auth terminar de carregar antes de inicializar WMS
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
-      </div>
-    );
-  }
   
   const invalidateWithScope = (entityType: 'nfs' | 'documentos_financeiros', entityId?: string, userType?: string, userId?: string) => {
     if (entityType === 'nfs') {
@@ -502,6 +493,17 @@ export function WMSProvider({ children }: { children: ReactNode }) {
     deletePedidoLiberado,
     recusarPedido
   };
+
+  // RENDERIZAÇÃO CONDICIONAL DEVE SER FEITA AQUI, APÓS TODOS OS HOOKS
+  if (loading) {
+    return (
+      <WMSContext.Provider value={value}>
+        <div className="min-h-screen bg-background flex items-center justify-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
+        </div>
+      </WMSContext.Provider>
+    );
+  }
 
   return (
     <WMSContext.Provider value={value}>

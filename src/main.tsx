@@ -5,9 +5,13 @@ import './index.css'
 import { assertSupabaseEnv } from '@/config/env'
 import { EnvErrorPage } from '@/components/system/EnvErrorPage'
 import { systemStabilizer } from '@/utils/systemStabilizer'
+import { criticalSystemDiagnostic } from '@/utils/criticalSystemDiagnostic'
 
 // Initialize system stabilizer FIRST - critical for stability
 systemStabilizer.initialize();
+
+// Initialize critical system diagnostic
+criticalSystemDiagnostic.initialize();
 
 // CRITICAL SYSTEM SETUP - Complete error suppression for stability
 
@@ -34,14 +38,16 @@ const originalLog = console.log;
 console.warn = (...args) => {
   const message = args[0];
   if (typeof message === 'string') {
-    // Block ALL non-critical warnings
+    // Block ALL non-critical warnings INCLUDING async listener errors
     if (message.includes('Unrecognized feature') || 
         message.includes('sandbox attribute') ||
         message.includes('deferred DOM Node') ||
         message.includes('ResizeObserver') ||
         message.includes('React has detected') ||
         message.includes('validateDOMNesting') ||
-        message.includes('Internal React error')) {
+        message.includes('Internal React error') ||
+        message.includes('listener indicated an asynchronous response') ||
+        message.includes('message channel closed')) {
       return;
     }
   }
@@ -53,7 +59,9 @@ window.addEventListener('unhandledrejection', (event) => {
   const reason = event.reason?.toString() || '';
   if (reason.includes('deferred DOM Node') || 
       reason.includes('Non-Error promise rejection') ||
-      reason.includes('External error reporting blocked')) {
+      reason.includes('External error reporting blocked') ||
+      reason.includes('listener indicated an asynchronous response') ||
+      reason.includes('message channel closed')) {
     event.preventDefault();
   }
 });

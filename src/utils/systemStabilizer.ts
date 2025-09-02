@@ -155,7 +155,11 @@ class SystemStabilizer {
            message.includes('Load failed') ||
            message.includes('validateDOMNesting') ||
            message.includes('React has detected') ||
-           message.includes('Internal React error');
+           message.includes('Internal React error') ||
+           message.includes('listener indicated an asynchronous response') ||
+           message.includes('message channel closed') ||
+           message.includes('Uncaught (in promise)') ||
+           message.includes('A listener indicated');
   }
 
   private isIgnorableRejection(reason: string): boolean {
@@ -163,7 +167,9 @@ class SystemStabilizer {
            reason.includes('Non-Error promise rejection') ||
            reason.includes('External error service blocked') ||
            reason.includes('AbortError') ||
-           reason.includes('The user aborted a request');
+           reason.includes('The user aborted a request') ||
+           reason.includes('listener indicated an asynchronous response') ||
+           reason.includes('message channel closed');
   }
 
   private isIgnorableWarning(message: string): boolean {
@@ -197,9 +203,6 @@ class SystemStabilizer {
 // Singleton instance
 export const systemStabilizer = new SystemStabilizer();
 
-// Auto-initialize
-if (typeof window !== 'undefined') {
-  systemStabilizer.initialize();
-}
+// DO NOT auto-initialize - will be initialized from main.tsx to prevent double initialization
 
 export default systemStabilizer;

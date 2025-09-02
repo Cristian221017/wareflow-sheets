@@ -8,21 +8,28 @@
     
     <!-- Complete feature policy to suppress all warnings -->
     <meta http-equiv="Permissions-Policy" content="
-      vr=(), 
-      ambient-light-sensor=(), 
-      battery=(), 
-      camera=(), 
-      microphone=(), 
-      geolocation=(), 
-      gyroscope=(), 
-      magnetometer=(), 
-      payment=(),
-      usb=(),
+      vr=(),
+      xr-spatial-tracking=(),
+      camera=(),
+      microphone=(),
+      geolocation=(),
+      accelerometer=(),
+      gyroscope=(),
+      magnetometer=(),
+      ambient-light-sensor=(),
+      battery=(),
       bluetooth=(),
-      midi=()
+      usb=(),
+      midi=(),
+      payment=(),
+      picture-in-picture=(),
+      screen-wake-lock=(),
+      web-share=(),
+      clipboard-read=(),
+      clipboard-write=()
     " />
     
-    <!-- Prevent external error reporting -->
+    <!-- Enhanced CSP with complete error service blocking -->
     <meta http-equiv="Content-Security-Policy" content="
       default-src 'self';
       connect-src 'self' https://*.supabase.co https://supabase.co https://cdn.gpteng.co https://*.lovable.dev;
@@ -31,6 +38,8 @@
       img-src 'self' data: https:;
       font-src 'self' data:;
       frame-src 'self' https://*.lovable.dev;
+      block-all-mixed-content;
+      upgrade-insecure-requests;
     " />
   </head>
 
