@@ -49,7 +49,18 @@ export function FinanceiroCliente() {
     }
     
     if (statusFilter !== 'all') {
-      filtered = filtered.filter(doc => doc.status === statusFilter);
+      if (statusFilter === 'vencidos') {
+        // Filtrar documentos que estão vencidos por data (Em aberto + data vencida)
+        filtered = filtered.filter(doc => {
+          if (doc.status !== 'Em aberto') return false;
+          const date = new Date(doc.dataVencimento + 'T00:00:00');
+          const today = new Date();
+          today.setHours(0, 0, 0, 0);
+          return date < today;
+        });
+      } else {
+        filtered = filtered.filter(doc => doc.status === statusFilter);
+      }
     }
 
     if (dataInicio) {
@@ -102,9 +113,19 @@ export function FinanceiroCliente() {
   }
   
   const getStatusColor = (status: string, dataVencimento: string) => {
-    const isVencido = dateUtils.isOverdue(dataVencimento, status);
+    // Verificar se documento está vencido baseado na data (apenas para status "Em aberto")
+    const isVencido = (dataVencimento: string, status: string): boolean => {
+      if (!dataVencimento || status !== 'Em aberto') return false;
+      
+      const date = new Date(dataVencimento + 'T00:00:00');
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      return date < today;
+    };
+
+    const vencido = isVencido(dataVencimento, status);
     
-    if (isVencido) return 'bg-destructive text-destructive-foreground';
+    if (vencido) return 'bg-destructive text-destructive-foreground';
     
     switch (status) {
       case 'Em aberto':
@@ -177,6 +198,7 @@ export function FinanceiroCliente() {
                 <SelectContent>
                   <SelectItem value="all">Todos os status</SelectItem>
                   <SelectItem value="Em aberto">Em aberto</SelectItem>
+                  <SelectItem value="vencidos">Vencidos</SelectItem>
                   <SelectItem value="Pago">Pago</SelectItem>
                   <SelectItem value="Vencido">Vencido</SelectItem>
                 </SelectContent>
@@ -245,9 +267,9 @@ export function FinanceiroCliente() {
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
                       <h3 className="font-medium">CTE {documento.numeroCte}</h3>
-                      <Badge className={getStatusColor(documento.status, documento.dataVencimento)}>
-                        {documento.status}
-                      </Badge>
+                       <Badge className={getStatusColor(documento.status, documento.dataVencimento)}>
+                         {getStatusColor(documento.status, documento.dataVencimento).includes('destructive') && documento.status === 'Em aberto' ? 'Vencido' : documento.status}
+                       </Badge>
                     </div>
                     
                     <div className="grid grid-cols-2 gap-4 text-sm text-muted-foreground">
