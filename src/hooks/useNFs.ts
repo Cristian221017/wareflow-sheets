@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { solicitarNF, confirmarNF, recusarNF, fetchNFsByStatus } from "@/lib/nfApi";
 import { toast } from "sonner";
 import { useAuth } from '@/contexts/SimplifiedAuthContext';
-import { log, audit, error as logError } from '@/utils/optimizedLogger';
+import { log, audit, error as logError } from '@/utils/logger';
 import { useInvalidateAll } from "./useInvalidateAll";
 import { useAgendamentoUnificado } from "./useAgendamentoUnificado";
 import type { NFStatus, NotaFiscal } from "@/types/nf";

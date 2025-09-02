@@ -19,7 +19,7 @@ import {
   X,
   Package
 } from 'lucide-react';
-import { log, error as logError } from '@/utils/optimizedLogger';
+import { log, error as logError } from '@/utils/logger';
 import { toast } from 'sonner';
 import type { NotaFiscal } from '@/types/nf';
 

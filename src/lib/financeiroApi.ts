@@ -1,5 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
-import { log, warn, error as logError, audit, auditError } from '@/utils/optimizedLogger';
+import { log, warn, error as logError, audit, auditError } from '@/utils/logger';
 import { getCurrentUserId } from '@/utils/authCache';
 
 export async function createDocumentoFinanceiro(

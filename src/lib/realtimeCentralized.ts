@@ -1,5 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
-import { log, warn } from "@/utils/optimizedLogger";
+import { log, warn } from "@/utils/logger";
 import type { QueryClient } from "@tanstack/react-query";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 

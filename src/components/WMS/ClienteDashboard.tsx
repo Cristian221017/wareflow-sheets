@@ -1,4 +1,4 @@
-import { log, warn, error as logError } from '@/utils/optimizedLogger';
+import { log, warn, error as logError } from '@/utils/logger';
 import { useAuth } from '@/contexts/SimplifiedAuthContext';
 import { useOptimizedDashboard } from '@/hooks/useOptimizedDashboard';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';

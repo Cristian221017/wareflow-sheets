@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import type { NotaFiscal } from '@/types/wms';
-import { log, error } from '@/utils/optimizedLogger';
+import { log, error } from '@/utils/logger';
 import { handleError } from '@/utils/centralizedErrorHandler';
 import { useAuth } from '@/contexts/SimplifiedAuthContext';
 

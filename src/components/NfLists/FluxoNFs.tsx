@@ -14,7 +14,7 @@ import { SolicitarCarregamentoDialog } from "@/components/WMS/SolicitarCarregame
 import { useAgendamentoUnificado } from "@/hooks/useAgendamentoUnificado";
 import { useAuth } from "@/contexts/SimplifiedAuthContext";
 import type { NotaFiscal } from "@/types/nf";
-import { log } from "@/utils/optimizedLogger";
+import { log } from "@/utils/logger";
 import { toast } from "sonner";
 
 // Componente para mostrar estado vazio
