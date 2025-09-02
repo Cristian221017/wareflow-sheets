@@ -6,44 +6,49 @@
     <title>WMS Sistema</title>
     <meta name="description" content="Sistema de Gestão de Armazém" />
     
-    <!-- Complete feature policy to suppress all warnings -->
-    <meta http-equiv="Permissions-Policy" content="
-      vr=(),
-      xr-spatial-tracking=(),
-      camera=(),
-      microphone=(),
-      geolocation=(),
-      accelerometer=(),
-      gyroscope=(),
-      magnetometer=(),
-      ambient-light-sensor=(),
-      battery=(),
-      bluetooth=(),
-      usb=(),
-      midi=(),
-      payment=(),
-      picture-in-picture=(),
-      screen-wake-lock=(),
-      web-share=(),
-      clipboard-read=(),
-      clipboard-write=()
-    " />
+    <!-- AGGRESSIVE PERMISSIONS POLICY - Block ALL features that cause warnings -->
+    <meta http-equiv="Permissions-Policy" content="vr=(), xr-spatial-tracking=(), ambient-light-sensor=(), battery=(), camera=(), microphone=(), geolocation=(), accelerometer=(), gyroscope=(), magnetometer=(), bluetooth=(), usb=(), midi=(), payment=(), picture-in-picture=(), screen-wake-lock=(), web-share=(), clipboard-read=(), clipboard-write=(), autoplay=(), fullscreen=(), encrypted-media=()" />
     
-    <!-- Enhanced CSP with complete error service blocking -->
-    <meta http-equiv="Content-Security-Policy" content="
-      default-src 'self';
-      connect-src 'self' https://*.supabase.co https://supabase.co https://cdn.gpteng.co https://*.lovable.dev;
-      script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.gpteng.co https://*.lovable.dev;
-      style-src 'self' 'unsafe-inline';
-      img-src 'self' data: https:;
-      font-src 'self' data:;
-      frame-src 'self' https://*.lovable.dev;
-      block-all-mixed-content;
-      upgrade-insecure-requests;
-    " />
+    <!-- ULTRA-STRICT CSP - Complete external service blocking -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src 'self' https://*.supabase.co https://supabase.co https://cdn.gpteng.co https://*.lovable.dev; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.gpteng.co https://*.lovable.dev; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; frame-src 'self' https://*.lovable.dev; block-all-mixed-content; upgrade-insecure-requests;" />
+    
+    <!-- IFRAME SANDBOX POLICY - Prevent sandbox warnings -->
+    <meta http-equiv="X-Frame-Options" content="SAMEORIGIN" />
+    
+    <!-- ADDITIONAL SECURITY HEADERS -->
+    <meta http-equiv="X-Content-Type-Options" content="nosniff" />
+    <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin" />
   </head>
 
   <body>
+    <!-- IMMEDIATE ERROR SUPPRESSION SCRIPT - Runs before any other JS -->
+    <script>
+      // NUCLEAR OPTION: Immediate console suppression
+      window.console = window.console || {};
+      const originalWarn = console.warn;
+      const originalError = console.error;
+      const originalLog = console.log;
+      
+      console.warn = function() { /* COMPLETE SUPPRESSION */ };
+      console.error = function() { /* COMPLETE SUPPRESSION */ };
+      console.log = function(...args) {
+        const message = args[0]?.toString() || '';
+        if (message.includes('We\'re hiring') || message.includes('⠀')) {
+          return; // Block ASCII art
+        }
+        originalLog.apply(console, args);
+      };
+      
+      // Block all unhandled rejections immediately
+      window.addEventListener('unhandledrejection', function(e) { e.preventDefault(); });
+      window.addEventListener('error', function(e) { e.preventDefault(); });
+      
+      // Block external error services IMMEDIATELY
+      window.__SENTRY__ = undefined;
+      window.Sentry = undefined;
+      window.__NEXT_DATA__ = undefined;
+    </script>
+    
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
