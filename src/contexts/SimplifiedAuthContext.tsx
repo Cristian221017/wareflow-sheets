@@ -2,8 +2,6 @@ import { createContext, useContext, useEffect, useState, useCallback } from 'rea
 import { User as SupabaseUser, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { User, AuthContextType } from '@/types/auth';
-import { log, warn, error as logError } from '@/utils/productionOptimizedLogger';
-import { ENV } from '@/config/env';
 
 const SimplifiedAuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -14,58 +12,31 @@ export function SimplifiedAuthProvider({ children }: { children: React.ReactNode
 
   const loadUserData = useCallback(async (supabaseUser: SupabaseUser): Promise<User> => {
     try {
-      // Logs essenciais apenas
-      if (supabaseUser.email?.includes('test') || ENV.MODE === 'development') {
-        log(`🔍 [Simple] Loading user for: ${supabaseUser.email}`);
-        (window as any).debugLogger?.log('DEBUG', 'AUTH', `Loading user data for: ${supabaseUser.email}`);
-      }
-      
-      // Usar a função RPC otimizada, mas com timeout curto
-      const { data: result, error } = await Promise.race([
-        supabase.rpc('get_user_data_optimized' as any, {
-          p_user_id: supabaseUser.id,
-          p_email: supabaseUser.email || ''
-        }),
-        new Promise<never>((_, reject) => 
-          setTimeout(() => reject(new Error('RPC timeout')), 5000)
-        )
-      ]);
+      const { data: result, error } = await supabase.rpc('get_user_data_optimized' as any, {
+        p_user_id: supabaseUser.id,
+        p_email: supabaseUser.email || ''
+      });
       
       if (error) {
-        if (ENV.MODE === 'development') {
-          log('⚠️ RPC error, using fallback approach:', error.message);
-          (window as any).debugLogger?.log('WARN', 'AUTH', 'RPC error, using fallback', { error: error.message });
-        }
         return await loadUserDataFallback(supabaseUser);
       }
       
-        if (result && Array.isArray(result) && result.length > 0) {
-          const userData = result[0].user_data;
-          if (ENV.MODE === 'development') {
-            log(`✅ [Simple] User loaded successfully: ${userData.type}`);
-            (window as any).debugLogger?.log('INFO', 'AUTH', `User loaded via RPC: ${userData.type}`, { userData });
-          }
-          return userData as User;
-        }
+      if (result && Array.isArray(result) && result.length > 0) {
+        const userData = result[0].user_data;
+        return userData as User;
+      }
       
       return await loadUserDataFallback(supabaseUser);
       
-      } catch (error) {
-        if (ENV.MODE === 'development') {
-          log('⚠️ Loading error, using fallback:', error);
-          (window as any).debugLogger?.log('ERROR', 'AUTH', 'User loading error', { error: String(error) });
-        }
-        return await loadUserDataFallback(supabaseUser);
-      }
+    } catch (error) {
+      console.warn('⚠️ Loading error, using fallback:', error);
+      return await loadUserDataFallback(supabaseUser);
+    }
   }, []);
 
   const loadUserDataFallback = useCallback(async (supabaseUser: SupabaseUser): Promise<User> => {
     try {
-      if (ENV.MODE === 'development') {
-        log(`🔄 [Fallback] Loading user: ${supabaseUser.email}`);
-      }
-      
-      // Verificar se é usuário de transportadora - query otimizada
+      // Verificar se é usuário de transportadora
       const { data: transportadoraData } = await supabase
         .from('user_transportadoras')
         .select('role, transportadora_id')
@@ -84,7 +55,7 @@ export function SimplifiedAuthProvider({ children }: { children: React.ReactNode
         };
       }
 
-      // Verificar se é cliente - query otimizada
+      // Verificar se é cliente
       const { data: clienteData } = await supabase
         .from('clientes')
         .select('id, razao_social, cnpj, email_nota_fiscal, email_solicitacao_liberacao, email_liberacao_autorizada, transportadora_id')
@@ -116,9 +87,6 @@ export function SimplifiedAuthProvider({ children }: { children: React.ReactNode
       };
       
     } catch (error) {
-      if (ENV.MODE === 'development') {
-        logError('Fallback loading failed:', error);
-      }
       // Fallback absoluto - sempre funciona
       return {
         id: supabaseUser.id,
@@ -131,11 +99,6 @@ export function SimplifiedAuthProvider({ children }: { children: React.ReactNode
 
   // Handler para mudanças de autenticação
   const handleAuthStateChange = useCallback(async (event: string, session: Session | null) => {
-    // Reduzir verbosidade dos logs - só logar eventos críticos
-    if (event === 'SIGNED_OUT' || event === 'SIGNED_IN') {
-      log(`🔄 [Simple] Auth event: ${event}`);
-    }
-    
     try {
       setSession(session);
       
@@ -152,7 +115,7 @@ export function SimplifiedAuthProvider({ children }: { children: React.ReactNode
         setLoading(false);
       }
     } catch (error) {
-      logError('Auth state change error:', error);
+      console.error('Auth state change error:', error);
       setUser(null);
       setLoading(false);
     }
@@ -162,7 +125,6 @@ export function SimplifiedAuthProvider({ children }: { children: React.ReactNode
   const login = useCallback(async (email: string, password: string): Promise<boolean> => {
     try {
       setLoading(true);
-      log(`🔑 [Simple] Login attempt: ${email}`);
       
       const { error } = await supabase.auth.signInWithPassword({
         email: email.trim().toLowerCase(),
@@ -170,16 +132,15 @@ export function SimplifiedAuthProvider({ children }: { children: React.ReactNode
       });
       
       if (error) {
-        logError('Login error:', error);
+        console.error('Login error:', error);
         setLoading(false);
         return false;
       }
       
-      log('✅ [Simple] Login successful');
       return true;
       
     } catch (error) {
-      logError('Login exception:', error);
+      console.error('Login exception:', error);
       setLoading(false);
       return false;
     }
@@ -188,20 +149,17 @@ export function SimplifiedAuthProvider({ children }: { children: React.ReactNode
   // Logout
   const logout = useCallback(async (): Promise<void> => {
     try {
-      log('🚪 [Simple] Logout');
       await supabase.auth.signOut();
       setUser(null);
       setSession(null);
       setLoading(false);
     } catch (error) {
-      logError('Logout error:', error);
+      console.error('Logout error:', error);
     }
   }, []);
 
   // Configurar listener de autenticação
   useEffect(() => {
-    log('🚀 [Simple] Auth initialized');
-    
     // Configurar listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(handleAuthStateChange);
     
@@ -215,7 +173,6 @@ export function SimplifiedAuthProvider({ children }: { children: React.ReactNode
     });
     
     return () => {
-      log('🧹 [Simple] Auth cleanup');
       subscription.unsubscribe();
     };
   }, [handleAuthStateChange]);
@@ -223,12 +180,12 @@ export function SimplifiedAuthProvider({ children }: { children: React.ReactNode
   const value: AuthContextType = {
     user,
     login,
-    signUp: async () => ({ error: 'Not implemented' }), // Placeholder
+    signUp: async () => ({ error: 'Not implemented' }),
     logout,
     isAuthenticated: !!user,
     loading,
-    clientes: [], // Placeholder
-    addCliente: async () => ({ id: '' }) // Placeholder
+    clientes: [],
+    addCliente: async () => ({ id: '' })
   };
 
   return (
@@ -246,7 +203,6 @@ export function useSimplifiedAuth() {
   return context;
 }
 
-// Hook de compatibilidade
 export function useAuth() {
   return useSimplifiedAuth();
 }

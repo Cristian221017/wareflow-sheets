@@ -5,7 +5,6 @@ import { WMSProvider } from "@/contexts/WMSContext";
 import { SimplifiedAuthProvider, useAuth } from "@/contexts/SimplifiedAuthContext";
 import { FinanceiroProvider } from "@/contexts/FinanceiroContext";
 import EnvBanner from "@/components/system/EnvBanner";
-import { log } from '@/utils/productionOptimizedLogger';
 import Index from "./pages/Index";
 import SuperAdminPortal from "./pages/SuperAdminPortal";
 import TransportadoraPortal from "./pages/TransportadoraPortal";
@@ -25,7 +24,6 @@ import React from 'react';
 import OptimizedRealtimeProvider from "@/providers/OptimizedRealtimeProvider";
 import { ErrorBoundary, RouteErrorBoundary } from "@/components/ErrorBoundary";
 
-// Protected Route Component
 function ProtectedRoute({ children, allowedRoles }: { children: React.ReactNode, allowedRoles: string[] }) {
   const { user, isAuthenticated, loading } = useAuth();
 
@@ -41,35 +39,20 @@ function ProtectedRoute({ children, allowedRoles }: { children: React.ReactNode,
   }
 
   if (!isAuthenticated) {
-    // Só logar se não for retry ou loop de redirecionamento
-    if (!sessionStorage.getItem('auth-redirect-logged')) {
-      log('❌ Not authenticated, redirecting to /');
-      sessionStorage.setItem('auth-redirect-logged', 'true');
-      setTimeout(() => sessionStorage.removeItem('auth-redirect-logged'), 5000);
-    }
     return <Navigate to="/" replace />;
   }
 
-  // Check access based on user role/type
   const hasAccess = (() => {
     if (!user) return false;
     
-    // For cliente route - check if user is a client
     if (allowedRoles.includes('cliente')) {
       return user.type === 'cliente';
     }
     
-    // For admin/transportadora routes - check if user has the required role
     return user.role && allowedRoles.includes(user.role);
   })();
 
   if (!hasAccess) {
-    // Só logar se não for retry
-    if (!sessionStorage.getItem('access-denied-logged')) {
-      log('❌ Access denied, redirecting to /');
-      sessionStorage.setItem('access-denied-logged', 'true');
-      setTimeout(() => sessionStorage.removeItem('access-denied-logged'), 5000);
-    }
     return <Navigate to="/" replace />;
   }
 
