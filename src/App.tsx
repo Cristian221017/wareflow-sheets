@@ -20,7 +20,6 @@ import RealtimeProvider from "@/providers/RealtimeProvider";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { DiagnosticPage } from "@/components/system/DiagnosticPage";
 import { SystemHealthDashboard } from "@/components/system/SystemHealthDashboard";
-import SystemMaintenancePage from "@/pages/SystemMaintenancePage";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
@@ -97,7 +96,7 @@ function App() {
                       <Route path="/health" element={<HealthPage />} />
                       <Route path="/diagnostic" element={<DiagnosticPage />} />
                       <Route path="/system-health" element={<SystemHealthDashboard />} />
-                      <Route path="/system-maintenance" element={<SystemMaintenancePage />} />
+                      
                       <Route path="/system-admin" element={<SystemAdminLogin />} />
                       <Route path="/reset-password" element={<ResetPassword />} />
                       

@@ -136,14 +136,6 @@ export default function Index() {
               >
                 Fazer Login
               </Button>
-              <Button 
-                variant="outline"
-                className="w-full" 
-                size="sm"
-                onClick={() => navigate('/system-maintenance')}
-              >
-                Manutenção do Sistema
-              </Button>
             </CardContent>
           </Card>
         </div>

@@ -14,6 +14,7 @@ import { DeploymentSafetyDashboard } from './DeploymentSafetyDashboard';
 import { FormCadastroUsuario } from './FormCadastroUsuario';
 import { FormCadastroTransportadora } from './FormCadastroTransportadora';
 import { LogsPage } from './LogsPage';
+import { SystemMaintenanceTab } from './SystemMaintenanceTab';
 import { EnvironmentBadge, EnvironmentIndicator } from '@/components/system/EnvironmentBadge';
 import { 
   Building2, 
@@ -26,7 +27,8 @@ import {
   UserPlus,
   Menu,
   FileText,
-  Shield
+  Shield,
+  Wrench
 } from 'lucide-react';
 
 export function SuperAdminLayout() {
@@ -40,6 +42,7 @@ export function SuperAdminLayout() {
     { value: "transportadoras", label: "Transportadoras", icon: Building2 },
     { value: "usuarios", label: "Usuários", icon: Users },
     { value: "deployment", label: "Deployment Seguro", icon: Shield },
+    { value: "manutencao", label: "Manutenção", icon: Wrench },
     { value: "logs", label: "Logs", icon: FileText },
     { value: "cadastro-usuario", label: "Cadastro", icon: UserPlus },
     { value: "configuracoes", label: "Configurações", icon: Settings },
@@ -206,7 +209,7 @@ export function SuperAdminLayout() {
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           {/* Desktop Navigation */}
           <div className="hidden md:block">
-            <TabsList className="grid w-full grid-cols-2 md:grid-cols-3 lg:grid-cols-7 max-w-6xl">
+            <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 lg:grid-cols-8 max-w-7xl">
               {tabs.map((tab) => {
                 const Icon = tab.icon;
                 return (
@@ -238,6 +241,10 @@ export function SuperAdminLayout() {
 
           <TabsContent value="deployment">
             <DeploymentSafetyDashboard />
+          </TabsContent>
+
+          <TabsContent value="manutencao">
+            <SystemMaintenanceTab />
           </TabsContent>
 
           <TabsContent value="logs">
