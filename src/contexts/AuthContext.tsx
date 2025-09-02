@@ -155,6 +155,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const loadUserDataWithTimeout = async (supabaseUser: SupabaseUser): Promise<User> => {
     // FIRST: Check user_transportadoras for role-based access (super_admin, admin_transportadora, operador)
+    // This takes priority to ensure consistent user identity
     const { data: userTranspData, error: userTranspError } = await supabase
       .from('user_transportadoras')
       .select('role, transportadora_id, is_active')
@@ -178,6 +179,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           transportadoraName = transpData[0].razao_social;
         }
       }
+      
+      log('🏢 Loading as transportadora user:', { 
+        role: userTransp.role, 
+        transportadoraId: userTransp.transportadora_id 
+      });
       
       return {
         id: supabaseUser.id,

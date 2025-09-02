@@ -48,6 +48,11 @@ function ProtectedRoute({ children, allowedRoles }: { children: React.ReactNode,
   const hasAccess = (() => {
     if (!user) return false;
     
+    // Super admins can access everything
+    if (user.role === 'super_admin') {
+      return true;
+    }
+    
     // For cliente route - check if user is a client
     if (allowedRoles.includes('cliente')) {
       return user.type === 'cliente';
