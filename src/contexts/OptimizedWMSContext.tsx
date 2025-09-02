@@ -97,11 +97,7 @@ export function OptimizedWMSProvider({ children }: { children: ReactNode }) {
           integration_metadata: nf.integration_metadata || {}
         })) as NotaFiscal[];
       } catch (queryError) {
-        handleError(
-          queryError as Error,
-          { component: 'OptimizedWMS', action: 'fetchNFs', userId: user.id },
-          'medium'
-        );
+        handleError(queryError as Error);
         throw queryError;
       }
     },
@@ -173,11 +169,7 @@ export function OptimizedWMSProvider({ children }: { children: ReactNode }) {
       });
     },
     onError: (error: Error) => {
-      handleError(
-        error,
-        { component: 'OptimizedWMS', action: 'addNF', userId: user?.id },
-        'high'
-      );
+      handleError(error);
       toast.error(error.message || 'Erro ao cadastrar Nota Fiscal');
     }
   });
@@ -204,11 +196,7 @@ export function OptimizedWMSProvider({ children }: { children: ReactNode }) {
       });
     },
     onError: (error: Error) => {
-      handleError(
-        error,
-        { component: 'OptimizedWMS', action: 'deleteNF', userId: user?.id },
-        'medium'
-      );
+      handleError(error);
       toast.error(error.message || 'Erro ao excluir Nota Fiscal');
     }
   });

@@ -1,7 +1,5 @@
 // Error Boundary React para capturar erros não tratados
 import React from 'react';
-import { error as logError } from '@/utils/productionOptimizedLogger';
-import { SecureIdGenerator } from '@/utils/memoryManager';
 import { Button } from '@/components/ui/button';
 import { AlertTriangle, RefreshCw, Home } from 'lucide-react';
 
@@ -25,7 +23,7 @@ export class ErrorBoundary extends React.Component<Props, State> {
     super(props);
     this.state = { 
       hasError: false,
-      errorId: SecureIdGenerator.generate('error')
+      errorId: `error_${Date.now()}`
     };
   }
 
@@ -33,30 +31,16 @@ export class ErrorBoundary extends React.Component<Props, State> {
     return { 
       hasError: true, 
       error,
-      errorId: SecureIdGenerator.generate('error')
+      errorId: `error_${Date.now()}`
     };
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    // Only log truly critical errors to prevent spam
-    const isCriticalError = !error.message.includes('deferred DOM Node') &&
-                           !error.message.includes('ResizeObserver') &&
-                           !error.message.includes('Non-Error promise rejection') &&
-                           !error.message.includes('Script error') &&
-                           !error.message.includes('validateDOMNesting');
-    
-    if (isCriticalError && import.meta.env.MODE === 'development') {
-      // Minimal logging even in development
-      logError('🚨 Critical ErrorBoundary:', {
-        error: error.message,
-        errorId: this.state.errorId
-      });
+    if (import.meta.env.MODE === 'development') {
+      console.error('ErrorBoundary caught error:', error);
     }
 
-    // Callback customizado
     this.props.onError?.(error, errorInfo);
-
-    // No external logging - completely disabled to prevent loops
   }
 
   handleRetry = () => {
@@ -65,10 +49,9 @@ export class ErrorBoundary extends React.Component<Props, State> {
       this.setState({ 
         hasError: false, 
         error: undefined,
-        errorId: SecureIdGenerator.generate('error')
+        errorId: `error_${Date.now()}`
       });
     } else {
-      // Após máximo de retries, recarregar página
       window.location.reload();
     }
   };
@@ -137,47 +120,7 @@ const DefaultErrorFallback: React.FC<{ error: Error; retry: () => void }> = ({ e
 
 // Error Boundary específico para rotas
 export const RouteErrorBoundary: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <ErrorBoundary
-    onError={(error, errorInfo) => {
-      // Only log if it's a critical route error
-      if (!error.message.includes('deferred DOM Node') && import.meta.env.MODE === 'development') {
-        logError('🛣️ Route error:', { error: error.message });
-      }
-    }}
-  >
-    {children}
-  </ErrorBoundary>
-);
-
-// Error Boundary para componentes críticos
-export const CriticalErrorBoundary: React.FC<{ children: React.ReactNode; componentName?: string }> = ({ 
-  children, 
-  componentName = 'Componente crítico' 
-}) => (
-  <ErrorBoundary
-    onError={(error, errorInfo) => {
-      // Only log truly critical errors
-      if (!error.message.includes('deferred DOM Node') && import.meta.env.MODE === 'development') {
-        logError(`🔥 Critical error in ${componentName}:`, { 
-          error: error.message
-        });
-      }
-    }}
-    fallback={({ error, retry }) => (
-      <div className="bg-red-50 border border-red-200 rounded-lg p-4 m-4">
-        <div className="flex items-center gap-2 text-red-700 mb-2">
-          <AlertTriangle className="h-5 w-5" />
-          <span className="font-medium">Erro em {componentName}</span>
-        </div>
-        <p className="text-red-600 text-sm mb-3">
-          {error.message}
-        </p>
-        <Button size="sm" onClick={retry} variant="outline">
-          Recarregar Componente
-        </Button>
-      </div>
-    )}
-  >
+  <ErrorBoundary>
     {children}
   </ErrorBoundary>
 );

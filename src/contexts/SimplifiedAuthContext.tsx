@@ -12,30 +12,6 @@ export function SimplifiedAuthProvider({ children }: { children: React.ReactNode
 
   const loadUserData = useCallback(async (supabaseUser: SupabaseUser): Promise<User> => {
     try {
-      const { data: result, error } = await supabase.rpc('get_user_data_optimized' as any, {
-        p_user_id: supabaseUser.id,
-        p_email: supabaseUser.email || ''
-      });
-      
-      if (error) {
-        return await loadUserDataFallback(supabaseUser);
-      }
-      
-      if (result && Array.isArray(result) && result.length > 0) {
-        const userData = result[0].user_data;
-        return userData as User;
-      }
-      
-      return await loadUserDataFallback(supabaseUser);
-      
-    } catch (error) {
-      console.warn('⚠️ Loading error, using fallback:', error);
-      return await loadUserDataFallback(supabaseUser);
-    }
-  }, []);
-
-  const loadUserDataFallback = useCallback(async (supabaseUser: SupabaseUser): Promise<User> => {
-    try {
       // Verificar se é usuário de transportadora
       const { data: transportadoraData } = await supabase
         .from('user_transportadoras')
@@ -58,7 +34,7 @@ export function SimplifiedAuthProvider({ children }: { children: React.ReactNode
       // Verificar se é cliente
       const { data: clienteData } = await supabase
         .from('clientes')
-        .select('id, razao_social, cnpj, email_nota_fiscal, email_solicitacao_liberacao, email_liberacao_autorizada, transportadora_id')
+        .select('id, razao_social, cnpj, transportadora_id')
         .eq('email', supabaseUser.email)
         .eq('status', 'ativo')
         .maybeSingle();
@@ -70,15 +46,12 @@ export function SimplifiedAuthProvider({ children }: { children: React.ReactNode
           email: supabaseUser.email || '',
           type: 'cliente',
           cnpj: clienteData.cnpj,
-          emailNotaFiscal: clienteData.email_nota_fiscal,
-          emailSolicitacaoLiberacao: clienteData.email_solicitacao_liberacao,
-          emailLiberacaoAutorizada: clienteData.email_liberacao_autorizada,
           clienteId: clienteData.id,
           transportadoraId: clienteData.transportadora_id
         };
       }
 
-      // Usuário básico como fallback final
+      // Usuário básico
       return {
         id: supabaseUser.id,
         name: supabaseUser.email?.split('@')[0] || 'Usuário',
@@ -87,7 +60,6 @@ export function SimplifiedAuthProvider({ children }: { children: React.ReactNode
       };
       
     } catch (error) {
-      // Fallback absoluto - sempre funciona
       return {
         id: supabaseUser.id,
         name: supabaseUser.email?.split('@')[0] || 'Usuário',
@@ -115,7 +87,6 @@ export function SimplifiedAuthProvider({ children }: { children: React.ReactNode
         setLoading(false);
       }
     } catch (error) {
-      console.error('Auth state change error:', error);
       setUser(null);
       setLoading(false);
     }
@@ -132,7 +103,6 @@ export function SimplifiedAuthProvider({ children }: { children: React.ReactNode
       });
       
       if (error) {
-        console.error('Login error:', error);
         setLoading(false);
         return false;
       }
@@ -140,7 +110,6 @@ export function SimplifiedAuthProvider({ children }: { children: React.ReactNode
       return true;
       
     } catch (error) {
-      console.error('Login exception:', error);
       setLoading(false);
       return false;
     }
@@ -154,13 +123,12 @@ export function SimplifiedAuthProvider({ children }: { children: React.ReactNode
       setSession(null);
       setLoading(false);
     } catch (error) {
-      console.error('Logout error:', error);
+      // Ignore logout errors
     }
   }, []);
 
   // Configurar listener de autenticação
   useEffect(() => {
-    // Configurar listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(handleAuthStateChange);
     
     // Verificar sessão inicial
@@ -195,14 +163,10 @@ export function SimplifiedAuthProvider({ children }: { children: React.ReactNode
   );
 }
 
-export function useSimplifiedAuth() {
+export function useAuth() {
   const context = useContext(SimplifiedAuthContext);
   if (context === undefined) {
-    throw new Error('useSimplifiedAuth must be used within a SimplifiedAuthProvider');
+    throw new Error('useAuth must be used within a SimplifiedAuthProvider');
   }
   return context;
-}
-
-export function useAuth() {
-  return useSimplifiedAuth();
 }
