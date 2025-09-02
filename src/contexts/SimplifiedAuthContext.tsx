@@ -27,7 +27,7 @@ export function SimplifiedAuthProvider({ children }: { children: React.ReactNode
           p_email: supabaseUser.email || ''
         }),
         new Promise<never>((_, reject) => 
-          setTimeout(() => reject(new Error('RPC timeout')), 2000)
+          setTimeout(() => reject(new Error('RPC timeout')), 5000)
         )
       ]);
       
@@ -56,12 +56,13 @@ export function SimplifiedAuthProvider({ children }: { children: React.ReactNode
       }
   }, []);
 
-  // Fallback simples usando queries diretas
   const loadUserDataFallback = useCallback(async (supabaseUser: SupabaseUser): Promise<User> => {
     try {
-      log(`🔄 [Fallback] Loading user: ${supabaseUser.email}`);
+      if (ENV.MODE === 'development') {
+        log(`🔄 [Fallback] Loading user: ${supabaseUser.email}`);
+      }
       
-      // Verificar se é usuário de transportadora
+      // Verificar se é usuário de transportadora - query otimizada
       const { data: transportadoraData } = await supabase
         .from('user_transportadoras')
         .select('role, transportadora_id')
@@ -80,7 +81,7 @@ export function SimplifiedAuthProvider({ children }: { children: React.ReactNode
         };
       }
 
-      // Verificar se é cliente
+      // Verificar se é cliente - query otimizada
       const { data: clienteData } = await supabase
         .from('clientes')
         .select('id, razao_social, cnpj, email_nota_fiscal, email_solicitacao_liberacao, email_liberacao_autorizada, transportadora_id')
@@ -112,8 +113,10 @@ export function SimplifiedAuthProvider({ children }: { children: React.ReactNode
       };
       
     } catch (error) {
-      logError('Fallback loading failed:', error);
-      // Fallback absoluto
+      if (ENV.MODE === 'development') {
+        logError('Fallback loading failed:', error);
+      }
+      // Fallback absoluto - sempre funciona
       return {
         id: supabaseUser.id,
         name: supabaseUser.email?.split('@')[0] || 'Usuário',

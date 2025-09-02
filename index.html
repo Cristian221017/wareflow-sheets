@@ -24,11 +24,13 @@
     
     <!-- Prevent external error reporting -->
     <meta http-equiv="Content-Security-Policy" content="
-      connect-src 'self' https://*.supabase.co https://supabase.co;
-      script-src 'self' 'unsafe-inline' 'unsafe-eval';
+      default-src 'self';
+      connect-src 'self' https://*.supabase.co https://supabase.co https://cdn.gpteng.co https://*.lovable.dev;
+      script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.gpteng.co https://*.lovable.dev;
       style-src 'self' 'unsafe-inline';
       img-src 'self' data: https:;
       font-src 'self' data:;
+      frame-src 'self' https://*.lovable.dev;
     " />
   </head>
 
