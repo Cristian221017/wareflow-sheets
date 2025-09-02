@@ -157,8 +157,45 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const loadUserDataWithTimeout = async (supabaseUser: SupabaseUser): Promise<User> => {
-    // Quick check transportadora first (most common case)
-    console.log('🔍 [1] Checking transportadoras...');
+    // FIRST: Check user_transportadoras for role-based access (super_admin, admin_transportadora, operador)
+    console.log('🔍 [1] Checking user_transportadoras for roles...');
+    const { data: userTranspData, error: userTranspError } = await supabase
+      .from('user_transportadoras')
+      .select('role, transportadora_id, is_active')
+      .eq('user_id', supabaseUser.id)
+      .eq('is_active', true)
+      .limit(1);
+
+    if (userTranspData?.[0] && !userTranspError) {
+      const userTransp = userTranspData[0];
+      console.log('✅ Found user with role:', userTransp.role);
+      
+      // Get transportadora data if needed
+      let transportadoraName = supabaseUser.email?.split('@')[0] || 'Admin';
+      if (userTransp.transportadora_id) {
+        const { data: transpData } = await supabase
+          .from('transportadoras')
+          .select('razao_social')
+          .eq('id', userTransp.transportadora_id)
+          .limit(1);
+        
+        if (transpData?.[0]) {
+          transportadoraName = transpData[0].razao_social;
+        }
+      }
+      
+      return {
+        id: supabaseUser.id,
+        name: transportadoraName,
+        email: supabaseUser.email || '',
+        type: 'transportadora',
+        role: userTransp.role as 'super_admin' | 'admin_transportadora' | 'operador',
+        transportadoraId: userTransp.transportadora_id
+      };
+    }
+
+    // SECOND: Check direct transportadora email match (legacy support)
+    console.log('🔍 [2] Checking transportadoras by email...');
     const { data: transportadoraData } = await supabase
       .from('transportadoras')
       .select('id, razao_social, email')
@@ -167,20 +204,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     if (transportadoraData?.[0]) {
       const transportadora = transportadoraData[0];
-      console.log('✅ Found transportadora:', transportadora.razao_social);
+      console.log('✅ Found transportadora (legacy):', transportadora.razao_social);
       
       return {
         id: supabaseUser.id,
         name: transportadora.razao_social,
         email: transportadora.email,
         type: 'transportadora',
-        role: 'admin_transportadora',
+        role: 'admin_transportadora', // Default role for legacy users
         transportadoraId: transportadora.id
       };
     }
 
-    // Check cliente
-    console.log('🔍 [2] Checking clientes...');
+    // THIRD: Check direct cliente email match
+    console.log('🔍 [3] Checking clientes by email...');
     const { data: clienteData } = await supabase
       .from('clientes')
       .select('id, razao_social, email, transportadora_id')
