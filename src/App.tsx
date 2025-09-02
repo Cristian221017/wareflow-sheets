@@ -39,9 +39,15 @@ function ProtectedRoute({ children, allowedRoles }: { children: React.ReactNode,
     );
   }
 
+  // Se não está autenticado, redirecionar para login
   if (!isAuthenticated) {
-    log('❌ Not authenticated, redirecting to /');
     return <Navigate to="/" replace />;
+  }
+
+  // Se está carregando MAS tem usuário (refresh de token/perfil), não redirecionar
+  if (loading && user) {
+    log('⏳ User profile refreshing, maintaining current route');
+    return <>{children}</>;
   }
 
   // Check access based on user role/type
@@ -71,9 +77,15 @@ function ProtectedRoute({ children, allowedRoles }: { children: React.ReactNode,
     loading
   });
 
-  if (!hasAccess) {
+  if (!hasAccess && !loading) {  // Só redirecionar se NÃO estiver carregando
     log('❌ Access denied, redirecting to /');
     return <Navigate to="/" replace />;
+  }
+
+  // Se não tem acesso mas está carregando, aguardar
+  if (!hasAccess && loading) {
+    log('⏳ Waiting for auth state to stabilize');
+    return <>{children}</>;
   }
 
   return <>{children}</>;

@@ -58,9 +58,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION') {
           setSession(session);
           
-          // Se já existe usuário e não é primeiro carregamento, evitar reload desnecessário
-          if (userRef.current && event === 'TOKEN_REFRESHED') {
-            log('🔄 Token refreshed, keeping current user');
+          // Se é refresh de token e já tem usuário carregado, manter usuário atual para evitar mudanças de painel
+          if (userRef.current && (event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION')) {
+            log('🔄 Token refreshed or initial session with existing user, keeping current profile');
+            setLoading(false); // Ensure loading is false to prevent redirects
             return;
           }
           
