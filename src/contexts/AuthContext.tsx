@@ -128,93 +128,87 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const getUserData = async (supabaseUser: SupabaseUser): Promise<User> => {
-    console.log(`🔍 [DETAILED] Loading user profile for: ${supabaseUser.id}`);
-    console.log(`🔍 [DETAILED] Email: ${supabaseUser.email}`);
+    console.log(`🔍 Loading user profile for: ${supabaseUser.id}, email: ${supabaseUser.email}`);
+    
+    // Create timeout promise to prevent infinite loading
+    const timeoutPromise = new Promise<never>((_, reject) => 
+      setTimeout(() => reject(new Error('Profile loading timeout')), 5000)
+    );
     
     try {
-      // Step 1: Check profiles table first
-      console.log('🔍 [STEP 1] Checking profiles table...');
-      const { data: profileData, error: profileError } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('user_id', supabaseUser.id)
-        .single();
-        
-      console.log('🔍 [STEP 1] Profile result:', { profileData, profileError });
-
-      // Step 2: Check direct transportadora by email (no joins)
-      console.log('🔍 [STEP 2] Checking transportadoras by email...');
-      const { data: transportadoraData, error: transportadoraError } = await supabase
-        .from('transportadoras')
-        .select('id, razao_social, email')
-        .eq('email', supabaseUser.email || '');
-        
-      console.log('🔍 [STEP 2] Transportadora by email result:', { transportadoraData, transportadoraError });
-
-      if (transportadoraData && transportadoraData.length > 0) {
-        const transportadora = transportadoraData[0];
-        console.log('✅ [STEP 2] Found transportadora by email:', transportadora);
-        
-        return {
-          id: supabaseUser.id,
-          name: transportadora.razao_social,
-          email: transportadora.email,
-          type: 'transportadora',
-          role: 'admin_transportadora',
-          transportadoraId: transportadora.id
-        };
-      }
-
-      // Step 3: Check direct cliente by email (no joins)
-      console.log('🔍 [STEP 3] Checking clientes by email...');
-      const { data: clienteData, error: clienteError } = await supabase
-        .from('clientes')
-        .select('id, razao_social, email, transportadora_id')
-        .eq('email', supabaseUser.email || '');
-        
-      console.log('🔍 [STEP 3] Cliente by email result:', { clienteData, clienteError });
-
-      if (clienteData && clienteData.length > 0) {
-        const cliente = clienteData[0];
-        console.log('✅ [STEP 3] Found cliente by email:', cliente);
-        
-        return {
-          id: supabaseUser.id,
-          name: cliente.razao_social,
-          email: cliente.email,
-          type: 'cliente',
-          clienteId: cliente.id,
-          transportadoraId: cliente.transportadora_id
-        };
-      }
-
-      // Step 4: Fallback - create basic user
-      console.log('⚠️ [STEP 4] No matches found, creating fallback user');
-      const fallbackUser = {
-        id: supabaseUser.id,
-        name: profileData?.name || supabaseUser.email?.split('@')[0] || 'Usuário',
-        email: supabaseUser.email || '',
-        type: 'cliente' as const
-      };
+      // Race against timeout to prevent infinite loading
+      const userData = await Promise.race([
+        loadUserDataWithTimeout(supabaseUser),
+        timeoutPromise
+      ]);
       
-      console.log('⚠️ [STEP 4] Fallback user created:', fallbackUser);
-      return fallbackUser;
-
+      return userData;
     } catch (error) {
-      console.error('❌ [ERROR] Failed to load user profile:', error);
-      logError('Complete user profile loading failed:', error);
+      console.warn('⚠️ Profile loading failed or timed out, using fallback:', error);
       
-      // Retorna usuário básico em caso de erro
-      const errorFallback = {
+      // Always return a valid user to prevent infinite loading
+      return {
         id: supabaseUser.id,
         name: supabaseUser.email?.split('@')[0] || 'Usuário',
         email: supabaseUser.email || '',
         type: 'cliente' as const
       };
-      
-      console.log('❌ [ERROR] Error fallback user:', errorFallback);
-      return errorFallback;
     }
+  };
+
+  const loadUserDataWithTimeout = async (supabaseUser: SupabaseUser): Promise<User> => {
+    // Quick check transportadora first (most common case)
+    console.log('🔍 [1] Checking transportadoras...');
+    const { data: transportadoraData } = await supabase
+      .from('transportadoras')
+      .select('id, razao_social, email')
+      .eq('email', supabaseUser.email || '')
+      .limit(1);
+
+    if (transportadoraData?.[0]) {
+      const transportadora = transportadoraData[0];
+      console.log('✅ Found transportadora:', transportadora.razao_social);
+      
+      return {
+        id: supabaseUser.id,
+        name: transportadora.razao_social,
+        email: transportadora.email,
+        type: 'transportadora',
+        role: 'admin_transportadora',
+        transportadoraId: transportadora.id
+      };
+    }
+
+    // Check cliente
+    console.log('🔍 [2] Checking clientes...');
+    const { data: clienteData } = await supabase
+      .from('clientes')
+      .select('id, razao_social, email, transportadora_id')
+      .eq('email', supabaseUser.email || '')
+      .limit(1);
+
+    if (clienteData?.[0]) {
+      const cliente = clienteData[0];
+      console.log('✅ Found cliente:', cliente.razao_social);
+      
+      return {
+        id: supabaseUser.id,
+        name: cliente.razao_social,
+        email: cliente.email,
+        type: 'cliente',
+        clienteId: cliente.id,
+        transportadoraId: cliente.transportadora_id
+      };
+    }
+
+    // Final fallback
+    console.log('⚠️ No matches found, using basic user');
+    return {
+      id: supabaseUser.id,
+      name: supabaseUser.email?.split('@')[0] || 'Usuário',
+      email: supabaseUser.email || '',
+      type: 'cliente' as const
+    };
   };
 
   const login = async (email: string, password: string): Promise<boolean> => {
