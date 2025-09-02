@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, ReactNode, useCallback } from 'react';
+import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './AuthContext';
 import { NotaFiscal, PedidoLiberacao, PedidoLiberado } from '@/types/wms';
@@ -47,16 +47,7 @@ export function WMSProvider({ children }: { children: ReactNode }) {
   const [pedidosLiberados, setPedidosLiberados] = useState<PedidoLiberado[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   
-  // Aguardar auth terminar de carregar antes de inicializar WMS
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
-      </div>
-    );
-  }
-  
-  const invalidateWithScope = useCallback((entityType: 'nfs' | 'documentos_financeiros', entityId?: string, userType?: string, userId?: string) => {
+  const invalidateWithScope = (entityType: 'nfs' | 'documentos_financeiros', entityId?: string, userType?: string, userId?: string) => {
     if (entityType === 'nfs') {
       // Invalidar queries com escopo por persona
       const scope = user?.type === 'cliente' ? user?.clienteId : user?.transportadoraId;
@@ -86,10 +77,10 @@ export function WMSProvider({ children }: { children: ReactNode }) {
         queryClient.invalidateQueries({ queryKey: ['documentos_financeiros', 'transportadora', user.transportadoraId] });
       }
     }
-  }, [user, queryClient]);
+  };
 
   // Load data
-  const loadData = useCallback(async () => {
+  const loadData = async () => {
     try {
       setIsLoading(true);
       
@@ -191,7 +182,7 @@ export function WMSProvider({ children }: { children: ReactNode }) {
     } finally {
       setIsLoading(false);
     }
-  }, []); // Empty dependency array since loadData doesn't depend on external variables
+  };
 
   // Add Nota Fiscal
   const addNotaFiscal = async (nfData: Omit<NotaFiscal, 'id' | 'createdAt'>) => {
@@ -262,7 +253,7 @@ export function WMSProvider({ children }: { children: ReactNode }) {
         }
       
       toast.success('✅ Nota Fiscal cadastrada com sucesso!');
-      await loadData();
+      // Don't call loadData() here to prevent infinite loops
       
     } catch (err: any) {
       auditError('NF_CREATE_FAIL', 'NF', err, { 
@@ -321,7 +312,7 @@ export function WMSProvider({ children }: { children: ReactNode }) {
       queryClient.invalidateQueries({ queryKey: ['nfs'] });
       queryClient.invalidateQueries({ queryKey: ['dashboard'] });
       invalidateWithScope('nfs', undefined, user?.type, user?.type === 'cliente' ? user?.clienteId : user?.transportadoraId);
-      await loadData();
+      // Don't call loadData() to prevent infinite loops
       
     } catch (err: any) {
       logError('❌ Erro ao solicitar carregamento:', err);
@@ -368,7 +359,7 @@ export function WMSProvider({ children }: { children: ReactNode }) {
       // Invalidar com escopo
       invalidateWithScope('nfs', undefined, user?.type, user?.type === 'cliente' ? user?.clienteId : user?.transportadoraId);
       toast.success(`✅ Carregamento aprovado para NF ${numeroNF}!`);
-      await loadData();
+      // Don't call loadData() to prevent infinite loops
       
     } catch (err: any) {
       logError('❌ Erro ao aprovar carregamento:', err);
@@ -396,7 +387,7 @@ export function WMSProvider({ children }: { children: ReactNode }) {
       // Invalidar com escopo
       invalidateWithScope('nfs', undefined, user?.type, user?.type === 'cliente' ? user?.clienteId : user?.transportadoraId);
       toast.success(`❌ Carregamento rejeitado para NF ${numeroNF}!`);
-      await loadData();
+      // Don't call loadData() to prevent infinite loops
       
     } catch (err: any) {
       logError('❌ Erro ao rejeitar carregamento:', err);
@@ -410,7 +401,7 @@ export function WMSProvider({ children }: { children: ReactNode }) {
     if (user) {
       loadData();
     }
-  }, [user, loadData]);
+  }, [user?.id]); // Only depend on user ID to prevent infinite loops
 
   // Legacy API functions for compatibility
   const addPedidoLiberacao = async (data: any) => {
@@ -428,7 +419,7 @@ export function WMSProvider({ children }: { children: ReactNode }) {
       if (error) throw error;
       
       toast.success('Nota Fiscal excluída com sucesso');
-      await loadData();
+      // Don't call loadData() to prevent infinite loops
       
     } catch (err: any) {
       logError('❌ Erro ao excluir NF:', err);
@@ -452,7 +443,7 @@ export function WMSProvider({ children }: { children: ReactNode }) {
       if (error) throw error;
       
       toast.success('Pedido de liberação excluído com sucesso');
-      await loadData();
+      // Don't call loadData() to prevent infinite loops
       
     } catch (err: any) {
       logError('❌ Erro ao excluir pedido:', err);
@@ -471,7 +462,7 @@ export function WMSProvider({ children }: { children: ReactNode }) {
       if (error) throw error;
       
       toast.success('Pedido liberado excluído com sucesso');
-      await loadData();
+      // Don't call loadData() to prevent infinite loops
       
     } catch (err: any) {
       logError('❌ Erro ao excluir pedido liberado:', err);
@@ -502,6 +493,17 @@ export function WMSProvider({ children }: { children: ReactNode }) {
     deletePedidoLiberado,
     recusarPedido
   };
+
+  // Show loading spinner while auth is loading
+  if (loading) {
+    return (
+      <WMSContext.Provider value={value}>
+        <div className="min-h-screen bg-background flex items-center justify-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
+        </div>
+      </WMSContext.Provider>
+    );
+  }
 
   return (
     <WMSContext.Provider value={value}>
