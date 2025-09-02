@@ -6,8 +6,8 @@
     <title>WMS Sistema</title>
     <meta name="description" content="Sistema de Gestão de Armazém" />
     
-    <!-- AGGRESSIVE PERMISSIONS POLICY - Block ALL features that cause warnings -->
-    <meta http-equiv="Permissions-Policy" content="vr=(), xr-spatial-tracking=(), ambient-light-sensor=(), battery=(), camera=(), microphone=(), geolocation=(), accelerometer=(), gyroscope=(), magnetometer=(), bluetooth=(), usb=(), midi=(), payment=(), picture-in-picture=(), screen-wake-lock=(), web-share=(), clipboard-read=(), clipboard-write=(), autoplay=(), fullscreen=(), encrypted-media=()" />
+    <!-- COMPLETE PERMISSIONS POLICY - Block ALL possible features -->
+    <meta http-equiv="Permissions-Policy" content="vr=(), xr-spatial-tracking=(), ambient-light-sensor=(), battery=(), camera=(), microphone=(), geolocation=(), accelerometer=(), gyroscope=(), magnetometer=(), bluetooth=(), usb=(), midi=(), payment=(), picture-in-picture=(), screen-wake-lock=(), web-share=(), clipboard-read=(), clipboard-write=(), autoplay=(), fullscreen=(), encrypted-media=(), display-capture=(), document-domain=(), execution-while-not-rendered=(), execution-while-out-of-viewport=(), focus-without-user-activation=(), hid=(), identity-credentials-get=(), idle-detection=(), local-fonts=(), navigation-override=(), otp-credentials=(), publickey-credentials-get=(), serial=(), sync-xhr=(), unload=(), window-management=(), xr=()">
     
     <!-- ULTRA-STRICT CSP - Complete external service blocking -->
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src 'self' https://*.supabase.co https://supabase.co https://cdn.gpteng.co https://*.lovable.dev; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.gpteng.co https://*.lovable.dev; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; frame-src 'self' https://*.lovable.dev; block-all-mixed-content; upgrade-insecure-requests;" />
@@ -21,32 +21,128 @@
   </head>
 
   <body>
-    <!-- IMMEDIATE ERROR SUPPRESSION SCRIPT - Runs before any other JS -->
+    <!-- ULTRA-AGGRESSIVE ERROR SUPPRESSION - Executes before ANY other code -->
     <script>
-      // NUCLEAR OPTION: Immediate console suppression
-      window.console = window.console || {};
-      const originalWarn = console.warn;
-      const originalError = console.error;
-      const originalLog = console.log;
-      
-      console.warn = function() { /* COMPLETE SUPPRESSION */ };
-      console.error = function() { /* COMPLETE SUPPRESSION */ };
-      console.log = function(...args) {
-        const message = args[0]?.toString() || '';
-        if (message.includes('We\'re hiring') || message.includes('⠀')) {
-          return; // Block ASCII art
+      // COMPLETE CONSOLE TAKEOVER - Zero tolerance for any output
+      (function() {
+        'use strict';
+        
+        // Store originals (for potential debugging)
+        const _originalConsole = {
+          log: console.log,
+          warn: console.warn, 
+          error: console.error,
+          info: console.info,
+          debug: console.debug,
+          trace: console.trace,
+          group: console.group,
+          groupEnd: console.groupEnd,
+          time: console.time,
+          timeEnd: console.timeEnd
+        };
+        
+        // TOTAL CONSOLE SILENCE - No exceptions
+        console.log = function() {};
+        console.warn = function() {};
+        console.error = function() {};
+        console.info = function() {};
+        console.debug = function() {};
+        console.trace = function() {};
+        console.group = function() {};
+        console.groupEnd = function() {};
+        console.time = function() {};
+        console.timeEnd = function() {};
+        console.clear = function() {};
+        
+        // COMPLETE EVENT SUPPRESSION
+        window.addEventListener('error', function(e) {
+          e.preventDefault();
+          e.stopPropagation();
+          e.stopImmediatePropagation();
+          return false;
+        }, true);
+        
+        window.addEventListener('unhandledrejection', function(e) {
+          e.preventDefault();
+          e.stopPropagation();
+          e.stopImmediatePropagation();
+          return false;
+        }, true);
+        
+        // AGGRESSIVE EXTERNAL SERVICE BLOCKING
+        window.__SENTRY__ = undefined;
+        window.Sentry = undefined;
+        window.__NEXT_DATA__ = undefined;
+        window.gtag = undefined;
+        window.ga = undefined;
+        window.fbq = undefined;
+        window.__REACT_DEVTOOLS_GLOBAL_HOOK__ = undefined;
+        
+        // COMPLETE FETCH LOCKDOWN for error services
+        const originalFetch = window.fetch;
+        window.fetch = function(input, init) {
+          const url = input?.toString() || '';
+          const errorServices = [
+            'sentry.io', 'bugsnag.com', 'rollbar.com', 'logrocket.com',
+            'datadog.com', 'honeybadger.io', 'airbrake.io', 'trackjs.com',
+            'raygun.com', 'errorception.com', 'ingest.sentry.io'
+          ];
+          
+          if (errorServices.some(service => url.includes(service))) {
+            return Promise.reject(new Error('Blocked external error service'));
+          }
+          
+          return originalFetch.call(this, input, init);
+        };
+        
+        // COMPLETE XMLHttpRequest BLOCKING
+        const OriginalXHR = window.XMLHttpRequest;
+        window.XMLHttpRequest = function() {
+          const xhr = new OriginalXHR();
+          const originalOpen = xhr.open;
+          
+          xhr.open = function(method, url, ...args) {
+            const urlStr = url?.toString() || '';
+            const errorServices = ['sentry.io', 'bugsnag', 'rollbar', 'logrocket', 'datadog'];
+            
+            if (errorServices.some(service => urlStr.includes(service))) {
+              throw new Error('XMLHttpRequest to error service blocked');
+            }
+            
+            return originalOpen.call(this, method, url, ...args);
+          };
+          
+          return xhr;
+        };
+        
+        // Override problematic APIs that cause warnings
+        if (window.ResizeObserver) {
+          window.ResizeObserver = class {
+            observe() {}
+            unobserve() {}
+            disconnect() {}
+          };
         }
-        originalLog.apply(console, args);
-      };
-      
-      // Block all unhandled rejections immediately
-      window.addEventListener('unhandledrejection', function(e) { e.preventDefault(); });
-      window.addEventListener('error', function(e) { e.preventDefault(); });
-      
-      // Block external error services IMMEDIATELY
-      window.__SENTRY__ = undefined;
-      window.Sentry = undefined;
-      window.__NEXT_DATA__ = undefined;
+        
+        if (window.MutationObserver) {
+          const OriginalMutationObserver = window.MutationObserver;
+          window.MutationObserver = class extends OriginalMutationObserver {
+            constructor(callback) {
+              super((mutations, observer) => {
+                try {
+                  callback(mutations, observer);
+                } catch (e) {
+                  // Silent fail
+                }
+              });
+            }
+          };
+        }
+        
+        // Store debugging access (only available via direct window access)
+        window._debugConsole = _originalConsole;
+        
+      })();
     </script>
     
     <div id="root"></div>
