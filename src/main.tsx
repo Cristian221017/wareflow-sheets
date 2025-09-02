@@ -42,42 +42,43 @@ window.fetch = function(...args) {
   return originalFetch.apply(this, args);
 };
 
-// 3. NUCLEAR CONSOLE FILTERING - Block EVERYTHING non-critical
+// 3. TARGETED CONSOLE FILTERING - Allow important logs through
 const originalWarn = console.warn;
 const originalError = console.error;
 const originalLog = console.log;
 
 console.warn = (...args) => {
-  const message = args[0];
-  if (typeof message === 'string') {
-    // COMPLETE WARNING SUPPRESSION
-    const suppressedMessages = [
-      'Unrecognized feature', 'sandbox attribute', 'deferred DOM Node',
-      'ResizeObserver', 'React has detected', 'validateDOMNesting',
-      'Internal React error', 'listener indicated an asynchronous response',
-      'message channel closed', 'We\'re hiring', 'Expected static flag',
-      'favicon.ico', 'manifest.json'
-    ];
-    
-    if (suppressedMessages.some(msg => message.includes(msg))) {
-      return; // COMPLETE SUPPRESSION
-    }
+  const message = String(args[0] || '');
+  // Only suppress specific known non-critical warnings
+  const suppressedMessages = [
+    'We\'re hiring!', '⠀', 'Unrecognized feature', 'sandbox attribute',
+    'deferred DOM Node', 'ResizeObserver'
+  ];
+  
+  if (!suppressedMessages.some(msg => message.includes(msg))) {
+    originalWarn.apply(console, args);
   }
-  originalWarn.apply(console, args);
 };
 
 console.error = (...args) => {
-  const message = args[0]?.toString() || '';
+  const message = String(args[0] || '');
+  // Only suppress specific known non-critical errors
   const suppressedErrors = [
-    'deferred DOM Node', 'ResizeObserver', 'Script error',
-    'Network request failed', 'Load failed', 'validateDOMNesting',
-    'Non-Error promise rejection', 'listener indicated an asynchronous response',
-    'message channel closed', 'External error reporting', 'favicon.ico',
-    'Too Many Requests', '429'
+    'Failed to load resource: the server responded with a status of 429',
+    'deferred DOM Node', 'ResizeObserver', 'External error reporting',
+    'We\'re hiring!', '⠀'
   ];
   
   if (!suppressedErrors.some(err => message.includes(err))) {
     originalError.apply(console, args);
+  }
+};
+
+console.log = (...args) => {
+  const message = String(args[0] || '');
+  // Block ASCII art and hiring messages
+  if (!message.includes('⠀') && !message.includes('We\'re hiring!')) {
+    originalLog.apply(console, args);
   }
 };
 

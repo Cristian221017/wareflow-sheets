@@ -6,10 +6,7 @@
     <title>WMS Sistema</title>
     <meta name="description" content="Sistema de Gestão de Armazém" />
     
-    <!-- COMPLETE PERMISSIONS POLICY - Block ALL possible features -->
-    <meta http-equiv="Permissions-Policy" content="vr=(), xr-spatial-tracking=(), ambient-light-sensor=(), battery=(), camera=(), microphone=(), geolocation=(), accelerometer=(), gyroscope=(), magnetometer=(), bluetooth=(), usb=(), midi=(), payment=(), picture-in-picture=(), screen-wake-lock=(), web-share=(), clipboard-read=(), clipboard-write=(), autoplay=(), fullscreen=(), encrypted-media=(), display-capture=(), document-domain=(), execution-while-not-rendered=(), execution-while-out-of-viewport=(), focus-without-user-activation=(), hid=(), identity-credentials-get=(), idle-detection=(), local-fonts=(), navigation-override=(), otp-credentials=(), publickey-credentials-get=(), serial=(), sync-xhr=(), unload=(), window-management=(), xr=()">
-    
-    <!-- ULTRA-STRICT CSP - Complete external service blocking -->
+    <!-- CSP - Block external error services specifically -->
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src 'self' https://*.supabase.co https://supabase.co https://cdn.gpteng.co https://*.lovable.dev; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.gpteng.co https://*.lovable.dev; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; frame-src 'self' https://*.lovable.dev; block-all-mixed-content; upgrade-insecure-requests;" />
     
     <!-- IFRAME SANDBOX POLICY - Prevent sandbox warnings -->
@@ -41,18 +38,37 @@
           timeEnd: console.timeEnd
         };
         
-        // TOTAL CONSOLE SILENCE - No exceptions
-        console.log = function() {};
-        console.warn = function() {};
-        console.error = function() {};
-        console.info = function() {};
-        console.debug = function() {};
-        console.trace = function() {};
-        console.group = function() {};
-        console.groupEnd = function() {};
-        console.time = function() {};
-        console.timeEnd = function() {};
-        console.clear = function() {};
+        // TARGETED CONSOLE FILTERING - Allow important logs
+        console.warn = function(...args) {
+          const message = String(args[0] || '');
+          const blockedWarnings = [
+            'We\'re hiring!', '⠀', 'Unrecognized feature', 'sandbox attribute',
+            'deferred DOM Node', 'ResizeObserver', 'validateDOMNesting'
+          ];
+          if (!blockedWarnings.some(blocked => message.includes(blocked))) {
+            _originalConsole.warn.apply(console, args);
+          }
+        };
+        
+        console.error = function(...args) {
+          const message = String(args[0] || '');
+          const blockedErrors = [
+            'Failed to load resource: the server responded with a status of 429',
+            'deferred DOM Node', 'ResizeObserver', 'External error service',
+            'We\'re hiring!', '⠀'
+          ];
+          if (!blockedErrors.some(blocked => message.includes(blocked))) {
+            _originalConsole.error.apply(console, args);
+          }
+        };
+        
+        // Keep other console methods functional
+        console.log = function(...args) {
+          const message = String(args[0] || '');
+          if (!message.includes('⠀') && !message.includes('We\'re hiring!')) {
+            _originalConsole.log.apply(console, args);
+          }
+        };
         
         // COMPLETE EVENT SUPPRESSION
         window.addEventListener('error', function(e) {
