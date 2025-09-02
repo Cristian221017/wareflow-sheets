@@ -12,15 +12,26 @@ export default function Index() {
   // Redireciona usuários autenticados para seus portais
   useEffect(() => {
     if (!loading && isAuthenticated && user) {
+      console.log('🔄 Index redirect check:', { 
+        userType: user.type, 
+        userRole: user.role, 
+        email: user.email 
+      });
+      
       const timer = setTimeout(() => {
         if (user.role === 'super_admin') {
+          console.log('➡️ Redirecting to /admin');
           navigate('/admin', { replace: true });
-        } else if (user.role === 'admin_transportadora' || user.role === 'operador') {
+        } else if (user.type === 'transportadora' && (user.role === 'admin_transportadora' || user.role === 'operador')) {
+          console.log('➡️ Redirecting to /transportadora');
           navigate('/transportadora', { replace: true });
         } else if (user.type === 'cliente') {
+          console.log('➡️ Redirecting to /cliente');
           navigate('/cliente', { replace: true });
+        } else {
+          console.log('⚠️ User type/role not recognized:', user);
         }
-      }, 100); // Pequeno delay para evitar loops
+      }, 100);
       
       return () => clearTimeout(timer);
     }
