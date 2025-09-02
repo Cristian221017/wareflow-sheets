@@ -128,8 +128,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const getUserData = async (supabaseUser: SupabaseUser): Promise<User> => {
-    console.log(`🔍 Loading user profile for: ${supabaseUser.id}, email: ${supabaseUser.email}`);
-    
     // Create timeout promise to prevent infinite loading
     const timeoutPromise = new Promise<never>((_, reject) => 
       setTimeout(() => reject(new Error('Profile loading timeout')), 5000)
@@ -144,7 +142,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       return userData;
     } catch (error) {
-      console.warn('⚠️ Profile loading failed or timed out, using fallback:', error);
       
       // Always return a valid user to prevent infinite loading
       return {
@@ -158,7 +155,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const loadUserDataWithTimeout = async (supabaseUser: SupabaseUser): Promise<User> => {
     // FIRST: Check user_transportadoras for role-based access (super_admin, admin_transportadora, operador)
-    console.log('🔍 [1] Checking user_transportadoras for roles...');
     const { data: userTranspData, error: userTranspError } = await supabase
       .from('user_transportadoras')
       .select('role, transportadora_id, is_active')
@@ -168,7 +164,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     if (userTranspData?.[0] && !userTranspError) {
       const userTransp = userTranspData[0];
-      console.log('✅ Found user with role:', userTransp.role);
       
       // Get transportadora data if needed
       let transportadoraName = supabaseUser.email?.split('@')[0] || 'Admin';
@@ -195,7 +190,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     // SECOND: Check direct transportadora email match (legacy support)
-    console.log('🔍 [2] Checking transportadoras by email...');
     const { data: transportadoraData } = await supabase
       .from('transportadoras')
       .select('id, razao_social, email')
@@ -204,7 +198,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     if (transportadoraData?.[0]) {
       const transportadora = transportadoraData[0];
-      console.log('✅ Found transportadora (legacy):', transportadora.razao_social);
       
       return {
         id: supabaseUser.id,
@@ -217,7 +210,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     // THIRD: Check direct cliente email match
-    console.log('🔍 [3] Checking clientes by email...');
     const { data: clienteData } = await supabase
       .from('clientes')
       .select('id, razao_social, email, transportadora_id')
@@ -226,7 +218,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     if (clienteData?.[0]) {
       const cliente = clienteData[0];
-      console.log('✅ Found cliente:', cliente.razao_social);
       
       return {
         id: supabaseUser.id,
@@ -239,7 +230,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     // Final fallback
-    console.log('⚠️ No matches found, using basic user');
     return {
       id: supabaseUser.id,
       name: supabaseUser.email?.split('@')[0] || 'Usuário',

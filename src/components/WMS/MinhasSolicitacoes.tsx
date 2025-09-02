@@ -15,11 +15,8 @@ export function MinhasSolicitacoes() {
       e.stopPropagation();
     }
     try {
-      console.log('📥 Iniciando download:', anexo.name);
-      
       // Obter a URL do anexo
       const url = await getAnexoUrl(anexo.path);
-      console.log('🔗 URL obtida:', url);
       
       // Fazer fetch da URL para obter o blob
       const response = await fetch(url);
@@ -28,7 +25,6 @@ export function MinhasSolicitacoes() {
       }
       
       const blob = await response.blob();
-      console.log('📦 Blob criado:', blob.size, 'bytes');
       
       // Criar URL local do blob
       const blobUrl = URL.createObjectURL(blob);
@@ -46,7 +42,6 @@ export function MinhasSolicitacoes() {
       setTimeout(() => {
         document.body.removeChild(link);
         URL.revokeObjectURL(blobUrl);
-        console.log('✅ Download concluído e cleanup feito');
       }, 100);
       
       toast.success('Download iniciado!');

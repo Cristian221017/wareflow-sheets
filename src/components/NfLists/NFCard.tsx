@@ -193,14 +193,9 @@ export function NFCard({
                           onClick={async (e) => {
                             e.preventDefault();
                             e.stopPropagation();
-                            console.log('📥 Download iniciado:', doc.name || doc.nome);
-                            
                             try {
-                              console.log('📥 Iniciando download:', doc.name || doc.nome);
-                              
                               // Obter a URL do anexo
                               const url = await getAnexoUrl(doc.path || doc.caminho);
-                              console.log('🔗 URL obtida:', url);
                               
                               // Fazer fetch da URL para obter o blob
                               const response = await fetch(url);
@@ -209,7 +204,6 @@ export function NFCard({
                               }
                               
                               const blob = await response.blob();
-                              console.log('📦 Blob criado:', blob.size, 'bytes');
                               
                               // Criar URL local do blob
                               const blobUrl = URL.createObjectURL(blob);
@@ -227,7 +221,6 @@ export function NFCard({
                               setTimeout(() => {
                                 document.body.removeChild(a);
                                 URL.revokeObjectURL(blobUrl);
-                                console.log('✅ Download concluído e cleanup feito');
                               }, 100);
                               
                               toast.success('Download iniciado!');

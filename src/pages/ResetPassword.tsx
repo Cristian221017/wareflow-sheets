@@ -22,8 +22,6 @@ export default function ResetPassword() {
         const refreshToken = searchParams.get('refresh_token');
         const type = searchParams.get('type');
 
-        console.log('Reset page params:', { accessToken: !!accessToken, refreshToken: !!refreshToken, type });
-
         if (accessToken && refreshToken && type === 'recovery') {
           // Definir a sessão usando os tokens do email
           const { data, error } = await supabase.auth.setSession({
@@ -32,13 +30,11 @@ export default function ResetPassword() {
           });
 
           if (error) {
-            console.error('Error setting session:', error);
             toast.error('Link de redefinição inválido ou expirado');
             navigate('/');
             return;
           }
 
-          console.log('Session set successfully:', data);
           setSessionReady(true);
           toast.success('Link válido! Você pode redefinir sua senha agora.');
         } else {
@@ -84,7 +80,6 @@ export default function ResetPassword() {
     try {
       // Verificar a sessão atual antes de tentar atualizar
       const { data: { session } } = await supabase.auth.getSession();
-      console.log('Current session:', session);
 
       if (!session) {
         toast.error('Sessão inválida. Use o link do email.');
@@ -97,13 +92,11 @@ export default function ResetPassword() {
       });
 
       if (error) {
-        console.error('Update password error:', error);
         toast.error(`Erro ao redefinir senha: ${error.message}`);
         return;
       }
 
       toast.success('Senha redefinida com sucesso!');
-      console.log('Password updated successfully');
       
       // Fazer logout e redirecionar para login
       await supabase.auth.signOut();
