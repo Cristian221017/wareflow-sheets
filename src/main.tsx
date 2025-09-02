@@ -14,8 +14,15 @@ const queryClient = new QueryClient({
   },
 });
 
-createRoot(document.getElementById('root')!).render(
+const container = document.getElementById('root');
+if (!container) {
+  throw new Error('Root container not found');
+}
+
+const root = createRoot(container);
+
+root.render(
   <QueryClientProvider client={queryClient}>
     <App />
   </QueryClientProvider>
-)
+);

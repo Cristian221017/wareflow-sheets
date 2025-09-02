@@ -2,15 +2,13 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { SimplifiedAuthProvider, useAuth } from "@/contexts/SimplifiedAuthContext";
-import Index from "./pages/Index";
+import { LoginPage } from "@/components/Auth/LoginPage";
 import SuperAdminPortal from "./pages/SuperAdminPortal";
 import TransportadoraPortal from "./pages/TransportadoraPortal";
 import ClientePortal from "./pages/ClientePortal";
 import SystemAdminLogin from "./pages/SystemAdminLogin";
 import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
-import MercadoriasEmbarcadas from "@/pages/MercadoriasEmbarcadas";
-import MercadoriasEntregues from "@/pages/MercadoriasEntregues";
 import React from 'react';
 
 function ProtectedRoute({ children, allowedRoles }: { children: React.ReactNode, allowedRoles: string[] }) {
@@ -43,6 +41,37 @@ function ProtectedRoute({ children, allowedRoles }: { children: React.ReactNode,
   }
 
   return <>{children}</>;
+}
+
+// Simple index component
+function Index() {
+  const { isAuthenticated, user, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-muted">
+        <div className="text-center space-y-4">
+          <div className="animate-spin w-12 h-12 border-4 border-primary border-t-transparent rounded-full mx-auto"></div>
+          <p className="text-muted-foreground text-lg">Carregando sistema...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return <LoginPage />;
+  }
+
+  // Auto-redirect based on user type
+  if (user?.role === 'super_admin') {
+    return <Navigate to="/admin" replace />;
+  } else if (user?.type === 'cliente') {
+    return <Navigate to="/cliente" replace />;
+  } else if (user?.role === 'admin_transportadora' || user?.role === 'operador') {
+    return <Navigate to="/transportadora" replace />;
+  } else {
+    return <Navigate to="/cliente" replace />;
+  }
 }
 
 function App() {
@@ -81,24 +110,6 @@ function App() {
                 element={
                   <ProtectedRoute allowedRoles={['cliente', 'super_admin', 'admin_transportadora', 'operador']}>
                     <ClientePortal />
-                  </ProtectedRoute>
-                } 
-              />
-              
-              <Route 
-                path="/mercadorias-embarcadas" 
-                element={
-                  <ProtectedRoute allowedRoles={['super_admin', 'admin_transportadora', 'operador', 'cliente']}>
-                    <MercadoriasEmbarcadas />
-                  </ProtectedRoute>
-                } 
-              />
-              
-              <Route 
-                path="/mercadorias-entregues" 
-                element={
-                  <ProtectedRoute allowedRoles={['super_admin', 'admin_transportadora', 'operador', 'cliente']}>
-                    <MercadoriasEntregues />
                   </ProtectedRoute>
                 } 
               />
