@@ -1230,6 +1230,15 @@ export type Database = {
         }
         Returns: undefined
       }
+      fix_client_transportadora_links: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          action_taken: string
+          cliente_email: string
+          cliente_id: string
+          details: Json
+        }[]
+      }
       get_cliente_transportadora: {
         Args: { _user_id: string }
         Returns: string
