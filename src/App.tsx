@@ -72,7 +72,8 @@ function App() {
           <SimplifiedAuthProvider>
             <WMSProvider>
               <FinanceiroProvider>
-                <OptimizedRealtimeProvider>
+                {/* OptimizedRealtimeProvider desabilitado */}
+                <div>
                   <div className="min-h-screen bg-background">
                     <EnvBanner />
                     <AuthRefreshButton />
@@ -170,7 +171,7 @@ function App() {
                       </Routes>
                     </RouteErrorBoundary>
                   </div>
-                </OptimizedRealtimeProvider>
+                </div>
               </FinanceiroProvider>
             </WMSProvider>
           </SimplifiedAuthProvider>

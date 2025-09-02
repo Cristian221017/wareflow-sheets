@@ -16,21 +16,6 @@ interface OptimizedRealtimeProviderProps {
  * - Reconexão inteligente
  */
 export default function OptimizedRealtimeProvider({ children }: OptimizedRealtimeProviderProps) {
-  const queryClient = useQueryClient();
-  const { addCleanup } = useMemoryCleanup();
-
-  useEffect(() => {
-    log('🌐 OptimizedRealtimeProvider desabilitado temporariamente para debug');
-    
-    // Desabilitar realtime temporariamente para evitar loops de erro
-    // const cleanup = useOptimizedRealtimeManager(queryClient, 'global-optimized-provider');
-    // const removeCleanup = addCleanup(cleanup);
-    
-    return () => {
-      log('🌐 Limpando OptimizedRealtimeProvider');
-      // removeCleanup();
-    };
-  }, [queryClient, addCleanup]);
-
+  // Completamente desabilitado para evitar memory leaks
   return <>{children}</>;
 }
