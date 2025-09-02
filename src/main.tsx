@@ -7,6 +7,7 @@ import { EnvErrorPage } from '@/components/system/EnvErrorPage'
 import { systemStabilizer } from '@/utils/systemStabilizer'
 import { criticalSystemDiagnostic } from '@/utils/criticalSystemDiagnostic'
 import { advancedDebugLogger } from '@/utils/advancedDebugLogger'
+import { emergencyDebugger } from '@/utils/emergencyDebugger'
 
 // Initialize system stabilizer FIRST - critical for stability
 systemStabilizer.initialize();
@@ -125,6 +126,7 @@ if (typeof window !== 'undefined') {
   (window as any).debugLogger = advancedDebugLogger;
   (window as any).systemStabilizer = systemStabilizer;
   (window as any).criticalDiagnostic = criticalSystemDiagnostic;
+  (window as any).emergencyDebugger = emergencyDebugger;
   
   // Add helpful console commands
   (window as any).debugCommands = {
