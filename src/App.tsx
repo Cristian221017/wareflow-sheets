@@ -108,7 +108,6 @@ function App() {
                 <RealtimeProvider>
                   <div className="min-h-screen bg-background">
                     <Sonner />
-                    <ApiStatusIndicator />
                     
                     <Routes>
                       <Route path="/" element={<Index />} />

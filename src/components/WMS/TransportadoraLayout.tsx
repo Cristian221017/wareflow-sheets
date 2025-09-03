@@ -33,6 +33,7 @@ import {
 } from 'lucide-react';
 
 import { useAuth } from '@/contexts/AuthContext';
+import { ApiStatusIndicator } from '@/components/system/ApiStatusIndicator';
 
 export function TransportadoraLayout() {
   const { user, logout } = useAuth();
@@ -100,6 +101,7 @@ export function TransportadoraLayout() {
             
             {/* Desktop Actions */}
             <div className="hidden lg:flex gap-2 xl:gap-3">
+              <ApiStatusIndicator />
               <Button 
                 onClick={() => setShowClientes(true)}
                 className="bg-secondary hover:bg-secondary/90 text-secondary-foreground"

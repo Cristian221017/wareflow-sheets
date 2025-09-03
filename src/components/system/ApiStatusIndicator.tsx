@@ -86,32 +86,19 @@ export function ApiStatusIndicator() {
   }
 
   return (
-    <div className="fixed top-4 right-4 z-50">
-      <Alert className="w-auto">
-        <div className="flex items-center gap-2">
-          <Icon className="h-4 w-4" />
-          <AlertDescription className="flex items-center gap-2">
-            <span>{config.text}</span>
-            
-            <Badge variant={config.variant} className="text-xs">
-              <div className={`w-2 h-2 rounded-full ${config.color} mr-1`} />
-              {status === 'error' && errorCount > 0 && ` (${errorCount} erros)`}
-            </Badge>
-            
-            {lastCheck && (
-              <span className="text-xs text-muted-foreground">
-                {lastCheck.toLocaleTimeString()}
-              </span>
-            )}
-          </AlertDescription>
-        </div>
-        
-        {status === 'error' && (
-          <div className="mt-2 text-xs text-muted-foreground">
-            Problemas de autenticação detectados. Verifique as configurações da API.
-          </div>
-        )}
-      </Alert>
+    <div className="inline-flex items-center gap-2">
+      <Badge variant={config.variant} className="text-xs">
+        <Icon className="h-3 w-3 mr-1" />
+        <div className={`w-2 h-2 rounded-full ${config.color} mr-1`} />
+        {config.text}
+        {status === 'error' && errorCount > 0 && ` (${errorCount})`}
+      </Badge>
+      
+      {status === 'error' && (
+        <span className="text-xs text-muted-foreground">
+          Auth error - Check API config
+        </span>
+      )}
     </div>
   );
 }

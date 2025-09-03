@@ -16,6 +16,7 @@ import { FormCadastroTransportadora } from './FormCadastroTransportadora';
 import { LogsPage } from './LogsPage';
 import { SystemMaintenanceTab } from './SystemMaintenanceTab';
 import { EnvironmentBadge, EnvironmentIndicator } from '@/components/system/EnvironmentBadge';
+import { ApiStatusIndicator } from '@/components/system/ApiStatusIndicator';
 import { 
   Building2, 
   Users, 
@@ -184,6 +185,7 @@ export function SuperAdminLayout() {
             <div className="text-right hidden sm:block">
               <p className="text-sm font-medium">{user?.name}</p>
               <div className="flex items-center justify-end space-x-2">
+                <ApiStatusIndicator />
                 <Badge variant="secondary" className="text-xs">Super Admin</Badge>
               </div>
             </div>

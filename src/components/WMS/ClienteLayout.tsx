@@ -16,6 +16,7 @@ import { PedidosConfirmadosTable } from './PedidosConfirmadosTable';
 import { FormCadastroUsuario } from './FormCadastroUsuario';
 import { AlterarSenhaDialog } from './AlterarSenhaDialog';
 import { EnvironmentBadge, EnvironmentIndicator } from '@/components/system/EnvironmentBadge';
+import { ApiStatusIndicator } from '@/components/system/ApiStatusIndicator';
 
 import { 
   Package, 
@@ -204,6 +205,10 @@ export function ClienteLayout() {
                 <p className="text-sm text-muted-foreground max-w-[120px] truncate">
                   Olá, {user?.name?.split(' ')[0]}
                 </p>
+              </div>
+              
+              <div className="hidden xl:flex">
+                <ApiStatusIndicator />
               </div>
               
               <Button variant="ghost" size="sm" onClick={logout} className="hidden lg:flex p-2">
