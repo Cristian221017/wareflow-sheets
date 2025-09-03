@@ -1561,6 +1561,8 @@ export type Database = {
         | "em_separacao"
         | "separacao_concluida"
         | "separacao_com_pendencia"
+        | "em_viagem"
+        | "entregue"
       user_role: "super_admin" | "admin_transportadora" | "operador" | "cliente"
     }
     CompositeTypes: {
@@ -1695,6 +1697,8 @@ export const Constants = {
         "em_separacao",
         "separacao_concluida",
         "separacao_com_pendencia",
+        "em_viagem",
+        "entregue",
       ],
       user_role: ["super_admin", "admin_transportadora", "operador", "cliente"],
     },

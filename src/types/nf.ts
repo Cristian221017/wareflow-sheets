@@ -17,7 +17,7 @@ export interface NotaFiscal {
   localizacao: string;
   data_recebimento: string;
   status: NFStatus;
-  status_separacao?: 'pendente' | 'em_separacao' | 'separacao_concluida' | 'separacao_com_pendencia';
+  status_separacao?: 'pendente' | 'em_separacao' | 'separacao_concluida' | 'separacao_com_pendencia' | 'em_viagem' | 'entregue';
   created_at: string;
   updated_at: string;
   // Campos opcionais que podem não existir ainda

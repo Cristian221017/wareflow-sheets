@@ -5,7 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Package, Clock, CheckCircle, AlertTriangle, Pencil } from 'lucide-react';
+import { Package, Clock, CheckCircle, AlertTriangle, Pencil, Truck } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/components/ui/use-toast';
 import { log, warn, error as logError } from '@/utils/logger';
@@ -18,7 +18,7 @@ interface StatusSeparacaoManagerProps {
   onStatusChanged?: () => void;
 }
 
-type SeparacaoStatus = 'pendente' | 'em_separacao' | 'separacao_concluida' | 'separacao_com_pendencia';
+type SeparacaoStatus = 'pendente' | 'em_separacao' | 'separacao_concluida' | 'separacao_com_pendencia' | 'em_viagem' | 'entregue';
 
 const statusConfig = {
   pendente: {
@@ -44,6 +44,18 @@ const statusConfig = {
     icon: AlertTriangle,
     variant: 'destructive' as const,
     description: 'Separação com problemas ou itens faltantes'
+  },
+  em_viagem: {
+    label: 'Em Viagem',
+    icon: Truck,
+    variant: 'default' as const,
+    description: 'Mercadoria despachada e em transporte'
+  },
+  entregue: {
+    label: 'Entregue',
+    icon: CheckCircle,
+    variant: 'default' as const,
+    description: 'Mercadoria entregue ao destinatário'
   }
 };
 

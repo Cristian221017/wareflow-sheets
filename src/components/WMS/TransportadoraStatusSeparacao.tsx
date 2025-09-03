@@ -34,14 +34,28 @@ const statusConfig = {
     icon: CheckCircle,
     color: 'hsl(var(--success))',
     description: 'Separação finalizada com sucesso',
-    progress: 100
+    progress: 75
   },
   separacao_com_pendencia: {
     label: 'Separação com Pendência',
     icon: AlertTriangle,
     color: 'hsl(var(--destructive))',
     description: 'Separação com problemas ou itens faltantes',
-    progress: 75
+    progress: 60
+  },
+  em_viagem: {
+    label: 'Em Viagem',
+    icon: Truck,
+    color: 'hsl(217 91% 60%)',
+    description: 'Mercadoria despachada e em transporte',
+    progress: 90
+  },
+  entregue: {
+    label: 'Entregue',
+    icon: CheckCircle,
+    color: 'hsl(142 76% 36%)',
+    description: 'Mercadoria entregue ao destinatário',
+    progress: 100
   }
 };
 

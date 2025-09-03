@@ -6,11 +6,14 @@ import { useLastVisit } from '@/hooks/useLastVisit';
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { CheckCircle, Printer, Download, Truck } from "lucide-react";
+import { CheckCircle, Printer, Download, Truck, Paperclip } from "lucide-react";
 import { NFFilters, type NFFilterState } from "@/components/NfLists/NFFilters";
 import { NFCard } from "@/components/NfLists/NFCard";
 import { ConfirmarEventoDialog } from "./ConfirmarEventoDialog";
+import { StatusSeparacaoManager } from "./StatusSeparacaoManager";
+import { AnexarDocumentosDialog } from "./AnexarDocumentosDialog";
 import { useNFEventosMutations } from "@/hooks/useNFEventos";
+import { useInvalidateAll } from "@/hooks/useInvalidateAll";
 import type { NotaFiscal } from "@/types/nf";
 import { log, error as logError } from "@/utils/logger";
 import { toast } from "sonner";
@@ -19,6 +22,7 @@ export function PedidosConfirmadosTable() {
   const { user } = useAuth();
   const once = useRef(false);
   const { markVisitForComponent } = useLastVisit();
+  const { invalidateAll } = useInvalidateAll();
   const isCliente = user?.type === "cliente";
   const isTransportadora = user?.role === "admin_transportadora" || user?.role === "operador";
   const { confirmarEmbarque } = useNFEventosMutations();
@@ -419,18 +423,57 @@ export function PedidosConfirmadosTable() {
                       />
                     </div>
                     
-                    {/* Botão Confirmar Embarque apenas para transportadora */}
-                    {isTransportadora && !(nf as any).data_embarque && (
+                    {/* Ações da Transportadora */}
+                    {isTransportadora && (
                       <div className="flex flex-col gap-2">
-                        <Button
-                          onClick={() => handleConfirmarEmbarque(nf)}
-                          variant="outline"
-                          size="sm"
-                          className="min-w-[140px]"
-                        >
-                          <Truck className="w-4 h-4 mr-2" />
-                          Confirmar Embarque
-                        </Button>
+                        {/* Status de Separação com edição */}
+                        <StatusSeparacaoManager
+                          nfId={nf.id}
+                          statusAtual={nf.status_separacao || 'pendente'}
+                          numeroNf={nf.numero_nf}
+                          canEdit={true}
+                          onStatusChanged={() => invalidateAll()}
+                        />
+                        
+                        {/* Anexar Documentos */}
+                        <AnexarDocumentosDialog 
+                          nf={nf}
+                          onDocumentosAnexados={() => invalidateAll()}
+                        />
+                        
+                        {/* Botão Confirmar Embarque apenas se ainda não foi embarcado */}
+                        {!(nf as any).data_embarque && (
+                          <Button
+                            onClick={() => handleConfirmarEmbarque(nf)}
+                            variant="outline"
+                            size="sm"
+                            className="min-w-[140px] gap-2"
+                          >
+                            <Truck className="w-4 h-4" />
+                            Confirmar Embarque
+                          </Button>
+                        )}
+                      </div>
+                    )}
+                    
+                    {/* Informações para Cliente */}
+                    {isCliente && (
+                      <div className="flex flex-col gap-2 items-end">
+                        {/* Status de Separação (somente leitura) */}
+                        <StatusSeparacaoManager
+                          nfId={nf.id}
+                          statusAtual={nf.status_separacao || 'pendente'}
+                          numeroNf={nf.numero_nf}
+                          canEdit={false}
+                        />
+                        
+                        {/* Documentos anexados (se houver) */}
+                        {nf.documentos_anexos && nf.documentos_anexos.length > 0 && (
+                          <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                            <Paperclip className="w-4 h-4" />
+                            {nf.documentos_anexos.length} documento(s)
+                          </div>
+                        )}
                       </div>
                     )}
                     

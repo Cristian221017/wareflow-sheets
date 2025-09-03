@@ -77,6 +77,8 @@ export function NFCard({
       case 'em_separacao': return 'bg-orange-100 text-orange-800 border-orange-300';
       case 'separacao_concluida': return 'bg-green-100 text-green-800 border-green-300';
       case 'separacao_com_pendencia': return 'bg-red-100 text-red-800 border-red-300';
+      case 'em_viagem': return 'bg-indigo-100 text-indigo-800 border-indigo-300';
+      case 'entregue': return 'bg-emerald-100 text-emerald-800 border-emerald-300';
       default: return 'bg-gray-100 text-gray-800 border-gray-300';
     }
   };
@@ -87,6 +89,8 @@ export function NFCard({
       case 'em_separacao': return 'Em Separação';
       case 'separacao_concluida': return 'Separação Concluída';
       case 'separacao_com_pendencia': return 'Separação com Pendência';
+      case 'em_viagem': return 'Em Viagem';
+      case 'entregue': return 'Entregue';
       default: return 'Status não definido';
     }
   };

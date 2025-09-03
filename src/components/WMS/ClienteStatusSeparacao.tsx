@@ -37,14 +37,28 @@ const statusConfig = {
     icon: CheckCircle,
     color: "text-green-600",
     description: "Produtos separados e prontos para carregamento",
-    progress: 100,
+    progress: 75,
   },
   separacao_com_pendencia: {
     label: "Pendências na Separação",
     icon: AlertCircle,
     color: "text-red-600",
     description: "Encontramos algumas pendências que requerem atenção",
-    progress: 75,
+    progress: 60,
+  },
+  em_viagem: {
+    label: "Em Viagem",
+    icon: Truck,
+    color: "text-indigo-600",
+    description: "Sua mercadoria está em transporte",
+    progress: 90,
+  },
+  entregue: {
+    label: "Entregue",
+    icon: CheckCircle,
+    color: "text-emerald-600",
+    description: "Mercadoria entregue com sucesso",
+    progress: 100,
   },
 };
 
