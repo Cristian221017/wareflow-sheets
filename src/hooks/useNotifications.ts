@@ -19,7 +19,7 @@ export function useNotifications() {
       if (!lastVisit) return items.length;
       
       return items.filter(item => {
-        const itemDate = new Date(item.updated_at || item.created_at);
+        const itemDate = new Date(item.updatedAt || item.updated_at || item.createdAt || item.created_at);
         return itemDate > lastVisit;
       }).length;
     };
