@@ -472,18 +472,21 @@ export function PedidosConfirmadosTable() {
                             console.log('🔄 CALLBACK onDocumentosAnexados disparado para NF:', nf.id);
                             console.log('🔄 Estado atual da NF antes do refetch:', {
                               nfId: nf.id,
-                              documentosAtuais: nf.documentos_anexos?.length || 0
+                              documentosAtuais: nf.documentos_anexos?.length || 0,
+                              estruturaAtual: JSON.stringify(nf.documentos_anexos, null, 2)
                             });
                             
                             // Forçar reload completo dos dados
                             console.log('🔄 Documento anexado, recarregando dados da NF:', nf.id);
                             invalidateAll();
-                            await refetch();
+                            const result = await refetch();
+                            console.log('🔄 Resultado do primeiro refetch:', result);
                             
                             // Pequeno delay para garantir sincronização
                             setTimeout(async () => {
                               console.log('🔄 Segundo refetch após delay...');
-                              await refetch();
+                              const result2 = await refetch();
+                              console.log('🔄 Resultado do segundo refetch:', result2);
                             }, 100);
                           }}
                         />
@@ -554,14 +557,29 @@ export function PedidosConfirmadosTable() {
                         </p>
                       )}
                       
-                      {nf.documentos_anexos && Array.isArray(nf.documentos_anexos) && nf.documentos_anexos.length > 0 && (
-                        <DocumentosAnexadosViewer 
-                          documentos={nf.documentos_anexos}
-                          nfNumero={nf.numero_nf}
-                          showTitle={true}
-                          compact={false}
-                        />
-                      )}
+                      {(() => {
+                        console.log('🔍 PedidosConfirmadosTable - Verificando documentos para NF:', {
+                          nfId: nf.id,
+                          numeroNf: nf.numero_nf,
+                          documentos_anexos: nf.documentos_anexos,
+                          temDocumentos: !!(nf.documentos_anexos && nf.documentos_anexos.length > 0),
+                          quantidadeDocumentos: nf.documentos_anexos?.length || 0,
+                          estruturaCompleta: JSON.stringify(nf.documentos_anexos, null, 2)
+                        });
+                        
+                        return nf.documentos_anexos && Array.isArray(nf.documentos_anexos) && nf.documentos_anexos.length > 0 ? (
+                          <DocumentosAnexadosViewer 
+                            documentos={nf.documentos_anexos}
+                            nfNumero={nf.numero_nf}
+                            showTitle={true}
+                            compact={false}
+                          />
+                        ) : (
+                          <div className="text-xs text-muted-foreground">
+                            Nenhum documento anexado (total: {nf.documentos_anexos?.length || 0})
+                          </div>
+                        );
+                      })()}
                     </div>
                   )}
                 </div>
