@@ -37,17 +37,20 @@ export function ClienteDashboard() {
   }
 
   // Cálculos baseados nos dados do dashboard
-  const totalNFs = stats.nfsArmazenadas + stats.solicitacoesPendentes + stats.nfsConfirmadas + (stats.nfsEmViagem || 0) + (stats.nfsEntregues || 0);
+  // Evitar dupla contagem: NFs entregues ou em viagem não devem ser somadas com confirmadas
+  const totalNFs = stats.nfsArmazenadas + stats.solicitacoesPendentes + 
+    Math.max(stats.nfsConfirmadas, (stats.nfsEmViagem || 0) + (stats.nfsEntregues || 0));
   const totalPeso = 0; // Poderia calcular se necessário
   const totalVolume = 0; // Poderia calcular se necessário
 
   // Debug do cálculo do total
-  console.log('🔢 Cálculo total NFs:', {
+  console.log('🔢 Cálculo total NFs corrigido:', {
     nfsArmazenadas: stats.nfsArmazenadas,
     solicitacoesPendentes: stats.solicitacoesPendentes,
     nfsConfirmadas: stats.nfsConfirmadas,
     nfsEmViagem: stats.nfsEmViagem || 0,
     nfsEntregues: stats.nfsEntregues || 0,
+    maxConfirmadasOuProcessadas: Math.max(stats.nfsConfirmadas, (stats.nfsEmViagem || 0) + (stats.nfsEntregues || 0)),
     total: totalNFs
   });
 
