@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Paperclip, Upload, X } from 'lucide-react';
-import { toast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { log, error as logError } from '@/utils/logger';
@@ -31,11 +31,7 @@ export function AnexarDocumentosSolicitacao({ nf, onDocumentosAnexados }: Anexar
     const invalidFiles = files.filter(file => file.size > maxSize);
     
     if (invalidFiles.length > 0) {
-      toast({
-        title: "Arquivo muito grande",
-        description: `Alguns arquivos excedem o limite de 10MB: ${invalidFiles.map(f => f.name).join(', ')}`,
-        variant: "destructive"
-      });
+      toast.error(`Alguns arquivos excedem o limite de 10MB: ${invalidFiles.map(f => f.name).join(', ')}`);
       return;
     }
     
@@ -85,11 +81,7 @@ export function AnexarDocumentosSolicitacao({ nf, onDocumentosAnexados }: Anexar
 
   const handleAnexarDocumentos = async () => {
     if (arquivos.length === 0) {
-      toast({
-        title: "Nenhum arquivo selecionado",
-        description: "Selecione pelo menos um arquivo para anexar",
-        variant: "destructive"
-      });
+      toast.error("Selecione pelo menos um arquivo para anexar");
       return;
     }
 
@@ -133,11 +125,7 @@ export function AnexarDocumentosSolicitacao({ nf, onDocumentosAnexados }: Anexar
         totalDocumentos: todosDocumentos.length
       });
 
-      toast({
-        title: "Documentos anexados com sucesso",
-        description: `${documentosUpload.length} documento(s) anexado(s) à solicitação ${nf.numero_nf}`,
-        variant: "default"
-      });
+      toast.success(`${documentosUpload.length} documento(s) anexado(s) à solicitação ${nf.numero_nf}`);
 
       // Resetar formulário
       setArquivos([]);
@@ -149,11 +137,7 @@ export function AnexarDocumentosSolicitacao({ nf, onDocumentosAnexados }: Anexar
 
     } catch (error) {
       logError('Erro no anexo de documentos:', error);
-      toast({
-        title: "Erro ao anexar documentos",
-        description: error instanceof Error ? error.message : "Erro interno do servidor",
-        variant: "destructive"
-      });
+      toast.error(error instanceof Error ? error.message : "Erro interno do servidor");
     } finally {
       setIsUploading(false);
     }

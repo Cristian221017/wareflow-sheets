@@ -100,7 +100,7 @@ export function StatusSeparacaoManager({
         
         const { data, error } = await (supabase.rpc as any)('nf_update_status_separacao', {
           p_nf_id: nfId,
-          p_status_separacao: novoStatus,
+          p_novo_status: novoStatus,
           p_observacoes: observacoes || null
         });
 
