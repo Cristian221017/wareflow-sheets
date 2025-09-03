@@ -64,12 +64,23 @@ export function DocumentosAnexadosViewer({
     try {
       const normalized = normalizeDocument(documento);
       
+      // Detectar bucket correto baseado no path
+      const bucketName = normalized.path.startsWith('documentos/') ? 'documents' : 'solicitacoes-anexos';
+      
+      log('📥 Tentando baixar documento:', { 
+        arquivo: normalized.name, 
+        path: normalized.path,
+        bucket: bucketName,
+        nf: nfNumero 
+      });
+      
       // Tentar baixar do storage
       const { data, error } = await supabase.storage
-        .from('documents')
+        .from(bucketName)
         .download(normalized.path);
 
       if (error) {
+        logError('Erro no download do storage:', error);
         throw new Error(`Erro ao baixar arquivo: ${error.message}`);
       }
 
@@ -83,10 +94,11 @@ export function DocumentosAnexadosViewer({
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
 
-      log('📥 Documento baixado:', { 
+      log('📥 Documento baixado com sucesso:', { 
         arquivo: normalized.name, 
         nf: nfNumero,
-        tamanho: normalized.size 
+        tamanho: normalized.size,
+        bucket: bucketName
       });
 
       toast({
