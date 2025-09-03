@@ -419,6 +419,7 @@ export function PedidosConfirmadosTable() {
                       <NFCard
                         nf={nf}
                         showApprovalInfo
+                        showRequestInfo={true} // Mostrar informações de agendamento
                         showSelection={false} // Confirmadas não precisam de seleção
                       />
                     </div>
