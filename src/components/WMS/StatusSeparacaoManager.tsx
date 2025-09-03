@@ -107,24 +107,13 @@ export function StatusSeparacaoManager({
 
       log('✅ Status de separação atualizado com sucesso');
       
-      // Invalidação imediata
-      if (onStatusChanged) {
-        onStatusChanged();
-      }
+      // Forçar re-fetch imediato dos dados
+      onStatusChanged?.();
       
-      // Aguardar um pouco para o banco processar e forçar nova invalidação
+      // Aguardar um pouco para o realtime sincronizar
       setTimeout(() => {
-        if (onStatusChanged) {
-          onStatusChanged();
-        }
-      }, 500);
-      
-      // Terceira invalidação para garantir sincronização completa
-      setTimeout(() => {
-        if (onStatusChanged) {
-          onStatusChanged();
-        }
-      }, 1000);
+        onStatusChanged?.();
+      }, 300);
       
       toast({
         title: "Status atualizado",
