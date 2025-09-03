@@ -120,12 +120,30 @@ export function ClienteSolicitacaoCarregamento() {
             <th>Localização</th>
             <th>Data Receb.</th>
             <th>Status</th>
+            <th>Agendamento</th>
+            <th>Observações</th>
+            <th>Documentos</th>
           </tr>
         </thead>
         <tbody>
     `;
 
     filteredNfs.forEach(nf => {
+      // Buscar dados de agendamento das solicitações
+      let agendamento = 'Não informado';
+      let observacoes = 'Nenhuma';
+      let documentos = 'Nenhum';
+
+      if (nf.data_agendamento_entrega) {
+        agendamento = new Date(nf.data_agendamento_entrega).toLocaleDateString('pt-BR');
+      }
+      if (nf.observacoes_solicitacao) {
+        observacoes = nf.observacoes_solicitacao;
+      }
+      if (nf.documentos_anexos?.length) {
+        documentos = `${nf.documentos_anexos.length} arquivo(s)`;
+      }
+
       html += `
         <tr>
           <td>${nf.numero_nf}</td>
@@ -138,6 +156,9 @@ export function ClienteSolicitacaoCarregamento() {
           <td>${nf.localizacao}</td>
           <td>${new Date(nf.data_recebimento).toLocaleDateString('pt-BR')}</td>
           <td>${nf.status}</td>
+          <td style="color: ${agendamento !== 'Não informado' ? '#059669' : '#6b7280'}; font-weight: ${agendamento !== 'Não informado' ? 'bold' : 'normal'}">${agendamento}</td>
+          <td style="max-width: 200px; word-wrap: break-word;">${observacoes}</td>
+          <td style="color: ${documentos !== 'Nenhum' ? '#059669' : '#6b7280'}; font-weight: ${documentos !== 'Nenhum' ? 'bold' : 'normal'}">${documentos}</td>
         </tr>
       `;
     });
@@ -166,23 +187,33 @@ export function ClienteSolicitacaoCarregamento() {
   const handleExportar = () => {
     const headers = [
       'NF', 'Pedido', 'Produto', 'Fornecedor', 'Quantidade', 
-      'Peso (kg)', 'Volume (m³)', 'Localização', 'Data Recebimento', 'Status'
+      'Peso (kg)', 'Volume (m³)', 'Localização', 'Data Recebimento', 'Status',
+      'Agendamento', 'Observações', 'Documentos'
     ];
     
     const csvContent = [
       headers.join(','),
-      ...filteredNfs.map(nf => [
-        nf.numero_nf,
-        nf.numero_pedido,
-        `"${nf.produto}"`,
-        `"${nf.fornecedor}"`,
-        nf.quantidade,
-        nf.peso,
-        nf.volume,
-        `"${nf.localizacao}"`,
-        new Date(nf.data_recebimento).toLocaleDateString('pt-BR'),
-        nf.status
-      ].join(','))
+      ...filteredNfs.map(nf => {
+        const agendamento = nf.data_agendamento_entrega ? new Date(nf.data_agendamento_entrega).toLocaleDateString('pt-BR') : 'Não informado';
+        const observacoes = nf.observacoes_solicitacao || 'Nenhuma';
+        const documentos = nf.documentos_anexos?.length ? `${nf.documentos_anexos.length} arquivo(s)` : 'Nenhum';
+        
+        return [
+          nf.numero_nf,
+          nf.numero_pedido,
+          `"${nf.produto}"`,
+          `"${nf.fornecedor}"`,
+          nf.quantidade,
+          nf.peso,
+          nf.volume,
+          `"${nf.localizacao}"`,
+          new Date(nf.data_recebimento).toLocaleDateString('pt-BR'),
+          nf.status,
+          `"${agendamento}"`,
+          `"${observacoes}"`,
+          `"${documentos}"`
+        ].join(',');
+      })
     ].join('\n');
 
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });

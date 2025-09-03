@@ -221,9 +221,21 @@ export function PedidosConfirmadosTable() {
     `;
 
     filteredNfs.forEach(nf => {
-      const agendamento = nf.data_agendamento_entrega ? new Date(nf.data_agendamento_entrega).toLocaleDateString('pt-BR') : 'Não informado';
-      const observacoes = nf.observacoes_solicitacao || 'Nenhuma';
-      const documentos = nf.documentos_anexos?.length ? `${nf.documentos_anexos.length} arquivo(s)` : 'Nenhum';
+      // Melhorada: buscar dados de agendamento da solicitação OU da NF
+      let agendamento = 'Não informado';
+      let observacoes = 'Nenhuma';
+      let documentos = 'Nenhum';
+
+      // Primeiro, verificar se há dados diretamente na NF (dados herdados da solicitação)
+      if (nf.data_agendamento_entrega) {
+        agendamento = new Date(nf.data_agendamento_entrega).toLocaleDateString('pt-BR');
+      }
+      if (nf.observacoes_solicitacao) {
+        observacoes = nf.observacoes_solicitacao;
+      }
+      if (nf.documentos_anexos?.length) {
+        documentos = `${nf.documentos_anexos.length} arquivo(s)`;
+      }
       
       html += `
         <tr>
@@ -237,9 +249,9 @@ export function PedidosConfirmadosTable() {
           <td>${nf.localizacao}</td>
           <td>${new Date(nf.data_recebimento).toLocaleDateString('pt-BR')}</td>
           <td>${nf.status_separacao || 'Pendente'}</td>
-          <td>${agendamento}</td>
-          <td>${observacoes}</td>
-          <td>${documentos}</td>
+          <td style="font-weight: ${agendamento !== 'Não informado' ? 'bold' : 'normal'}; color: ${agendamento !== 'Não informado' ? '#059669' : '#6b7280'}">${agendamento}</td>
+          <td style="max-width: 200px; word-wrap: break-word;">${observacoes}</td>
+          <td style="font-weight: ${documentos !== 'Nenhum' ? 'bold' : 'normal'}; color: ${documentos !== 'Nenhum' ? '#059669' : '#6b7280'}">${documentos}</td>
         </tr>
       `;
     });
@@ -275,9 +287,21 @@ export function PedidosConfirmadosTable() {
     const csvContent = [
       headers.join(','),
       ...filteredNfs.map(nf => {
-        const agendamento = nf.data_agendamento_entrega ? new Date(nf.data_agendamento_entrega).toLocaleDateString('pt-BR') : 'Não informado';
-        const observacoes = nf.observacoes_solicitacao || 'Nenhuma';
-        const documentos = nf.documentos_anexos?.length ? `${nf.documentos_anexos.length} arquivo(s)` : 'Nenhum';
+        // Melhorada: buscar dados de agendamento da solicitação OU da NF
+        let agendamento = 'Não informado';
+        let observacoes = 'Nenhuma';
+        let documentos = 'Nenhum';
+
+        // Primeiro, verificar se há dados diretamente na NF (dados herdados da solicitação)
+        if (nf.data_agendamento_entrega) {
+          agendamento = new Date(nf.data_agendamento_entrega).toLocaleDateString('pt-BR');
+        }
+        if (nf.observacoes_solicitacao) {
+          observacoes = nf.observacoes_solicitacao;
+        }
+        if (nf.documentos_anexos?.length) {
+          documentos = `${nf.documentos_anexos.length} arquivo(s)`;
+        }
         
         return [
           nf.numero_nf,
