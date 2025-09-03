@@ -470,6 +470,7 @@ export function PedidosConfirmadosTable() {
                         <AnexarDocumentosDialog 
                           nf={nf}
                           onDocumentosAnexados={async () => {
+                            console.log('🚨🚨🚨 CALLBACK EXECUTADO - INÍCIO 🚨🚨🚨');
                             console.log('🔄 CALLBACK onDocumentosAnexados disparado para NF:', nf.id);
                             console.log('🔄 Estado atual da NF antes do refetch:', {
                               nfId: nf.id,
