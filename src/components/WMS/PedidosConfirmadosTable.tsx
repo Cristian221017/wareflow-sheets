@@ -30,7 +30,7 @@ export function PedidosConfirmadosTable() {
   // Estados para dialog
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedNF, setSelectedNF] = useState<NotaFiscal | null>(null);
-  const { data: nfs, isLoading, isError } = isCliente ? useNFsCliente("CONFIRMADA") : useNFs("CONFIRMADA");
+  const { data: nfs, isLoading, isError, refetch } = isCliente ? useNFsCliente("CONFIRMADA") : useNFs("CONFIRMADA");
 
   // Estados para filtros
   const [filters, setFilters] = useState<NFFilterState>({
@@ -427,14 +427,18 @@ export function PedidosConfirmadosTable() {
                     {/* Ações da Transportadora */}
                     {isTransportadora && (
                       <div className="flex flex-col gap-2">
-                        {/* Status de Separação com edição */}
-                        <StatusSeparacaoManager
-                          nfId={nf.id}
-                          statusAtual={nf.status_separacao || 'pendente'}
-                          numeroNf={nf.numero_nf}
-                          canEdit={true}
-                          onStatusChanged={() => invalidateAll()}
-                        />
+                         {/* Status de Separação com edição */}
+                         <StatusSeparacaoManager
+                           nfId={nf.id}
+                           statusAtual={nf.status_separacao || 'pendente'}
+                           numeroNf={nf.numero_nf}
+                           canEdit={true}
+                            onStatusChanged={async () => {
+                              // Invalidação + refetch forçado para sincronização imediata
+                              invalidateAll();
+                              await refetch();
+                            }}
+                         />
                         
                         {/* Anexar Documentos */}
                         <AnexarDocumentosDialog 
