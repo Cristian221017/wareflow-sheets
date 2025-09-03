@@ -75,13 +75,34 @@ export function DocumentosAnexadosViewer({
       });
       
       // Tentar baixar do storage
-      const { data, error } = await supabase.storage
+      let { data, error } = await supabase.storage
         .from(bucketName)
         .download(normalized.path);
 
+      // Se falhou, tentar no outro bucket
+      if (error) {
+        const alternateBucket = bucketName === 'documents' ? 'solicitacoes-anexos' : 'documents';
+        log('⚠️ Tentando bucket alternativo:', { 
+          bucket_original: bucketName, 
+          bucket_alternativo: alternateBucket,
+          erro_original: error.message 
+        });
+        
+        const altResult = await supabase.storage
+          .from(alternateBucket)
+          .download(normalized.path);
+        
+        data = altResult.data;
+        error = altResult.error;
+      }
+
       if (error) {
         logError('Erro no download do storage:', error);
-        throw new Error(`Erro ao baixar arquivo: ${error.message}`);
+        throw new Error(`Erro ao baixar arquivo: ${error.message || 'Erro desconhecido'}`);
+      }
+
+      if (!data) {
+        throw new Error('Nenhum dado retornado do storage');
       }
 
       // Criar URL para download
@@ -98,7 +119,7 @@ export function DocumentosAnexadosViewer({
         arquivo: normalized.name, 
         nf: nfNumero,
         tamanho: normalized.size,
-        bucket: bucketName
+        bucket: data ? bucketName : 'alternate'
       });
 
       toast({
