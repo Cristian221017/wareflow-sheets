@@ -46,6 +46,17 @@ export function useNFsCliente(status?: NFStatus) {
       const { data, error } = await query;
       if (error) throw error;
       
+      console.log('🔍 useNFsCliente - Dados brutos da query:', {
+        status,
+        totalNFs: data?.length || 0,
+        primeirasCincoNFs: data?.slice(0, 5).map((nf: any) => ({
+          numero_nf: nf.numero_nf,
+          documentos_anexos: nf.documentos_anexos,
+          quantidade_documentos: nf.documentos_anexos?.length || 0,
+          solicitacoes: nf.solicitacoes_carregamento?.length || 0
+        }))
+      });
+      
       // Transformar dados para incluir informações das solicitações na NF
       return data?.map((item: any) => {
         const nf = { ...item };
