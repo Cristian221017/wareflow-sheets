@@ -1,3 +1,4 @@
+// Force cache refresh: 2025-01-03
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Clock, TrendingUp, TrendingDown, Activity, Target } from 'lucide-react';
