@@ -41,6 +41,16 @@ export function ClienteDashboard() {
   const totalPeso = 0; // Poderia calcular se necessário
   const totalVolume = 0; // Poderia calcular se necessário
 
+  // Debug do cálculo do total
+  console.log('🔢 Cálculo total NFs:', {
+    nfsArmazenadas: stats.nfsArmazenadas,
+    solicitacoesPendentes: stats.solicitacoesPendentes,
+    nfsConfirmadas: stats.nfsConfirmadas,
+    nfsEmViagem: stats.nfsEmViagem || 0,
+    nfsEntregues: stats.nfsEntregues || 0,
+    total: totalNFs
+  });
+
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">

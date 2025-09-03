@@ -34,7 +34,7 @@ export function useDashboard() {
       }
       
       const stats = data[0] as DashboardRPCResult;
-      // Dashboard stats recebidos
+      console.log('📊 Dashboard stats raw from RPC:', stats);
       
       const dashboardStats: DashboardStats = {
         userType: stats.user_type as 'transportadora' | 'cliente',
@@ -51,7 +51,7 @@ export function useDashboard() {
         valorVencido: stats.valor_vencido ? Number(stats.valor_vencido) : undefined,
       };
       
-      // Dashboard stats processados
+      console.log('📊 Dashboard stats processed:', dashboardStats);
       return dashboardStats;
     },
     staleTime: 10000, // Reduzir para 10 segundos para sincronização mais rápida
