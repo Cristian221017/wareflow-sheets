@@ -47,83 +47,38 @@ export default function Index() {
           </p>
         </div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Truck className="h-5 w-5" />
-                Transportadoras
-              </CardTitle>
-              <CardDescription>
-                Gestão completa de frota e operações de transporte
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button 
-                className="w-full" 
-                onClick={() => navigate('/system-admin')}
-              >
-                Portal Transportadora
-              </Button>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Package className="h-5 w-5" />
-                Clientes
-              </CardTitle>
-              <CardDescription>
-                Acompanhamento de pedidos e solicitações de carregamento
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button 
-                className="w-full" 
-                onClick={() => navigate('/system-admin')}
-              >
-                Portal Cliente
-              </Button>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <ShieldCheck className="h-5 w-5" />
-                Administração
-              </CardTitle>
-              <CardDescription>
-                Gestão de usuários e configurações do sistema
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button 
-                className="w-full" 
-                onClick={() => navigate('/system-admin')}
-              >
-                Portal Admin
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
-
-        <div className="text-center">
-          <Card className="max-w-md mx-auto">
-            <CardHeader>
-              <CardTitle className="flex items-center justify-center gap-2">
-                <Users className="h-5 w-5" />
+        <div className="flex justify-center">
+          <Card className="max-w-lg mx-auto">
+            <CardHeader className="text-center">
+              <CardTitle className="flex items-center justify-center gap-2 text-2xl">
+                <ShieldCheck className="h-6 w-6" />
                 Acesso ao Sistema
               </CardTitle>
+              <CardDescription className="text-base">
+                Portal unificado para transportadoras, clientes e administração
+              </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-2">
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-3 gap-4 mb-6 text-center">
+                <div className="flex flex-col items-center gap-2">
+                  <Truck className="h-8 w-8 text-muted-foreground" />
+                  <span className="text-sm text-muted-foreground">Transportadoras</span>
+                </div>
+                <div className="flex flex-col items-center gap-2">
+                  <Package className="h-8 w-8 text-muted-foreground" />
+                  <span className="text-sm text-muted-foreground">Clientes</span>
+                </div>
+                <div className="flex flex-col items-center gap-2">
+                  <Users className="h-8 w-8 text-muted-foreground" />
+                  <span className="text-sm text-muted-foreground">Administração</span>
+                </div>
+              </div>
               <Button 
                 className="w-full" 
                 size="lg"
                 onClick={() => navigate('/system-admin')}
               >
-                Fazer Login
+                Acessar Sistema
               </Button>
             </CardContent>
           </Card>
