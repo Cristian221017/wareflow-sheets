@@ -443,7 +443,11 @@ export function PedidosConfirmadosTable() {
                         {/* Anexar Documentos */}
                         <AnexarDocumentosDialog 
                           nf={nf}
-                          onDocumentosAnexados={() => invalidateAll()}
+                          onDocumentosAnexados={async () => {
+                            // Invalidação + refetch forçado para sincronização imediata
+                            invalidateAll();
+                            await refetch();
+                          }}
                         />
                         
                         {/* Botão Confirmar Embarque apenas se ainda não foi embarcado */}
