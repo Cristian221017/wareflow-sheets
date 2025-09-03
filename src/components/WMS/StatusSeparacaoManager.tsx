@@ -94,9 +94,8 @@ export function StatusSeparacaoManager({
       const { error } = await supabase
         .from('notas_fiscais')
         .update({ 
-          status_separacao: novoStatus,
-          updated_at: new Date().toISOString()
-        })
+          status_separacao: novoStatus
+        } as any)
         .eq('id', nfId);
 
       if (error) {
