@@ -54,7 +54,10 @@ export function useNFsCliente(status?: NFStatus) {
         if (solicitacao) {
           nf.data_agendamento_entrega = solicitacao.data_agendamento;
           nf.observacoes_solicitacao = solicitacao.observacoes;
-          nf.documentos_anexos = solicitacao.anexos;
+          // Combinar documentos da solicitação com documentos anexados diretamente à NF
+          const documentosSolicitacao = solicitacao.anexos || [];
+          const documentosNF = nf.documentos_anexos || [];
+          nf.documentos_anexos = [...documentosNF, ...documentosSolicitacao];
           nf.requested_at = solicitacao.requested_at;
           nf.approved_at = solicitacao.approved_at;
         }
@@ -68,6 +71,7 @@ export function useNFsCliente(status?: NFStatus) {
         };
       }) || [];
     },
+    staleTime: 0, // Always consider data stale for immediate refetch after invalidation
     enabled: !!(user && user.id), // Só executar se usuário autenticado
   });
 }
