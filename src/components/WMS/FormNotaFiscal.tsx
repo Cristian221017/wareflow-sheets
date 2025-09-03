@@ -7,11 +7,11 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { useWMS } from '@/contexts/WMSContext';
-import { useAuth } from '@/contexts/AuthContext';
+import { useClientes } from '@/hooks/useClientes';
 import { NotaFiscal } from '@/types/wms';
 import { log, warn, error as logError, auditError } from '@/utils/logger';
 import { toast } from 'sonner';
-import { Package } from 'lucide-react';
+import { Package, AlertCircle } from 'lucide-react';
 
 const formSchema = z.object({
   numeroNF: z.string().min(1, 'Número da NF é obrigatório'),
@@ -33,7 +33,7 @@ type FormData = z.infer<typeof formSchema>;
 
 export function FormNotaFiscal() {
   const { addNotaFiscal } = useWMS();
-  const { clientes } = useAuth();
+  const { clientes, loading: clientesLoading, error: clientesError } = useClientes();
   
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -132,6 +132,24 @@ export function FormNotaFiscal() {
         </CardDescription>
       </CardHeader>
       <CardContent>
+        {/* Show error if clientes failed to load */}
+        {clientesError && (
+          <div className="mb-4 p-3 bg-destructive/10 text-destructive rounded-md flex items-center gap-2">
+            <AlertCircle className="h-4 w-4" />
+            <span className="text-sm">{clientesError}</span>
+          </div>
+        )}
+        
+        {/* Show warning if no clientes available */}
+        {!clientesLoading && !clientesError && clientes.length === 0 && (
+          <div className="mb-4 p-3 bg-yellow-50 text-yellow-800 rounded-md flex items-center gap-2">
+            <AlertCircle className="h-4 w-4" />
+            <span className="text-sm">
+              Nenhum cliente encontrado. Cadastre clientes antes de criar notas fiscais.
+            </span>
+          </div>
+        )}
+        
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -232,11 +250,21 @@ export function FormNotaFiscal() {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {clientes.map((cliente) => (
-                          <SelectItem key={cliente.id} value={cliente.id}>
-                            {cliente.name} - {cliente.cnpj}
+                        {clientesLoading ? (
+                          <SelectItem value="loading" disabled>
+                            Carregando clientes...
                           </SelectItem>
-                        ))}
+                        ) : clientes.length === 0 ? (
+                          <SelectItem value="empty" disabled>
+                            Nenhum cliente disponível
+                          </SelectItem>
+                        ) : (
+                          clientes.map((cliente) => (
+                            <SelectItem key={cliente.id} value={cliente.id}>
+                              {cliente.name} - {cliente.cnpj}
+                            </SelectItem>
+                          ))
+                        )}
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -346,8 +374,12 @@ export function FormNotaFiscal() {
             </div>
 
             <div className="flex justify-end">
-              <Button type="submit" className="w-full sm:w-auto bg-success text-success-foreground hover:bg-success/80">
-                Cadastrar Nota Fiscal
+              <Button 
+                type="submit" 
+                className="w-full sm:w-auto bg-success text-success-foreground hover:bg-success/80"
+                disabled={clientesLoading || clientes.length === 0}
+              >
+                {clientesLoading ? 'Carregando...' : 'Cadastrar Nota Fiscal'}
               </Button>
             </div>
           </form>

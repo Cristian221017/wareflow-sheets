@@ -1255,6 +1255,17 @@ export type Database = {
         Args: { _user_id: string }
         Returns: string
       }
+      get_clientes_for_user: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          cnpj: string
+          email: string
+          id: string
+          name: string
+          razao_social: string
+          transportadora_id: string
+        }[]
+      }
       get_current_user_dashboard: {
         Args: Record<PropertyKey, never>
         Returns: {
