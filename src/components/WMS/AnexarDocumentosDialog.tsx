@@ -54,21 +54,40 @@ export function AnexarDocumentosDialog({ nf, onDocumentosAnexados }: AnexarDocum
       return;
     }
 
+    console.log('🔄 INICIANDO ANEXO DE DOCUMENTOS:', {
+      nfId: nf.id,
+      numeroNf: nf.numero_nf,
+      quantidadeArquivos: arquivos.length,
+      arquivosNomes: arquivos.map(a => a.name),
+      documentosExistentes: nf.documentos_anexos?.length || 0
+    });
+
     setIsUploading(true);
 
     try {
       // Upload dos arquivos para o storage
-      const uploadPromises = arquivos.map(async (arquivo) => {
+      const uploadPromises = arquivos.map(async (arquivo, index) => {
         const fileName = `nf_${nf.id}_${Date.now()}_${arquivo.name}`;
         const filePath = `${nf.cliente_id}/${nf.id}/${fileName}`;
+
+        console.log(`📤 Fazendo upload ${index + 1}/${arquivos.length}:`, {
+          arquivoOriginal: arquivo.name,
+          nomeNoStorage: fileName,
+          pathCompleto: filePath,
+          tamanho: arquivo.size,
+          tipo: arquivo.type
+        });
 
         const { error: uploadError } = await supabase.storage
           .from('solicitacoes-anexos')
           .upload(filePath, arquivo);
 
         if (uploadError) {
+          console.error(`❌ Erro no upload de ${arquivo.name}:`, uploadError);
           throw new Error(`Erro no upload de ${arquivo.name}: ${uploadError.message}`);
         }
+
+        console.log(`✅ Upload ${index + 1} concluído com sucesso:`, fileName);
 
       return {
         name: arquivo.name,
@@ -83,10 +102,19 @@ export function AnexarDocumentosDialog({ nf, onDocumentosAnexados }: AnexarDocum
       });
 
       const documentosUpload = await Promise.all(uploadPromises);
+      console.log('📦 Todos os uploads concluídos:', documentosUpload);
 
       // Atualizar a NF com os novos documentos
       const documentosExistentes = nf.documentos_anexos || [];
       const novosDocumentos = [...documentosExistentes, ...documentosUpload];
+
+      console.log('🔄 Atualizando NF com documentos:', {
+        nfId: nf.id,
+        documentosAnteriores: documentosExistentes.length,
+        documentosNovos: documentosUpload.length,
+        totalDocumentos: novosDocumentos.length,
+        estruturaCompleta: novosDocumentos
+      });
 
       const { error: updateError } = await supabase
         .from('notas_fiscais')
@@ -97,8 +125,11 @@ export function AnexarDocumentosDialog({ nf, onDocumentosAnexados }: AnexarDocum
         .eq('id', nf.id);
 
       if (updateError) {
+        console.error('❌ Erro ao salvar documentos na NF:', updateError);
         throw new Error(`Erro ao salvar documentos na NF: ${updateError.message}`);
       }
+
+      console.log('✅ NF atualizada com sucesso na base de dados');
 
       // Log do evento com dados detalhados
       log('📎 Documentos anexados à NF:', { 
@@ -121,12 +152,15 @@ export function AnexarDocumentosDialog({ nf, onDocumentosAnexados }: AnexarDocum
       setObservacoes('');
       setIsOpen(false);
       
+      console.log('🔄 Chamando callback onDocumentosAnexados...');
+      
       // Callback para atualizar lista
       if (onDocumentosAnexados) {
         onDocumentosAnexados();
       }
 
     } catch (error) {
+      console.error('❌ ERRO GERAL no processo de anexo:', error);
       logError('Erro ao anexar documentos:', error);
       toast({
         title: "Erro ao anexar documentos",
@@ -135,6 +169,7 @@ export function AnexarDocumentosDialog({ nf, onDocumentosAnexados }: AnexarDocum
       });
     } finally {
       setIsUploading(false);
+      console.log('🏁 Processo de anexo finalizado');
     }
   };
 

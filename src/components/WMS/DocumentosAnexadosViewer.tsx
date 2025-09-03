@@ -32,6 +32,14 @@ export function DocumentosAnexadosViewer({
 }: DocumentosAnexadosViewerProps) {
   const [downloadingFiles, setDownloadingFiles] = useState<Set<string>>(new Set());
 
+  console.log('🔍 DocumentosAnexadosViewer renderizando:', {
+    nfNumero,
+    quantidadeDocumentos: documentos?.length || 0,
+    documentos: documentos,
+    showTitle,
+    compact
+  });
+
   // Normalizar documento para um formato consistente
   const normalizeDocument = (doc: DocumentoAnexado) => ({
     name: doc.name || doc.nome || 'Documento',

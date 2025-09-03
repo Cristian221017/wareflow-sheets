@@ -442,25 +442,49 @@ export function PedidosConfirmadosTable() {
                          />
                         
                         {/* Documentos anexados (se houver) */}
-                        {nf.documentos_anexos && nf.documentos_anexos.length > 0 && (
-                          <DocumentosAnexadosViewer 
-                            documentos={nf.documentos_anexos}
-                            nfNumero={nf.numero_nf}
-                            showTitle={true}
-                            compact={false}
-                          />
-                        )}
+                        {(() => {
+                          console.log('🔍 PedidosConfirmadosTable - Verificando documentos para NF:', {
+                            nfId: nf.id,
+                            numeroNf: nf.numero_nf,
+                            documentos_anexos: nf.documentos_anexos,
+                            temDocumentos: !!(nf.documentos_anexos && nf.documentos_anexos.length > 0),
+                            quantidadeDocumentos: nf.documentos_anexos?.length || 0
+                          });
+                          
+                          return nf.documentos_anexos && nf.documentos_anexos.length > 0 ? (
+                            <DocumentosAnexadosViewer 
+                              documentos={nf.documentos_anexos}
+                              nfNumero={nf.numero_nf}
+                              showTitle={true}
+                              compact={false}
+                            />
+                          ) : (
+                            <div className="text-xs text-muted-foreground">
+                              Nenhum documento anexado
+                            </div>
+                          );
+                        })()}
                         
                         {/* Anexar Documentos */}
                         <AnexarDocumentosDialog 
                           nf={nf}
                           onDocumentosAnexados={async () => {
+                            console.log('🔄 CALLBACK onDocumentosAnexados disparado para NF:', nf.id);
+                            console.log('🔄 Estado atual da NF antes do refetch:', {
+                              nfId: nf.id,
+                              documentosAtuais: nf.documentos_anexos?.length || 0
+                            });
+                            
                             // Forçar reload completo dos dados
                             console.log('🔄 Documento anexado, recarregando dados da NF:', nf.id);
                             invalidateAll();
                             await refetch();
+                            
                             // Pequeno delay para garantir sincronização
-                            setTimeout(() => refetch(), 100);
+                            setTimeout(async () => {
+                              console.log('🔄 Segundo refetch após delay...');
+                              await refetch();
+                            }, 100);
                           }}
                         />
                         
