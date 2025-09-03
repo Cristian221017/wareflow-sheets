@@ -8,19 +8,6 @@ export function ClienteDashboard() {
   const { data: stats, isLoading, error } = useDashboard();
   const { user } = useAuth();
 
-  // Debug apenas informações essenciais
-  log('🔍 ClienteDashboard:', {
-    user: user?.email,
-    hasStats: !!stats,
-    stats: stats ? {
-      nfsArmazenadas: stats.nfsArmazenadas,
-      nfsSolicitadas: stats.solicitacoesPendentes,
-      nfsConfirmadas: stats.nfsConfirmadas,
-      nfsEmViagem: stats.nfsEmViagem,
-      nfsEntregues: stats.nfsEntregues
-    } : null
-  });
-
   if (isLoading || !stats) {
     return (
       <div className="space-y-6">
@@ -37,22 +24,10 @@ export function ClienteDashboard() {
   }
 
   // Cálculos baseados nos dados do dashboard
-  // Evitar dupla contagem: NFs entregues ou em viagem não devem ser somadas com confirmadas
   const totalNFs = stats.nfsArmazenadas + stats.solicitacoesPendentes + 
     Math.max(stats.nfsConfirmadas, (stats.nfsEmViagem || 0) + (stats.nfsEntregues || 0));
-  const totalPeso = 0; // Poderia calcular se necessário
-  const totalVolume = 0; // Poderia calcular se necessário
-
-  // Debug do cálculo do total
-  console.log('🔢 Cálculo total NFs corrigido:', {
-    nfsArmazenadas: stats.nfsArmazenadas,
-    solicitacoesPendentes: stats.solicitacoesPendentes,
-    nfsConfirmadas: stats.nfsConfirmadas,
-    nfsEmViagem: stats.nfsEmViagem || 0,
-    nfsEntregues: stats.nfsEntregues || 0,
-    maxConfirmadasOuProcessadas: Math.max(stats.nfsConfirmadas, (stats.nfsEmViagem || 0) + (stats.nfsEntregues || 0)),
-    total: totalNFs
-  });
+  const totalPeso = 0;
+  const totalVolume = 0;
 
   return (
     <div className="space-y-6">

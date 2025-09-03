@@ -27,24 +27,22 @@ export function useOptimizedDashboard() {
 
   // Memoizar cálculos pesados
   const dashboardStats = useMemo((): OptimizedDashboardStats => {
-    log('🔄 Recalculando dashboard stats otimizado');
-
     // Cálculos básicos
     const nfsArmazenadas = armazenadas.length;
     const nfsSolicitadas = solicitadas.length;
     const nfsConfirmadas = confirmadas.length;
     const totalNFs = nfsArmazenadas;
 
-    // Cálculos de peso e volume - apenas das armazenadas (evita cálculo desnecessário)
-    const totalPeso = armazenadas.reduce((sum, nf) => {
+    // Cálculos de peso e volume otimizados
+    let totalPeso = 0;
+    let totalVolume = 0;
+    
+    for (const nf of armazenadas) {
       const peso = Number(nf.peso);
-      return sum + (isNaN(peso) ? 0 : peso);
-    }, 0);
-
-    const totalVolume = armazenadas.reduce((sum, nf) => {
       const volume = Number(nf.volume);
-      return sum + (isNaN(volume) ? 0 : volume);
-    }, 0);
+      if (!isNaN(peso)) totalPeso += peso;
+      if (!isNaN(volume)) totalVolume += volume;
+    }
 
     // Distribuição de status
     const statusDistribution = {
@@ -53,7 +51,7 @@ export function useOptimizedDashboard() {
       CONFIRMADA: nfsConfirmadas
     };
 
-    // Atividade recente - combinar todas as NFs e pegar as mais recentes
+    // Atividade recente otimizada
     const allNFs = [...armazenadas, ...solicitadas, ...confirmadas];
     const recentActivity = allNFs
       .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
@@ -76,14 +74,7 @@ export function useOptimizedDashboard() {
       statusDistribution,
       recentActivity
     };
-  }, [armazenadas, solicitadas, confirmadas]); // Dependências específicas
-
-  // Debug com user info
-  log('🔍 OptimizedDashboard Debug:', {
-    user: user?.email,
-    stats: dashboardStats,
-    loadingState: { isLoading, isError }
-  });
+  }, [armazenadas, solicitadas, confirmadas]);
 
   return {
     ...dashboardStats,

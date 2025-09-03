@@ -24,18 +24,13 @@ export function useNFsCliente(status?: NFStatus) {
   return useQuery({
     queryKey: ['nfs', 'cliente', user?.id ?? 'anon', status ?? 'todas'],
     queryFn: async () => {
+      // Query otimizada - buscar apenas campos essenciais
       let query = supabase
         .from('notas_fiscais')
         .select(`
-          *,
-          solicitacoes_carregamento(
-            data_agendamento,
-            observacoes,
-            anexos,
-            status,
-            requested_at,
-            approved_at
-          )
+          id, numero_nf, produto, status, status_separacao, 
+          peso, volume, localizacao, created_at, updated_at,
+          cliente_id, transportadora_id
         `)
         .order('created_at', { ascending: false });
       
@@ -46,29 +41,15 @@ export function useNFsCliente(status?: NFStatus) {
       const { data, error } = await query;
       if (error) throw error;
       
-      // Transformar dados para incluir informações das solicitações na NF
-      return data?.map((item: any) => {
-        const nf = { ...item };
-        const solicitacao = item.solicitacoes_carregamento?.[0];
-        
-        if (solicitacao) {
-          nf.data_agendamento_entrega = solicitacao.data_agendamento;
-          nf.observacoes_solicitacao = solicitacao.observacoes;
-          nf.documentos_anexos = solicitacao.anexos;
-          nf.requested_at = solicitacao.requested_at;
-          nf.approved_at = solicitacao.approved_at;
-        }
-        
-        // Remover array de solicitações do objeto final
-        delete nf.solicitacoes_carregamento;
-        
-        return {
-          ...nf,
-          status_separacao: nf.status_separacao || 'pendente'
-        };
-      }) || [];
+      return data?.map((nf: any) => ({
+        ...nf,
+        status_separacao: nf.status_separacao || 'pendente'
+      })) || [];
     },
-    enabled: !!(user && user.id), // Só executar se usuário autenticado
+    enabled: !!(user && user.id),
+    staleTime: 2 * 60 * 1000, // 2 minutos
+    refetchOnWindowFocus: false,
+    refetchInterval: false,
   });
 }
 
