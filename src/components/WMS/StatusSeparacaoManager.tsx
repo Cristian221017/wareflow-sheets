@@ -76,62 +76,70 @@ export function StatusSeparacaoManager({
 
   const handleUpdateStatus = async () => {
     if (novoStatus === statusAtual) {
-      setIsOpen(false);
+      toast({
+        title: "Nenhuma alteração",
+        description: "O status selecionado é o mesmo atual.",
+        variant: "default"
+      });
       return;
     }
 
     setIsUpdating(true);
     
     try {
-      log('🔄 Atualizando status de separação:', {
-        nfId,
-        numeroNf,
-        statusAtual,
-        novoStatus,
-        observacoes
-      });
+      log('🔄 Atualizando status de separação:', { nfId, statusAtual, novoStatus, observacoes });
 
-      // UPDATE direto na tabela - abordagem mais simples e confiável
-      const { error } = await supabase
-        .from('notas_fiscais')
-        .update({ 
-          status_separacao: novoStatus
-        } as any)
-        .eq('id', nfId);
+      const { error } = await (supabase.rpc as any)('nf_update_status_separacao', {
+        p_nf_id: nfId,
+        p_status_separacao: novoStatus,
+        p_observacoes: observacoes || null
+      });
 
       if (error) {
         logError('Erro ao atualizar status de separação:', error);
-        throw error;
+        toast({
+          title: "Erro ao atualizar status",
+          description: error.message || "Erro interno do servidor",
+          variant: "destructive"
+        });
+        return;
       }
 
       log('✅ Status de separação atualizado com sucesso');
-
+      
+      // Usar invalidação otimizada para responsividade instantânea
+      if (onStatusChanged) {
+        onStatusChanged();
+      }
+      
+      // Forçar re-render imediato com estado local
+      setTimeout(() => {
+        // Aguardar um pouco para que o realtime atualize
+        onStatusChanged?.();
+      }, 100);
+      
       toast({
         title: "Status atualizado",
-        description: `Status alterado para: ${statusConfig[novoStatus].label}`,
+        description: `Status da NF ${numeroNf} alterado para: ${statusConfig[novoStatus].label}`,
+        variant: "default"
       });
 
       setIsOpen(false);
       setObservacoes('');
-      
-      // Chamar callback se fornecido para atualizar a tela
-      if (onStatusChanged) {
-        onStatusChanged();
-      }
 
-    } catch (error) {
-      logError('Erro ao atualizar status de separação:', error);
+    } catch (err) {
+      logError('Erro inesperado ao atualizar status:', err);
       toast({
-        title: "Erro ao atualizar status",
-        description: error instanceof Error ? error.message : "Erro interno do servidor",
-        variant: "destructive",
+        title: "Erro inesperado",
+        description: "Não foi possível atualizar o status. Tente novamente.",
+        variant: "destructive"
       });
     } finally {
       setIsUpdating(false);
     }
   };
 
-  // Se não pode editar, mostra apenas o badge
+  // Se não pode editar, mostra apenas o badge (removido lock no separacao_concluida)
   if (!canEdit) {
     return (
       <div className="flex items-center gap-2">

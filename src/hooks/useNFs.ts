@@ -16,7 +16,7 @@ export function useNFs(status: NFStatus) {
   return useQuery({
     queryKey: ['nfs', status, user?.type, scope],
     queryFn: () => fetchNFsByStatus(status),
-    staleTime: 0, // Always consider data stale for immediate refetch after invalidation
+    staleTime: 30000, // 30 segundos
     refetchOnWindowFocus: true,
     enabled: !!user?.id && !!scope, // Só executar se usuário estiver autenticado e com escopo
   });

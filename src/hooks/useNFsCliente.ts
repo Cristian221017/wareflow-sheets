@@ -46,17 +46,6 @@ export function useNFsCliente(status?: NFStatus) {
       const { data, error } = await query;
       if (error) throw error;
       
-      console.log('🔍 useNFsCliente - Dados brutos da query:', {
-        status,
-        totalNFs: data?.length || 0,
-        primeirasCincoNFs: data?.slice(0, 5).map((nf: any) => ({
-          numero_nf: nf.numero_nf,
-          documentos_anexos: nf.documentos_anexos,
-          quantidade_documentos: nf.documentos_anexos?.length || 0,
-          solicitacoes: nf.solicitacoes_carregamento?.length || 0
-        }))
-      });
-      
       // Transformar dados para incluir informações das solicitações na NF
       return data?.map((item: any) => {
         const nf = { ...item };
@@ -65,10 +54,7 @@ export function useNFsCliente(status?: NFStatus) {
         if (solicitacao) {
           nf.data_agendamento_entrega = solicitacao.data_agendamento;
           nf.observacoes_solicitacao = solicitacao.observacoes;
-          // Combinar documentos da solicitação com documentos anexados diretamente à NF
-          const documentosSolicitacao = solicitacao.anexos || [];
-          const documentosNF = nf.documentos_anexos || [];
-          nf.documentos_anexos = [...documentosNF, ...documentosSolicitacao];
+          nf.documentos_anexos = solicitacao.anexos;
           nf.requested_at = solicitacao.requested_at;
           nf.approved_at = solicitacao.approved_at;
         }
@@ -82,7 +68,6 @@ export function useNFsCliente(status?: NFStatus) {
         };
       }) || [];
     },
-    staleTime: 0, // Always consider data stale for immediate refetch after invalidation
     enabled: !!(user && user.id), // Só executar se usuário autenticado
   });
 }

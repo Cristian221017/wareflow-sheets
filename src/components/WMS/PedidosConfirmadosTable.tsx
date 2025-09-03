@@ -7,9 +7,11 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CheckCircle, Printer, Download, Truck, Paperclip } from "lucide-react";
-import { SolicitacoesConfirmadasCard } from './SolicitacoesConfirmadasCard'; 
 import { NFFilters, type NFFilterState } from "@/components/NfLists/NFFilters";
+import { NFCard } from "@/components/NfLists/NFCard";
 import { ConfirmarEventoDialog } from "./ConfirmarEventoDialog";
+import { StatusSeparacaoManager } from "./StatusSeparacaoManager";
+import { AnexarDocumentosDialog } from "./AnexarDocumentosDialog";
 import { useNFEventosMutations } from "@/hooks/useNFEventos";
 import { useInvalidateAll } from "@/hooks/useInvalidateAll";
 import type { NotaFiscal } from "@/types/nf";
@@ -28,7 +30,7 @@ export function PedidosConfirmadosTable() {
   // Estados para dialog
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedNF, setSelectedNF] = useState<NotaFiscal | null>(null);
-  const { data: nfs, isLoading, isError, refetch } = isCliente ? useNFsCliente("CONFIRMADA") : useNFs("CONFIRMADA");
+  const { data: nfs, isLoading, isError } = isCliente ? useNFsCliente("CONFIRMADA") : useNFs("CONFIRMADA");
 
   // Estados para filtros
   const [filters, setFilters] = useState<NFFilterState>({
@@ -411,14 +413,116 @@ export function PedidosConfirmadosTable() {
           {filteredNfs.length > 0 ? (
             <div className="space-y-3">
               {filteredNfs.map((nf) => (
-                <SolicitacoesConfirmadasCard
-                  key={nf.id}
-                  nf={nf}
-                  onRefresh={() => {
-                    invalidateAll();
-                    refetch();
-                  }}
-                />
+                <div key={nf.id} className="space-y-3">
+                  <div className="flex items-start gap-4">
+                    <div className="flex-1">
+                      <NFCard
+                        nf={nf}
+                        showApprovalInfo
+                        showRequestInfo={true} // Mostrar informações de agendamento
+                        showSelection={false} // Confirmadas não precisam de seleção
+                      />
+                    </div>
+                    
+                    {/* Ações da Transportadora */}
+                    {isTransportadora && (
+                      <div className="flex flex-col gap-2">
+                        {/* Status de Separação com edição */}
+                        <StatusSeparacaoManager
+                          nfId={nf.id}
+                          statusAtual={nf.status_separacao || 'pendente'}
+                          numeroNf={nf.numero_nf}
+                          canEdit={true}
+                          onStatusChanged={() => invalidateAll()}
+                        />
+                        
+                        {/* Anexar Documentos */}
+                        <AnexarDocumentosDialog 
+                          nf={nf}
+                          onDocumentosAnexados={() => invalidateAll()}
+                        />
+                        
+                        {/* Botão Confirmar Embarque apenas se ainda não foi embarcado */}
+                        {!(nf as any).data_embarque && (
+                          <Button
+                            onClick={() => handleConfirmarEmbarque(nf)}
+                            variant="outline"
+                            size="sm"
+                            className="min-w-[140px] gap-2"
+                          >
+                            <Truck className="w-4 h-4" />
+                            Confirmar Embarque
+                          </Button>
+                        )}
+                      </div>
+                    )}
+                    
+                    {/* Informações para Cliente */}
+                    {isCliente && (
+                      <div className="flex flex-col gap-2 items-end">
+                        {/* Status de Separação (somente leitura) */}
+                        <StatusSeparacaoManager
+                          nfId={nf.id}
+                          statusAtual={nf.status_separacao || 'pendente'}
+                          numeroNf={nf.numero_nf}
+                          canEdit={false}
+                        />
+                        
+                        {/* Documentos anexados (se houver) */}
+                        {nf.documentos_anexos && nf.documentos_anexos.length > 0 && (
+                          <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                            <Paperclip className="w-4 h-4" />
+                            {nf.documentos_anexos.length} documento(s)
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    
+                    {/* Indicador de embarque confirmado */}
+                    {(nf as any).data_embarque && (
+                      <div className="flex flex-col items-center gap-1 p-2 bg-green-50 rounded-lg border border-green-200">
+                        <Truck className="w-5 h-5 text-green-600" />
+                        <span className="text-xs text-green-700 font-medium">Embarcado</span>
+                        <span className="text-xs text-green-600">
+                          {new Date((nf as any).data_embarque).toLocaleDateString('pt-BR')}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                  
+                  {/* Informações adicionais da solicitação original */}
+                  {(nf.data_agendamento_entrega || nf.observacoes_solicitacao || nf.documentos_anexos?.length > 0) && (
+                    <div className="pl-4 border-l-2 border-primary/20 bg-muted/30 rounded-r p-3">
+                      <h4 className="text-sm font-medium text-primary mb-2">Informações da Solicitação Original:</h4>
+                      
+                      {nf.data_agendamento_entrega && (
+                        <p className="text-sm text-muted-foreground mb-1">
+                          <span className="font-medium">Data de Agendamento:</span>{' '}
+                          {new Date(nf.data_agendamento_entrega).toLocaleDateString('pt-BR')}
+                        </p>
+                      )}
+                      
+                      {nf.observacoes_solicitacao && (
+                        <p className="text-sm text-muted-foreground mb-1">
+                          <span className="font-medium">Observações:</span> {nf.observacoes_solicitacao}
+                        </p>
+                      )}
+                      
+                      {nf.documentos_anexos && Array.isArray(nf.documentos_anexos) && nf.documentos_anexos.length > 0 && (
+                        <div className="text-sm text-muted-foreground">
+                          <span className="font-medium">Documentos anexados ({nf.documentos_anexos.length}):</span>
+                          <ul className="mt-1 ml-4 list-disc">
+                            {nf.documentos_anexos.map((doc: any, docIndex: number) => (
+                              <li key={`${doc.nome}-${docIndex}`} className="text-xs">
+                                {doc.nome} ({((doc.tamanho || 0) / 1024).toFixed(1)} KB)
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
               ))}
             </div>
           ) : validNfs.length > 0 ? (
