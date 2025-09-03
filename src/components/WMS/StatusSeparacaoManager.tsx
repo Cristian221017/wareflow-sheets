@@ -7,7 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Package, Clock, CheckCircle, AlertTriangle, Pencil, Truck } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from '@/hooks/use-toast';
+import { toast } from '@/components/ui/use-toast';
 import { log, warn, error as logError } from '@/utils/logger';
 
 interface StatusSeparacaoManagerProps {
@@ -91,6 +91,7 @@ export function StatusSeparacaoManager({
         observacoes
       });
 
+      // UPDATE direto na tabela - versão que funcionava
       const { error } = await supabase
         .from('notas_fiscais')
         .update({ 
@@ -99,7 +100,7 @@ export function StatusSeparacaoManager({
         .eq('id', nfId);
 
       if (error) {
-        logError('Erro ao atualizar status de separação:', error);
+        logError('Erro na RPC nf_update_status_separacao:', error);
         throw error;
       }
 
