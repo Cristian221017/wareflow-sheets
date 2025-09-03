@@ -91,7 +91,7 @@ export function StatusSeparacaoManager({
         observacoes
       });
 
-      // UPDATE direto na tabela - versão que funcionava
+      // UPDATE direto na tabela - abordagem mais simples e confiável
       const { error } = await supabase
         .from('notas_fiscais')
         .update({ 
@@ -100,7 +100,7 @@ export function StatusSeparacaoManager({
         .eq('id', nfId);
 
       if (error) {
-        logError('Erro na RPC nf_update_status_separacao:', error);
+        logError('Erro ao atualizar status de separação:', error);
         throw error;
       }
 
@@ -114,7 +114,7 @@ export function StatusSeparacaoManager({
       setIsOpen(false);
       setObservacoes('');
       
-      // Chamar callback se fornecido
+      // Chamar callback se fornecido para atualizar a tela
       if (onStatusChanged) {
         onStatusChanged();
       }
