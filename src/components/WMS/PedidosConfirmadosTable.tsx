@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CheckCircle, Printer, Download, Truck, Paperclip } from "lucide-react";
+import { DocumentosAnexadosViewer } from './DocumentosAnexadosViewer';
 import { NFFilters, type NFFilterState } from "@/components/NfLists/NFFilters";
 import { NFCard } from "@/components/NfLists/NFCard";
 import { ConfirmarEventoDialog } from "./ConfirmarEventoDialog";
@@ -442,10 +443,12 @@ export function PedidosConfirmadosTable() {
                         
                         {/* Documentos anexados (se houver) */}
                         {nf.documentos_anexos && nf.documentos_anexos.length > 0 && (
-                          <div className="flex items-center gap-1 text-sm text-muted-foreground mb-2">
-                            <Paperclip className="w-4 h-4" />
-                            {nf.documentos_anexos.length} documento(s) anexado(s)
-                          </div>
+                          <DocumentosAnexadosViewer 
+                            documentos={nf.documentos_anexos}
+                            nfNumero={nf.numero_nf}
+                            showTitle={true}
+                            compact={false}
+                          />
                         )}
                         
                         {/* Anexar Documentos */}
@@ -528,16 +531,12 @@ export function PedidosConfirmadosTable() {
                       )}
                       
                       {nf.documentos_anexos && Array.isArray(nf.documentos_anexos) && nf.documentos_anexos.length > 0 && (
-                        <div className="text-sm text-muted-foreground">
-                          <span className="font-medium">Documentos anexados ({nf.documentos_anexos.length}):</span>
-                          <ul className="mt-1 ml-4 list-disc">
-                            {nf.documentos_anexos.map((doc: any, docIndex: number) => (
-                              <li key={`${doc.nome}-${docIndex}`} className="text-xs">
-                                {doc.nome} ({((doc.tamanho || 0) / 1024).toFixed(1)} KB)
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
+                        <DocumentosAnexadosViewer 
+                          documentos={nf.documentos_anexos}
+                          nfNumero={nf.numero_nf}
+                          showTitle={true}
+                          compact={false}
+                        />
                       )}
                     </div>
                   )}

@@ -7,6 +7,7 @@ import type { NotaFiscal } from "@/types/nf";
 import { getAnexoUrl } from "@/lib/nfApi";
 import { toast } from "sonner";
 import { error as logError } from "@/utils/logger";
+import { DocumentosAnexadosViewer } from "../WMS/DocumentosAnexadosViewer";
 
 interface NFCardProps {
   nf: NotaFiscal;
@@ -180,68 +181,12 @@ export function NFCard({
             )}
             
             {nf.documentos_anexos && Array.isArray(nf.documentos_anexos) && nf.documentos_anexos.length > 0 && (
-              <div className="text-muted-foreground">
-                <span className="font-medium">Documentos anexados ({nf.documentos_anexos.length}):</span>
-                <div className="mt-2 space-y-1">
-                  {nf.documentos_anexos.map((doc: any, docIndex: number) => (
-                    <div key={`${doc.name || doc.nome}-${docIndex}`} className="flex items-center justify-between text-xs p-2 bg-background rounded border">
-                      <div className="flex items-center gap-2">
-                        <span>{doc.name || doc.nome}</span>
-                        <span className="text-muted-foreground">
-                          ({((doc.size || doc.tamanho || 0) / 1024).toFixed(1)} KB)
-                        </span>
-                      </div>
-                      {(doc.path || doc.caminho) && (
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={async (e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            try {
-                              // Obter a URL do anexo
-                              const url = await getAnexoUrl(doc.path || doc.caminho);
-                              
-                              // Fazer fetch da URL para obter o blob
-                              const response = await fetch(url);
-                              if (!response.ok) {
-                                throw new Error(`Erro HTTP: ${response.status}`);
-                              }
-                              
-                              const blob = await response.blob();
-                              
-                              // Criar URL local do blob
-                              const blobUrl = URL.createObjectURL(blob);
-                              
-                              // Criar link para download forçado
-                              const a = document.createElement('a');
-                              a.style.display = 'none';
-                              a.href = blobUrl;
-                              a.download = doc.name || doc.nome || 'documento';
-                              
-                              document.body.appendChild(a);
-                              a.click();
-                              
-                              // Cleanup
-                              setTimeout(() => {
-                                document.body.removeChild(a);
-                                URL.revokeObjectURL(blobUrl);
-                              }, 100);
-                              
-                              toast.success('Download iniciado!');
-                            } catch (error) {
-                              logError('❌ Erro no download:', error);
-                              toast.error('Erro ao baixar anexo');
-                            }
-                          }}
-                        >
-                          <Download className="w-3 h-3" />
-                        </Button>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
+              <DocumentosAnexadosViewer 
+                documentos={nf.documentos_anexos}
+                nfNumero={nf.numero_nf}
+                showTitle={true}
+                compact={false}
+              />
             )}
           </div>
         )}
