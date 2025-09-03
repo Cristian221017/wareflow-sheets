@@ -55,7 +55,8 @@ export function AnexarDocumentosSolicitacao({ nf, onDocumentosAnexados }: Anexar
       arquivo: file.name,
       tamanho: file.size,
       path: filePath,
-      nf: nf.numero_nf
+      nf: nf.numero_nf,
+      bucket: 'solicitacoes-anexos'
     });
 
     const { data, error } = await supabase.storage
@@ -69,6 +70,11 @@ export function AnexarDocumentosSolicitacao({ nf, onDocumentosAnexados }: Anexar
       logError('Erro no upload:', error);
       throw new Error(`Erro no upload: ${error.message}`);
     }
+
+    log('✅ Upload concluído:', {
+      path: data?.path,
+      fullPath: filePath
+    });
 
     return {
       name: file.name,
@@ -91,7 +97,9 @@ export function AnexarDocumentosSolicitacao({ nf, onDocumentosAnexados }: Anexar
       log('📎 Iniciando anexo de documentos à solicitação:', {
         nfId: nf.id,
         numeroNf: nf.numero_nf,
-        quantidadeArquivos: arquivos.length
+        quantidadeArquivos: arquivos.length,
+        transportadoraId: user?.transportadoraId,
+        bucketExists: true
       });
 
       // Fazer upload de todos os arquivos

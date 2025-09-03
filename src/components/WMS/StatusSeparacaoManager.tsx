@@ -7,7 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Package, Clock, CheckCircle, AlertTriangle, Pencil, Truck } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from '@/components/ui/use-toast';
+import { toast } from '@/hooks/use-toast';
 import { log, warn, error as logError } from '@/utils/logger';
 
 interface StatusSeparacaoManagerProps {
@@ -76,93 +76,62 @@ export function StatusSeparacaoManager({
 
   const handleUpdateStatus = async () => {
     if (novoStatus === statusAtual) {
-      toast({
-        title: "Nenhuma alteração",
-        description: "O status selecionado é o mesmo atual.",
-        variant: "default"
-      });
+      setIsOpen(false);
       return;
     }
 
     setIsUpdating(true);
     
     try {
-      log('🔄 Atualizando status de separação:', { nfId, statusAtual, novoStatus, observacoes });
+      log('🔄 Atualizando status de separação:', {
+        nfId,
+        numeroNf,
+        statusAtual,
+        novoStatus,
+        observacoes
+      });
 
-      try {
-        // Verificar se o usuário está autenticado
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session) {
-          throw new Error('Usuário não autenticado');
-        }
+      const { error } = await supabase
+        .from('notas_fiscais')
+        .update({ 
+          status_separacao: novoStatus,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', nfId);
 
-        log('🔐 Sessão do usuário válida, fazendo chamada RPC...');
-        
-        const { data, error } = await (supabase.rpc as any)('nf_update_status_separacao', {
-          p_nf_id: nfId,
-          p_novo_status: novoStatus,
-          p_observacoes: observacoes || null
-        });
-
-        if (error) {
-          logError('❌ Erro RPC detalhado:', {
-            code: error.code,
-            message: error.message,
-            details: error.details,
-            hint: error.hint
-          });
-          
-          toast({
-            title: "Erro ao atualizar status",
-            description: `${error.message}${error.hint ? ` - ${error.hint}` : ''}`,
-            variant: "destructive"
-          });
-          return;
-        }
-
-        log('✅ RPC executada com sucesso:', data);
-      } catch (err: any) {
-        logError('💥 Erro inesperado na chamada RPC:', err);
-        toast({
-          title: "Erro inesperado",
-          description: err.message || "Falha na comunicação com o servidor",
-          variant: "destructive"
-        });
-        return;
+      if (error) {
+        logError('Erro ao atualizar status de separação:', error);
+        throw error;
       }
 
       log('✅ Status de separação atualizado com sucesso');
-      
-      // Forçar re-fetch imediato dos dados
-      onStatusChanged?.();
-      
-      // Aguardar um pouco para o realtime sincronizar
-      setTimeout(() => {
-        onStatusChanged?.();
-      }, 300);
-      
+
       toast({
         title: "Status atualizado",
-        description: `Status da NF ${numeroNf} alterado para: ${statusConfig[novoStatus].label}`,
-        variant: "default"
+        description: `Status alterado para: ${statusConfig[novoStatus].label}`,
       });
 
       setIsOpen(false);
       setObservacoes('');
+      
+      // Chamar callback se fornecido
+      if (onStatusChanged) {
+        onStatusChanged();
+      }
 
-    } catch (err) {
-      logError('Erro inesperado ao atualizar status:', err);
+    } catch (error) {
+      logError('Erro ao atualizar status de separação:', error);
       toast({
-        title: "Erro inesperado",
-        description: "Não foi possível atualizar o status. Tente novamente.",
-        variant: "destructive"
+        title: "Erro ao atualizar status",
+        description: error instanceof Error ? error.message : "Erro interno do servidor",
+        variant: "destructive",
       });
     } finally {
       setIsUpdating(false);
     }
   };
 
-  // Se não pode editar, mostra apenas o badge (removido lock no separacao_concluida)
+  // Se não pode editar, mostra apenas o badge
   if (!canEdit) {
     return (
       <div className="flex items-center gap-2">
