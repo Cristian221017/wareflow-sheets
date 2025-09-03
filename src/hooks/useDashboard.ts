@@ -9,6 +9,8 @@ export interface DashboardStats {
   solicitacoesPendentes: number;
   nfsArmazenadas: number;
   nfsConfirmadas: number;
+  nfsEmViagem: number;
+  nfsEntregues: number;
   docsVencendo: number;
   docsVencidos: number;
   valorPendente?: number;
@@ -41,6 +43,8 @@ export function useDashboard() {
         solicitacoesPendentes: Number(stats.solicitacoes_pendentes) || 0,
         nfsArmazenadas: Number(stats.nfs_armazenadas) || 0,
         nfsConfirmadas: Number(stats.nfs_confirmadas) || 0,
+        nfsEmViagem: Number(stats.nfs_em_viagem) || 0,
+        nfsEntregues: Number(stats.nfs_entregues) || 0,
         docsVencendo: Number(stats.docs_vencendo) || 0,
         docsVencidos: Number(stats.docs_vencidos) || 0,
         valorPendente: stats.valor_pendente ? Number(stats.valor_pendente) : undefined,

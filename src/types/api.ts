@@ -6,6 +6,8 @@ export interface DashboardRPCResult {
   solicitacoes_pendentes: number;
   nfs_armazenadas: number;
   nfs_confirmadas: number;
+  nfs_em_viagem: number;
+  nfs_entregues: number;
   docs_vencendo: number;
   docs_vencidos: number;
   valor_pendente?: number;

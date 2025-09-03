@@ -1263,6 +1263,8 @@ export type Database = {
           docs_vencidos: number
           nfs_armazenadas: number
           nfs_confirmadas: number
+          nfs_em_viagem: number
+          nfs_entregues: number
           solicitacoes_pendentes: number
           transportadora_id: string
           user_type: string

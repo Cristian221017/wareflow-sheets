@@ -8,7 +8,11 @@ import {
   AlertTriangle, 
   DollarSign,
   TrendingUp,
-  Eye
+  Eye,
+  Truck,
+  PackageCheck,
+  Calendar,
+  BarChart3
 } from "lucide-react";
 import { useDashboard, type DashboardStats } from "@/hooks/useDashboard";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -32,8 +36,8 @@ export function DashboardStatsComponent({ onDeepLink }: DashboardStatsComponentP
 
   if (isLoading) {
     return (
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {Array.from({ length: 4 }).map((_, i) => (
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+        {Array.from({ length: 6 }).map((_, i) => (
           <Card key={`skeleton-${i}`}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <Skeleton className="h-4 w-20" />
@@ -96,6 +100,24 @@ export function DashboardStatsComponent({ onDeepLink }: DashboardStatsComponentP
           deepLink: "?tab=confirmadas"
         },
         {
+          title: "Em Viagem",
+          value: stats.nfsEmViagem,
+          description: "Mercadorias em trânsito",
+          icon: Truck,
+          color: "text-indigo-600",
+          bgColor: "bg-indigo-100",
+          deepLink: "/mercadorias-embarcadas"
+        },
+        {
+          title: "Entregues",
+          value: stats.nfsEntregues,
+          description: "Entregas concluídas",
+          icon: PackageCheck,
+          color: "text-emerald-600",
+          bgColor: "bg-emerald-100",
+          deepLink: "/mercadorias-entregues"
+        },
+        {
           title: "Docs Vencendo",
           value: stats.docsVencendo,
           description: "Próximos do vencimento",
@@ -137,6 +159,24 @@ export function DashboardStatsComponent({ onDeepLink }: DashboardStatsComponentP
           deepLink: "?tab=confirmados"
         },
         {
+          title: "Em Viagem",
+          value: stats.nfsEmViagem,
+          description: "Mercadorias em trânsito",
+          icon: Truck,
+          color: "text-indigo-600",
+          bgColor: "bg-indigo-100",
+          deepLink: "/mercadorias-embarcadas"
+        },
+        {
+          title: "Entregues",
+          value: stats.nfsEntregues,
+          description: "Entregas concluídas",
+          icon: PackageCheck,
+          color: "text-emerald-600",
+          bgColor: "bg-emerald-100",
+          deepLink: "/mercadorias-entregues"
+        },
+        {
           title: stats.valorPendente ? "Valor Pendente" : "Documentos Pendentes",
           value: stats.valorPendente ? `R$ ${stats.valorPendente.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}` : stats.docsVencendo,
           description: stats.valorPendente ? "Total em aberto" : "Aguardando pagamento",
@@ -167,7 +207,7 @@ export function DashboardStatsComponent({ onDeepLink }: DashboardStatsComponentP
         </Badge>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
         {statsCards.map((stat) => (
           <Card key={`${stat.title}-${stat.value}`} className={`relative transition-all hover:shadow-md ${stat.urgent ? 'ring-2 ring-red-200' : ''}`}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -204,76 +244,223 @@ export function DashboardStatsComponent({ onDeepLink }: DashboardStatsComponentP
         ))}
       </div>
 
-      {/* Resumo adicional para transportadora */}
+      {/* Resumo adicional para transportadora com logística */}
       {stats.userType === 'transportadora' && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <TrendingUp className="h-5 w-5" />
-              Resumo da Operação
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-wrap gap-4 text-sm">
-              <div className="flex items-center gap-2">
-                <Package className="h-4 w-4 text-blue-600" />
-                <span>
-                  <strong>{stats.nfsArmazenadas}</strong> NFs disponíveis
-                </span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Clock className="h-4 w-4 text-orange-600" />
-                <span>
-                  <strong>{stats.solicitacoesPendentes}</strong> aguardando decisão
-                </span>
-              </div>
-              <div className="flex items-center gap-2">
-                <CheckCircle className="h-4 w-4 text-green-600" />
-                <span>
-                  <strong>{stats.nfsConfirmadas}</strong> confirmadas hoje
-                </span>
-              </div>
-              {stats.docsVencendo > 0 && (
+        <>
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <TrendingUp className="h-5 w-5" />
+                Resumo da Operação
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-wrap gap-4 text-sm">
                 <div className="flex items-center gap-2">
-                  <AlertTriangle className="h-4 w-4 text-red-600" />
-                  <span className="text-red-600">
-                    <strong>{stats.docsVencendo}</strong> documentos vencendo
+                  <Package className="h-4 w-4 text-blue-600" />
+                  <span>
+                    <strong>{stats.nfsArmazenadas}</strong> NFs disponíveis
                   </span>
                 </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
+                <div className="flex items-center gap-2">
+                  <Clock className="h-4 w-4 text-orange-600" />
+                  <span>
+                    <strong>{stats.solicitacoesPendentes}</strong> aguardando decisão
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <CheckCircle className="h-4 w-4 text-green-600" />
+                  <span>
+                    <strong>{stats.nfsConfirmadas}</strong> confirmadas hoje
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Truck className="h-4 w-4 text-indigo-600" />
+                  <span>
+                    <strong>{stats.nfsEmViagem}</strong> em trânsito
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <PackageCheck className="h-4 w-4 text-emerald-600" />
+                  <span>
+                    <strong>{stats.nfsEntregues}</strong> entregues
+                  </span>
+                </div>
+                {stats.docsVencendo > 0 && (
+                  <div className="flex items-center gap-2">
+                    <AlertTriangle className="h-4 w-4 text-red-600" />
+                    <span className="text-red-600">
+                      <strong>{stats.docsVencendo}</strong> documentos vencendo
+                    </span>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Fluxo Logístico */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <BarChart3 className="h-5 w-5" />
+                Fluxo Logístico
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <Package className="h-5 w-5 text-blue-600" />
+                    <div>
+                      <p className="font-medium">Armazenadas</p>
+                      <p className="text-sm text-muted-foreground">Disponíveis para solicitação</p>
+                    </div>
+                  </div>
+                  <Badge variant="secondary" className="bg-blue-100 text-blue-700">
+                    {stats.nfsArmazenadas}
+                  </Badge>
+                </div>
+
+                <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <CheckCircle className="h-5 w-5 text-green-600" />
+                    <div>
+                      <p className="font-medium">Confirmadas</p>
+                      <p className="text-sm text-muted-foreground">Prontas para embarque</p>
+                    </div>
+                  </div>
+                  <Badge variant="secondary" className="bg-green-100 text-green-700">
+                    {stats.nfsConfirmadas}
+                  </Badge>
+                </div>
+
+                <div className="flex items-center justify-between p-3 bg-indigo-50 rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <Truck className="h-5 w-5 text-indigo-600" />
+                    <div>
+                      <p className="font-medium">Em Viagem</p>
+                      <p className="text-sm text-muted-foreground">Em trânsito para destino</p>
+                    </div>
+                  </div>
+                  <Badge variant="secondary" className="bg-indigo-100 text-indigo-700">
+                    {stats.nfsEmViagem}
+                  </Badge>
+                </div>
+
+                <div className="flex items-center justify-between p-3 bg-emerald-50 rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <PackageCheck className="h-5 w-5 text-emerald-600" />
+                    <div>
+                      <p className="font-medium">Entregues</p>
+                      <p className="text-sm text-muted-foreground">Concluídas com sucesso</p>
+                    </div>
+                  </div>
+                  <Badge variant="secondary" className="bg-emerald-100 text-emerald-700">
+                    {stats.nfsEntregues}
+                  </Badge>
+                </div>
+
+                <div className="pt-3 border-t">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-medium text-muted-foreground">Taxa de Entrega</span>
+                    <span className="text-lg font-bold text-emerald-600">
+                      {stats.nfsEntregues + stats.nfsEmViagem > 0 
+                        ? `${Math.round((stats.nfsEntregues / (stats.nfsEntregues + stats.nfsEmViagem)) * 100)}%`
+                        : '0%'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </>
       )}
 
-      {/* Resumo adicional para cliente */}
-      {stats.userType === 'cliente' && stats.valorPendente && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <DollarSign className="h-5 w-5" />
-              Situação Financeira
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <p className="text-sm text-muted-foreground">Total Pendente</p>
-                <p className="text-2xl font-bold text-blue-600">
-                  R$ {stats.valorPendente.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                </p>
-              </div>
-              {stats.valorVencido && stats.valorVencido > 0 && (
-                <div>
-                  <p className="text-sm text-muted-foreground">Vencido</p>
-                  <p className="text-2xl font-bold text-red-600">
-                    R$ {stats.valorVencido.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                  </p>
+      {/* Resumo adicional para cliente com logística */}
+      {stats.userType === 'cliente' && (
+        <>
+          {stats.valorPendente && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <DollarSign className="h-5 w-5" />
+                  Situação Financeira
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Total Pendente</p>
+                    <p className="text-2xl font-bold text-blue-600">
+                      R$ {stats.valorPendente.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                    </p>
+                  </div>
+                  {stats.valorVencido && stats.valorVencido > 0 && (
+                    <div>
+                      <p className="text-sm text-muted-foreground">Vencido</p>
+                      <p className="text-2xl font-bold text-red-600">
+                        R$ {stats.valorVencido.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                      </p>
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Status das Mercadorias do Cliente */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Package className="h-5 w-5" />
+                Status das Mercadorias
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <div className="flex items-center gap-2">
+                    <Package className="h-4 w-4 text-blue-600" />
+                    <span className="text-sm">Armazenadas</span>
+                  </div>
+                  <Badge variant="secondary">{stats.nfsArmazenadas}</Badge>
+                </div>
+                
+                <div className="flex justify-between items-center">
+                  <div className="flex items-center gap-2">
+                    <Clock className="h-4 w-4 text-orange-600" />
+                    <span className="text-sm">Aguardando Aprovação</span>
+                  </div>
+                  <Badge variant="secondary">{stats.solicitacoesPendentes}</Badge>
+                </div>
+
+                <div className="flex justify-between items-center">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="h-4 w-4 text-green-600" />
+                    <span className="text-sm">Confirmadas</span>
+                  </div>
+                  <Badge variant="secondary">{stats.nfsConfirmadas}</Badge>
+                </div>
+
+                <div className="flex justify-between items-center">
+                  <div className="flex items-center gap-2">
+                    <Truck className="h-4 w-4 text-indigo-600" />
+                    <span className="text-sm">Em Viagem</span>
+                  </div>
+                  <Badge variant="secondary">{stats.nfsEmViagem}</Badge>
+                </div>
+
+                <div className="flex justify-between items-center">
+                  <div className="flex items-center gap-2">
+                    <PackageCheck className="h-4 w-4 text-emerald-600" />
+                    <span className="text-sm">Entregues</span>
+                  </div>
+                  <Badge variant="secondary">{stats.nfsEntregues}</Badge>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </>
       )}
     </div>
   );
