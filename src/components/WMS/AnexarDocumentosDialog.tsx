@@ -70,13 +70,15 @@ export function AnexarDocumentosDialog({ nf, onDocumentosAnexados }: AnexarDocum
           throw new Error(`Erro no upload de ${arquivo.name}: ${uploadError.message}`);
         }
 
-        return {
-          nome: arquivo.name,
-          path: filePath,
-          tamanho: arquivo.size,
-          tipo: arquivo.type,
-          uploaded_at: new Date().toISOString()
-        };
+      return {
+        name: arquivo.name,
+        nome: arquivo.name,
+        path: filePath,
+        size: arquivo.size,
+        tamanho: arquivo.size,
+        tipo: arquivo.type,
+        uploaded_at: new Date().toISOString()
+      };
       });
 
       const documentosUpload = await Promise.all(uploadPromises);
