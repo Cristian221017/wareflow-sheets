@@ -494,8 +494,8 @@ export function PedidosConfirmadosTable() {
                     )}
                   </div>
                   
-                  {/* Informações adicionais da solicitação original */}
-                  {(nf.data_agendamento_entrega || nf.observacoes_solicitacao || nf.documentos_anexos?.length > 0) && (
+                  {/* Informações adicionais da solicitação original - apenas para transportadoras */}
+                  {!isCliente && (nf.data_agendamento_entrega || nf.observacoes_solicitacao || nf.documentos_anexos?.length > 0) && (
                     <div className="pl-4 border-l-2 border-primary/20 bg-muted/30 rounded-r p-3">
                       <h4 className="text-sm font-medium text-primary mb-2">Informações da Solicitação Original:</h4>
                       
