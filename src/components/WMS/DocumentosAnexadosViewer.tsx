@@ -64,8 +64,8 @@ export function DocumentosAnexadosViewer({
     try {
       const normalized = normalizeDocument(documento);
       
-      // Detectar bucket correto baseado no path
-      const bucketName = normalized.path.startsWith('documentos/') ? 'documents' : 'solicitacoes-anexos';
+      // Todos os documentos agora ficam no bucket solicitacoes-anexos por padrão
+      const bucketName = 'solicitacoes-anexos';
       
       log('📥 Tentando baixar documento:', { 
         arquivo: normalized.name, 
@@ -75,26 +75,9 @@ export function DocumentosAnexadosViewer({
       });
       
       // Tentar baixar do storage
-      let { data, error } = await supabase.storage
+      const { data, error } = await supabase.storage
         .from(bucketName)
         .download(normalized.path);
-
-      // Se falhou, tentar no outro bucket
-      if (error) {
-        const alternateBucket = bucketName === 'documents' ? 'solicitacoes-anexos' : 'documents';
-        log('⚠️ Tentando bucket alternativo:', { 
-          bucket_original: bucketName, 
-          bucket_alternativo: alternateBucket,
-          erro_original: error.message 
-        });
-        
-        const altResult = await supabase.storage
-          .from(alternateBucket)
-          .download(normalized.path);
-        
-        data = altResult.data;
-        error = altResult.error;
-      }
 
       if (error) {
         logError('Erro no download do storage:', error);
@@ -119,7 +102,7 @@ export function DocumentosAnexadosViewer({
         arquivo: normalized.name, 
         nf: nfNumero,
         tamanho: normalized.size,
-        bucket: data ? bucketName : 'alternate'
+        bucket: bucketName
       });
 
       toast({
