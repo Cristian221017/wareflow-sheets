@@ -11,7 +11,6 @@ import ClientePortal from "./pages/ClientePortal";
 import SystemAdminLogin from "./pages/SystemAdminLogin";
 import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
-import DebugFluxoNFs from "./pages/DebugFluxoNFs";
 import HealthPage from "./pages/HealthPage";
 import MercadoriasEmbarcadas from "@/pages/MercadoriasEmbarcadas";
 import MercadoriasEntregues from "@/pages/MercadoriasEntregues";
@@ -161,10 +160,10 @@ function App() {
                             <MercadoriasEntregues />
                           </ProtectedRoute>
                         } 
-                      />
-                      
-                      <Route path="/debug/fluxo-nfs" element={<DebugFluxoNFs />} />
-                      <Route path="*" element={<NotFound />} />
+                       />
+                       
+                       <Route path="/health" element={<HealthPage />} />
+                       <Route path="*" element={<NotFound />} />
                     </Routes>
                   </div>
                 </RealtimeProvider>
