@@ -31,8 +31,16 @@ export function useAgendamentoUnificado() {
 
   const solicitarCarregamentoComAgendamento = useMutation<AgendarResult, Error, AgendamentoData>({
     mutationFn: async (data: AgendamentoData) => {
-      if (!user) throw new Error('Usuário não autenticado');
+      if (!user) {
+        console.error('❌ Usuário não autenticado no agendamento unificado');
+        throw new Error('Usuário não autenticado');
+      }
       
+      console.log('🚚 Solicitação unificada de carregamento iniciada:', { 
+        data, 
+        userType: user.type, 
+        userEmail: user.email 
+      });
       log('🚚 Solicitação unificada de carregamento:', data);
 
       // 1) Buscar dados da NF para obter cliente_id
@@ -62,6 +70,13 @@ export function useAgendamentoUnificado() {
       }
 
       // 3) RPC unificado de agendamento
+      console.log('📞 Chamando RPC nf_solicitar_agendamento:', {
+        p_nf_id: data.nfId,
+        p_data_agendamento: data.dataAgendamento ? new Date(data.dataAgendamento).toISOString() : null,
+        p_observacoes: data.observacoes || null,
+        p_anexos: anexosPayload.length > 0 ? JSON.stringify(anexosPayload) : null
+      });
+
       const { error: rpcError } = await supabase.rpc('nf_solicitar_agendamento' as any, {
         p_nf_id: data.nfId,
         p_data_agendamento: data.dataAgendamento ? new Date(data.dataAgendamento).toISOString() : null,
@@ -70,8 +85,11 @@ export function useAgendamentoUnificado() {
       });
 
       if (rpcError) {
+        console.error('❌ Erro no RPC nf_solicitar_agendamento:', rpcError);
         throw rpcError;
       }
+
+      console.log('✅ RPC nf_solicitar_agendamento executado com sucesso');
 
       return { nfNumero: nfData.numero_nf, anexosCount: anexosPayload.length };
     },
