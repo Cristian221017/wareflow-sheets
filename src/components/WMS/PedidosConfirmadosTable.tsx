@@ -440,6 +440,14 @@ export function PedidosConfirmadosTable() {
                             }}
                          />
                         
+                        {/* Documentos anexados (se houver) */}
+                        {nf.documentos_anexos && nf.documentos_anexos.length > 0 && (
+                          <div className="flex items-center gap-1 text-sm text-muted-foreground mb-2">
+                            <Paperclip className="w-4 h-4" />
+                            {nf.documentos_anexos.length} documento(s) anexado(s)
+                          </div>
+                        )}
+                        
                         {/* Anexar Documentos */}
                         <AnexarDocumentosDialog 
                           nf={nf}
