@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { Package, Clock, CheckCircle, AlertTriangle, FileText, Printer, Download } from 'lucide-react';
+import { Package, Clock, CheckCircle, AlertTriangle, FileText, Printer, Download, Truck } from 'lucide-react';
 import { NotaFiscal } from '@/types/nf';
 import { NFFilters, NFFilterState } from '@/components/NfLists/NFFilters';
 import { NFCard } from '@/components/NfLists/NFCard';
