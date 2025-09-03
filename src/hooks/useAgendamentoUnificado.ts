@@ -89,7 +89,7 @@ export function useAgendamentoUnificado() {
         throw rpcError;
       }
 
-      console.log('✅ RPC nf_solicitar_agendamento executado com sucesso');
+      // RPC executado com sucesso
 
       return { nfNumero: nfData.numero_nf, anexosCount: anexosPayload.length };
     },

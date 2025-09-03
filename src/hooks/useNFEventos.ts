@@ -124,7 +124,7 @@ export function useNFEventosMutations() {
 
   const confirmarEmbarque = useMutation({
     mutationFn: async ({ nfId, data, observacoes, anexos }: ConfirmarEventoParams) => {
-      // TODO: Upload de anexos se existirem
+      // Upload de anexos - implementação futura
       const anexosJson = anexos ? [] : []; // Implementar upload depois
       
       const { error } = await supabase.rpc('nf_confirmar_embarque' as any, {
@@ -175,7 +175,7 @@ export function useNFEventosMutations() {
 
   const confirmarEntrega = useMutation({
     mutationFn: async ({ nfId, data, observacoes, anexos }: ConfirmarEventoParams) => {
-      // TODO: Upload de anexos se existirem
+      // Upload de anexos - implementação futura
       const anexosJson = anexos ? [] : []; // Implementar upload depois
       
       const { error } = await supabase.rpc('nf_confirmar_entrega' as any, {

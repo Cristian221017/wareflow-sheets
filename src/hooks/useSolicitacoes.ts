@@ -82,8 +82,8 @@ export function useSolicitacoesTransportadora(status: 'PENDENTE' | 'APROVADA' | 
         nfsLegado = (todasNfsData || []).filter((nf: any) => !nfsComSolicitacao.has(nf.id));
       }
 
-      console.log('🔧 Solicitações modernas:', solicitacoesModernas?.length || 0);
-      console.log('🔧 NFs legado:', nfsLegado?.length || 0);
+      // Solicitações modernas processadas
+      // NFs legado processadas
 
       // 3. Unificar dados no formato esperado
       const solicitacoesUnificadas = [

@@ -47,7 +47,7 @@ export function EmailNotificationTester() {
         senha: emailType === 'cliente_cadastrado' ? 'teste123' : undefined,
       };
 
-      console.log('🧪 Enviando email de teste:', { to: email, type: emailType, data: testData });
+      // Enviando email de teste
 
       const { data, error } = await supabase.functions.invoke('send-notification-email', {
         body: {
