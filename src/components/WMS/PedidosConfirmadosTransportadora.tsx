@@ -4,8 +4,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { useNFs } from '@/hooks/useNFs';
 import { NFCard } from '@/components/NfLists/NFCard';
 import { NFDeleteManager } from './NFDeleteManager';
+import { StatusSeparacaoManager } from './StatusSeparacaoManager';
+import { AnexarDocumentosDialog } from './AnexarDocumentosDialog';
 import { NFFilters, type NFFilterState } from '@/components/NfLists/NFFilters';
 import { useAuth } from '@/contexts/AuthContext';
+import { useInvalidateAll } from '@/hooks/useInvalidateAll';
 import { CheckCircle, Printer, Download } from 'lucide-react';
 import { toast } from 'sonner';
 import type { NotaFiscal } from '@/types/nf';
@@ -14,6 +17,7 @@ import { useState } from 'react';
 export function PedidosConfirmadosTransportadora() {
   const { user } = useAuth();
   const { data: confirmadas, isLoading } = useNFs("CONFIRMADA");
+  const invalidateAll = useInvalidateAll();
   
   // Estados para filtros
   const [filters, setFilters] = useState<NFFilterState>({
@@ -265,14 +269,34 @@ export function PedidosConfirmadosTransportadora() {
               {filteredConfirmadas.length > 0 ? (
                 <div className="space-y-3">
                   {filteredConfirmadas.map((nf) => (
-                    <NFCard
-                      key={nf.id}
-                      nf={nf}
-                      showApprovalInfo
-                      showSelection={false}
-                      canDelete={canDelete}
-                      onDelete={onDelete}
-                    />
+                    <div key={nf.id} className="space-y-2">
+                      <NFCard
+                        nf={nf}
+                        showApprovalInfo
+                        showRequestInfo
+                        showSelection={false}
+                        canDelete={canDelete}
+                        onDelete={onDelete}
+                        actions={
+                          <div className="flex flex-col gap-2">
+                            {/* Status de Separação com edição */}
+                            <StatusSeparacaoManager
+                              nfId={nf.id}
+                              statusAtual={nf.status_separacao || 'pendente'}
+                              numeroNf={nf.numero_nf}
+                              canEdit={true}
+                              onStatusChanged={() => invalidateAll.invalidateAll()}
+                            />
+                            
+                            {/* Anexar Documentos */}
+                            <AnexarDocumentosDialog 
+                              nf={nf}
+                              onDocumentosAnexados={() => invalidateAll.invalidateAll()}
+                            />
+                          </div>
+                        }
+                      />
+                    </div>
                   ))}
                 </div>
               ) : validConfirmadas.length > 0 ? (
