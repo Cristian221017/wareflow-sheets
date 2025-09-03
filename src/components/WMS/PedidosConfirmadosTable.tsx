@@ -444,9 +444,12 @@ export function PedidosConfirmadosTable() {
                         <AnexarDocumentosDialog 
                           nf={nf}
                           onDocumentosAnexados={async () => {
-                            // Invalidação + refetch forçado para sincronização imediata
+                            // Forçar reload completo dos dados
+                            console.log('🔄 Documento anexado, recarregando dados da NF:', nf.id);
                             invalidateAll();
                             await refetch();
+                            // Pequeno delay para garantir sincronização
+                            setTimeout(() => refetch(), 100);
                           }}
                         />
                         

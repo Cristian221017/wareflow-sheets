@@ -99,11 +99,13 @@ export function AnexarDocumentosDialog({ nf, onDocumentosAnexados }: AnexarDocum
         throw new Error(`Erro ao salvar documentos na NF: ${updateError.message}`);
       }
 
-      // Log do evento
+      // Log do evento com dados detalhados
       log('📎 Documentos anexados à NF:', { 
         nfId: nf.id, 
         numeroNf: nf.numero_nf,
         quantidadeDocumentos: documentosUpload.length,
+        documentosDetalhes: documentosUpload,
+        totalDocumentosNaNF: novosDocumentos.length,
         observacoes 
       });
 
