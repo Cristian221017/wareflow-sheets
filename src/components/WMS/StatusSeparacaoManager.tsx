@@ -107,16 +107,24 @@ export function StatusSeparacaoManager({
 
       log('✅ Status de separação atualizado com sucesso');
       
-      // Usar invalidação otimizada para responsividade instantânea
+      // Invalidação imediata
       if (onStatusChanged) {
         onStatusChanged();
       }
       
-      // Forçar re-render imediato com estado local
+      // Aguardar um pouco para o banco processar e forçar nova invalidação
       setTimeout(() => {
-        // Aguardar um pouco para que o realtime atualize
-        onStatusChanged?.();
-      }, 100);
+        if (onStatusChanged) {
+          onStatusChanged();
+        }
+      }, 500);
+      
+      // Terceira invalidação para garantir sincronização completa
+      setTimeout(() => {
+        if (onStatusChanged) {
+          onStatusChanged();
+        }
+      }, 1000);
       
       toast({
         title: "Status atualizado",
