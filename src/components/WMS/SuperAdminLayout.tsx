@@ -16,6 +16,9 @@ import { FormCadastroUsuario } from './FormCadastroUsuario';
 import { FormCadastroTransportadora } from './FormCadastroTransportadora';
 import { LogsPage } from './LogsPage';
 import { SystemMaintenanceTab } from './SystemMaintenanceTab';
+import { ProductionReadinessCheck } from '@/components/production/ProductionReadinessCheck';
+import DataSeeder from '@/components/system/DataSeeder';
+import SecurityInstructions from '@/components/production/SecurityInstructions';
 import { EnvironmentBadge, EnvironmentIndicator } from '@/components/system/EnvironmentBadge';
 import { ApiStatusIndicator } from '@/components/system/ApiStatusIndicator';
 import { 
@@ -31,7 +34,8 @@ import {
   FileText,
   Shield,
   Wrench,
-  HardDrive
+  HardDrive,
+  Rocket
 } from 'lucide-react';
 
 export function SuperAdminLayout() {
@@ -44,6 +48,7 @@ export function SuperAdminLayout() {
     { value: "dashboard", label: "Dashboard", icon: BarChart3 },
     { value: "transportadoras", label: "Transportadoras", icon: Building2 },
     { value: "usuarios", label: "Super Admins", icon: Users },
+    { value: "production", label: "Production", icon: Rocket },
     { value: "backup", label: "Backup", icon: HardDrive },
     { value: "deployment", label: "Deployment Seguro", icon: Shield },
     { value: "manutencao", label: "Manutenção", icon: Wrench },
@@ -242,6 +247,14 @@ export function SuperAdminLayout() {
 
           <TabsContent value="usuarios">
             <AdminScopedUserManagement />
+          </TabsContent>
+
+          <TabsContent value="production">
+            <div className="space-y-6">
+              <ProductionReadinessCheck />
+              <SecurityInstructions />
+              <DataSeeder />
+            </div>
           </TabsContent>
 
           <TabsContent value="backup">
