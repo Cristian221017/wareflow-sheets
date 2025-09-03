@@ -7,6 +7,7 @@ import { ptBR } from 'date-fns/locale';
 import type { NotaFiscal } from '@/types/nf';
 import { AnexarDocumentosSolicitacao } from './AnexarDocumentosSolicitacao';
 import { DocumentosAnexadosViewer } from './DocumentosAnexadosViewer';
+import { StatusSeparacaoManager } from './StatusSeparacaoManager';
 import { useAuth } from '@/contexts/AuthContext';
 
 interface SolicitacoesConfirmadasCardProps {
@@ -140,6 +141,22 @@ export function SolicitacoesConfirmadasCard({ nf, onRefresh }: SolicitacoesConfi
             />
           </div>
         )}
+
+        {/* Status de Separação */}
+        <div className="border-t pt-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium text-muted-foreground">Status de Separação:</span>
+            </div>
+            <StatusSeparacaoManager
+              nfId={nf.id}
+              statusAtual={nf.status_separacao || 'pendente'}
+              numeroNf={nf.numero_nf}
+              canEdit={isTransportadora}
+              onStatusChanged={onRefresh}
+            />
+          </div>
+        </div>
 
         {/* Ações */}
         <div className="flex flex-wrap items-center gap-2 pt-2">
