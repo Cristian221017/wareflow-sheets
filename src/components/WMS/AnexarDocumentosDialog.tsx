@@ -60,10 +60,10 @@ export function AnexarDocumentosDialog({ nf, onDocumentosAnexados }: AnexarDocum
       // Upload dos arquivos para o storage
       const uploadPromises = arquivos.map(async (arquivo) => {
         const fileName = `nf_${nf.id}_${Date.now()}_${arquivo.name}`;
-        const filePath = `documentos/${fileName}`;
+        const filePath = `${nf.cliente_id}/${nf.id}/${fileName}`;
 
         const { error: uploadError } = await supabase.storage
-          .from('documents')
+          .from('solicitacoes-anexos')
           .upload(filePath, arquivo);
 
         if (uploadError) {
@@ -77,6 +77,7 @@ export function AnexarDocumentosDialog({ nf, onDocumentosAnexados }: AnexarDocum
         size: arquivo.size,
         tamanho: arquivo.size,
         tipo: arquivo.type,
+        contentType: arquivo.type,
         uploaded_at: new Date().toISOString()
       };
       });
