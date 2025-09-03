@@ -1388,6 +1388,10 @@ export type Database = {
           user_agent: string | null
         }
       }
+      monitor_security_events: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       nf_confirmar: {
         Args: { p_nf_id: string; p_user_id: string }
         Returns: undefined
