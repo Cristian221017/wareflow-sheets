@@ -11,6 +11,7 @@ import { SuperAdminTransportadoras } from './SuperAdminTransportadoras';
 import { AdminScopedUserManagement } from './AdminScopedUserManagement';
 import { SuperAdminDashboard } from './SuperAdminDashboard';
 import { DeploymentSafetyDashboard } from './DeploymentSafetyDashboard';
+import { BackupManager } from './BackupManager';
 import { FormCadastroUsuario } from './FormCadastroUsuario';
 import { FormCadastroTransportadora } from './FormCadastroTransportadora';
 import { LogsPage } from './LogsPage';
@@ -29,7 +30,8 @@ import {
   Menu,
   FileText,
   Shield,
-  Wrench
+  Wrench,
+  HardDrive
 } from 'lucide-react';
 
 export function SuperAdminLayout() {
@@ -42,6 +44,7 @@ export function SuperAdminLayout() {
     { value: "dashboard", label: "Dashboard", icon: BarChart3 },
     { value: "transportadoras", label: "Transportadoras", icon: Building2 },
     { value: "usuarios", label: "Super Admins", icon: Users },
+    { value: "backup", label: "Backup", icon: HardDrive },
     { value: "deployment", label: "Deployment Seguro", icon: Shield },
     { value: "manutencao", label: "Manutenção", icon: Wrench },
     { value: "logs", label: "Logs", icon: FileText },
@@ -239,6 +242,10 @@ export function SuperAdminLayout() {
 
           <TabsContent value="usuarios">
             <AdminScopedUserManagement />
+          </TabsContent>
+
+          <TabsContent value="backup">
+            <BackupManager />
           </TabsContent>
 
           <TabsContent value="deployment">
