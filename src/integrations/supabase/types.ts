@@ -1209,6 +1209,10 @@ export type Database = {
         Args: { email1: string; email2: string }
         Returns: boolean
       }
+      execute_manual_backup: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
       financeiro_create_documento: {
         Args: {
           p_cliente_id: string
@@ -1237,6 +1241,14 @@ export type Database = {
           cliente_email: string
           cliente_id: string
           details: Json
+        }[]
+      }
+      get_backup_cron_status: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          active: boolean
+          jobname: string
+          schedule: string
         }[]
       }
       get_cliente_transportadora: {

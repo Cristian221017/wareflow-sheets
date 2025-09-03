@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { BackupManager } from '@/components/WMS/BackupManager';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { SystemHealthDashboard } from '@/components/system/SystemHealthDashboard';
@@ -11,6 +12,7 @@ export function SystemMaintenanceTab() {
   const subTabs = [
     { value: "health", label: "Health Check", icon: Activity },
     { value: "cleanup", label: "Limpeza de Código", icon: Wrench },
+    { value: "backup", label: "Backup", icon: Shield },
   ];
 
   return (
@@ -28,7 +30,7 @@ export function SystemMaintenanceTab() {
       </Card>
 
       <Tabs value={activeSubTab} onValueChange={setActiveSubTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-2 max-w-md">
+        <TabsList className="grid w-full grid-cols-3 max-w-lg">
           {subTabs.map((tab) => {
             const Icon = tab.icon;
             return (
@@ -50,6 +52,10 @@ export function SystemMaintenanceTab() {
 
         <TabsContent value="cleanup">
           <CodeCleanupTools />
+        </TabsContent>
+
+        <TabsContent value="backup">
+          <BackupManager />
         </TabsContent>
       </Tabs>
     </div>
