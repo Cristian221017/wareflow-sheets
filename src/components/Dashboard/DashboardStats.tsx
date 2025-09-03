@@ -12,9 +12,12 @@ import {
   Truck,
   PackageCheck,
   Calendar,
-  BarChart3
+  BarChart3,
+  Timer,
+  Target
 } from "lucide-react";
 import { useDashboard, type DashboardStats } from "@/hooks/useDashboard";
+import { useSLAMetrics } from "@/hooks/useSLAMetrics";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useNavigate } from "react-router-dom";
 
@@ -24,6 +27,7 @@ interface DashboardStatsComponentProps {
 
 export function DashboardStatsComponent({ onDeepLink }: DashboardStatsComponentProps) {
   const { data: stats, isLoading, error } = useDashboard();
+  const { data: slaMetrics, isLoading: slaLoading } = useSLAMetrics();
   const navigate = useNavigate();
 
   const handleDeepLink = (path: string) => {
@@ -373,6 +377,81 @@ export function DashboardStatsComponent({ onDeepLink }: DashboardStatsComponentP
               </div>
             </CardContent>
           </Card>
+
+          {/* Métricas de Performance */}
+          {slaMetrics && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Target className="h-5 w-5" />
+                  Performance (Últimos 30 dias)
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="text-center">
+                      <div className="flex items-center justify-center gap-2 mb-1">
+                        <Timer className="h-4 w-4 text-blue-600" />
+                        <span className="text-sm font-medium">Tempo Médio</span>
+                      </div>
+                      <p className="text-xl font-bold text-blue-600">
+                        {slaMetrics.tempoMedioEntregaHoras > 0 
+                          ? `${Math.round(slaMetrics.tempoMedioEntregaHoras)}h`
+                          : 'N/A'}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {slaMetrics.tempoMedioEntregaHoras > 0 
+                          ? `${Math.round(slaMetrics.tempoMedioEntregaHoras / 24)} dias`
+                          : 'Sem dados'}
+                      </p>
+                    </div>
+
+                    <div className="text-center">
+                      <div className="flex items-center justify-center gap-2 mb-1">
+                        <Target className="h-4 w-4 text-green-600" />
+                        <span className="text-sm font-medium">SLA</span>
+                      </div>
+                      <p className={`text-xl font-bold ${
+                        slaMetrics.slaCumprimentoPercent >= 95 ? 'text-green-600' :
+                        slaMetrics.slaCumprimentoPercent >= 80 ? 'text-yellow-600' : 'text-red-600'
+                      }`}>
+                        {slaMetrics.slaCumprimentoPercent}%
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        Cumprimento
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center text-sm">
+                      <span>Entregas no Prazo</span>
+                      <span className="font-medium text-green-600">
+                        {slaMetrics.entregasNoPrazo}
+                      </span>
+                    </div>
+                    
+                    <div className="flex justify-between items-center text-sm">
+                      <span>Entregas Atrasadas</span>
+                      <span className="font-medium text-red-600">
+                        {slaMetrics.entregasAtrasadas}
+                      </span>
+                    </div>
+
+                    {slaMetrics.mercadoriasEmAtraso > 0 && (
+                      <div className="flex justify-between items-center text-sm p-2 bg-red-50 rounded">
+                        <span className="text-red-700">Em Atraso</span>
+                        <span className="font-medium text-red-700">
+                          {slaMetrics.mercadoriasEmAtraso}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </>
       )}
 
@@ -460,6 +539,59 @@ export function DashboardStatsComponent({ onDeepLink }: DashboardStatsComponentP
               </div>
             </CardContent>
           </Card>
+
+          {/* Métricas de Performance do Cliente */}
+          {slaMetrics && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Target className="h-5 w-5" />
+                  Suas Entregas (30 dias)
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  <div className="text-center">
+                    <p className={`text-3xl font-bold mb-1 ${
+                      slaMetrics.slaCumprimentoPercent >= 95 ? 'text-green-600' :
+                      slaMetrics.slaCumprimentoPercent >= 80 ? 'text-yellow-600' : 'text-red-600'
+                    }`}>
+                      {slaMetrics.slaCumprimentoPercent}%
+                    </p>
+                    <p className="text-sm text-muted-foreground">Entregas no Prazo</p>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    <div className="flex justify-between">
+                      <span>No Prazo:</span>
+                      <span className="font-medium text-green-600">
+                        {slaMetrics.entregasNoPrazo}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Atrasadas:</span>
+                      <span className="font-medium text-red-600">
+                        {slaMetrics.entregasAtrasadas}
+                      </span>
+                    </div>
+                  </div>
+
+                  {slaMetrics.tempoMedioEntregaHoras > 0 && (
+                    <div className="pt-2 border-t">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-muted-foreground">
+                          Tempo Médio de Entrega
+                        </span>
+                        <span className="font-medium">
+                          {Math.round(slaMetrics.tempoMedioEntregaHoras / 24)} dias
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </>
       )}
     </div>

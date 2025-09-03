@@ -1272,6 +1272,19 @@ export type Database = {
           valor_vencido: number
         }[]
       }
+      get_dashboard_sla_metrics: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          cliente_id: string
+          entregas_atrasadas: number
+          entregas_no_prazo: number
+          mercadorias_em_atraso: number
+          sla_cumprimento_percent: number
+          tempo_medio_entrega_horas: number
+          transportadora_id: string
+          user_type: string
+        }[]
+      }
       get_deployment_config: {
         Args: { p_key: string }
         Returns: Json

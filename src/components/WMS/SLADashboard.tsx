@@ -1,15 +1,14 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Clock, TrendingUp, TrendingDown, Activity, Target } from 'lucide-react';
-import { useSLAMetrics, useSLATrends } from '@/hooks/useSLAMetrics';
+import { useSLAMetrics } from '@/hooks/useSLAMetrics';
 
 interface SLADashboardProps {
   className?: string;
 }
 
 export function SLADashboard({ className }: SLADashboardProps) {
-  const metrics = useSLAMetrics();
-  const trends = useSLATrends(30);
+  const { data: metrics, isLoading } = useSLAMetrics();
 
   const formatTempo = (horas: number): string => {
     if (horas === 0) return '-';
@@ -33,147 +32,135 @@ export function SLADashboard({ className }: SLADashboardProps) {
     }
   };
 
+  if (isLoading || !metrics) {
+    return <div className="p-4">Carregando métricas de SLA...</div>;
+  }
+
   return (
     <div className={className}>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-        {/* Tempo Médio Cadastro → Separação */}
+        {/* Tempo Médio de Entrega */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Cadastro → Separação</CardTitle>
+            <CardTitle className="text-sm font-medium">Tempo Médio de Entrega</CardTitle>
             <Clock className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">Média:</span>
-                <Badge variant={getSLABadgeVariant(getSLAStatus(metrics.tempoMedioCadastroSeparacao))}>
-                  {formatTempo(metrics.tempoMedioCadastroSeparacao)}
+                <span className="text-sm text-muted-foreground">Tempo médio:</span>
+                <Badge variant={getSLABadgeVariant(getSLAStatus(metrics.tempoMedioEntregaHoras, 168))}>
+                  {formatTempo(metrics.tempoMedioEntregaHoras)}
                 </Badge>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">P90:</span>
+                <span className="text-sm text-muted-foreground">Em dias:</span>
                 <span className="text-sm font-medium">
-                  {formatTempo(metrics.tempoP90CadastroSeparacao)}
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">Máximo:</span>
-                <span className="text-sm font-medium">
-                  {formatTempo(metrics.tempoMaximoCadastroSeparacao)}
+                  {metrics.tempoMedioEntregaHoras > 0 
+                    ? `${Math.round(metrics.tempoMedioEntregaHoras / 24)} dias`
+                    : '-'}
                 </span>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        {/* Tempo Médio Separação → Liberação */}
+        {/* Cumprimento de SLA */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Separação → Liberação</CardTitle>
+            <CardTitle className="text-sm font-medium">Cumprimento de SLA</CardTitle>
             <Target className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">Média:</span>
-                <Badge variant={getSLABadgeVariant(getSLAStatus(metrics.tempoMedioSeparacaoLiberacao))}>
-                  {formatTempo(metrics.tempoMedioSeparacaoLiberacao)}
+                <span className="text-sm text-muted-foreground">Percentual:</span>
+                <Badge variant={metrics.slaCumprimentoPercent >= 95 ? 'default' : 
+                               metrics.slaCumprimentoPercent >= 80 ? 'secondary' : 'destructive'}>
+                  {metrics.slaCumprimentoPercent}%
                 </Badge>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">P90:</span>
-                <span className="text-sm font-medium">
-                  {formatTempo(metrics.tempoP90SeparacaoLiberacao)}
+                <span className="text-sm text-muted-foreground">No prazo:</span>
+                <span className="text-sm font-medium text-green-600">
+                  {metrics.entregasNoPrazo}
                 </span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">Máximo:</span>
-                <span className="text-sm font-medium">
-                  {formatTempo(metrics.tempoMaximoSeparacaoLiberacao)}
+                <span className="text-sm text-muted-foreground">Atrasadas:</span>
+                <span className="text-sm font-medium text-red-600">
+                  {metrics.entregasAtrasadas}
                 </span>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        {/* Estatísticas Gerais */}
+        {/* Situação Atual */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Estatísticas</CardTitle>
+            <CardTitle className="text-sm font-medium">Situação Atual</CardTitle>
             <Activity className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">Total NFs:</span>
-                <span className="text-sm font-medium">{metrics.totalNFsAnalisadas}</span>
+                <span className="text-sm text-muted-foreground">Total entregas:</span>
+                <span className="text-sm font-medium">
+                  {metrics.entregasNoPrazo + metrics.entregasAtrasadas}
+                </span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">Com Separação:</span>
-                <span className="text-sm font-medium">{metrics.nfsComSeparacao}</span>
+                <span className="text-sm text-muted-foreground">Em atraso:</span>
+                <span className={`text-sm font-medium ${metrics.mercadoriasEmAtraso > 0 ? 'text-red-600' : 'text-green-600'}`}>
+                  {metrics.mercadoriasEmAtraso}
+                </span>
               </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">Com Liberação:</span>
-                <span className="text-sm font-medium">{metrics.nfsComLiberacao}</span>
-              </div>
+              {metrics.mercadoriasEmAtraso > 0 && (
+                <div className="text-xs text-red-600 bg-red-50 p-2 rounded">
+                  ⚠️ Mercadorias em viagem há mais de 7 dias
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Tendências dos últimos 30 dias */}
-      {trends.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <TrendingUp className="h-5 w-5" />
-              Tendência dos Últimos 30 Dias
-            </CardTitle>
-            <CardDescription>
-              Evolução do tempo médio de processamento por semana
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {trends.map((trend, index) => {
-                const tendenciaAnterior = index > 0 ? trends[index - 1].tempoMedio : trend.tempoMedio;
-                const mudanca = trend.tempoMedio - tendenciaAnterior;
-                const isGood = mudanca <= 0;
-
-                return (
-                  <div key={trend.semana} className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
-                    <div>
-                      <p className="text-sm font-medium">
-                        Semana de {new Date(trend.semana).toLocaleDateString('pt-BR')}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {trend.totalNFs} NFs • {trend.nfsProcessadas} processadas
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-medium">
-                        {formatTempo(trend.tempoMedio)}
-                      </span>
-                      {index > 0 && (
-                        <div className={`flex items-center gap-1 ${isGood ? 'text-green-600' : 'text-red-600'}`}>
-                          {isGood ? (
-                            <TrendingDown className="h-3 w-3" />
-                          ) : (
-                            <TrendingUp className="h-3 w-3" />
-                          )}
-                          <span className="text-xs">
-                            {Math.abs(mudanca).toFixed(1)}h
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
+      {/* Resumo de Performance */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <TrendingUp className="h-5 w-5" />
+            Resumo de Performance (Últimos 30 dias)
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="text-center p-4 bg-green-50 rounded-lg">
+              <p className="text-2xl font-bold text-green-600">
+                {metrics.slaCumprimentoPercent}%
+              </p>
+              <p className="text-sm text-green-700">Entregas no Prazo</p>
             </div>
-          </CardContent>
-        </Card>
-      )}
+            
+            <div className="text-center p-4 bg-blue-50 rounded-lg">
+              <p className="text-2xl font-bold text-blue-600">
+                {metrics.tempoMedioEntregaHoras > 0 
+                  ? `${Math.round(metrics.tempoMedioEntregaHoras / 24)}`
+                  : '0'}
+              </p>
+              <p className="text-sm text-blue-700">Dias Médios de Entrega</p>
+            </div>
+            
+            <div className="text-center p-4 bg-orange-50 rounded-lg">
+              <p className="text-2xl font-bold text-orange-600">
+                {metrics.mercadoriasEmAtraso}
+              </p>
+              <p className="text-sm text-orange-700">Mercadorias em Atraso</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
