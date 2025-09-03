@@ -89,17 +89,43 @@ export function StatusSeparacaoManager({
     try {
       log('🔄 Atualizando status de separação:', { nfId, statusAtual, novoStatus, observacoes });
 
-      const { error } = await (supabase.rpc as any)('nf_update_status_separacao', {
-        p_nf_id: nfId,
-        p_status_separacao: novoStatus,
-        p_observacoes: observacoes || null
-      });
+      try {
+        // Verificar se o usuário está autenticado
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) {
+          throw new Error('Usuário não autenticado');
+        }
 
-      if (error) {
-        logError('Erro ao atualizar status de separação:', error);
+        log('🔐 Sessão do usuário válida, fazendo chamada RPC...');
+        
+        const { data, error } = await (supabase.rpc as any)('nf_update_status_separacao', {
+          p_nf_id: nfId,
+          p_status_separacao: novoStatus,
+          p_observacoes: observacoes || null
+        });
+
+        if (error) {
+          logError('❌ Erro RPC detalhado:', {
+            code: error.code,
+            message: error.message,
+            details: error.details,
+            hint: error.hint
+          });
+          
+          toast({
+            title: "Erro ao atualizar status",
+            description: `${error.message}${error.hint ? ` - ${error.hint}` : ''}`,
+            variant: "destructive"
+          });
+          return;
+        }
+
+        log('✅ RPC executada com sucesso:', data);
+      } catch (err: any) {
+        logError('💥 Erro inesperado na chamada RPC:', err);
         toast({
-          title: "Erro ao atualizar status",
-          description: error.message || "Erro interno do servidor",
+          title: "Erro inesperado",
+          description: err.message || "Falha na comunicação com o servidor",
           variant: "destructive"
         });
         return;
