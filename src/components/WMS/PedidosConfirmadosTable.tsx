@@ -7,18 +7,14 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CheckCircle, Printer, Download, Truck, Paperclip } from "lucide-react";
-import { DocumentosAnexadosViewer } from './DocumentosAnexadosViewer';
+import { SolicitacoesConfirmadasCard } from './SolicitacoesConfirmadasCard'; 
 import { NFFilters, type NFFilterState } from "@/components/NfLists/NFFilters";
-import { NFCard } from "@/components/NfLists/NFCard";
 import { ConfirmarEventoDialog } from "./ConfirmarEventoDialog";
-import { StatusSeparacaoManager } from "./StatusSeparacaoManager";
-import { AnexarDocumentosDialog } from "./AnexarDocumentosDialog";
 import { useNFEventosMutations } from "@/hooks/useNFEventos";
 import { useInvalidateAll } from "@/hooks/useInvalidateAll";
 import type { NotaFiscal } from "@/types/nf";
 import { log, error as logError } from "@/utils/logger";
 import { toast } from "sonner";
-import { supabase } from '@/integrations/supabase/client';
 
 export function PedidosConfirmadosTable() {
   const { user } = useAuth();
@@ -415,197 +411,14 @@ export function PedidosConfirmadosTable() {
           {filteredNfs.length > 0 ? (
             <div className="space-y-3">
               {filteredNfs.map((nf) => (
-                <div key={nf.id} className="space-y-3">
-                  <div className="flex items-start gap-4">
-                    <div className="flex-1">
-                      <NFCard
-                        nf={nf}
-                        showApprovalInfo
-                        showRequestInfo={true} // Mostrar informações de agendamento
-                        showSelection={false} // Confirmadas não precisam de seleção
-                      />
-                    </div>
-                    
-                    {/* Ações da Transportadora */}
-                    {isTransportadora && (
-                      <div className="flex flex-col gap-2">
-                         {/* Status de Separação com edição */}
-                         <StatusSeparacaoManager
-                           nfId={nf.id}
-                           statusAtual={nf.status_separacao || 'pendente'}
-                           numeroNf={nf.numero_nf}
-                           canEdit={true}
-                            onStatusChanged={async () => {
-                              // Invalidação + refetch forçado para sincronização imediata
-                              invalidateAll();
-                              await refetch();
-                            }}
-                         />
-                        
-                        {/* Documentos anexados (se houver) */}
-                        {(() => {
-                          console.log('🔍 PedidosConfirmadosTable - Verificando documentos para NF:', {
-                            nfId: nf.id,
-                            numeroNf: nf.numero_nf,
-                            documentos_anexos: nf.documentos_anexos,
-                            temDocumentos: !!(nf.documentos_anexos && nf.documentos_anexos.length > 0),
-                            quantidadeDocumentos: nf.documentos_anexos?.length || 0
-                          });
-                          
-                          return nf.documentos_anexos && nf.documentos_anexos.length > 0 ? (
-                            <DocumentosAnexadosViewer 
-                              documentos={nf.documentos_anexos}
-                              nfNumero={nf.numero_nf}
-                              showTitle={true}
-                              compact={false}
-                            />
-                          ) : (
-                            <div className="text-xs text-muted-foreground">
-                              Nenhum documento anexado
-                            </div>
-                          );
-                        })()}
-                        
-                        {/* Anexar Documentos */}
-                        <AnexarDocumentosDialog 
-                          nf={nf}
-                          onDocumentosAnexados={async () => {
-                            console.log('🚨🚨🚨 CALLBACK EXECUTADO - INÍCIO 🚨🚨🚨');
-                            console.log('🔄 CALLBACK onDocumentosAnexados disparado para NF:', nf.id);
-                            console.log('🔄 Estado atual da NF antes do refetch:', {
-                              nfId: nf.id,
-                              documentosAtuais: nf.documentos_anexos?.length || 0,
-                              estruturaAtual: JSON.stringify(nf.documentos_anexos, null, 2)
-                            });
-                            
-                           // Buscar dados diretamente da base para comparar
-                            console.log('🔍 Buscando dados diretamente da base de dados...');
-                            try {
-                              const { data: nfAtualizada, error } = await supabase
-                                .from('notas_fiscais')
-                                .select('id, numero_nf, documentos_anexos')
-                                .eq('id', nf.id)
-                                .single();
-                              
-                              if (error) {
-                                console.error('❌ Erro ao buscar NF atualizada:', error);
-                              } else {
-                                console.log('📊 Dados na base após anexo:', {
-                                  documentosNaBase: (nfAtualizada as any)?.documentos_anexos?.length || 0,
-                                  estruturaNaBase: JSON.stringify((nfAtualizada as any)?.documentos_anexos, null, 2)
-                                });
-                              }
-                            } catch (e) {
-                              console.error('❌ Erro na busca direta:', e);
-                            }
-                            
-                            // Forçar reload completo dos dados
-                            console.log('🔄 Invalidando cache e recarregando...');
-                            invalidateAll();
-                            const result = await refetch();
-                            console.log('🔄 Resultado do primeiro refetch:', result);
-                            
-                            // Pequeno delay para garantir sincronização
-                            setTimeout(async () => {
-                              console.log('🔄 Segundo refetch após delay...');
-                              const result2 = await refetch();
-                              console.log('🔄 Resultado do segundo refetch:', result2);
-                            }, 100);
-                          }}
-                        />
-                        
-                        {/* Botão Confirmar Embarque apenas se ainda não foi embarcado */}
-                        {!(nf as any).data_embarque && (
-                          <Button
-                            onClick={() => handleConfirmarEmbarque(nf)}
-                            variant="outline"
-                            size="sm"
-                            className="min-w-[140px] gap-2"
-                          >
-                            <Truck className="w-4 h-4" />
-                            Confirmar Embarque
-                          </Button>
-                        )}
-                      </div>
-                    )}
-                    
-                    {/* Informações para Cliente */}
-                    {isCliente && (
-                      <div className="flex flex-col gap-2 items-end">
-                        {/* Status de Separação (somente leitura) */}
-                        <StatusSeparacaoManager
-                          nfId={nf.id}
-                          statusAtual={nf.status_separacao || 'pendente'}
-                          numeroNf={nf.numero_nf}
-                          canEdit={false}
-                        />
-                        
-                        {/* Documentos anexados (se houver) */}
-                        {nf.documentos_anexos && nf.documentos_anexos.length > 0 && (
-                          <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                            <Paperclip className="w-4 h-4" />
-                            {nf.documentos_anexos.length} documento(s)
-                          </div>
-                        )}
-                      </div>
-                    )}
-                    
-                    {/* Indicador de embarque confirmado */}
-                    {(nf as any).data_embarque && (
-                      <div className="flex flex-col items-center gap-1 p-2 bg-green-50 rounded-lg border border-green-200">
-                        <Truck className="w-5 h-5 text-green-600" />
-                        <span className="text-xs text-green-700 font-medium">Embarcado</span>
-                        <span className="text-xs text-green-600">
-                          {new Date((nf as any).data_embarque).toLocaleDateString('pt-BR')}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                  
-                  {/* Informações adicionais da solicitação original - apenas para transportadoras */}
-                  {!isCliente && (nf.data_agendamento_entrega || nf.observacoes_solicitacao || nf.documentos_anexos?.length > 0) && (
-                    <div className="pl-4 border-l-2 border-primary/20 bg-muted/30 rounded-r p-3">
-                      <h4 className="text-sm font-medium text-primary mb-2">Informações da Solicitação Original:</h4>
-                      
-                      {nf.data_agendamento_entrega && (
-                        <p className="text-sm text-muted-foreground mb-1">
-                          <span className="font-medium">Data de Agendamento:</span>{' '}
-                          {new Date(nf.data_agendamento_entrega).toLocaleDateString('pt-BR')}
-                        </p>
-                      )}
-                      
-                      {nf.observacoes_solicitacao && (
-                        <p className="text-sm text-muted-foreground mb-1">
-                          <span className="font-medium">Observações:</span> {nf.observacoes_solicitacao}
-                        </p>
-                      )}
-                      
-                      {(() => {
-                        console.log('🔍 PedidosConfirmadosTable - Verificando documentos para NF:', {
-                          nfId: nf.id,
-                          numeroNf: nf.numero_nf,
-                          documentos_anexos: nf.documentos_anexos,
-                          temDocumentos: !!(nf.documentos_anexos && nf.documentos_anexos.length > 0),
-                          quantidadeDocumentos: nf.documentos_anexos?.length || 0,
-                          estruturaCompleta: JSON.stringify(nf.documentos_anexos, null, 2)
-                        });
-                        
-                        return nf.documentos_anexos && Array.isArray(nf.documentos_anexos) && nf.documentos_anexos.length > 0 ? (
-                          <DocumentosAnexadosViewer 
-                            documentos={nf.documentos_anexos}
-                            nfNumero={nf.numero_nf}
-                            showTitle={true}
-                            compact={false}
-                          />
-                        ) : (
-                          <div className="text-xs text-muted-foreground">
-                            Nenhum documento anexado (total: {nf.documentos_anexos?.length || 0})
-                          </div>
-                        );
-                      })()}
-                    </div>
-                  )}
-                </div>
+                <SolicitacoesConfirmadasCard
+                  key={nf.id}
+                  nf={nf}
+                  onRefresh={() => {
+                    invalidateAll();
+                    refetch();
+                  }}
+                />
               ))}
             </div>
           ) : validNfs.length > 0 ? (
