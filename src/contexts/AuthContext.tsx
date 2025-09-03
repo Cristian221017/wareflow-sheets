@@ -58,14 +58,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION') {
           setSession(session);
           
-          // Se é refresh de token e já tem usuário carregado, manter usuário atual para evitar mudanças de painel
+          // Se é refresh de token ou sessão inicial e já tem usuário carregado, manter usuário atual
+          // Isso previne mudanças de perfil que causam redirecionamentos automáticos
           if (userRef.current && (event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION')) {
-            log('🔄 Token refreshed or initial session with existing user, keeping current profile');
-            setLoading(false); // Ensure loading is false to prevent redirects
+            log('🔄 Token refreshed or initial session with existing user, keeping current profile to prevent portal switching');
+            setLoading(false);
             return;
           }
           
-          await loadUserProfile(session.user);
+          // Apenas carregar perfil em login inicial para evitar mudanças de portal
+          if (event === 'SIGNED_IN' && !userRef.current) {
+            await loadUserProfile(session.user);
+          }
         }
       }
     );
@@ -155,6 +159,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const loadUserDataWithTimeout = async (supabaseUser: SupabaseUser): Promise<User> => {
+    // Cache key to ensure consistent user identity and prevent portal switching
+    const cacheKey = `user_profile_${supabaseUser.id}`;
+    const cachedUser = sessionStorage.getItem(cacheKey);
+    
+    if (cachedUser) {
+      log('📋 Using cached user profile to prevent portal switching');
+      return JSON.parse(cachedUser);
+    }
+    
     // FIRST: Check user_transportadoras for role-based access (super_admin, admin_transportadora, operador)
     // This takes priority to ensure consistent user identity
     const { data: userTranspData, error: userTranspError } = await supabase
@@ -186,14 +199,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         transportadoraId: userTransp.transportadora_id 
       });
       
-      return {
+      const transportadoraUser = {
         id: supabaseUser.id,
         name: transportadoraName,
         email: supabaseUser.email || '',
-        type: 'transportadora',
+        type: 'transportadora' as const,
         role: userTransp.role as 'super_admin' | 'admin_transportadora' | 'operador',
         transportadoraId: userTransp.transportadora_id
       };
+      
+      // Cache user profile to prevent inconsistent loading
+      sessionStorage.setItem(cacheKey, JSON.stringify(transportadoraUser));
+      return transportadoraUser;
     }
 
     // SECOND: Check direct transportadora email match (legacy support)
@@ -206,14 +223,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (transportadoraData?.[0]) {
       const transportadora = transportadoraData[0];
       
-      return {
+      const legacyTransportadoraUser = {
         id: supabaseUser.id,
         name: transportadora.razao_social,
         email: transportadora.email,
-        type: 'transportadora',
-        role: 'admin_transportadora', // Default role for legacy users
+        type: 'transportadora' as const,
+        role: 'admin_transportadora' as const, // Default role for legacy users
         transportadoraId: transportadora.id
       };
+      
+      // Cache user profile to prevent inconsistent loading
+      sessionStorage.setItem(cacheKey, JSON.stringify(legacyTransportadoraUser));
+      return legacyTransportadoraUser;
     }
 
     // THIRD: Check direct cliente email match
@@ -226,23 +247,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (clienteData?.[0]) {
       const cliente = clienteData[0];
       
-      return {
+      const clienteUser = {
         id: supabaseUser.id,
         name: cliente.razao_social,
         email: cliente.email,
-        type: 'cliente',
+        type: 'cliente' as const,
         clienteId: cliente.id,
         transportadoraId: cliente.transportadora_id
       };
+      
+      // Cache user profile to prevent inconsistent loading
+      sessionStorage.setItem(cacheKey, JSON.stringify(clienteUser));
+      return clienteUser;
     }
 
     // Final fallback
-    return {
+    const fallbackUser = {
       id: supabaseUser.id,
       name: supabaseUser.email?.split('@')[0] || 'Usuário',
       email: supabaseUser.email || '',
       type: 'cliente' as const
     };
+    
+    // Cache fallback user profile
+    sessionStorage.setItem(cacheKey, JSON.stringify(fallbackUser));
+    return fallbackUser;
   };
 
   const login = async (email: string, password: string): Promise<boolean> => {
@@ -291,6 +320,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const logout = async () => {
     try {
+      // Clear cached user profile on logout to allow fresh login
+      const userId = user?.id;
+      if (userId) {
+        sessionStorage.removeItem(`user_profile_${userId}`);
+      }
       await supabase.auth.signOut();
     } catch (error) {
       logError('Logout error:', error);
