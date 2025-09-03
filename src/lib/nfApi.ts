@@ -78,8 +78,8 @@ export async function fetchNFsByStatus(status?: NFStatus) {
     throw new Error('Usuário não autenticado');
   }
 
-  // SINCRONIZAÇÃO: Query idêntica ao useNFsCliente para consistência
-  let query = supabase
+  // Buscar NFs primeiro
+  let nfQuery = supabase
     .from("notas_fiscais")
     .select(`
       id,
@@ -100,49 +100,63 @@ export async function fetchNFsByStatus(status?: NFStatus) {
       created_at,
       updated_at,
       requested_at,
-      approved_at,
-      solicitacoes_carregamento(
-        id, status, requested_at, data_agendamento, observacoes, anexos, approved_at
-      )
+      approved_at
     `)
     .order("created_at", { ascending: false });
 
-  // Aplicar filtro de status se fornecido
   if (status) {
-    query = query.eq("status", status);
+    nfQuery = nfQuery.eq("status", status);
   }
 
-  const { data, error: fetchError } = await query;
+  const { data: nfs, error: fetchError } = await nfQuery;
   
   if (fetchError) {
     auditError('NF_FETCH_BY_STATUS_FAIL', 'NF', fetchError, { status, userId: authUser.user.id });
     throw new Error(`Erro ao buscar notas fiscais: ${fetchError.message}`);
   }
-  
-  log(`📊 Encontradas ${data?.length || 0} NFs com status ${status || 'todos'}`);
-  
-  // MAPEAMENTO CONSISTENTE: Idêntico ao useNFsCliente
-  return (data || []).map((item: any) => {
-    const nf = { ...item };
-    const solicitacao = item.solicitacoes_carregamento?.[0];
-    
-    if (solicitacao) {
-      nf.data_agendamento_entrega = solicitacao.data_agendamento;
-      nf.observacoes_solicitacao = solicitacao.observacoes;
-      nf.documentos_anexos = solicitacao.anexos;
-      nf.requested_at = solicitacao.requested_at;
-      nf.approved_at = solicitacao.approved_at;
-    }
-    
-    // Remover array de solicitações do objeto final
-    delete nf.solicitacoes_carregamento;
+
+  // Para cada NF, buscar dados de solicitação
+  const nfsWithSolicitacao = await Promise.all((nfs || []).map(async (nf: any) => {
+    // Buscar solicitação mais recente desta NF usando any para contornar tipos
+    const { data: solicitacoes } = await (supabase as any)
+      .from('solicitacoes_carregamento')
+      .select('data_agendamento, observacoes, anexos, requested_at, approved_at, status')
+      .eq('nf_id', nf.id)
+      .order('created_at', { ascending: false })
+      .limit(1);
+
+    const solicitacao = solicitacoes?.[0];
     
     return {
       ...nf,
       status: nf.status as NFStatus,
-      status_separacao: nf.status_separacao || 'pendente'
+      status_separacao: nf.status_separacao || 'pendente',
+      // Mapear dados da solicitação se existir
+      data_agendamento_entrega: solicitacao?.data_agendamento,
+      observacoes_solicitacao: solicitacao?.observacoes,
+      documentos_anexos: solicitacao?.anexos || [],
+      // Usar dados da solicitação se existir, senão usar dados da NF
+      requested_at: solicitacao?.requested_at || nf.requested_at,
+      approved_at: solicitacao?.approved_at || nf.approved_at
     };
-  });
+  }));
+  
+  log(`📊 Encontradas ${nfsWithSolicitacao?.length || 0} NFs com status ${status || 'todos'}`);
+  
+  // Log para debug - mostrar se as informações de agendamento estão chegando
+  const nfsComAgendamento = nfsWithSolicitacao.filter(nf => nf.data_agendamento_entrega || nf.observacoes_solicitacao || nf.documentos_anexos?.length > 0);
+  log(`📋 ${nfsComAgendamento.length} NFs têm informações de agendamento`);
+  
+  if (nfsComAgendamento.length > 0) {
+    log('📋 Exemplo de NF com agendamento:', {
+      numero_nf: nfsComAgendamento[0].numero_nf,
+      data_agendamento: nfsComAgendamento[0].data_agendamento_entrega,
+      observacoes: !!nfsComAgendamento[0].observacoes_solicitacao,
+      documentos: nfsComAgendamento[0].documentos_anexos?.length
+    });
+  }
+  
+  return nfsWithSolicitacao;
 }
 
 export async function solicitarCarregamentoComAgendamento({
