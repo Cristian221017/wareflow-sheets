@@ -12,7 +12,7 @@ import type { NotaFiscal } from '@/types/nf';
 
 interface AnexarDocumentosDialogProps {
   nf: NotaFiscal;
-  onDocumentosAnexados?: () => void;
+  onDocumentosAnexados?: () => Promise<void> | void;
 }
 
 export function AnexarDocumentosDialog({ nf, onDocumentosAnexados }: AnexarDocumentosDialogProps) {
@@ -156,7 +156,11 @@ export function AnexarDocumentosDialog({ nf, onDocumentosAnexados }: AnexarDocum
       
       // Callback para atualizar lista
       if (onDocumentosAnexados) {
-        onDocumentosAnexados();
+        console.log('✅ Callback encontrado, executando...');
+        await onDocumentosAnexados();
+        console.log('✅ Callback executado com sucesso');
+      } else {
+        console.log('❌ Callback onDocumentosAnexados não foi fornecido');
       }
 
     } catch (error) {
