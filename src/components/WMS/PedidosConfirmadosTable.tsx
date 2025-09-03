@@ -489,39 +489,6 @@ export function PedidosConfirmadosTable() {
                       </div>
                     )}
                   </div>
-                  
-                  {/* Informações adicionais da solicitação original */}
-                  {(nf.data_agendamento_entrega || nf.observacoes_solicitacao || nf.documentos_anexos?.length > 0) && (
-                    <div className="pl-4 border-l-2 border-primary/20 bg-muted/30 rounded-r p-3">
-                      <h4 className="text-sm font-medium text-primary mb-2">Informações da Solicitação Original:</h4>
-                      
-                      {nf.data_agendamento_entrega && (
-                        <p className="text-sm text-muted-foreground mb-1">
-                          <span className="font-medium">Data de Agendamento:</span>{' '}
-                          {new Date(nf.data_agendamento_entrega).toLocaleDateString('pt-BR')}
-                        </p>
-                      )}
-                      
-                      {nf.observacoes_solicitacao && (
-                        <p className="text-sm text-muted-foreground mb-1">
-                          <span className="font-medium">Observações:</span> {nf.observacoes_solicitacao}
-                        </p>
-                      )}
-                      
-                      {nf.documentos_anexos && Array.isArray(nf.documentos_anexos) && nf.documentos_anexos.length > 0 && (
-                        <div className="text-sm text-muted-foreground">
-                          <span className="font-medium">Documentos anexados ({nf.documentos_anexos.length}):</span>
-                          <ul className="mt-1 ml-4 list-disc">
-                            {nf.documentos_anexos.map((doc: any, docIndex: number) => (
-                              <li key={`${doc.nome}-${docIndex}`} className="text-xs">
-                                {doc.nome} ({((doc.tamanho || 0) / 1024).toFixed(1)} KB)
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
-                    </div>
-                  )}
                 </div>
               ))}
             </div>
