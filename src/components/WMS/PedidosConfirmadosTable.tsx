@@ -18,6 +18,7 @@ import { useInvalidateAll } from "@/hooks/useInvalidateAll";
 import type { NotaFiscal } from "@/types/nf";
 import { log, error as logError } from "@/utils/logger";
 import { toast } from "sonner";
+import { supabase } from '@/integrations/supabase/client';
 
 export function PedidosConfirmadosTable() {
   const { user } = useAuth();
@@ -476,8 +477,29 @@ export function PedidosConfirmadosTable() {
                               estruturaAtual: JSON.stringify(nf.documentos_anexos, null, 2)
                             });
                             
+                           // Buscar dados diretamente da base para comparar
+                            console.log('🔍 Buscando dados diretamente da base de dados...');
+                            try {
+                              const { data: nfAtualizada, error } = await supabase
+                                .from('notas_fiscais')
+                                .select('id, numero_nf, documentos_anexos')
+                                .eq('id', nf.id)
+                                .single();
+                              
+                              if (error) {
+                                console.error('❌ Erro ao buscar NF atualizada:', error);
+                              } else {
+                                console.log('📊 Dados na base após anexo:', {
+                                  documentosNaBase: (nfAtualizada as any)?.documentos_anexos?.length || 0,
+                                  estruturaNaBase: JSON.stringify((nfAtualizada as any)?.documentos_anexos, null, 2)
+                                });
+                              }
+                            } catch (e) {
+                              console.error('❌ Erro na busca direta:', e);
+                            }
+                            
                             // Forçar reload completo dos dados
-                            console.log('🔄 Documento anexado, recarregando dados da NF:', nf.id);
+                            console.log('🔄 Invalidando cache e recarregando...');
                             invalidateAll();
                             const result = await refetch();
                             console.log('🔄 Resultado do primeiro refetch:', result);
