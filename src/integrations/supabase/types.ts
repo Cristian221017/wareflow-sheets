@@ -1462,17 +1462,11 @@ export type Database = {
         Returns: string
       }
       nf_update_status_separacao: {
-        Args:
-          | {
-              p_nf_id: string
-              p_observacoes?: string
-              p_status_separacao: Database["public"]["Enums"]["separacao_status"]
-            }
-          | {
-              p_nf_id: string
-              p_observacoes?: string
-              p_status_separacao: string
-            }
+        Args: {
+          p_nf_id: string
+          p_observacoes?: string
+          p_status_separacao: string
+        }
         Returns: undefined
       }
       refresh_dashboard_views: {
