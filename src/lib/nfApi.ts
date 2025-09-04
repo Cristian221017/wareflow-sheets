@@ -115,8 +115,18 @@ export async function fetchNFsByStatus(status?: NFStatus) {
     throw new Error(`Erro ao buscar notas fiscais: ${fetchError.message}`);
   }
 
+  // Filtrar NFs com status de separação 'em_viagem' ou 'entregue' quando status for ARMAZENADA
+  let filteredNFs = nfs || [];
+  if (status === 'ARMAZENADA') {
+    filteredNFs = filteredNFs.filter((nf: any) => 
+      !nf.status_separacao || 
+      (nf.status_separacao !== 'em_viagem' && nf.status_separacao !== 'entregue')
+    );
+    log(`🔍 Filtradas ${(nfs || []).length - filteredNFs.length} NFs em viagem/entregues do status ARMAZENADA`);
+  }
+
   // Para cada NF, buscar dados de solicitação
-  const nfsWithSolicitacao = await Promise.all((nfs || []).map(async (nf: any) => {
+  const nfsWithSolicitacao = await Promise.all(filteredNFs.map(async (nf: any) => {
     // Buscar solicitação mais recente desta NF usando any para contornar tipos
     const { data: solicitacoes } = await (supabase as any)
       .from('solicitacoes_carregamento')

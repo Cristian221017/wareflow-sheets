@@ -1,16 +1,25 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from 'recharts';
-import { Package, Clock, CheckCircle, TrendingUp } from 'lucide-react';
+import { Package, Clock, CheckCircle, TrendingUp, RefreshCw } from 'lucide-react';
 import { useMemo } from 'react';
 import { useAllNFs } from '@/hooks/useNFs';
 import { SLADashboard } from './SLADashboard';
 import { StatusSeparacaoSummary } from '@/components/Dashboard/StatusSeparacaoSummary';
 import { ReportsActions } from '@/components/Dashboard/ReportsActions';
+import { useInvalidateAll } from '@/hooks/useInvalidateAll';
+import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
 
 const COLORS = ['hsl(var(--success))', 'hsl(var(--warning))', 'hsl(var(--error))'];
 
 export function Dashboard() {
   const { armazenadas, solicitadas, confirmadas, isLoading: nfsLoading } = useAllNFs();
+  const { invalidateAll } = useInvalidateAll();
+
+  const handleRefresh = () => {
+    invalidateAll();
+    toast.success('Dados atualizados com sucesso!');
+  };
 
   const dashboardData = useMemo(() => {
     // Combinando todas as NFs para análise geral
@@ -96,6 +105,23 @@ export function Dashboard() {
 
   return (
     <div className="space-y-6">
+      {/* Header com botão de refresh */}
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-2xl font-bold">Dashboard Transportadora</h1>
+          <p className="text-muted-foreground">Visão geral das operações e estatísticas</p>
+        </div>
+        <Button 
+          onClick={handleRefresh} 
+          variant="outline" 
+          size="sm"
+          className="gap-2"
+        >
+          <RefreshCw className="h-4 w-4" />
+          Atualizar Dados
+        </Button>
+      </div>
+
       {/* KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
