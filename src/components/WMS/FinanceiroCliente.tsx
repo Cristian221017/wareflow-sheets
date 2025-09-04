@@ -50,13 +50,24 @@ export function FinanceiroCliente() {
     
     if (statusFilter !== 'all') {
       if (statusFilter === 'vencidos') {
-        // Filtrar documentos que estão vencidos por data (Em aberto + data vencida)
+        // Filtrar documentos com status "Vencido" OU "Em aberto" com data vencida
         filtered = filtered.filter(doc => {
-          if (doc.status !== 'Em aberto') return false;
-          const date = new Date(doc.dataVencimento + 'T00:00:00');
-          const today = new Date();
-          today.setHours(0, 0, 0, 0);
-          return date < today;
+          const isVencido = (dataVencimento: string, status: string): boolean => {
+            // Se já está marcado como Vencido manualmente, retorna true
+            if (status === 'Vencido') return true;
+            
+            // Para documentos Em aberto, verifica se a data venceu
+            if (status === 'Em aberto' && dataVencimento) {
+              const date = new Date(dataVencimento + 'T00:00:00');
+              const today = new Date();
+              today.setHours(0, 0, 0, 0);
+              return date < today;
+            }
+            
+            return false;
+          };
+          
+          return isVencido(doc.dataVencimento, doc.status);
         });
       } else {
         filtered = filtered.filter(doc => doc.status === statusFilter);
@@ -113,14 +124,20 @@ export function FinanceiroCliente() {
   }
   
   const getStatusColor = (status: string, dataVencimento: string) => {
-    // Verificar se documento está vencido baseado na data (apenas para status "Em aberto")
+    // Verificar se documento está vencido baseado na data
     const isVencido = (dataVencimento: string, status: string): boolean => {
-      if (!dataVencimento || status !== 'Em aberto') return false;
+      // Se já está marcado como Vencido manualmente, retorna true
+      if (status === 'Vencido') return true;
       
-      const date = new Date(dataVencimento + 'T00:00:00');
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      return date < today;
+      // Para documentos Em aberto, verifica se a data venceu
+      if (status === 'Em aberto' && dataVencimento) {
+        const date = new Date(dataVencimento + 'T00:00:00');
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        return date < today;
+      }
+      
+      return false;
     };
 
     const vencido = isVencido(dataVencimento, status);
@@ -284,6 +301,14 @@ export function FinanceiroCliente() {
                           <span>Valor:</span>
                           <p className="font-medium text-foreground">
                             R$ {documento.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                          </p>
+                        </div>
+                      )}
+                      {documento.status === 'Pago' && documento.dataPagamento && (
+                        <div className="col-span-2">
+                          <span>Data Pagamento:</span>
+                          <p className="font-medium text-green-600">
+                            {new Date(documento.dataPagamento).toLocaleDateString('pt-BR')}
                           </p>
                         </div>
                       )}

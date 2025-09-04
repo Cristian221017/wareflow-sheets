@@ -27,17 +27,22 @@ export function FinanceiroClienteDashboard({ className }: FinanceiroClienteDashb
 
     // Função helper para verificar se documento está vencido
     const isVencido = (dataVencimento: string, status: string): boolean => {
-      // Só verifica vencimento por data para documentos 'Em aberto'
-      if (!dataVencimento || status !== 'Em aberto') return false;
+      // Se já está marcado como Vencido manualmente, retorna true
+      if (status === 'Vencido') return true;
       
-      const date = new Date(dataVencimento + 'T00:00:00');
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      return date < today;
+      // Para documentos Em aberto, verifica se a data venceu
+      if (status === 'Em aberto' && dataVencimento) {
+        const date = new Date(dataVencimento + 'T00:00:00');
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        return date < today;
+      }
+      
+      return false;
     };
     
     return documentos.reduce((acc, doc) => {
-      const docVencido = doc.status === 'Vencido' || isVencido(doc.dataVencimento, doc.status);
+      const docVencido = isVencido(doc.dataVencimento, doc.status);
       const docEmAberto = doc.status === 'Em aberto' && !isVencido(doc.dataVencimento, doc.status);
       const docPago = doc.status === 'Pago';
       const valor = doc.valor || 0;
