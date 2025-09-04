@@ -109,7 +109,9 @@ export function ClienteStatusSeparacao() {
     );
   }
 
-  const validNfs = Array.isArray(nfs) ? nfs : [];
+  const validNfs = Array.isArray(nfs) ? nfs.filter(nf => 
+    nf.status_separacao !== 'em_viagem' && nf.status_separacao !== 'entregue'
+  ) : [];
 
   if (validNfs.length === 0) {
     return (

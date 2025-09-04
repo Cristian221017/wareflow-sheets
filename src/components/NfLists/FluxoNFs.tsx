@@ -197,7 +197,9 @@ function ArmazenadasColumn({
   if (isLoading) return <div className="p-4">Carregando...</div>;
   if (isError) return <div className="p-4 text-red-500">Erro ao carregar dados</div>;
 
-  const validNfs = Array.isArray(nfs) ? nfs : [];
+  const validNfs = Array.isArray(nfs) ? nfs.filter(nf => 
+    nf.status_separacao !== 'em_viagem' && nf.status_separacao !== 'entregue'
+  ) : [];
   const filteredNfs = applyFilters(validNfs);
 
   const handleImprimir = () => {

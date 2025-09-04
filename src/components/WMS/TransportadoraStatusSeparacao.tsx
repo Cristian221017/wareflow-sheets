@@ -61,6 +61,11 @@ const statusConfig = {
 
 export function TransportadoraStatusSeparacao() {
   const { data: nfs = [], isLoading, error } = useNFs('ARMAZENADA');
+  
+  // Filtrar NFs excluindo aquelas em viagem ou entregues na tela de armazenamento
+  const filteredArmazenadasNfs = nfs.filter(nf => 
+    nf.status_separacao !== 'em_viagem' && nf.status_separacao !== 'entregue'
+  );
 
   const [filters, setFilters] = useState<NFFilterState>({
     searchNF: '',
@@ -144,7 +149,7 @@ export function TransportadoraStatusSeparacao() {
     );
   }
 
-  if (!nfs.length) {
+  if (!filteredArmazenadasNfs.length) {
     return (
       <div className="space-y-6">
         <div>
@@ -164,7 +169,7 @@ export function TransportadoraStatusSeparacao() {
     );
   }
 
-  const filteredNfs = applyFilters(nfs);
+  const filteredNfs = applyFilters(filteredArmazenadasNfs);
 
   // Função para imprimir relatório
   const handleImprimir = () => {
