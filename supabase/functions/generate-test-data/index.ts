@@ -67,7 +67,7 @@ serve(async (req) => {
     ]
 
     const statuses = ['ARMAZENADA', 'SOLICITADA', 'CONFIRMADA', 'CARREGADA', 'ENTREGUE']
-    const separacaoStatus = ['pendente', 'em_andamento', 'separacao_concluida']
+    const separacaoStatus = ['pendente', 'em_separacao', 'separacao_concluida', 'separacao_com_pendencia', 'em_viagem', 'entregue']
 
     for (let batch = 0; batch < batches; batch++) {
       const currentBatchSize = Math.min(batchSize, count - totalInserted)
