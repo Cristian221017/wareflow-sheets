@@ -7,6 +7,10 @@ const CENTRAL_CHANNEL_NAME = "wms-central-realtime";
 
 // D) Guard para evitar múltiplas subscriptions centralizadas
 let activeCentralChannel: RealtimeChannel | null = null;
+let reconnectTimeout: NodeJS.Timeout | null = null;
+let reconnectAttempts = 0;
+const MAX_RECONNECT_ATTEMPTS = 5;
+const BASE_RECONNECT_DELAY = 1000; // 1 second
 
 export function subscribeCentralizedChanges(queryClient: QueryClient): () => void {
   // Guard: se já existe uma subscription ativa, retorna cleanup vazio
@@ -14,7 +18,17 @@ export function subscribeCentralizedChanges(queryClient: QueryClient): () => voi
     log('🔒 Subscription centralizada já ativa, ignorando nova tentativa');
     return () => {}; 
   }
-  log('🔄 Iniciando subscription realtime centralizada');
+  
+  return createRealtimeSubscription(queryClient);
+}
+
+function createRealtimeSubscription(queryClient: QueryClient, isReconnect = false): () => void {
+  if (isReconnect) {
+    log(`🔄 Tentativa de reconexão ${reconnectAttempts + 1}/${MAX_RECONNECT_ATTEMPTS}`);
+  } else {
+    log('🔄 Iniciando subscription realtime centralizada');
+    reconnectAttempts = 0;
+  }
   
   // Contador de erros para reduzir spam
   let errorCount = 0;
@@ -63,6 +77,13 @@ export function subscribeCentralizedChanges(queryClient: QueryClient): () => voi
         log('✅ Subscription realtime centralizada ativa');
         activeCentralChannel = channel;
         errorCount = 0; // Reset contador
+        reconnectAttempts = 0; // Reset reconnect attempts on success
+        
+        // Clear any pending reconnect timeout
+        if (reconnectTimeout) {
+          clearTimeout(reconnectTimeout);
+          reconnectTimeout = null;
+        }
       } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
         errorCount++;
         // Só logar os primeiros 3 erros, depois a cada 10
@@ -70,7 +91,26 @@ export function subscribeCentralizedChanges(queryClient: QueryClient): () => voi
           log('📡 Status da subscription centralizada:', status);
           warn('❌ Erro na subscription realtime centralizada');
         }
-        activeCentralChannel = null;
+        
+        // Clean up current channel
+        if (activeCentralChannel) {
+          supabase.removeChannel(activeCentralChannel);
+          activeCentralChannel = null;
+        }
+        
+        // Attempt reconnection with exponential backoff
+        if (reconnectAttempts < MAX_RECONNECT_ATTEMPTS && !reconnectTimeout) {
+          const delay = BASE_RECONNECT_DELAY * Math.pow(2, reconnectAttempts);
+          log(`🔄 Reagendando reconexão em ${delay}ms`);
+          
+          reconnectTimeout = setTimeout(() => {
+            reconnectTimeout = null;
+            reconnectAttempts++;
+            createRealtimeSubscription(queryClient, true);
+          }, delay);
+        } else if (reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
+          warn('❌ Máximo de tentativas de reconexão atingido. Subscription desabilitada.');
+        }
       } else {
         log('📡 Status da subscription centralizada:', status);
       }
@@ -79,8 +119,17 @@ export function subscribeCentralizedChanges(queryClient: QueryClient): () => voi
   // Retorna função de cleanup
   return () => {
     log('🔌 Desconectando subscription realtime centralizada');
+    
+    // Clear any pending reconnect timeout
+    if (reconnectTimeout) {
+      clearTimeout(reconnectTimeout);
+      reconnectTimeout = null;
+    }
+    
+    // Remove the channel
     supabase.removeChannel(channel);
     activeCentralChannel = null;
+    reconnectAttempts = 0;
   };
 }
 
