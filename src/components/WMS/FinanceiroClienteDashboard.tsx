@@ -25,21 +25,31 @@ export function FinanceiroClienteDashboard({ className }: FinanceiroClienteDashb
       };
     }
 
-    const hoje = new Date();
+    // Função helper para verificar se documento está vencido
+    const isVencido = (dataVencimento: string, status: string): boolean => {
+      // Só verifica vencimento por data para documentos 'Em aberto'
+      if (!dataVencimento || status !== 'Em aberto') return false;
+      
+      const date = new Date(dataVencimento + 'T00:00:00');
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      return date < today;
+    };
     
     return documentos.reduce((acc, doc) => {
-      const isVencido = !doc.pagoEm && new Date(doc.dataVencimento) < hoje;
-      const isPago = !!doc.pagoEm;
+      const docVencido = doc.status === 'Vencido' || isVencido(doc.dataVencimento, doc.status);
+      const docEmAberto = doc.status === 'Em aberto' && !isVencido(doc.dataVencimento, doc.status);
+      const docPago = doc.status === 'Pago';
       const valor = doc.valor || 0;
-      const valorPago = doc.valorPago || 0;
+      const valorPago = doc.valorPago || (docPago ? valor : 0);
 
       return {
         total: acc.total + 1,
-        emAberto: acc.emAberto + (!isPago && !isVencido ? 1 : 0),
-        vencidos: acc.vencidos + (isVencido ? 1 : 0),
-        pagos: acc.pagos + (isPago ? 1 : 0),
-        valorTotal: acc.valorTotal + valor,
-        valorVencido: acc.valorVencido + (isVencido ? valor : 0),
+        emAberto: acc.emAberto + (docEmAberto ? 1 : 0),
+        vencidos: acc.vencidos + (docVencido ? 1 : 0),
+        pagos: acc.pagos + (docPago ? 1 : 0),
+        valorTotal: acc.valorTotal + (docEmAberto ? valor : 0), // Apenas valor em aberto
+        valorVencido: acc.valorVencido + (docVencido ? valor : 0),
         valorPago: acc.valorPago + valorPago,
       };
     }, {
