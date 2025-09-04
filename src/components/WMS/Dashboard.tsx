@@ -4,6 +4,8 @@ import { Package, Clock, CheckCircle, TrendingUp } from 'lucide-react';
 import { useMemo } from 'react';
 import { useAllNFs } from '@/hooks/useNFs';
 import { SLADashboard } from './SLADashboard';
+import { StatusSeparacaoSummary } from '@/components/Dashboard/StatusSeparacaoSummary';
+import { ReportsActions } from '@/components/Dashboard/ReportsActions';
 
 const COLORS = ['hsl(var(--success))', 'hsl(var(--warning))', 'hsl(var(--error))'];
 
@@ -210,6 +212,16 @@ export function Dashboard() {
           </ResponsiveContainer>
         </CardContent>
       </Card>
+
+      {/* Status Separação Summary */}
+      <StatusSeparacaoSummary />
+
+      {/* Reports Actions */}
+      <ReportsActions 
+        nfs={[...armazenadas, ...solicitadas, ...confirmadas]}
+        reportTitle="Relatório Geral de Mercadorias"
+        fileName="relatorio-geral-mercadorias"
+      />
 
       {/* SLA Dashboard */}
       <SLADashboard />

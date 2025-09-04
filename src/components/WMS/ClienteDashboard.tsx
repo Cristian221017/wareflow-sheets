@@ -3,10 +3,24 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useDashboard } from '@/hooks/useDashboard';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Package, FileText, Truck, BarChart3, PackageCheck } from 'lucide-react';
+import { StatusSeparacaoSummary } from '@/components/Dashboard/StatusSeparacaoSummary';
+import { ReportsActions } from '@/components/Dashboard/ReportsActions';
+import { useNFsCliente } from '@/hooks/useNFsCliente';
 
 export function ClienteDashboard() {
   const { data: stats, isLoading, error } = useDashboard();
   const { user } = useAuth();
+  
+  // Buscar NFs para relatórios
+  const { data: nfsArmazenadas } = useNFsCliente("ARMAZENADA");
+  const { data: nfsSolicitadas } = useNFsCliente("SOLICITADA");
+  const { data: nfsConfirmadas } = useNFsCliente("CONFIRMADA");
+  
+  const allNfs = [
+    ...(Array.isArray(nfsArmazenadas) ? nfsArmazenadas : []),
+    ...(Array.isArray(nfsSolicitadas) ? nfsSolicitadas : []),
+    ...(Array.isArray(nfsConfirmadas) ? nfsConfirmadas : [])
+  ];
 
   if (isLoading || !stats) {
     return (
@@ -201,6 +215,16 @@ export function ClienteDashboard() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Status Separação Summary - apenas armazenadas */}
+      <StatusSeparacaoSummary showOnlyArmazenadas={true} />
+
+      {/* Reports Actions */}
+      <ReportsActions 
+        nfs={allNfs}
+        reportTitle="Relatório de Minhas Mercadorias"
+        fileName="minhas-mercadorias"
+      />
     </div>
   );
 }

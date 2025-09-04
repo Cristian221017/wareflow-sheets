@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { Package, Clock, CheckCircle, AlertTriangle, FileText, Printer, Download, Truck } from 'lucide-react';
+import { Package, Clock, CheckCircle, AlertTriangle, FileText, Truck } from 'lucide-react';
 import { NotaFiscal } from '@/types/nf';
 import { NFFilters, NFFilterState } from '@/components/NfLists/NFFilters';
 import { NFCard } from '@/components/NfLists/NFCard';
@@ -171,173 +171,6 @@ export function TransportadoraStatusSeparacao() {
 
   const filteredNfs = applyFilters(filteredArmazenadasNfs);
 
-  // Função para imprimir relatório
-  const handleImprimir = () => {
-    const hoje = new Date();
-    const dataHoraImpressao = hoje.toLocaleString('pt-BR');
-    
-    const filtrosAplicados = [];
-    if (filters.searchNF) filtrosAplicados.push(`NF: ${filters.searchNF}`);
-    if (filters.searchPedido) filtrosAplicados.push(`Pedido: ${filters.searchPedido}`);
-    if (filters.produto) filtrosAplicados.push(`Produto: ${filters.produto}`);
-    if (filters.fornecedor) filtrosAplicados.push(`Fornecedor: ${filters.fornecedor}`);
-    if (filters.localizacao) filtrosAplicados.push(`Localização: ${filters.localizacao}`);
-    if (filters.dataInicio) filtrosAplicados.push(`Data início: ${new Date(filters.dataInicio).toLocaleDateString('pt-BR')}`);
-    if (filters.dataFim) filtrosAplicados.push(`Data fim: ${new Date(filters.dataFim).toLocaleDateString('pt-BR')}`);
-
-    let html = `
-      <html>
-        <head>
-          <title>Relatório de Mercadorias Armazenadas</title>
-          <style>
-            body { font-family: Arial, sans-serif; margin: 20px; }
-            .header { text-align: center; margin-bottom: 30px; }
-            .filters { margin-bottom: 20px; padding: 10px; background-color: #f5f5f5; border-radius: 5px; }
-            .summary { margin-bottom: 20px; }
-            table { width: 100%; border-collapse: collapse; }
-            th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-            th { background-color: #f2f2f2; }
-            .footer { margin-top: 30px; text-align: center; font-size: 12px; color: #666; }
-          </style>
-        </head>
-        <body>
-          <div class="header">
-            <h1>Relatório de Mercadorias Armazenadas</h1>
-            <p>Gerado em: ${dataHoraImpressao}</p>
-          </div>
-    `;
-
-    if (filtrosAplicados.length > 0) {
-      html += `
-        <div class="filters">
-          <strong>Filtros aplicados:</strong> ${filtrosAplicados.join(', ')}
-        </div>
-      `;
-    }
-
-    const totalPeso = filteredNfs.reduce((sum, nf) => sum + Number(nf.peso || 0), 0);
-    const totalVolume = filteredNfs.reduce((sum, nf) => sum + Number(nf.volume || 0), 0);
-    const totalQuantidade = filteredNfs.reduce((sum, nf) => sum + Number(nf.quantidade || 0), 0);
-
-    // Resumo por status
-    const nfsByStatus = filteredNfs.reduce((acc, nf) => {
-      const status = nf.status_separacao || 'pendente';
-      if (!acc[status]) acc[status] = [];
-      acc[status].push(nf);
-      return acc;
-    }, {} as Record<string, NotaFiscal[]>);
-    
-    const statusCounts = Object.entries(statusConfig).map(([status, config]) => ({
-      status,
-      label: config.label,
-      count: nfsByStatus[status]?.length || 0
-    }));
-
-    html += `
-      <div class="summary">
-        <h3>Resumo</h3>
-        <p><strong>Total de mercadorias armazenadas:</strong> ${filteredNfs.length}</p>
-        <p><strong>Peso total:</strong> ${totalPeso.toLocaleString('pt-BR')} kg</p>
-        <p><strong>Volume total:</strong> ${totalVolume.toLocaleString('pt-BR')} m³</p>
-        <p><strong>Quantidade total:</strong> ${totalQuantidade.toLocaleString('pt-BR')} unidades</p>
-        <h4>Por Status de Separação:</h4>
-        <ul>
-          ${statusCounts.map(s => `<li>${s.label}: ${s.count}</li>`).join('')}
-        </ul>
-      </div>
-
-      <table>
-        <thead>
-          <tr>
-            <th>NF</th>
-            <th>Pedido</th>
-            <th>Produto</th>
-            <th>Fornecedor</th>
-            <th>Quantidade</th>
-            <th>Peso (kg)</th>
-            <th>Volume (m³)</th>
-            <th>Localização</th>
-            <th>Data Receb.</th>
-            <th>Status Separação</th>
-          </tr>
-        </thead>
-        <tbody>
-    `;
-
-    filteredNfs.forEach(nf => {
-      const statusLabel = statusConfig[nf.status_separacao || 'pendente']?.label || 'Pendente';
-      html += `
-        <tr>
-          <td>${nf.numero_nf}</td>
-          <td>${nf.numero_pedido}</td>
-          <td>${nf.produto}</td>
-          <td>${nf.fornecedor}</td>
-          <td>${Number(nf.quantidade).toLocaleString('pt-BR')}</td>
-          <td>${Number(nf.peso).toLocaleString('pt-BR')}</td>
-          <td>${Number(nf.volume).toLocaleString('pt-BR')}</td>
-          <td>${nf.localizacao}</td>
-          <td>${new Date(nf.data_recebimento).toLocaleDateString('pt-BR')}</td>
-          <td>${statusLabel}</td>
-        </tr>
-      `;
-    });
-
-    html += `
-        </tbody>
-      </table>
-      <div class="footer">
-        <p>Relatório gerado pelo Sistema WMS - Portal Transportadora</p>
-      </div>
-    </body>
-    </html>
-    `;
-
-    const printWindow = window.open('', '_blank');
-    if (printWindow) {
-      printWindow.document.write(html);
-      printWindow.document.close();
-      printWindow.print();
-    }
-    
-    toast.success("Relatório enviado para impressão!");
-  };
-
-  // Função para exportar CSV
-  const handleExportar = () => {
-    const headers = [
-      'NF', 'Pedido', 'Produto', 'Fornecedor', 'Quantidade', 
-      'Peso (kg)', 'Volume (m³)', 'Localização', 'Data Recebimento', 'Status Separação'
-    ];
-    
-    const csvContent = [
-      headers.join(','),
-      ...filteredNfs.map(nf => [
-        nf.numero_nf,
-        nf.numero_pedido,
-        `"${nf.produto}"`,
-        `"${nf.fornecedor}"`,
-        nf.quantidade,
-        nf.peso,
-        nf.volume,
-        `"${nf.localizacao}"`,
-        new Date(nf.data_recebimento).toLocaleDateString('pt-BR'),
-        statusConfig[nf.status_separacao || 'pendente']?.label || 'Pendente'
-      ].join(','))
-    ].join('\n');
-
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    const url = URL.createObjectURL(blob);
-    link.setAttribute('href', url);
-    link.setAttribute('download', `mercadorias-armazenadas-${new Date().toISOString().split('T')[0]}.csv`);
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    
-    toast.success("Arquivo CSV exportado com sucesso!");
-  };
-
   // Group NFs by separation status
   const nfsByStatus = filteredNfs.reduce((acc, nf) => {
     const status = nf.status_separacao || 'pendente';
@@ -368,45 +201,9 @@ export function TransportadoraStatusSeparacao() {
                 Gerencie o status de separação das mercadorias armazenadas ({totalNfs} itens)
               </p>
             </div>
-            {filteredNfs.length > 0 && (
-              <div className="flex gap-2">
-                <Button onClick={handleImprimir} variant="outline" size="sm">
-                  <Printer className="w-4 h-4 mr-2" />
-                  Imprimir
-                </Button>
-                <Button onClick={handleExportar} variant="outline" size="sm">
-                  <Download className="w-4 h-4 mr-2" />
-                  Exportar CSV
-                </Button>
-              </div>
-            )}
           </div>
 
       <NFFilters filters={filters} onFiltersChange={setFilters} />
-
-      {/* Status Summary */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {statusSummary.map(({ status, config, count }) => {
-          const Icon = config.icon;
-          return (
-            <Card key={status}>
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Icon className="h-4 w-4" style={{ color: config.color }} />
-                    <span className="text-sm font-medium">{config.label}</span>
-                  </div>
-                  <Badge variant="secondary">{count}</Badge>
-                </div>
-                <div className="mt-2">
-                  <Progress value={(count / totalNfs) * 100} className="h-2" />
-                </div>
-                <p className="text-xs text-muted-foreground mt-2">{config.description}</p>
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
 
       {/* Bulk Actions for completed separation */}
       {nfsParaLiberacao.length > 0 && (
