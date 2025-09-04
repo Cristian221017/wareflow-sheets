@@ -54,7 +54,7 @@ export function FinanceiroProvider({ children }: { children: ReactNode }) {
         .from('documentos_financeiros' as any)
         .select(`
           *,
-          cliente:clientes(
+          clientes!cliente_id(
             razao_social,
             nome_fantasia
           )
@@ -83,9 +83,9 @@ export function FinanceiroProvider({ children }: { children: ReactNode }) {
         valorPago: doc.valor_pago,
         createdAt: doc.created_at,
         updatedAt: doc.updated_at,
-        cliente: doc.cliente ? {
-          razao_social: doc.cliente.razao_social,
-          nome_fantasia: doc.cliente.nome_fantasia
+        cliente: doc.clientes ? {
+          razao_social: doc.clientes.razao_social,
+          nome_fantasia: doc.clientes.nome_fantasia
         } : undefined
       })) as DocumentoFinanceiro[];
 
