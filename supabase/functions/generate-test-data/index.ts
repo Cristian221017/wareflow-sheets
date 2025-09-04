@@ -67,7 +67,8 @@ serve(async (req) => {
     ]
 
     const statuses = ['ARMAZENADA', 'SOLICITADA', 'CONFIRMADA']
-    const separacaoStatus = ['pendente', 'em_separacao', 'separacao_concluida', 'separacao_com_pendencia', 'em_viagem', 'entregue']
+    const separacaoStatusInicial = ['pendente', 'em_separacao', 'separacao_concluida', 'separacao_com_pendencia']
+    const separacaoStatusCompleto = ['pendente', 'em_separacao', 'separacao_concluida', 'separacao_com_pendencia', 'em_viagem', 'entregue']
 
     for (let batch = 0; batch < batches; batch++) {
       const currentBatchSize = Math.min(batchSize, count - totalInserted)
@@ -82,7 +83,16 @@ serve(async (req) => {
         baseDate.setMonth(baseDate.getMonth() - Math.floor(Math.random() * 6))
         
         const randomStatus = statuses[Math.floor(Math.random() * statuses.length)]
-        const randomSeparacao = separacaoStatus[Math.floor(Math.random() * separacaoStatus.length)]
+        
+        // Status de separação baseado no status da NF
+        let randomSeparacao
+        if (randomStatus === 'CONFIRMADA') {
+          // NFs confirmadas podem ter qualquer status de separação
+          randomSeparacao = separacaoStatusCompleto[Math.floor(Math.random() * separacaoStatusCompleto.length)]
+        } else {
+          // NFs não confirmadas só podem ter status iniciais
+          randomSeparacao = separacaoStatusInicial[Math.floor(Math.random() * separacaoStatusInicial.length)]
+        }
         
         nfsToInsert.push({
           numero_nf: nfNumber,
