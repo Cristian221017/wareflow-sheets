@@ -84,13 +84,17 @@ serve(async (req) => {
         
         const randomStatus = statuses[Math.floor(Math.random() * statuses.length)]
         
-        // Status de separação baseado no status da NF
+        // Status de separação baseado no status da NF e regras de negócio
         let randomSeparacao
-        if (randomStatus === 'CONFIRMADA') {
-          // NFs confirmadas podem ter qualquer status de separação
-          randomSeparacao = separacaoStatusCompleto[Math.floor(Math.random() * separacaoStatusCompleto.length)]
+        if (randomStatus === 'SOLICITADA') {
+          // Solicitações pendentes: apenas separação concluída
+          randomSeparacao = 'separacao_concluida'
+        } else if (randomStatus === 'CONFIRMADA') {
+          // Solicitações confirmadas: separação concluída, em viagem ou entregue
+          const statusConfirmadas = ['separacao_concluida', 'em_viagem', 'entregue']
+          randomSeparacao = statusConfirmadas[Math.floor(Math.random() * statusConfirmadas.length)]
         } else {
-          // NFs não confirmadas só podem ter status iniciais
+          // NFs armazenadas podem ter status iniciais
           randomSeparacao = separacaoStatusInicial[Math.floor(Math.random() * separacaoStatusInicial.length)]
         }
         
