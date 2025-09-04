@@ -66,7 +66,7 @@ serve(async (req) => {
       'Móveis e decoração', 'Medicamentos', 'Equipamentos industriais'
     ]
 
-    const statuses = ['ARMAZENADA', 'SOLICITADA', 'CONFIRMADA', 'CARREGADA', 'ENTREGUE']
+    const statuses = ['ARMAZENADA', 'SOLICITADA', 'CONFIRMADA']
     const separacaoStatus = ['pendente', 'em_separacao', 'separacao_concluida', 'separacao_com_pendencia', 'em_viagem', 'entregue']
 
     for (let batch = 0; batch < batches; batch++) {
