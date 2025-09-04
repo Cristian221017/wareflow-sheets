@@ -49,16 +49,10 @@ export function FinanceiroProvider({ children }: { children: ReactNode }) {
     try {
       setLoading(true);
       
-      // Query com JOIN para incluir dados do cliente  
+      // Query simples para documentos financeiros
       const { data, error } = await supabase
         .from('documentos_financeiros' as any)
-        .select(`
-          *,
-          clientes(
-            razao_social,
-            nome_fantasia
-          )
-        `)
+        .select('*')
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -67,27 +61,43 @@ export function FinanceiroProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      const documentosFormatados = data?.map((doc: any) => ({
-        id: doc.id,
-        transportadoraId: doc.transportadora_id,
-        clienteId: doc.cliente_id,
-        numeroCte: doc.numero_cte,
-        dataVencimento: doc.data_vencimento,
-        valor: doc.valor,
-        status: doc.status,
-        observacoes: doc.observacoes,
-        arquivoBoletoPath: doc.arquivo_boleto_path,
-        arquivoCtePath: doc.arquivo_cte_path,
-        dataPagamento: doc.data_pagamento,
-        pagoEm: doc.pago_em,
-        valorPago: doc.valor_pago,
-        createdAt: doc.created_at,
-        updatedAt: doc.updated_at,
-        cliente: doc.clientes ? {
-          razao_social: doc.clientes.razao_social,
-          nome_fantasia: doc.clientes.nome_fantasia
-        } : undefined
-      })) as DocumentoFinanceiro[];
+      // Buscar dados dos clientes separadamente para evitar erro de JOIN
+      const clienteIds = [...new Set(data?.map((doc: any) => doc.cliente_id).filter(Boolean))];
+      let clientesData: any[] = [];
+      
+      if (clienteIds.length > 0) {
+        const { data: clientesResponse } = await supabase
+          .from('clientes' as any)
+          .select('id, razao_social, nome_fantasia')
+          .in('id', clienteIds);
+        
+        clientesData = clientesResponse || [];
+      }
+
+      const documentosFormatados = data?.map((doc: any) => {
+        const cliente = clientesData.find(c => c.id === doc.cliente_id);
+        return {
+          id: doc.id,
+          transportadoraId: doc.transportadora_id,
+          clienteId: doc.cliente_id,
+          numeroCte: doc.numero_cte,
+          dataVencimento: doc.data_vencimento,
+          valor: doc.valor,
+          status: doc.status,
+          observacoes: doc.observacoes,
+          arquivoBoletoPath: doc.arquivo_boleto_path,
+          arquivoCtePath: doc.arquivo_cte_path,
+          dataPagamento: doc.data_pagamento,
+          pagoEm: doc.pago_em,
+          valorPago: doc.valor_pago,
+          createdAt: doc.created_at,
+          updatedAt: doc.updated_at,
+          cliente: cliente ? {
+            razao_social: cliente.razao_social,
+            nome_fantasia: cliente.nome_fantasia
+          } : undefined
+        };
+      }) as DocumentoFinanceiro[];
 
       setDocumentosFinanceiros(documentosFormatados || []);
     } catch (err) {
