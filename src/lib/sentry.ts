@@ -2,8 +2,16 @@ import * as Sentry from '@sentry/react';
 import { ENV } from '@/config/env';
 
 export function initializeSentry() {
+  const sentryDsn = import.meta.env.VITE_SENTRY_DSN;
+  
+  // Only initialize Sentry if a valid DSN is provided
+  if (!sentryDsn || sentryDsn.includes('your-sentry-dsn') || sentryDsn.includes('project-id')) {
+    console.log('⚠️ Sentry DSN not configured - skipping error monitoring initialization');
+    return;
+  }
+
   Sentry.init({
-    dsn: 'https://your-sentry-dsn@sentry.io/project-id', // Replace with actual DSN
+    dsn: sentryDsn,
     environment: ENV.APP_ENV,
     integrations: [
       // Add browser integrations here
