@@ -54,13 +54,18 @@ const getStatusColor = (status: string, dataVencimento: string) => {
 };
 
 const isVencido = (dataVencimento: string, status: string): boolean => {
-  // Só verifica vencimento por data para documentos 'Em aberto'
-  if (!dataVencimento || status !== 'Em aberto') return false;
+  // Se já está marcado como Vencido manualmente, retorna true
+  if (status === 'Vencido') return true;
   
-  const date = new Date(dataVencimento + 'T00:00:00');
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  return date < today;
+  // Para documentos Em aberto, verifica se a data venceu
+  if (status === 'Em aberto' && dataVencimento) {
+    const date = new Date(dataVencimento + 'T00:00:00');
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return date < today;
+  }
+  
+  return false;
 };
 
 export function FinanceiroTransportadoraTable() {
@@ -128,9 +133,15 @@ export function FinanceiroTransportadoraTable() {
     return filtered;
   }, [documentos, searchTerm, statusFilter, clienteFilter, clientes, dataInicio, dataFim]);
 
-  const getClienteNome = (clienteId: string) => {
-    const cliente = clientes.find(c => c.id === clienteId);
-    return cliente?.name || 'Cliente não encontrado';
+  const getClienteNome = (documento: DocumentoFinanceiro) => {
+    // Primeiro tenta dados do documento via JOIN
+    if (documento.cliente?.razao_social) {
+      return documento.cliente.razao_social;
+    }
+    
+    // Fallback para lista de clientes do AuthContext
+    const cliente = clientes.find(c => c.id === documento.clienteId);
+    return cliente?.name || 'Cliente não cadastrado';
   };
 
   const clearFilters = () => {
@@ -435,7 +446,7 @@ export function FinanceiroTransportadoraTable() {
                       className={docVencido ? 'bg-destructive/10' : ''}
                     >
                       <TableCell className="font-medium">{documento.numeroCte}</TableCell>
-                      <TableCell>{getClienteNome(documento.clienteId)}</TableCell>
+                      <TableCell>{getClienteNome(documento)}</TableCell>
                       <TableCell>
                         <div className="flex items-center gap-1">
                           {new Date(documento.dataVencimento).toLocaleDateString('pt-BR')}
@@ -525,7 +536,7 @@ export function FinanceiroTransportadoraTable() {
                       <div className="grid grid-cols-2 gap-2 text-xs">
                         <div>
                           <span className="text-muted-foreground">Cliente:</span>
-                          <p className="font-medium truncate">{getClienteNome(documento.clienteId)}</p>
+                          <p className="font-medium truncate">{getClienteNome(documento)}</p>
                         </div>
                         <div>
                           <span className="text-muted-foreground">Vencimento:</span>

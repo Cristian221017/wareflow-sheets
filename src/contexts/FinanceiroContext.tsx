@@ -49,10 +49,16 @@ export function FinanceiroProvider({ children }: { children: ReactNode }) {
     try {
       setLoading(true);
       
-      // Query direta para documentos financeiros 
+      // Query com JOIN para incluir dados do cliente
       const { data, error } = await supabase
         .from('documentos_financeiros' as any)
-        .select('*')
+        .select(`
+          *,
+          cliente:clientes(
+            razao_social,
+            nome_fantasia
+          )
+        `)
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -73,8 +79,14 @@ export function FinanceiroProvider({ children }: { children: ReactNode }) {
         arquivoBoletoPath: doc.arquivo_boleto_path,
         arquivoCtePath: doc.arquivo_cte_path,
         dataPagamento: doc.data_pagamento,
+        pagoEm: doc.pago_em,
+        valorPago: doc.valor_pago,
         createdAt: doc.created_at,
-        updatedAt: doc.updated_at
+        updatedAt: doc.updated_at,
+        cliente: doc.cliente ? {
+          razao_social: doc.cliente.razao_social,
+          nome_fantasia: doc.cliente.nome_fantasia
+        } : undefined
       })) as DocumentoFinanceiro[];
 
       setDocumentosFinanceiros(documentosFormatados || []);
