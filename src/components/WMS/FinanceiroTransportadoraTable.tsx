@@ -432,6 +432,7 @@ export function FinanceiroTransportadoraTable() {
                   <TableHead>Vencimento</TableHead>
                   <TableHead>Valor</TableHead>
                   <TableHead>Status</TableHead>
+                  <TableHead>Data Pagamento</TableHead>
                   <TableHead>Documentos</TableHead>
                   <TableHead className="text-center">Ações</TableHead>
                 </TableRow>
@@ -462,6 +463,15 @@ export function FinanceiroTransportadoraTable() {
                         <Badge className={getStatusColor(documento.status, documento.dataVencimento)}>
                           {documento.status}
                         </Badge>
+                      </TableCell>
+                      <TableCell>
+                        {documento.dataPagamento ? (
+                          <span className="text-sm">
+                            {new Date(documento.dataPagamento).toLocaleDateString('pt-BR')}
+                          </span>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">-</span>
+                        )}
                       </TableCell>
                       <TableCell>
                         <div className="flex gap-1">
@@ -553,6 +563,14 @@ export function FinanceiroTransportadoraTable() {
                             {documento.valor ? `R$ ${documento.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}` : '-'}
                           </p>
                         </div>
+                        {documento.status === 'Pago' && (
+                          <div className="col-span-2">
+                            <span className="text-muted-foreground">Data Pagamento:</span>
+                            <p className="font-medium">
+                              {documento.dataPagamento ? new Date(documento.dataPagamento).toLocaleDateString('pt-BR') : '-'}
+                            </p>
+                          </div>
+                        )}
                       </div>
 
                       <div className="flex flex-wrap gap-2">

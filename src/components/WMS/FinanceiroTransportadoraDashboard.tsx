@@ -42,16 +42,6 @@ export function FinanceiroTransportadoraDashboard({ className }: FinanceiroTrans
     };
     
     const documentosVencidos = documentos.filter(doc => isVencido(doc.dataVencimento, doc.status));
-    console.log('🔍 DASHBOARD DEBUG:', {
-      totalDocumentos: documentos.length,
-      documentosVencidos: documentosVencidos.length,
-      documentosDetalhes: documentos.map(doc => ({
-        cte: doc.numeroCte,
-        status: doc.status,
-        dataVencimento: doc.dataVencimento,
-        isVencido: isVencido(doc.dataVencimento, doc.status)
-      }))
-    });
     
     return documentos.reduce((acc, doc) => {
       const docVencido = isVencido(doc.dataVencimento, doc.status);
