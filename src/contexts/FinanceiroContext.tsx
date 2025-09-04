@@ -49,12 +49,12 @@ export function FinanceiroProvider({ children }: { children: ReactNode }) {
     try {
       setLoading(true);
       
-      // Query com JOIN para incluir dados do cliente
+      // Query com JOIN para incluir dados do cliente  
       const { data, error } = await supabase
         .from('documentos_financeiros' as any)
         .select(`
           *,
-          clientes!cliente_id(
+          clientes(
             razao_social,
             nome_fantasia
           )
