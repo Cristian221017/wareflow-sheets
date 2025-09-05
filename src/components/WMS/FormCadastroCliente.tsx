@@ -108,6 +108,20 @@ export function FormCadastroCliente({ clienteToEdit, onSuccess, isClientPortal =
             .maybeSingle();
 
           if (profile?.user_id) {
+            // Ao vincular um cliente, garantir que ele tenha permissões de admin
+            const updateResult = await (supabase as any)
+              .from('profiles')
+              .update({ 
+                permissions: {
+                  users: {
+                    create: true,
+                    edit: true,
+                    delete: true,
+                  }
+                }
+              })
+              .eq('user_id', profile.user_id);
+
             const { error: linkErr } = await supabase.rpc('create_user_cliente_link' as any, {
               p_user_id: profile.user_id,
               p_cliente_id: novoCliente.id
@@ -206,6 +220,20 @@ export function FormCadastroCliente({ clienteToEdit, onSuccess, isClientPortal =
       .maybeSingle();
 
     if (profile?.user_id) {
+      // Ao vincular um cliente, garantir que ele tenha permissões de admin
+      await (supabase as any)
+        .from('profiles')
+        .update({ 
+          permissions: {
+            users: {
+              create: true,
+              edit: true,
+              delete: true,
+            }
+          }
+        })
+        .eq('user_id', profile.user_id);
+
       const { error: linkErr } = await supabase.rpc('create_user_cliente_link' as any, {
         p_user_id: profile.user_id,
         p_cliente_id: id
