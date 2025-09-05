@@ -56,6 +56,21 @@ export function useNFsCliente(status?: NFStatus) {
       return nfsData?.map((nf: any) => {
         const solicitacao = solicitacoes?.find((s: any) => s.nf_id === nf.id);
         
+        // Parsing dos anexos (podem vir como string JSON do banco)
+        let documentosAnexos = [];
+        if (solicitacao?.anexos) {
+          if (Array.isArray(solicitacao.anexos)) {
+            documentosAnexos = solicitacao.anexos;
+          } else if (typeof solicitacao.anexos === 'string') {
+            try {
+              documentosAnexos = JSON.parse(solicitacao.anexos);
+            } catch (e) {
+              console.warn('❌ Erro ao parsear anexos cliente:', e);
+              documentosAnexos = [];
+            }
+          }
+        }
+        
         console.log('🔍 NF Cliente mapeada:', {
           nf_id: nf.id,
           numero_nf: nf.numero_nf,
@@ -63,7 +78,9 @@ export function useNFsCliente(status?: NFStatus) {
           tem_solicitacao: !!solicitacao,
           data_agendamento: solicitacao?.data_agendamento,
           observacoes: solicitacao?.observacoes,
-          anexos_count: solicitacao?.anexos?.length || 0
+          anexos_count: solicitacao?.anexos?.length || 0,
+          anexos_raw: solicitacao?.anexos,
+          anexos_parsed: !!documentosAnexos.length
         });
         
         return {
@@ -72,7 +89,7 @@ export function useNFsCliente(status?: NFStatus) {
           // Dados da solicitação
           data_agendamento_entrega: solicitacao?.data_agendamento,
           observacoes_solicitacao: solicitacao?.observacoes,
-          documentos_anexos: solicitacao?.anexos || [],
+          documentos_anexos: documentosAnexos,
         };
       }) || [];
     },

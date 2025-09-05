@@ -153,8 +153,18 @@ export async function fetchNFsByStatus(status?: NFStatus) {
     
     // Garantir que anexos estejam no formato correto para o NFCard
     let documentosAnexos = [];
-    if (solicitacao?.anexos && Array.isArray(solicitacao.anexos)) {
-      documentosAnexos = solicitacao.anexos;
+    if (solicitacao?.anexos) {
+      if (Array.isArray(solicitacao.anexos)) {
+        documentosAnexos = solicitacao.anexos;
+      } else if (typeof solicitacao.anexos === 'string') {
+        // Anexos podem vir como string JSON do banco
+        try {
+          documentosAnexos = JSON.parse(solicitacao.anexos);
+        } catch (e) {
+          console.warn('Erro ao parsear anexos:', e);
+          documentosAnexos = [];
+        }
+      }
     }
     
     return {
