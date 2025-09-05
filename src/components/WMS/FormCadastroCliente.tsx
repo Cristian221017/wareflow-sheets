@@ -109,8 +109,8 @@ export function FormCadastroCliente({ clienteToEdit, onSuccess, isClientPortal =
 
           if (profile?.user_id) {
             // Ao vincular um cliente, garantir que ele tenha permissões de admin
-            await supabase
-              .from('profiles')
+            const updateResult = await supabase
+              .from('profiles' as any)
               .update({ 
                 permissions: {
                   users: {
@@ -118,14 +118,20 @@ export function FormCadastroCliente({ clienteToEdit, onSuccess, isClientPortal =
                     edit: true,
                     delete: true,
                   }
-                } as any
-              })
+                }
+              } as any)
               .eq('user_id', profile.user_id);
 
-            const { error: linkErr } = await supabase.rpc('create_user_cliente_link', {
-              p_user_id: profile.user_id,
-              p_cliente_id: novoCliente.id
-            });
+            // Criar vínculo diretamente via SQL raw query
+            const { error: linkErr } = await supabase
+              .from('user_clientes' as any)
+              .upsert({
+                user_id: profile.user_id,
+                cliente_id: novoCliente.id
+              }, { 
+                onConflict: 'user_id,cliente_id',
+                ignoreDuplicates: true 
+              });
             
             if (linkErr) {
               warn('⚠️ Erro ao vincular user↔cliente:', linkErr);
@@ -222,7 +228,7 @@ export function FormCadastroCliente({ clienteToEdit, onSuccess, isClientPortal =
     if (profile?.user_id) {
       // Ao vincular um cliente, garantir que ele tenha permissões de admin
       await supabase
-        .from('profiles')
+        .from('profiles' as any)
         .update({ 
           permissions: {
             users: {
@@ -230,14 +236,20 @@ export function FormCadastroCliente({ clienteToEdit, onSuccess, isClientPortal =
               edit: true,
               delete: true,
             }
-          } as any
-        })
+          }
+        } as any)
         .eq('user_id', profile.user_id);
 
-      const { error: linkErr } = await supabase.rpc('create_user_cliente_link', {
-        p_user_id: profile.user_id,
-        p_cliente_id: id
-      });
+      // Criar vínculo diretamente via upsert
+      const { error: linkErr } = await supabase
+        .from('user_clientes' as any)
+        .upsert({
+          user_id: profile.user_id,
+          cliente_id: id
+        }, { 
+          onConflict: 'user_id,cliente_id',
+          ignoreDuplicates: true 
+        });
       
       if (linkErr) {
         warn('⚠️ Erro ao vincular user↔cliente:', linkErr);
