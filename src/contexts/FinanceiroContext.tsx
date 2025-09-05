@@ -49,6 +49,15 @@ export function FinanceiroProvider({ children }: { children: ReactNode }) {
     try {
       setLoading(true);
       
+      // Invalidar cache do React Query para garantir dados atualizados
+      queryClient.invalidateQueries({
+        predicate: (query) => {
+          if (!Array.isArray(query.queryKey)) return false;
+          const [firstKey] = query.queryKey;
+          return firstKey === 'documentos_financeiros' || firstKey === 'financeiro';
+        }
+      });
+      
       // Query simples para documentos financeiros
       const { data, error } = await supabase
         .from('documentos_financeiros' as any)
@@ -388,12 +397,23 @@ export function FinanceiroProvider({ children }: { children: ReactNode }) {
   };
 
   const refetch = async () => {
+    // Invalidar todas as queries relacionadas a documentos financeiros
+    queryClient.invalidateQueries({
+      predicate: (query) => {
+        if (!Array.isArray(query.queryKey)) return false;
+        const [firstKey] = query.queryKey;
+        return firstKey === 'documentos_financeiros' || firstKey === 'financeiro' || firstKey === 'dashboard';
+      }
+    });
     await fetchDocumentosFinanceiros();
   };
 
   useEffect(() => {
     fetchDocumentosFinanceiros();
-  }, [isAuthenticated, user]);
+    
+    // Invalidar cache do dashboard para garantir dados atualizados
+    queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+  }, [isAuthenticated, user, queryClient]);
 
   // Atualizar status vencidos automaticamente ao carregar
   useEffect(() => {

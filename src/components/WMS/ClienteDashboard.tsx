@@ -2,14 +2,17 @@ import { log, warn, error as logError } from '@/utils/logger';
 import { useAuth } from '@/contexts/AuthContext';
 import { useDashboard } from '@/hooks/useDashboard';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Package, FileText, Truck, BarChart3, PackageCheck } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Package, FileText, Truck, BarChart3, PackageCheck, RefreshCw } from 'lucide-react';
 import { StatusSeparacaoSummary } from '@/components/Dashboard/StatusSeparacaoSummary';
 import { ReportsActions } from '@/components/Dashboard/ReportsActions';
 import { useNFsCliente } from '@/hooks/useNFsCliente';
+import { useQueryClient } from '@tanstack/react-query';
 
 export function ClienteDashboard() {
-  const { data: stats, isLoading, error } = useDashboard();
+  const { data: stats, isLoading, error, refetch } = useDashboard();
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   
   // Buscar NFs para relatórios
   const { data: nfsArmazenadas } = useNFsCliente("ARMAZENADA");
@@ -21,6 +24,14 @@ export function ClienteDashboard() {
     ...(Array.isArray(nfsSolicitadas) ? nfsSolicitadas : []),
     ...(Array.isArray(nfsConfirmadas) ? nfsConfirmadas : [])
   ];
+
+  const handleRefresh = async () => {
+    // Invalidar todas as queries relacionadas
+    queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+    queryClient.invalidateQueries({ queryKey: ['documentos_financeiros'] });
+    queryClient.invalidateQueries({ queryKey: ['financeiro'] });
+    await refetch();
+  };
 
   if (isLoading || !stats) {
     return (
@@ -45,6 +56,19 @@ export function ClienteDashboard() {
 
   return (
     <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h2 className="text-2xl font-bold">Dashboard</h2>
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={handleRefresh}
+          className="flex items-center gap-2"
+        >
+          <RefreshCw className="h-4 w-4" />
+          Atualizar
+        </Button>
+      </div>
+      
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
