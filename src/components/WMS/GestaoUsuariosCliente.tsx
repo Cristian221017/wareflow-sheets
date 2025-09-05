@@ -64,10 +64,11 @@ export function GestaoUsuariosCliente() {
         return;
       }
 
-      // Por agora, vamos mostrar apenas o usuário atual
-      // Em um cenário real, seria necessário uma estrutura melhor de vínculos
+      // Filtrar apenas profiles com dados válidos do usuário atual
       const usuariosFormatados = profilesData?.filter(profile => 
-        profile.email === user?.email
+        profile.email === user?.email && 
+        profile.name && 
+        profile.email
       ).map(profile => ({
         id: profile.user_id,
         user_id: profile.user_id,

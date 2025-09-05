@@ -76,19 +76,24 @@ export function GestaoUsuariosTransportadora() {
         return;
       }
 
-      // Combinar os dados
-      const usuariosFormatados = userTransportadorasData.map(ut => {
-        const profile = profilesData?.find(p => p.user_id === ut.user_id);
-        return {
-          id: ut.id,
-          user_id: ut.user_id,
-          name: profile?.name || 'Nome não encontrado',
-          email: profile?.email || 'Email não encontrado',
-          role: ut.role,
-          is_active: ut.is_active,
-          created_at: ut.created_at
-        };
-      });
+      // Combinar os dados - apenas usuários com profiles válidos
+      const usuariosFormatados = userTransportadorasData
+        .map(ut => {
+          const profile = profilesData?.find(p => p.user_id === ut.user_id);
+          if (!profile || !profile.name || !profile.email) {
+            return null; // Pula usuários sem dados válidos
+          }
+          return {
+            id: ut.id,
+            user_id: ut.user_id,
+            name: profile.name,
+            email: profile.email,
+            role: ut.role,
+            is_active: ut.is_active,
+            created_at: ut.created_at
+          };
+        })
+        .filter(Boolean); // Remove entradas nulas
 
       setUsuarios(usuariosFormatados);
     } catch (error) {
