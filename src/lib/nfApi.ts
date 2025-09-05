@@ -146,8 +146,15 @@ export async function fetchNFsByStatus(status?: NFStatus) {
         data_agendamento: solicitacao?.data_agendamento,
         observacoes: solicitacao?.observacoes,
         anexos_count: solicitacao?.anexos?.length || 0,
-        anexos_preview: solicitacao?.anexos?.slice(0, 2)
+        anexos_preview: solicitacao?.anexos?.slice(0, 2),
+        anexos_raw: solicitacao?.anexos
       });
+    }
+    
+    // Garantir que anexos estejam no formato correto para o NFCard
+    let documentosAnexos = [];
+    if (solicitacao?.anexos && Array.isArray(solicitacao.anexos)) {
+      documentosAnexos = solicitacao.anexos;
     }
     
     return {
@@ -157,7 +164,7 @@ export async function fetchNFsByStatus(status?: NFStatus) {
       // Mapear dados da solicitação se existir
       data_agendamento_entrega: solicitacao?.data_agendamento,
       observacoes_solicitacao: solicitacao?.observacoes,
-      documentos_anexos: solicitacao?.anexos || [],
+      documentos_anexos: documentosAnexos,
       // Usar dados da solicitação se existir, senão usar dados da NF
       requested_at: solicitacao?.requested_at || nf.requested_at,
       approved_at: solicitacao?.approved_at || nf.approved_at
