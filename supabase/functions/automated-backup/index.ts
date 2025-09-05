@@ -91,8 +91,26 @@ serve(async (req) => {
     }
 
     // Salvar backup no storage (opcional - para backups maiores)
+    console.log('💾 Tentando salvar backup no storage...');
     if (backupSizeBytes < 50 * 1024 * 1024) { // Menor que 50MB
       try {
+        // Verificar se bucket existe e criar se necessário
+        const { data: buckets } = await supabase.storage.listBuckets();
+        const systemBackupsBucket = buckets?.find(b => b.name === 'system-backups');
+        
+        if (!systemBackupsBucket) {
+          console.log('📦 Criando bucket system-backups...');
+          const { error: bucketError } = await supabase.storage.createBucket('system-backups', {
+            public: false,
+            fileSizeLimit: 52428800, // 50MB
+            allowedMimeTypes: ['application/json']
+          });
+          
+          if (bucketError) {
+            console.error('❌ Erro ao criar bucket:', bucketError);
+          }
+        }
+
         const { error: storageError } = await supabase.storage
           .from('system-backups')
           .upload(`automated/${backupId}.json`, backupJson, {
@@ -107,9 +125,12 @@ serve(async (req) => {
       } catch (err) {
         console.error('⚠️ Erro inesperado no storage:', err);
       }
+    } else {
+      console.log('📊 Backup muito grande para storage, salvando apenas metadados');
     }
 
     // Limpeza de backups antigos (manter apenas os últimos 30 dias)
+    console.log('🧹 Iniciando limpeza de backups antigos...');
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
@@ -117,7 +138,7 @@ serve(async (req) => {
       .from('system_backups')
       .delete()
       .lt('created_at', thirtyDaysAgo.toISOString())
-      .eq('name', 'backup-automatico-%');
+      .ilike('name', 'backup-automatico-%');
 
     if (cleanupError) {
       console.error('⚠️ Erro na limpeza de backups antigos:', cleanupError);
@@ -126,19 +147,25 @@ serve(async (req) => {
     }
 
     // Log de sistema
-    await supabase.rpc('log_system_event', {
-      p_entity_type: 'BACKUP',
-      p_action: 'AUTOMATED_BACKUP_COMPLETED',
-      p_status: 'INFO',
-      p_message: `Backup automático concluído com sucesso`,
-      p_meta: {
-        backup_id: backupId,
-        tables_count: tablesToBackup.length,
-        total_records: totalRecords,
-        backup_size_bytes: backupSizeBytes,
-        execution_time: new Date().toISOString()
-      }
-    });
+    console.log('📝 Registrando log de sistema...');
+    try {
+      await supabase.rpc('log_system_event', {
+        p_entity_type: 'BACKUP',
+        p_action: 'AUTOMATED_BACKUP_COMPLETED',
+        p_status: 'INFO',
+        p_message: `Backup automático concluído com sucesso`,
+        p_meta: {
+          backup_id: backupId,
+          tables_count: tablesToBackup.length,
+          total_records: totalRecords,
+          backup_size_bytes: backupSizeBytes,
+          execution_time: new Date().toISOString()
+        }
+      });
+      console.log('✅ Log de sistema registrado com sucesso');
+    } catch (logError) {
+      console.error('⚠️ Erro ao registrar log de sistema:', logError);
+    }
 
     const result: BackupResult = {
       success: true,
