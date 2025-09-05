@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { errorThrottle, createErrorKey } from './errorThrottling';
 
 const isProd = import.meta.env.MODE === "production";
 

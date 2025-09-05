@@ -317,14 +317,22 @@ export async function deleteNF(nfId: string): Promise<void> {
     }
     // For other errors, proceed to RPC which will handle them properly
   } else if (!nfData) {
+    // Verificar se esta NF já foi registrada como não encontrada recentemente
+    const notFoundKey = `nf_not_found_${cleanNfId}`;
+    const lastLogTime = localStorage.getItem(notFoundKey);
+    
+    if (!lastLogTime || Date.now() - parseInt(lastLogTime) > 60000) { // 1 minuto
+      localStorage.setItem(notFoundKey, Date.now().toString());
+      auditError('NF_DELETE_FAIL', 'NF', new Error('Nota fiscal não encontrada'), { 
+        nfId, 
+        cleanNfId, 
+        userId, 
+        step: 'fetch_verification', 
+        reason: 'nf_not_found'
+      });
+    }
+    
     const error = new Error('Nota fiscal não encontrada ou já foi excluída');
-    auditError('NF_DELETE_FAIL', 'NF', error, { 
-      nfId, 
-      cleanNfId, 
-      userId, 
-      step: 'fetch_verification', 
-      reason: 'nf_not_found'
-    });
     throw error;
   }
   

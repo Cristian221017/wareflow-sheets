@@ -82,27 +82,59 @@ export function useFluxoMutations() {
     },
   });
 
+  // Cache para evitar tentativas repetidas de exclusão da mesma NF
+  const failedDeletions = new Set<string>();
+
   const excluir = useMutation({
-    mutationFn: deleteNF,
+    mutationFn: async (nfId: string) => {
+      // Verificar se já tentamos excluir esta NF recentemente
+      const cacheKey = `delete-attempt-${nfId}`;
+      const lastAttempt = sessionStorage.getItem(cacheKey);
+      
+      if (lastAttempt) {
+        const timeSinceAttempt = Date.now() - parseInt(lastAttempt);
+        // Se tentou nos últimos 30 segundos, não tente novamente
+        if (timeSinceAttempt < 30000) {
+          throw new Error('Aguarde antes de tentar excluir novamente');
+        }
+      }
+      
+      // Marcar tentativa
+      sessionStorage.setItem(cacheKey, Date.now().toString());
+      
+      try {
+        await deleteNF(nfId);
+        // Se sucesso, remover do cache
+        sessionStorage.removeItem(cacheKey);
+      } catch (error) {
+        // Se falhou, manter no cache por mais tempo
+        throw error;
+      }
+    },
     onSuccess: (_, nfId) => {
+      failedDeletions.delete(nfId);
       audit('NF_EXCLUIDA', 'NF', { nfId });
-      invalidateAll(); // USAR FUNÇÃO CENTRALIZADA
+      invalidateAll();
       toast.success("Nota fiscal excluída com sucesso!");
     },
     onError: (err: Error, nfId) => {
-      error('❌ Erro na exclusão:', err);
-      
-      // Se a NF não foi encontrada, significa que já foi excluída
-      // Neste caso, invalidamos as queries para atualizar a UI
+      // Se a NF não foi encontrada, tratar como sucesso silencioso
       if (err.message.includes('não encontrada') || err.message.includes('já foi excluída')) {
-        audit('NF_EXCLUIDA_JA_REMOVIDA', 'NF', { nfId, message: 'NF já estava excluída, atualizando UI' });
-        invalidateAll(); // Refresh UI to remove stale data
-        toast.success("Nota fiscal removida da lista (já estava excluída)");
+        failedDeletions.delete(nfId);
+        invalidateAll(); // Refresh UI para remover dados obsoletos
+        toast.success("Item removido da lista");
         return;
       }
       
-      audit('NF_EXCLUSAO_ERRO', 'NF', { nfId, error: err.message });
-      toast.error(err.message);
+      // Para outros erros, só mostrar se não foi tentado recentemente
+      if (!failedDeletions.has(nfId)) {
+        failedDeletions.add(nfId);
+        audit('NF_EXCLUSAO_ERRO', 'NF', { nfId, error: err.message });
+        toast.error(err.message);
+        
+        // Remover da lista de falhas após 5 minutos
+        setTimeout(() => failedDeletions.delete(nfId), 5 * 60 * 1000);
+      }
     },
   });
 
