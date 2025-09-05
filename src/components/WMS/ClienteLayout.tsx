@@ -72,7 +72,7 @@ export function ClienteLayout() {
     { id: 'pedidos', label: 'Carregamentos Solicitados', icon: FileText, shortLabel: 'Solicitados', notification: 0 },
     { id: 'liberados', label: 'Carregamentos Confirmados', icon: CheckCircle, shortLabel: 'Confirmados', notification: notifications.pedidosLiberados },
     { id: 'financeiro', label: 'Financeiro', icon: Receipt, shortLabel: 'Fin', notification: notifications.documentosFinanceiros },
-    { id: 'cadastro-usuario', label: 'Cadastro de Usuários', icon: UserPlus, shortLabel: 'Users', notification: 0 }
+    { id: 'cadastro-usuario', label: 'Gestão de Usuários', icon: UserPlus, shortLabel: 'Usuários', notification: 0 }
   ];
 
   const MobileNavigation = () => (
