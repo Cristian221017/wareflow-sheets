@@ -142,7 +142,14 @@ export default function DataSeeder() {
                 min="1"
                 max="10000"
                 value={seedCount}
-                onChange={(e) => setSeedCount(parseInt(e.target.value) || 1000)}
+                onChange={(e) => {
+                  const newSeedCount = parseInt(e.target.value) || 1000;
+                  setSeedCount(newSeedCount);
+                  // Automatically adjust financial docs count if it exceeds new NFe count
+                  if (financeCount > newSeedCount) {
+                    setFinanceCount(newSeedCount);
+                  }
+                }}
                 disabled={isSeeding}
                 className="mt-1"
               />
