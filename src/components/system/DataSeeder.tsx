@@ -11,12 +11,18 @@ import { Loader2, Database, Zap } from "lucide-react";
 export default function DataSeeder() {
   const [isSeeding, setIsSeeding] = useState(false);
   const [seedCount, setSeedCount] = useState(1000);
+  const [financeCount, setFinanceCount] = useState(200);
   const [progress, setProgress] = useState(0);
   const [lastSeedResult, setLastSeedResult] = useState<any>(null);
 
   const handleSeedData = async () => {
     if (seedCount < 1 || seedCount > 10000) {
-      toast.error("Count must be between 1 and 10,000");
+      toast.error("NFe count must be between 1 and 10,000");
+      return;
+    }
+    
+    if (financeCount < 0 || financeCount > seedCount) {
+      toast.error("Financial docs count must be between 0 and NFe count");
       return;
     }
 
@@ -24,7 +30,7 @@ export default function DataSeeder() {
     setProgress(0);
     
     try {
-      toast.info(`Starting to generate ${seedCount} test records...`);
+      toast.info(`Starting to generate ${seedCount} NFes and ${financeCount} financial docs...`);
       
       // Simulate progress for better UX
       const progressInterval = setInterval(() => {
@@ -34,6 +40,7 @@ export default function DataSeeder() {
       const { data, error } = await supabase.functions.invoke('generate-test-data', {
         body: { 
           count: seedCount,
+          financial_docs_count: financeCount,
           // Let the function find available transportadora and cliente
         }
       });
@@ -74,44 +81,66 @@ export default function DataSeeder() {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
-        <div className="flex items-center gap-4">
-          <div className="flex-1">
-            <label htmlFor="seedCount" className="text-sm font-medium">
-              Number of NFe Records to Generate
-            </label>
-            <Input
-              id="seedCount"
-              type="number"
-              min="1"
-              max="10000"
-              value={seedCount}
-              onChange={(e) => setSeedCount(parseInt(e.target.value) || 1000)}
-              disabled={isSeeding}
-              className="mt-1"
-            />
-            <p className="text-xs text-muted-foreground mt-1">
-              Recommended: 1000+ for performance testing
-            </p>
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label htmlFor="seedCount" className="text-sm font-medium">
+                Number of NFe Records to Generate
+              </label>
+              <Input
+                id="seedCount"
+                type="number"
+                min="1"
+                max="10000"
+                value={seedCount}
+                onChange={(e) => setSeedCount(parseInt(e.target.value) || 1000)}
+                disabled={isSeeding}
+                className="mt-1"
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                Recommended: 1000+ for performance testing
+              </p>
+            </div>
+            
+            <div>
+              <label htmlFor="financeCount" className="text-sm font-medium">
+                Number of Financial Documents to Generate
+              </label>
+              <Input
+                id="financeCount"
+                type="number"
+                min="0"
+                max={seedCount}
+                value={financeCount}
+                onChange={(e) => setFinanceCount(parseInt(e.target.value) || 0)}
+                disabled={isSeeding}
+                className="mt-1"
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                Max: {seedCount} (cannot exceed NFe count)
+              </p>
+            </div>
           </div>
           
-          <Button 
-            onClick={handleSeedData}
-            disabled={isSeeding}
-            className="mt-6"
-            size="lg"
-          >
-            {isSeeding ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Generating...
-              </>
-            ) : (
-              <>
-                <Zap className="mr-2 h-4 w-4" />
-                Generate Data
-              </>
-            )}
-          </Button>
+          <div className="flex justify-center">
+            <Button 
+              onClick={handleSeedData}
+              disabled={isSeeding}
+              size="lg"
+            >
+              {isSeeding ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Generating...
+                </>
+              ) : (
+                <>
+                  <Zap className="mr-2 h-4 w-4" />
+                  Generate Data
+                </>
+              )}
+            </Button>
+          </div>
         </div>
 
         {isSeeding && (

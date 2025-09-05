@@ -17,7 +17,7 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    const { count = 1000, transportadora_id, cliente_id } = await req.json()
+    const { count = 1000, financial_docs_count = Math.floor(count * 0.2), transportadora_id, cliente_id } = await req.json()
 
     // Get transportadora and cliente if not provided
     let targetTransportadora = transportadora_id
@@ -129,8 +129,8 @@ serve(async (req) => {
       console.log(`Inserted batch ${batch + 1}/${batches} - Total: ${totalInserted}`)
     }
 
-    // Generate financial documents with variety
-    const documentCount = Math.floor(count / 5) // 20% of NFs get financial docs
+    // Generate financial documents based on requested count
+    const documentCount = financial_docs_count
     const financialDocs = []
 
     const statusOptions = ['Em aberto', 'Pago', 'Vencido', 'Em análise', 'Cancelado']
