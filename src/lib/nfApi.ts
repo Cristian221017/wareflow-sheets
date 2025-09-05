@@ -137,6 +137,19 @@ export async function fetchNFsByStatus(status?: NFStatus) {
 
     const solicitacao = solicitacoes?.[0];
     
+    // Log debug para NFs confirmadas
+    if (status === 'CONFIRMADA') {
+      log(`🔍 [CONFIRMADA] NF ${nf.numero_nf} - Solicitação encontrada:`, {
+        nf_id: nf.id,
+        status: nf.status,
+        tem_solicitacao: !!solicitacao,
+        data_agendamento: solicitacao?.data_agendamento,
+        observacoes: solicitacao?.observacoes,
+        anexos_count: solicitacao?.anexos?.length || 0,
+        anexos_preview: solicitacao?.anexos?.slice(0, 2)
+      });
+    }
+    
     return {
       ...nf,
       status: nf.status as NFStatus,
