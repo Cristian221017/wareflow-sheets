@@ -13,7 +13,8 @@ import {
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { UserPlus } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { UserPlus, UserPlus as UserAdd, Edit, Trash2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { log, warn, error as logError } from '@/utils/logger';
 import { toast } from 'sonner';
@@ -25,6 +26,19 @@ const formSchema = z.object({
   password: z.string().min(6, 'Senha deve ter pelo menos 6 caracteres'),
   confirmPassword: z.string().min(6, 'Confirmação deve ter pelo menos 6 caracteres'),
   setor: z.string().min(1, 'Setor é obrigatório'),
+  permissions: z.object({
+    users: z.object({
+      create: z.boolean().default(false),
+      edit: z.boolean().default(false),
+      delete: z.boolean().default(false),
+    })
+  }).default({
+    users: {
+      create: false,
+      edit: false,
+      delete: false,
+    }
+  })
 }).refine((data) => data.password === data.confirmPassword, {
   message: "As senhas não coincidem",
   path: ["confirmPassword"],
@@ -48,6 +62,13 @@ export function FormCadastroUsuarioCliente({ onSuccess }: FormCadastroUsuarioCli
       password: '',
       confirmPassword: '',
       setor: '',
+      permissions: {
+        users: {
+          create: false,
+          edit: false,
+          delete: false,
+        }
+      }
     },
   });
 
@@ -89,7 +110,8 @@ export function FormCadastroUsuarioCliente({ onSuccess }: FormCadastroUsuarioCli
           name: values.name,
           email: values.email,
           cpf: values.cpf,
-          setor: values.setor
+          setor: values.setor,
+          permissions: values.permissions
         }]);
 
       if (profileError) {
@@ -209,6 +231,86 @@ export function FormCadastroUsuarioCliente({ onSuccess }: FormCadastroUsuarioCli
                   </FormItem>
                 )}
               />
+            </div>
+
+            {/* Seção de Permissões */}
+            <div className="space-y-4">
+              <div className="border-t pt-4">
+                <h4 className="font-semibold text-sm text-muted-foreground mb-3">Permissões de Usuário</h4>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="permissions.users.create"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                        <FormControl>
+                          <Checkbox
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                        <div className="space-y-1 leading-none">
+                          <FormLabel className="flex items-center gap-2">
+                            <UserAdd className="w-4 h-4 text-green-600" />
+                            Criar Usuários
+                          </FormLabel>
+                          <p className="text-xs text-muted-foreground">
+                            Permite cadastrar novos usuários
+                          </p>
+                        </div>
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="permissions.users.edit"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                        <FormControl>
+                          <Checkbox
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                        <div className="space-y-1 leading-none">
+                          <FormLabel className="flex items-center gap-2">
+                            <Edit className="w-4 h-4 text-blue-600" />
+                            Editar Usuários
+                          </FormLabel>
+                          <p className="text-xs text-muted-foreground">
+                            Permite editar dados dos usuários
+                          </p>
+                        </div>
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="permissions.users.delete"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                        <FormControl>
+                          <Checkbox
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                        <div className="space-y-1 leading-none">
+                          <FormLabel className="flex items-center gap-2">
+                            <Trash2 className="w-4 h-4 text-destructive" />
+                            Excluir Usuários
+                          </FormLabel>
+                          <p className="text-xs text-muted-foreground">
+                            Permite remover usuários do sistema
+                          </p>
+                        </div>
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </div>
             </div>
 
             <Button type="submit" disabled={isLoading} className="w-full">

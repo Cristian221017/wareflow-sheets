@@ -9,6 +9,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { FormCadastroUsuarioCliente } from './FormCadastroUsuarioCliente';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useUserPermissions } from '@/hooks/useUserPermissions';
 import { toast } from 'sonner';
 import { 
   UserPlus, 
@@ -33,6 +34,7 @@ interface UsuarioCliente {
 
 export function GestaoUsuariosCliente() {
   const { user } = useAuth();
+  const { canCreateUsers, canEditUsers, canDeleteUsers } = useUserPermissions();
   const [usuarios, setUsuarios] = useState<UsuarioCliente[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -151,13 +153,14 @@ export function GestaoUsuariosCliente() {
                 <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
                 Atualizar
               </Button>
-              <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button className="gap-2">
-                    <UserPlus className="w-4 h-4" />
-                    Novo Usuário
-                  </Button>
-                </DialogTrigger>
+              {canCreateUsers() && (
+                <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button className="gap-2">
+                      <UserPlus className="w-4 h-4" />
+                      Novo Usuário
+                    </Button>
+                  </DialogTrigger>
                 <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
                   <DialogHeader>
                     <DialogTitle>Cadastrar Novo Usuário</DialogTitle>
@@ -169,7 +172,8 @@ export function GestaoUsuariosCliente() {
                     }} 
                   />
                 </DialogContent>
-              </Dialog>
+                </Dialog>
+              )}
             </div>
           </div>
         </CardHeader>
@@ -267,22 +271,22 @@ export function GestaoUsuariosCliente() {
                                 </div>
                               </TableCell>
                               <TableCell className="text-right">
-                                <div className="flex justify-end space-x-2">
-                                  {/* Botão de Editar - apenas para outros usuários */}
-                                  {usuario.user_id !== user?.id && (
-                                    <Button
-                                      variant="outline"
-                                      size="sm"
-                                      className="gap-1"
-                                      onClick={() => handleEditUser()}
-                                    >
-                                      <Edit className="w-3 h-3" />
-                                      Editar
-                                    </Button>
-                                  )}
-                                  
-                                  {/* Botão de Excluir - apenas para outros usuários */}
-                                  {usuario.user_id !== user?.id && (
+                              <div className="flex justify-end space-x-2">
+                                 {/* Botão de Editar - apenas para outros usuários com permissão */}
+                                 {usuario.user_id !== user?.id && canEditUsers() && (
+                                   <Button
+                                     variant="outline"
+                                     size="sm"
+                                     className="gap-1"
+                                     onClick={() => handleEditUser()}
+                                   >
+                                     <Edit className="w-3 h-3" />
+                                     Editar
+                                   </Button>
+                                 )}
+                                 
+                                 {/* Botão de Excluir - apenas para outros usuários com permissão */}
+                                 {usuario.user_id !== user?.id && canDeleteUsers() && (
                                     <AlertDialog>
                                       <AlertDialogTrigger asChild>
                                         <Button

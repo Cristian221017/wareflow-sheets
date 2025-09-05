@@ -9,6 +9,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { FormCadastroUsuarioTransportadora } from './FormCadastroUsuarioTransportadora';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useUserPermissions } from '@/hooks/useUserPermissions';
 import { toast } from 'sonner';
 import { 
   UserPlus, 
@@ -37,6 +38,7 @@ interface UsuarioTransportadora {
 
 export function GestaoUsuariosTransportadora() {
   const { user } = useAuth();
+  const { canCreateUsers, canEditUsers, canDeleteUsers } = useUserPermissions();
   const [usuarios, setUsuarios] = useState<UsuarioTransportadora[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -226,13 +228,14 @@ export function GestaoUsuariosTransportadora() {
                 <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
                 Atualizar
               </Button>
-              <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button className="gap-2">
-                    <UserPlus className="w-4 h-4" />
-                    Novo Usuário
-                  </Button>
-                </DialogTrigger>
+              {canCreateUsers() && (
+                <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button className="gap-2">
+                      <UserPlus className="w-4 h-4" />
+                      Novo Usuário
+                    </Button>
+                  </DialogTrigger>
                 <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
                   <DialogHeader>
                     <DialogTitle>Cadastrar Novo Usuário</DialogTitle>
@@ -244,7 +247,8 @@ export function GestaoUsuariosTransportadora() {
                     }} 
                   />
                 </DialogContent>
-              </Dialog>
+                </Dialog>
+              )}
             </div>
           </div>
         </CardHeader>
@@ -333,8 +337,8 @@ export function GestaoUsuariosTransportadora() {
                           </TableCell>
                           <TableCell className="text-right">
                             <div className="flex justify-end space-x-2">
-                              {/* Botão de Editar */}
-                              {usuario.user_id !== user?.id && (
+                              {/* Botão de Editar - com verificação de permissão */}
+                              {usuario.user_id !== user?.id && canEditUsers() && (
                                 <Button
                                   variant="outline"
                                   size="sm"
@@ -346,8 +350,8 @@ export function GestaoUsuariosTransportadora() {
                                 </Button>
                               )}
                               
-                              {/* Botão de Ativar/Desativar */}
-                              {usuario.user_id !== user?.id && (
+                              {/* Botão de Ativar/Desativar - com verificação de permissão */}
+                              {usuario.user_id !== user?.id && canEditUsers() && (
                                 <AlertDialog>
                                   <AlertDialogTrigger asChild>
                                     <Button
@@ -392,8 +396,8 @@ export function GestaoUsuariosTransportadora() {
                                 </AlertDialog>
                               )}
 
-                              {/* Botão de Excluir */}
-                              {usuario.user_id !== user?.id && usuario.role !== 'super_admin' && (
+                              {/* Botão de Excluir - com verificação de permissão */}
+                              {usuario.user_id !== user?.id && usuario.role !== 'super_admin' && canDeleteUsers() && (
                                 <AlertDialog>
                                   <AlertDialogTrigger asChild>
                                     <Button

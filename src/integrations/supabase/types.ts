@@ -787,6 +787,7 @@ export type Database = {
           email: string
           id: string
           name: string
+          permissions: Json | null
           setor: string | null
           updated_at: string
           user_id: string
@@ -797,6 +798,7 @@ export type Database = {
           email: string
           id?: string
           name: string
+          permissions?: Json | null
           setor?: string | null
           updated_at?: string
           user_id: string
@@ -807,6 +809,7 @@ export type Database = {
           email?: string
           id?: string
           name?: string
+          permissions?: Json | null
           setor?: string | null
           updated_at?: string
           user_id?: string
@@ -1596,6 +1599,10 @@ export type Database = {
       }
       user_exists_in_system: {
         Args: { _user_id: string }
+        Returns: boolean
+      }
+      user_has_permission: {
+        Args: { _permission_path: string[]; _user_id: string }
         Returns: boolean
       }
       validate_cpf: {
