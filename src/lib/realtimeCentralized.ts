@@ -8,9 +8,47 @@ const CENTRAL_CHANNEL_NAME = "wms-central-realtime";
 // D) Guard para evitar múltiplas subscriptions centralizadas
 let activeCentralChannel: RealtimeChannel | null = null;
 let reconnectTimeout: NodeJS.Timeout | null = null;
+let heartbeatInterval: NodeJS.Timeout | null = null;
 let reconnectAttempts = 0;
-const MAX_RECONNECT_ATTEMPTS = 5;
-const BASE_RECONNECT_DELAY = 1000; // 1 second
+const MAX_RECONNECT_ATTEMPTS = 8; // Aumentado para mais tentativas
+const BASE_RECONNECT_DELAY = 500; // Reduzido para reconectar mais rápido
+const HEARTBEAT_INTERVAL = 30000; // 30 segundos
+
+// Funções para controlar heartbeat
+let heartbeatCount = 0;
+
+function startHeartbeat(channel: RealtimeChannel) {
+  // Parar heartbeat anterior se existir
+  stopHeartbeat();
+  heartbeatCount = 0;
+  
+  heartbeatInterval = setInterval(() => {
+    if (channel && activeCentralChannel === channel) {
+      // Enviar broadcast para manter conexão viva
+      channel.send({
+        type: 'broadcast',
+        event: 'heartbeat',
+        payload: { timestamp: Date.now() }
+      });
+      
+      heartbeatCount++;
+      // Log apenas a cada 10 heartbeats para reduzir spam
+      if (heartbeatCount === 1 || heartbeatCount % 10 === 0) {
+        log(`💓 Heartbeat #${heartbeatCount} enviado`);
+      }
+    }
+  }, HEARTBEAT_INTERVAL);
+  
+  log('💓 Sistema de heartbeat iniciado');
+}
+
+function stopHeartbeat() {
+  if (heartbeatInterval) {
+    clearInterval(heartbeatInterval);
+    heartbeatInterval = null;
+    log('💓 Heartbeat parado');
+  }
+}
 
 export function subscribeCentralizedChanges(queryClient: QueryClient): () => void {
   // Guard: se já existe uma subscription ativa, retorna cleanup vazio
@@ -34,7 +72,12 @@ function createRealtimeSubscription(queryClient: QueryClient, isReconnect = fals
   let errorCount = 0;
   
   const channel: RealtimeChannel = supabase
-    .channel(CENTRAL_CHANNEL_NAME)
+    .channel(CENTRAL_CHANNEL_NAME, {
+      config: {
+        presence: { key: 'user_id' },
+        broadcast: { self: true }
+      }
+    })
     .on(
       "postgres_changes",
       { 
@@ -72,8 +115,9 @@ function createRealtimeSubscription(queryClient: QueryClient, isReconnect = fals
       }
     )
     .subscribe((status) => {
+      log('📡 Status da subscription centralizada:', status);
+      
       if (status === 'SUBSCRIBED') {
-        log('📡 Status da subscription centralizada:', status);
         log('✅ Subscription realtime centralizada ativa');
         activeCentralChannel = channel;
         errorCount = 0; // Reset contador
@@ -84,13 +128,19 @@ function createRealtimeSubscription(queryClient: QueryClient, isReconnect = fals
           clearTimeout(reconnectTimeout);
           reconnectTimeout = null;
         }
+        
+        // Iniciar heartbeat para manter conexão viva
+        startHeartbeat(channel);
+        
       } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
         errorCount++;
         // Só logar os primeiros 3 erros, depois a cada 10
         if (errorCount <= 3 || errorCount % 10 === 0) {
-          log('📡 Status da subscription centralizada:', status);
           warn('❌ Erro na subscription realtime centralizada');
         }
+        
+        // Parar heartbeat
+        stopHeartbeat();
         
         // Clean up current channel
         if (activeCentralChannel) {
@@ -100,7 +150,8 @@ function createRealtimeSubscription(queryClient: QueryClient, isReconnect = fals
         
         // Attempt reconnection with exponential backoff
         if (reconnectAttempts < MAX_RECONNECT_ATTEMPTS && !reconnectTimeout) {
-          const delay = BASE_RECONNECT_DELAY * Math.pow(2, reconnectAttempts);
+          // Cap max delay at 8 seconds
+          const delay = Math.min(BASE_RECONNECT_DELAY * Math.pow(2, reconnectAttempts), 8000);
           log(`🔄 Reagendando reconexão em ${delay}ms`);
           
           reconnectTimeout = setTimeout(() => {
@@ -111,14 +162,27 @@ function createRealtimeSubscription(queryClient: QueryClient, isReconnect = fals
         } else if (reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
           warn('❌ Máximo de tentativas de reconexão atingido. Subscription desabilitada.');
         }
+        
+      } else if (status === 'CLOSED') {
+        log('🔌 Subscription realtime fechada');
+        stopHeartbeat();
+        activeCentralChannel = null;
+        
+      } else if (status === 'JOINING') {
+        log('🔄 Conectando ao canal realtime...');
+        
       } else {
-        log('📡 Status da subscription centralizada:', status);
+        // Outros status (JOINING, etc.)
+        log('📡 Status intermediário:', status);
       }
     });
 
   // Retorna função de cleanup
   return () => {
     log('🔌 Desconectando subscription realtime centralizada');
+    
+    // Stop heartbeat first
+    stopHeartbeat();
     
     // Clear any pending reconnect timeout
     if (reconnectTimeout) {
