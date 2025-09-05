@@ -247,6 +247,7 @@ export function ClienteStatusSeparacao() {
                   <div key={nf.id} className="space-y-3">
                     <NFCard
                       nf={nf}
+                      showRequestInfo
                       showSelection={
                         filteredNfs.length > 1 && nf.status_separacao === "separacao_concluida"
                       }
