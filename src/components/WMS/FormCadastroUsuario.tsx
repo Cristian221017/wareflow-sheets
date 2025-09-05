@@ -84,7 +84,7 @@ export function FormCadastroUsuario({ userType = 'super_admin', onSuccess }: For
         email: formData.email,
         password: formData.password,
         options: {
-          emailRedirectTo: `https://vyqnnnyamoovzxmuvtkl.supabase.co/`,
+          emailRedirectTo: `${window.location.origin}/`,
           data: {
             name: formData.name,
             cpf: formData.cpf,

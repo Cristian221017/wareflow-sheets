@@ -13,9 +13,10 @@ import {
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { UserPlus } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { UserPlus, Crown, Shield, User } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { log, warn, error as logError } from '@/utils/logger';
+import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 
 const formSchema = z.object({
@@ -25,6 +26,9 @@ const formSchema = z.object({
   password: z.string().min(6, 'Senha deve ter pelo menos 6 caracteres'),
   confirmPassword: z.string().min(6, 'Confirmação deve ter pelo menos 6 caracteres'),
   setor: z.string().min(1, 'Setor é obrigatório'),
+  role: z.enum(['operador', 'admin_transportadora', 'super_admin'], {
+    required_error: 'Selecione um nível de permissão',
+  }),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "As senhas não coincidem",
   path: ["confirmPassword"],
@@ -32,11 +36,12 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 
-interface FormCadastroUsuarioClienteProps {
+interface FormCadastroUsuarioTransportadoraProps {
   onSuccess?: () => void;
 }
 
-export function FormCadastroUsuarioCliente({ onSuccess }: FormCadastroUsuarioClienteProps) {
+export function FormCadastroUsuarioTransportadora({ onSuccess }: FormCadastroUsuarioTransportadoraProps) {
+  const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
 
   const form = useForm<FormValues>({
@@ -48,21 +53,39 @@ export function FormCadastroUsuarioCliente({ onSuccess }: FormCadastroUsuarioCli
       password: '',
       confirmPassword: '',
       setor: '',
+      role: 'operador',
     },
   });
 
   const onSubmit = async (values: FormValues) => {
+    if (!user?.transportadoraId) {
+      toast.error('Erro: transportadora não identificada');
+      return;
+    }
+
+    // Verificar se usuário atual pode criar o role solicitado
+    if (values.role === 'super_admin' && user.role !== 'super_admin') {
+      toast.error('Apenas Super Admins podem criar outros Super Admins');
+      return;
+    }
+
+    if (values.role === 'admin_transportadora' && !['super_admin', 'admin_transportadora'].includes(user.role)) {
+      toast.error('Você não tem permissão para criar Administradores');
+      return;
+    }
+
     setIsLoading(true);
+
     try {
-      // Criar usuário no Supabase Auth
+      // 1. Criar usuário no Supabase Auth
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: values.email,
         password: values.password,
         options: {
-          emailRedirectTo: `${window.location.origin}/cliente`,
+          emailRedirectTo: `${window.location.origin}/transportadora`,
           data: {
             name: values.name,
-            role: 'cliente'
+            role: values.role
           }
         }
       });
@@ -81,7 +104,7 @@ export function FormCadastroUsuarioCliente({ onSuccess }: FormCadastroUsuarioCli
         return;
       }
 
-      // Criar profile (será criado pelo trigger, mas garantir que existe)
+      // 2. Criar profile
       const { error: profileError } = await supabase
         .from('profiles')
         .upsert([{
@@ -93,17 +116,60 @@ export function FormCadastroUsuarioCliente({ onSuccess }: FormCadastroUsuarioCli
         }]);
 
       if (profileError) {
-        warn('Profile creation warning:', profileError);
+        console.warn('Profile creation warning:', profileError);
       }
 
-      toast.success('Usuário criado com sucesso! Pode fazer login imediatamente.');
+      // 3. Criar relação user_transportadoras
+      const { error: relationError } = await supabase
+        .from('user_transportadoras')
+        .insert([{
+          user_id: authData.user.id,
+          transportadora_id: user.transportadoraId,
+          role: values.role,
+          is_active: true
+        }]);
+
+      if (relationError) {
+        console.error('Error creating user relation:', relationError);
+        toast.error('Erro ao vincular usuário à transportadora');
+        return;
+      }
+
+      toast.success(`Usuário ${values.role === 'super_admin' ? 'Super Admin' : values.role === 'admin_transportadora' ? 'Administrador' : 'Operador'} criado com sucesso!`);
       form.reset();
       onSuccess?.();
+
     } catch (error) {
-      logError('Erro ao criar usuário:', error);
+      console.error('Erro ao criar usuário:', error);
       toast.error('Erro inesperado ao criar usuário');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const getRoleIcon = (role: string) => {
+    switch (role) {
+      case 'super_admin':
+        return <Crown className="w-4 h-4 text-yellow-600" />;
+      case 'admin_transportadora':
+        return <Shield className="w-4 h-4 text-blue-600" />;
+      case 'operador':
+        return <User className="w-4 h-4 text-green-600" />;
+      default:
+        return <User className="w-4 h-4" />;
+    }
+  };
+
+  const getRoleLabel = (role: string) => {
+    switch (role) {
+      case 'super_admin':
+        return 'Super Admin';
+      case 'admin_transportadora':
+        return 'Administrador';
+      case 'operador':
+        return 'Operador';
+      default:
+        return role;
     }
   };
 
@@ -112,10 +178,10 @@ export function FormCadastroUsuarioCliente({ onSuccess }: FormCadastroUsuarioCli
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <UserPlus className="w-5 h-5 text-primary" />
-          Cadastrar Novo Usuário
+          Cadastrar Novo Usuário da Transportadora
         </CardTitle>
         <CardDescription>
-          Cadastre um novo usuário para acessar o sistema
+          Cadastre um novo usuário para operar o sistema
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -180,6 +246,48 @@ export function FormCadastroUsuarioCliente({ onSuccess }: FormCadastroUsuarioCli
                 )}
               />
             </div>
+
+            <FormField
+              control={form.control}
+              name="role"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Nível de Permissão *</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione o nível de permissão" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="operador">
+                        <div className="flex items-center gap-2">
+                          {getRoleIcon('operador')}
+                          <span>{getRoleLabel('operador')} - Acesso básico às operações</span>
+                        </div>
+                      </SelectItem>
+                      {(['super_admin', 'admin_transportadora'].includes(user?.role || '')) && (
+                        <SelectItem value="admin_transportadora">
+                          <div className="flex items-center gap-2">
+                            {getRoleIcon('admin_transportadora')}
+                            <span>{getRoleLabel('admin_transportadora')} - Gerencia toda a transportadora</span>
+                          </div>
+                        </SelectItem>
+                      )}
+                      {user?.role === 'super_admin' && (
+                        <SelectItem value="super_admin">
+                          <div className="flex items-center gap-2">
+                            {getRoleIcon('super_admin')}
+                            <span>{getRoleLabel('super_admin')} - Acesso total ao sistema</span>
+                          </div>
+                        </SelectItem>
+                      )}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField

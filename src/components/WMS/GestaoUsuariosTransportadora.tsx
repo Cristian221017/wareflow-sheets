@@ -6,7 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { FormCadastroUsuario } from './FormCadastroUsuario';
+import { FormCadastroUsuarioTransportadora } from './FormCadastroUsuarioTransportadora';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
@@ -172,11 +172,11 @@ export function GestaoUsuariosTransportadora() {
   const getRoleIcon = (role: string) => {
     switch (role) {
       case 'super_admin':
-        return <Crown className="w-4 h-4 text-yellow-500" />;
+        return <Crown className="w-4 h-4 text-yellow-600" />;
       case 'admin_transportadora':
-        return <Shield className="w-4 h-4 text-blue-500" />;
+        return <Shield className="w-4 h-4 text-blue-600" />;
       case 'operador':
-        return <User className="w-4 h-4 text-green-500" />;
+        return <User className="w-4 h-4 text-green-600" />;
       default:
         return <User className="w-4 h-4" />;
     }
@@ -237,8 +237,7 @@ export function GestaoUsuariosTransportadora() {
                   <DialogHeader>
                     <DialogTitle>Cadastrar Novo Usuário</DialogTitle>
                   </DialogHeader>
-                  <FormCadastroUsuario 
-                    userType="admin_transportadora" 
+                  <FormCadastroUsuarioTransportadora 
                     onSuccess={() => {
                       setIsDialogOpen(false);
                       loadUsuarios();
@@ -275,7 +274,7 @@ export function GestaoUsuariosTransportadora() {
                 <p className="text-sm text-muted-foreground">Ativos</p>
               </div>
               <div className="text-center">
-                <p className="text-2xl font-bold text-red-600">{usuarios.filter(u => !u.is_active).length}</p>
+                <p className="text-2xl font-bold text-destructive">{usuarios.filter(u => !u.is_active).length}</p>
                 <p className="text-sm text-muted-foreground">Inativos</p>
               </div>
               <div className="text-center">
