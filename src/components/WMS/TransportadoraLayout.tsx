@@ -146,7 +146,7 @@ export function TransportadoraLayout() {
                 className="bg-secondary hover:bg-secondary/90 text-secondary-foreground"
               >
                 <User className="w-4 h-4 mr-2" />
-                Usuários
+                Gestão de usuários
               </Button>
               
               <Button 
@@ -218,7 +218,7 @@ export function TransportadoraLayout() {
                   <DropdownMenuContent align="end" className="w-56">
                     <DropdownMenuItem onClick={() => setShowUsuarios(true)}>
                       <User className="w-4 h-4 mr-2" />
-                      Usuários
+                      Gestão de usuários
                     </DropdownMenuItem>
 
                     <DropdownMenuItem onClick={() => setShowClientes(true)}>
