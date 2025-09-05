@@ -186,19 +186,6 @@ export function ClienteDashboard() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
-                <div className="flex items-center gap-3">
-                  <Package className="h-5 w-5 text-blue-600" />
-                  <div>
-                    <p className="font-medium">Mercadorias Ativas</p>
-                    <p className="text-sm text-muted-foreground">Em processo ou no armazém</p>
-                  </div>
-                </div>
-                <div className="text-2xl font-bold text-blue-600">
-                  {totalNFs}
-                </div>
-              </div>
-
               <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
                 <div className="flex items-center gap-3">
                   <PackageCheck className="h-5 w-5 text-green-600" />
