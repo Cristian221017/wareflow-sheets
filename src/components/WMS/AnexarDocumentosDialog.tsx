@@ -57,13 +57,26 @@ export function AnexarDocumentosDialog({ nf, onDocumentosAnexados }: AnexarDocum
     setIsUploading(true);
 
     try {
-      // Upload dos arquivos para o storage
+      // Buscar a solicitação relacionada à NF usando any para contornar tipos
+      const { data: solicitacao, error: solicitacaoError } = await (supabase as any)
+        .from('solicitacoes_carregamento')
+        .select('id, anexos')
+        .eq('nf_id', nf.id)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+
+      if (solicitacaoError && solicitacaoError.code !== 'PGRST116') {
+        throw new Error(`Erro ao buscar solicitação: ${solicitacaoError.message}`);
+      }
+
+      // Upload dos arquivos para o storage correto
       const uploadPromises = arquivos.map(async (arquivo) => {
-        const fileName = `nf_${nf.id}_${Date.now()}_${arquivo.name}`;
-        const filePath = `documentos/${fileName}`;
+        const fileName = `${Date.now()}_${arquivo.name}`;
+        const filePath = `${nf.cliente_id}/${nf.id}/${fileName}`;
 
         const { error: uploadError } = await supabase.storage
-          .from('documents')
+          .from('solicitacoes-anexos')
           .upload(filePath, arquivo);
 
         if (uploadError) {
@@ -71,30 +84,55 @@ export function AnexarDocumentosDialog({ nf, onDocumentosAnexados }: AnexarDocum
         }
 
         return {
-          nome: arquivo.name,
+          name: arquivo.name,
           path: filePath,
-          tamanho: arquivo.size,
-          tipo: arquivo.type,
-          uploaded_at: new Date().toISOString()
+          size: arquivo.size,
+          contentType: arquivo.type
         };
       });
 
       const documentosUpload = await Promise.all(uploadPromises);
 
-      // Atualizar a NF com os novos documentos
-      const documentosExistentes = nf.documentos_anexos || [];
-      const novosDocumentos = [...documentosExistentes, ...documentosUpload];
+      if (solicitacao?.id) {
+        // Atualizar anexos da solicitação existente
+        let anexosExistentes = [];
+        if (solicitacao.anexos) {
+          if (Array.isArray(solicitacao.anexos)) {
+            anexosExistentes = solicitacao.anexos;
+          } else if (typeof solicitacao.anexos === 'string') {
+            try {
+              anexosExistentes = JSON.parse(solicitacao.anexos);
+            } catch (e) {
+              anexosExistentes = [];
+            }
+          }
+        }
 
-      const { error: updateError } = await supabase
-        .from('notas_fiscais')
-        .update({
-          documentos_anexos: novosDocumentos,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', nf.id);
+        const novosAnexos = [...anexosExistentes, ...documentosUpload];
 
-      if (updateError) {
-        throw new Error(`Erro ao salvar documentos na NF: ${updateError.message}`);
+        const { error: updateError } = await (supabase as any)
+          .from('solicitacoes_carregamento')
+          .update({ anexos: novosAnexos })
+          .eq('id', solicitacao.id);
+
+        if (updateError) {
+          throw new Error(`Erro ao salvar documentos na solicitação: ${updateError.message}`);
+        }
+      } else {
+        // Criar nova solicitação se não existir (caso raro)
+        const { error: createError } = await (supabase as any)
+          .from('solicitacoes_carregamento')
+          .insert({
+            nf_id: nf.id,
+            cliente_id: nf.cliente_id,
+            transportadora_id: nf.transportadora_id,
+            anexos: documentosUpload,
+            status: 'PENDENTE'
+          });
+
+        if (createError) {
+          throw new Error(`Erro ao criar solicitação: ${createError.message}`);
+        }
       }
 
       // Log do evento
