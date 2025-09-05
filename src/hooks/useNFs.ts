@@ -91,6 +91,16 @@ export function useFluxoMutations() {
     },
     onError: (err: Error, nfId) => {
       error('❌ Erro na exclusão:', err);
+      
+      // Se a NF não foi encontrada, significa que já foi excluída
+      // Neste caso, invalidamos as queries para atualizar a UI
+      if (err.message.includes('não encontrada') || err.message.includes('já foi excluída')) {
+        audit('NF_EXCLUIDA_JA_REMOVIDA', 'NF', { nfId, message: 'NF já estava excluída, atualizando UI' });
+        invalidateAll(); // Refresh UI to remove stale data
+        toast.success("Nota fiscal removida da lista (já estava excluída)");
+        return;
+      }
+      
       audit('NF_EXCLUSAO_ERRO', 'NF', { nfId, error: err.message });
       toast.error(err.message);
     },
