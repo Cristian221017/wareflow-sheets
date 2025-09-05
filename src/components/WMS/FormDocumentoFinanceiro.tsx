@@ -169,13 +169,13 @@ export function FormDocumentoFinanceiro({ onSuccess }: FormDocumentoFinanceiroPr
                       </FormControl>
                       <SelectContent>
                         {loadingClientes ? (
-                          <SelectItem value="" disabled>
+                          <div className="px-3 py-2 text-sm text-muted-foreground">
                             Carregando clientes...
-                          </SelectItem>
+                          </div>
                         ) : clientes.length === 0 ? (
-                          <SelectItem value="" disabled>
+                          <div className="px-3 py-2 text-sm text-muted-foreground">
                             Nenhum cliente encontrado
-                          </SelectItem>
+                          </div>
                         ) : (
                           clientes.map((cliente) => (
                             <SelectItem key={cliente.id} value={cliente.id}>

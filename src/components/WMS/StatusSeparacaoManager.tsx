@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Package, Clock, CheckCircle, AlertTriangle, Pencil, Truck } from 'lucide-react';
@@ -168,6 +168,9 @@ export function StatusSeparacaoManager({
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Atualizar Status de Separação</DialogTitle>
+            <DialogDescription>
+              Altere o status de separação da nota fiscal
+            </DialogDescription>
           </DialogHeader>
           
           <div className="space-y-4">
