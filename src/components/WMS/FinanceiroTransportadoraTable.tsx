@@ -425,9 +425,9 @@ export function FinanceiroTransportadoraTable() {
           {/* Desktop Table View */}
           <div className="hidden lg:block rounded-md border overflow-auto">
             <Table>
-              <TableHeader>
+               <TableHeader>
                 <TableRow>
-                  <TableHead>CTE</TableHead>
+                  <TableHead>CTE / Boleto</TableHead>
                   <TableHead>Cliente</TableHead>
                   <TableHead>Vencimento</TableHead>
                   <TableHead>Valor</TableHead>
@@ -436,7 +436,7 @@ export function FinanceiroTransportadoraTable() {
                   <TableHead>Documentos</TableHead>
                   <TableHead className="text-center">Ações</TableHead>
                 </TableRow>
-              </TableHeader>
+               </TableHeader>
               <TableBody>
                 {documentosFiltrados.map((documento) => {
                   const docVencido = isVencido(documento.dataVencimento, documento.status);
@@ -446,7 +446,16 @@ export function FinanceiroTransportadoraTable() {
                       key={documento.id}
                       className={docVencido ? 'bg-destructive/10' : ''}
                     >
-                      <TableCell className="font-medium">{documento.numeroCte}</TableCell>
+                      <TableCell className="font-medium">
+                        <div>
+                          <div>CTE {documento.numeroCte}</div>
+                          {documento.numeroBoleto && (
+                            <div className="text-xs text-muted-foreground">
+                              Boleto {documento.numeroBoleto}
+                            </div>
+                          )}
+                        </div>
+                      </TableCell>
                       <TableCell>{getClienteNome(documento)}</TableCell>
                       <TableCell>
                         <div className="flex items-center gap-1">
@@ -537,7 +546,14 @@ export function FinanceiroTransportadoraTable() {
                   <Card key={documento.id} className={`p-4 ${docVencido ? 'border-destructive' : ''}`}>
                     <div className="space-y-3">
                       <div className="flex items-center justify-between">
-                        <span className="font-bold text-sm">CTE #{documento.numeroCte}</span>
+                        <div>
+                          <span className="font-bold text-sm">CTE #{documento.numeroCte}</span>
+                          {documento.numeroBoleto && (
+                            <div className="text-xs text-muted-foreground">
+                              Boleto {documento.numeroBoleto}
+                            </div>
+                          )}
+                        </div>
                         <Badge className={getStatusColor(documento.status, documento.dataVencimento)}>
                           {documento.status}
                         </Badge>

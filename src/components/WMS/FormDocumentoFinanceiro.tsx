@@ -8,7 +8,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { useFinanceiro } from '@/contexts/FinanceiroContext';
-import { useAuth } from '@/contexts/AuthContext';
+import { useClientes } from '@/hooks/useClientes';
 import { DocumentoFinanceiroFormData } from '@/types/financeiro';
 import { toast } from 'sonner';
 import { Receipt, Upload } from 'lucide-react';
@@ -17,6 +17,7 @@ import { log, error as logError } from '@/utils/logger';
 
 const formSchema = z.object({
   numeroCte: z.string().min(1, 'Número do CTE é obrigatório'),
+  numeroBoleto: z.string().optional(),
   dataVencimento: z.string().min(1, 'Data de vencimento é obrigatória'),
   valor: z.coerce.number().min(0.01, 'Valor deve ser maior que zero').optional(),
   clienteId: z.string().min(1, 'Cliente é obrigatório'),
@@ -33,7 +34,7 @@ interface FormDocumentoFinanceiroProps {
 
 export function FormDocumentoFinanceiro({ onSuccess }: FormDocumentoFinanceiroProps) {
   const { addDocumentoFinanceiro, uploadArquivo } = useFinanceiro();
-  const { clientes } = useAuth();
+  const { clientes, loading: loadingClientes } = useClientes();
   const [isLoading, setIsLoading] = useState(false);
   const [boletoFile, setBoletoFile] = useState<File | null>(null);
   const [cteFile, setCteFile] = useState<File | null>(null);
@@ -44,6 +45,7 @@ export function FormDocumentoFinanceiro({ onSuccess }: FormDocumentoFinanceiroPr
     resolver: zodResolver(formSchema),
     defaultValues: {
       numeroCte: '',
+      numeroBoleto: '',
       dataVencimento: '',
       valor: undefined,
       clienteId: '',
@@ -137,6 +139,20 @@ export function FormDocumentoFinanceiro({ onSuccess }: FormDocumentoFinanceiroPr
                     <FormMessage />
                   </FormItem>
                 )}
+                />
+
+              <FormField
+                control={form.control}
+                name="numeroBoleto"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Número do Boleto</FormLabel>
+                    <FormControl>
+                      <Input placeholder="BOL-123456" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
 
               <FormField
@@ -152,11 +168,21 @@ export function FormDocumentoFinanceiro({ onSuccess }: FormDocumentoFinanceiroPr
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {clientes.map((cliente) => (
-                          <SelectItem key={cliente.id} value={cliente.id}>
-                            {cliente.name}
+                        {loadingClientes ? (
+                          <SelectItem value="" disabled>
+                            Carregando clientes...
                           </SelectItem>
-                        ))}
+                        ) : clientes.length === 0 ? (
+                          <SelectItem value="" disabled>
+                            Nenhum cliente encontrado
+                          </SelectItem>
+                        ) : (
+                          clientes.map((cliente) => (
+                            <SelectItem key={cliente.id} value={cliente.id}>
+                              {cliente.name}
+                            </SelectItem>
+                          ))
+                        )}
                       </SelectContent>
                     </Select>
                     <FormMessage />

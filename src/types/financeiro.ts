@@ -3,6 +3,7 @@ export interface DocumentoFinanceiro {
   transportadoraId: string;
   clienteId: string;
   numeroCte: string;
+  numeroBoleto?: string;
   dataVencimento: string;
   valor?: number;
   status: 'Em aberto' | 'Pago' | 'Vencido';
@@ -23,6 +24,7 @@ export interface DocumentoFinanceiro {
 
 export interface DocumentoFinanceiroFormData {
   numeroCte: string;
+  numeroBoleto?: string;
   dataVencimento: string;
   valor?: number;
   clienteId: string;

@@ -173,6 +173,7 @@ export type Database = {
           id: string
           integration_metadata: Json | null
           last_sync: string | null
+          numero_boleto: string | null
           numero_cte: string
           observacoes: string | null
           pago_em: string | null
@@ -195,6 +196,7 @@ export type Database = {
           id?: string
           integration_metadata?: Json | null
           last_sync?: string | null
+          numero_boleto?: string | null
           numero_cte: string
           observacoes?: string | null
           pago_em?: string | null
@@ -217,6 +219,7 @@ export type Database = {
           id?: string
           integration_metadata?: Json | null
           last_sync?: string | null
+          numero_boleto?: string | null
           numero_cte?: string
           observacoes?: string | null
           pago_em?: string | null
@@ -1539,6 +1542,7 @@ export type Database = {
           id: string
           integration_metadata: Json | null
           last_sync: string | null
+          numero_boleto: string | null
           numero_cte: string
           observacoes: string | null
           pago_em: string | null
@@ -1564,6 +1568,7 @@ export type Database = {
           id: string
           integration_metadata: Json | null
           last_sync: string | null
+          numero_boleto: string | null
           numero_cte: string
           observacoes: string | null
           pago_em: string | null

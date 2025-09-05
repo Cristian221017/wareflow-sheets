@@ -303,6 +303,11 @@ export function FinanceiroCliente() {
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
                       <h3 className="font-medium">CTE {documento.numeroCte}</h3>
+                      {documento.numeroBoleto && (
+                        <span className="text-sm text-muted-foreground">
+                          • Boleto {documento.numeroBoleto}
+                        </span>
+                      )}
                        <Badge className={getStatusColor(documento.status, documento.dataVencimento)}>
                          {getStatusColor(documento.status, documento.dataVencimento).includes('destructive') && documento.status === 'Em aberto' ? 'Vencido' : documento.status}
                        </Badge>
