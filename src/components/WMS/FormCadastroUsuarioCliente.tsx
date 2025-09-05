@@ -64,9 +64,9 @@ export function FormCadastroUsuarioCliente({ onSuccess }: FormCadastroUsuarioCli
       setor: '',
       permissions: {
         users: {
-          create: false,
-          edit: false,
-          delete: false,
+          create: true,  // Default true para clientes cadastrados pela transportadora
+          edit: true,    // Default true para clientes cadastrados pela transportadora
+          delete: true,  // Default true para clientes cadastrados pela transportadora
         }
       }
     },
@@ -76,11 +76,12 @@ export function FormCadastroUsuarioCliente({ onSuccess }: FormCadastroUsuarioCli
     setIsLoading(true);
     try {
       // Garantir que as permissões tenham uma estrutura válida
+      // Clientes cadastrados pela transportadora são sempre admin
       const validPermissions = {
         users: {
-          create: values.permissions?.users?.create === true,
-          edit: values.permissions?.users?.edit === true,
-          delete: values.permissions?.users?.delete === true,
+          create: values.permissions?.users?.create !== false, // Default true para clientes
+          edit: values.permissions?.users?.edit !== false,     // Default true para clientes
+          delete: values.permissions?.users?.delete !== false, // Default true para clientes
         }
       };
 
@@ -311,13 +312,19 @@ export function FormCadastroUsuarioCliente({ onSuccess }: FormCadastroUsuarioCli
                             <Trash2 className="w-4 h-4 text-destructive" />
                             Excluir Usuários
                           </FormLabel>
-                          <p className="text-xs text-muted-foreground">
+                          <p className="text-xs text-muted-foreference">
                             Permite remover usuários do sistema
                           </p>
                         </div>
                       </FormItem>
                     )}
                   />
+                </div>
+                <div className="mt-4 p-3 bg-muted/50 rounded-lg">
+                  <p className="text-sm text-muted-foreground">
+                    <strong>Nota:</strong> Clientes cadastrados pela transportadora têm permissões de admin por padrão. 
+                    Você pode desmarcar as opções acima para criar usuários com acesso limitado.
+                  </p>
                 </div>
               </div>
             </div>

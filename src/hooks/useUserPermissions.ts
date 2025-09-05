@@ -85,6 +85,11 @@ export function useUserPermissions() {
       return true;
     }
 
+    // Clientes (user.type === 'cliente') são admin por padrão na gestão de usuários
+    if (user?.type === 'cliente' && resource === 'users') {
+      return true;
+    }
+
     // Verificar permissões específicas
     const resourcePermissions = permissions[resource];
     if (!resourcePermissions) {
