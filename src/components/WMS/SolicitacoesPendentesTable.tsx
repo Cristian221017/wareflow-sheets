@@ -5,12 +5,13 @@ import { useSolicitacoesTransportadora, useSolicitacoesMutations } from '@/hooks
 import { NFCard } from '@/components/NfLists/NFCard';
 import { NFDeleteManager } from './NFDeleteManager';
 import { NFFilters, type NFFilterState } from '@/components/NfLists/NFFilters';
-import { Clock, CheckCircle, X, Printer, Download, FileText } from 'lucide-react';
+import { Clock, CheckCircle, X, Printer, Download, FileText, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 import type { NotaFiscal } from '@/types/nf';
 import { useState } from 'react';
 import { log, error as logError } from '@/utils/logger';
 import { getAnexoUrl } from '@/lib/nfApi';
+import { RefreshButton } from '@/components/common/RefreshButton';
 
 export function SolicitacoesPendentesTable() {
   const { data: solicitadas, isLoading } = useSolicitacoesTransportadora("PENDENTE");
@@ -272,18 +273,24 @@ export function SolicitacoesPendentesTable() {
                     {validSolicitadas.length !== filteredSolicitadas.length && ` de ${validSolicitadas.length}`} itens)
                   </CardDescription>
                 </div>
-                {filteredSolicitadas.length > 0 && (
-                  <div className="flex gap-2">
-                    <Button onClick={handleImprimir} variant="outline" size="sm">
-                      <Printer className="w-4 h-4 mr-2" />
-                      Imprimir
-                    </Button>
-                    <Button onClick={handleExportar} variant="outline" size="sm">
-                      <Download className="w-4 h-4 mr-2" />
-                      Exportar CSV
-                    </Button>
-                  </div>
-                )}
+                <div className="flex gap-2">
+                  <RefreshButton 
+                    queryTypes={['solicitacoes', 'dashboard', 'transportadora']}
+                    iconOnly
+                  />
+                  {filteredSolicitadas.length > 0 && (
+                    <>
+                      <Button onClick={handleImprimir} variant="outline" size="sm">
+                        <Printer className="w-4 h-4 mr-2" />
+                        Imprimir
+                      </Button>
+                      <Button onClick={handleExportar} variant="outline" size="sm">
+                        <Download className="w-4 h-4 mr-2" />
+                        Exportar CSV
+                      </Button>
+                    </>
+                  )}
+                </div>
               </div>
             </CardHeader>
             <CardContent>

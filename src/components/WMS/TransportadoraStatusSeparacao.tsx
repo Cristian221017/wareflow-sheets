@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { Package, Clock, CheckCircle, AlertTriangle, FileText, Truck } from 'lucide-react';
+import { Package, Clock, CheckCircle, AlertTriangle, FileText, Truck, RefreshCw } from 'lucide-react';
 import { NotaFiscal } from '@/types/nf';
 import { NFFilters, NFFilterState } from '@/components/NfLists/NFFilters';
 import { NFCard } from '@/components/NfLists/NFCard';
@@ -13,6 +13,8 @@ import { StatusSeparacaoManager } from './StatusSeparacaoManager';
 import { NFDeleteManager } from './NFDeleteManager';
 import { log, warn } from '@/utils/logger';
 import { toast } from 'sonner';
+import { RefreshButton } from '@/components/common/RefreshButton';
+import { useQueryClient } from '@tanstack/react-query';
 
 const statusConfig = {
   pendente: {
@@ -201,6 +203,10 @@ export function TransportadoraStatusSeparacao() {
                 Gerencie o status de separação das mercadorias armazenadas ({totalNfs} itens)
               </p>
             </div>
+            <RefreshButton 
+              queryTypes={['nfs', 'dashboard', 'transportadora']}
+              iconOnly
+            />
           </div>
 
       <NFFilters filters={filters} onFiltersChange={setFilters} />

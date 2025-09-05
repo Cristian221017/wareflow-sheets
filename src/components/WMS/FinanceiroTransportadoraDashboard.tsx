@@ -1,8 +1,9 @@
 import { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { FileText, AlertTriangle, DollarSign, TrendingUp } from 'lucide-react';
+import { FileText, AlertTriangle, DollarSign, TrendingUp, RefreshCw } from 'lucide-react';
 import { useFinanceiro } from '@/contexts/FinanceiroContext';
 import { DocumentoFinanceiro } from '@/types/financeiro';
+import { RefreshButton } from '@/components/common/RefreshButton';
 
 interface FinanceiroTransportadoraDashboardProps {
   className?: string;
@@ -89,6 +90,13 @@ export function FinanceiroTransportadoraDashboard({ className }: FinanceiroTrans
 
   return (
     <div className={className}>
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-lg font-semibold">Dashboard Financeiro</h2>
+        <RefreshButton 
+          queryTypes={['documentos_financeiros', 'financeiro', 'dashboard']}
+          iconOnly
+        />
+      </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         {/* Total de Documentos */}
         <Card>

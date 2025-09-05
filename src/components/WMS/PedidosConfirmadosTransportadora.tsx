@@ -9,10 +9,11 @@ import { AnexarDocumentosDialog } from './AnexarDocumentosDialog';
 import { NFFilters, type NFFilterState } from '@/components/NfLists/NFFilters';
 import { useAuth } from '@/contexts/AuthContext';
 import { useInvalidateAll } from '@/hooks/useInvalidateAll';
-import { CheckCircle, Printer, Download } from 'lucide-react';
+import { CheckCircle, Printer, Download, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 import type { NotaFiscal } from '@/types/nf';
 import { useState } from 'react';
+import { RefreshButton } from '@/components/common/RefreshButton';
 
 export function PedidosConfirmadosTransportadora() {
   const { user } = useAuth();
@@ -251,18 +252,24 @@ export function PedidosConfirmadosTransportadora() {
                     {validConfirmadas.length !== filteredConfirmadas.length && ` de ${validConfirmadas.length}`} itens)
                   </CardDescription>
                 </div>
-                {filteredConfirmadas.length > 0 && (
-                  <div className="flex gap-2">
-                    <Button onClick={handleImprimir} variant="outline" size="sm">
-                      <Printer className="w-4 h-4 mr-2" />
-                      Imprimir
-                    </Button>
-                    <Button onClick={handleExportar} variant="outline" size="sm">
-                      <Download className="w-4 h-4 mr-2" />
-                      Exportar CSV
-                    </Button>
-                  </div>
-                )}
+                <div className="flex gap-2">
+                  <RefreshButton 
+                    queryTypes={['nfs', 'dashboard', 'transportadora']}
+                    iconOnly
+                  />
+                  {filteredConfirmadas.length > 0 && (
+                    <>
+                      <Button onClick={handleImprimir} variant="outline" size="sm">
+                        <Printer className="w-4 h-4 mr-2" />
+                        Imprimir
+                      </Button>
+                      <Button onClick={handleExportar} variant="outline" size="sm">
+                        <Download className="w-4 h-4 mr-2" />
+                        Exportar CSV
+                      </Button>
+                    </>
+                  )}
+                </div>
               </div>
             </CardHeader>
             <CardContent>
