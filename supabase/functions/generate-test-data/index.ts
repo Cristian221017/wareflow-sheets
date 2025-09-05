@@ -133,7 +133,7 @@ serve(async (req) => {
     const documentCount = financial_docs_count
     const financialDocs = []
 
-    const statusOptions = ['Em aberto', 'Pago', 'Vencido', 'Em análise', 'Cancelado']
+    const statusOptions = ['Em aberto', 'Pago', 'Vencido']
     const observacoes = [
       'Transporte de carga geral',
       'Frete para entrega expressa',
