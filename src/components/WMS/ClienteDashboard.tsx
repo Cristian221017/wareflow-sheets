@@ -26,10 +26,8 @@ export function ClienteDashboard() {
   ];
 
   const handleRefresh = async () => {
-    // Invalidar todas as queries relacionadas
+    // Invalidar apenas queries relacionadas ao dashboard
     queryClient.invalidateQueries({ queryKey: ['dashboard'] });
-    queryClient.invalidateQueries({ queryKey: ['documentos_financeiros'] });
-    queryClient.invalidateQueries({ queryKey: ['financeiro'] });
     await refetch();
   };
 

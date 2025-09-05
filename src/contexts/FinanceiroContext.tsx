@@ -39,10 +39,15 @@ export function FinanceiroProvider({ children }: { children: ReactNode }) {
   const [documentosFinanceiros, setDocumentosFinanceiros] = useState<DocumentoFinanceiro[]>([]);
   const [loading, setLoading] = useState(false);
 
-  const fetchDocumentosFinanceiros = async () => {
+  const fetchDocumentosFinanceiros = async (force: boolean = false) => {
     if (!isAuthenticated || !user) {
       setDocumentosFinanceiros([]);
       setLoading(false);
+      return;
+    }
+
+    // Só buscar documentos se for forçado (usado explicitamente)
+    if (!force && documentosFinanceiros.length === 0) {
       return;
     }
 
@@ -405,14 +410,12 @@ export function FinanceiroProvider({ children }: { children: ReactNode }) {
         return firstKey === 'documentos_financeiros' || firstKey === 'financeiro' || firstKey === 'dashboard';
       }
     });
-    await fetchDocumentosFinanceiros();
+    await fetchDocumentosFinanceiros(true); // Forçar busca
   };
 
   useEffect(() => {
-    fetchDocumentosFinanceiros();
-    
-    // Invalidar cache do dashboard para garantir dados atualizados
-    queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+    // Não carregar automaticamente documentos financeiros no contexto global
+    // Os dados só serão carregados quando o usuário acessar a aba financeiro
   }, [isAuthenticated, user, queryClient]);
 
   // Atualizar status vencidos automaticamente ao carregar
@@ -446,5 +449,23 @@ export function useFinanceiro() {
   if (context === undefined) {
     throw new Error('useFinanceiro deve ser usado dentro de um FinanceiroProvider');
   }
+  return context;
+}
+
+// Hook para carregar dados financeiros apenas quando necessário
+export function useFinanceiroOnDemand() {
+  const context = useContext(FinanceiroContext);
+  if (context === undefined) {
+    throw new Error('useFinanceiroOnDemand deve ser usado dentro de um FinanceiroProvider');
+  }
+  
+  const [hasLoaded, setHasLoaded] = useState(false);
+  
+  // Carrega os dados na primeira renderização
+  if (!hasLoaded) {
+    setHasLoaded(true);
+    context.refetch().catch(console.error);
+  }
+  
   return context;
 }

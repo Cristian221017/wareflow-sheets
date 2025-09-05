@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { FileText, AlertTriangle, CheckCircle, Clock } from 'lucide-react';
@@ -10,7 +10,12 @@ interface FinanceiroClienteDashboardProps {
 }
 
 export function FinanceiroClienteDashboard({ className }: FinanceiroClienteDashboardProps) {
-  const { documentos, loading } = useFinanceiro();
+  const { documentos, loading, refetch } = useFinanceiro();
+  
+  // Carrega os dados financeiros quando o componente é montado
+  useEffect(() => {
+    refetch();
+  }, []);
 
   const stats = useMemo(() => {
     if (!documentos.length) {
