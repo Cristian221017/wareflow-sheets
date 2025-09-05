@@ -94,7 +94,10 @@ export function useSolicitacoesTransportadora(status: 'PENDENTE' | 'APROVADA' | 
             numero_nf: sol.notas_fiscais?.numero_nf,
             produto: sol.notas_fiscais?.produto,
             status_separacao: sol.notas_fiscais?.status_separacao,
-            dados_completos: !!sol.notas_fiscais
+            dados_completos: !!sol.notas_fiscais,
+            anexos_raw: sol.anexos,
+            anexos_length: sol.anexos?.length || 0,
+            anexos_type: typeof sol.anexos
           });
           return {
             ...sol,
@@ -111,7 +114,7 @@ export function useSolicitacoesTransportadora(status: 'PENDENTE' | 'APROVADA' | 
             data_recebimento: sol.notas_fiscais?.data_recebimento || '',
             status_separacao: sol.notas_fiscais?.status_separacao || 'pendente',
             // Mapear anexos para documentos_anexos para compatibilidade com NFCard
-            documentos_anexos: sol.anexos || [],
+            documentos_anexos: Array.isArray(sol.anexos) ? sol.anexos : (sol.anexos ? JSON.parse(sol.anexos) : []),
             data_agendamento_entrega: sol.data_agendamento,
             observacoes_solicitacao: sol.observacoes,
           };
