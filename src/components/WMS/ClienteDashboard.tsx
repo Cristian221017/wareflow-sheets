@@ -46,9 +46,8 @@ export function ClienteDashboard() {
     );
   }
 
-  // Cálculos baseados nos dados do dashboard
-  const totalNFs = stats.nfsArmazenadas + stats.solicitacoesPendentes + 
-    Math.max(stats.nfsConfirmadas, (stats.nfsEmViagem || 0) + (stats.nfsEntregues || 0));
+  // Cálculos baseados nos dados do dashboard - apenas mercadorias que ainda estão com o cliente ou em processo
+  const totalNFs = stats.nfsArmazenadas + stats.solicitacoesPendentes + stats.nfsConfirmadas + (stats.nfsEmViagem || 0);
   const totalPeso = 0;
   const totalVolume = 0;
 
@@ -78,7 +77,7 @@ export function ClienteDashboard() {
           <CardContent>
             <div className="text-2xl font-bold">{totalNFs}</div>
             <p className="text-xs text-muted-foreground">
-              {stats.nfsArmazenadas} disponíveis para liberação
+              NFs em processo ou disponíveis
             </p>
           </CardContent>
         </Card>
@@ -206,8 +205,8 @@ export function ClienteDashboard() {
                 <div className="flex items-center gap-3">
                   <Package className="h-5 w-5 text-blue-600" />
                   <div>
-                    <p className="font-medium">Total de Mercadorias</p>
-                    <p className="text-sm text-muted-foreground">Todas as suas mercadorias</p>
+                    <p className="font-medium">Mercadorias Ativas</p>
+                    <p className="text-sm text-muted-foreground">Em processo ou no armazém</p>
                   </div>
                 </div>
                 <div className="text-2xl font-bold text-blue-600">
