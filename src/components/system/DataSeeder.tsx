@@ -68,7 +68,7 @@ export default function DataSeeder() {
         body: { 
           count: seedCount,
           financial_docs_count: financeCount,
-          cliente_id: selectedClient || undefined,
+          cliente_id: selectedClient === "auto" ? undefined : selectedClient || undefined,
         }
       });
 
@@ -118,7 +118,7 @@ export default function DataSeeder() {
                 <SelectValue placeholder={loadingClients ? "Loading clients..." : "Auto-select any available client"} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Auto-select any available client</SelectItem>
+                <SelectItem value="auto">Auto-select any available client</SelectItem>
                 {availableClients.map((client) => (
                   <SelectItem key={client.id} value={client.id}>
                     {client.razao_social} ({client.cnpj})
