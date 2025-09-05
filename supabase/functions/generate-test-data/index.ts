@@ -129,23 +129,63 @@ serve(async (req) => {
       console.log(`Inserted batch ${batch + 1}/${batches} - Total: ${totalInserted}`)
     }
 
-    // Generate some financial documents
-    const documentCount = Math.floor(count / 10) // 10% of NFs get financial docs
+    // Generate financial documents with variety
+    const documentCount = Math.floor(count / 5) // 20% of NFs get financial docs
     const financialDocs = []
+
+    const statusOptions = ['Em aberto', 'Pago', 'Vencido', 'Em análise', 'Cancelado']
+    const observacoes = [
+      'Transporte de carga geral',
+      'Frete para entrega expressa',
+      'Serviço de logística integrada',
+      'Taxa de armazenagem inclusa',
+      'Transporte de cargas especiais',
+      'Frete com seguro total',
+      'Entrega programada'
+    ]
 
     for (let i = 0; i < documentCount; i++) {
       const cteNumber = `CTE${String(Date.now() + i).slice(-8)}`
+      
+      // Criar datas variadas: algumas vencidas, algumas futuras, algumas atuais
       const dueDate = new Date()
-      dueDate.setDate(dueDate.getDate() + Math.floor(Math.random() * 90) + 1)
+      const randomDays = Math.floor(Math.random() * 180) - 90 // -90 a +90 dias
+      dueDate.setDate(dueDate.getDate() + randomDays)
+      
+      // Determinar status baseado na data de vencimento
+      let docStatus = statusOptions[Math.floor(Math.random() * statusOptions.length)]
+      let paymentDate = null
+      let paidValue = null
+      
+      // Se a data de vencimento já passou e não está pago, marcar como vencido
+      if (dueDate < new Date() && docStatus === 'Em aberto') {
+        docStatus = Math.random() > 0.5 ? 'Vencido' : 'Em aberto'
+      }
+      
+      // Se está pago, gerar data de pagamento e valor pago
+      if (docStatus === 'Pago') {
+        const payDate = new Date(dueDate)
+        payDate.setDate(payDate.getDate() - Math.floor(Math.random() * 30)) // Pago até 30 dias antes do vencimento
+        paymentDate = payDate.toISOString().split('T')[0]
+        
+        const originalValue = parseFloat((Math.random() * 15000 + 500).toFixed(2))
+        paidValue = Math.random() > 0.9 ? 
+          parseFloat((originalValue * 0.95).toFixed(2)) : // 10% de chance de desconto
+          originalValue
+      }
+      
+      const docValue = paidValue || parseFloat((Math.random() * 15000 + 500).toFixed(2))
       
       financialDocs.push({
         transportadora_id: targetTransportadora,
         cliente_id: targetCliente,
         numero_cte: cteNumber,
         data_vencimento: dueDate.toISOString().split('T')[0],
-        valor: parseFloat((Math.random() * 10000 + 100).toFixed(2)),
-        status: Math.random() > 0.7 ? 'Pago' : 'Em aberto',
-        observacoes: `Documento gerado automaticamente para teste - ${new Date().toISOString()}`
+        valor: docValue,
+        status: docStatus,
+        data_pagamento: paymentDate,
+        valor_pago: paidValue,
+        observacoes: `${observacoes[Math.floor(Math.random() * observacoes.length)]} - Teste ${i + 1}`
       })
     }
 
