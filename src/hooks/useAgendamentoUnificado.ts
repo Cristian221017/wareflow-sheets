@@ -1,4 +1,4 @@
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { uploadAnexoSolicitacao } from '@/lib/nfApi';
 import { useAuth } from '@/contexts/AuthContext';
@@ -28,6 +28,7 @@ interface AgendarResult {
 export function useAgendamentoUnificado() {
   const { user } = useAuth();
   const { invalidateAll } = useInvalidateAll();
+  const queryClient = useQueryClient();
 
   const solicitarCarregamentoComAgendamento = useMutation<AgendarResult, Error, AgendamentoData>({
     mutationFn: async (data: AgendamentoData) => {
@@ -102,6 +103,16 @@ export function useAgendamentoUnificado() {
       
       // 🎯 Invalidação COMPLETA por predicate
       invalidateAll();
+      
+      // 💪 Invalidação adicional específica para garantir atualização imediata dos anexos
+      queryClient.invalidateQueries({ queryKey: ['nfs'] });
+      queryClient.invalidateQueries({ queryKey: ['solicitacoes'] });
+      queryClient.refetchQueries({ queryKey: ['nfs'] });
+      
+      // Forçar re-render após pequeno delay para garantir que os dados estejam atualizados
+      setTimeout(() => {
+        queryClient.invalidateQueries({ queryKey: ['nfs'] });
+      }, 100);
       
       log('✅ Solicitação unificada concluída:', result);
     },
