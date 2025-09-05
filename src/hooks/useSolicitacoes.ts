@@ -58,6 +58,16 @@ export function useSolicitacoesTransportadora(status: 'PENDENTE' | 'APROVADA' | 
 
       // Aplicar hidratação em solicitações modernas
       const modernasHydrated = await Promise.all((solicitacoesModernas || []).map(hydrateNF));
+      
+      // Filtrar solicitações que não têm dados válidos de NF (NF foi excluída)
+      const modernasValid = modernasHydrated.filter(sol => {
+        const hasValidNF = sol?.notas_fiscais || (sol?.numero_nf && sol?.produto);
+        if (!hasValidNF) {
+          console.log('🗑️ Removendo solicitação com NF excluída:', { id: sol?.id, nf_id: sol?.nf_id });
+          audit('SOL_NF_EXCLUIDA', 'SOLICITACAO', { solicitacaoId: sol?.id, nfId: sol?.nf_id });
+        }
+        return hasValidNF;
+      });
 
       // 2. Buscar NFs com status SOLICITADA que não têm entrada em solicitacoes_carregamento (legado)
       const nfStatusMap = status === 'PENDENTE' || status === 'TODAS' ? 'SOLICITADA' : null;
@@ -88,7 +98,7 @@ export function useSolicitacoesTransportadora(status: 'PENDENTE' | 'APROVADA' | 
       // 3. Unificar dados no formato esperado
       const solicitacoesUnificadas = [
         // Solicitações modernas (mapear dados aninhados para o nível superior)
-        ...(modernasHydrated || []).map((sol: any) => {
+        ...(modernasValid || []).map((sol: any) => {
           console.log('🔧 Solicitação moderna mapeada:', {
             id: sol.id,
             numero_nf: sol.notas_fiscais?.numero_nf,
