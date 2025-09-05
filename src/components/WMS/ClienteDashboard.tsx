@@ -186,6 +186,19 @@ export function ClienteDashboard() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
+              <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
+                <div className="flex items-center gap-3">
+                  <Truck className="h-5 w-5 text-blue-600" />
+                  <div>
+                    <p className="font-medium">Em Viagem</p>
+                    <p className="text-sm text-muted-foreground">Mercadorias em trânsito</p>
+                  </div>
+                </div>
+                <div className="text-2xl font-bold text-blue-600">
+                  {stats.nfsEmViagem || 0}
+                </div>
+              </div>
+
               <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
                 <div className="flex items-center gap-3">
                   <PackageCheck className="h-5 w-5 text-green-600" />
@@ -198,12 +211,6 @@ export function ClienteDashboard() {
                   {stats.nfsEntregues || 0}
                 </div>
               </div>
-
-              {(stats.nfsEmViagem || 0) > 0 && (
-                <div className="text-xs text-blue-600 bg-blue-50 p-2 rounded">
-                  ℹ️ Você tem {stats.nfsEmViagem} mercadorias em trânsito
-                </div>
-              )}
             </div>
           </CardContent>
         </Card>
