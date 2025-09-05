@@ -109,7 +109,7 @@ export function FormCadastroCliente({ clienteToEdit, onSuccess, isClientPortal =
 
           if (profile?.user_id) {
             // Ao vincular um cliente, garantir que ele tenha permissões de admin
-            const updateResult = await (supabase as any)
+            await supabase
               .from('profiles')
               .update({ 
                 permissions: {
@@ -118,11 +118,11 @@ export function FormCadastroCliente({ clienteToEdit, onSuccess, isClientPortal =
                     edit: true,
                     delete: true,
                   }
-                }
+                } as any
               })
               .eq('user_id', profile.user_id);
 
-            const { error: linkErr } = await supabase.rpc('create_user_cliente_link' as any, {
+            const { error: linkErr } = await supabase.rpc('create_user_cliente_link', {
               p_user_id: profile.user_id,
               p_cliente_id: novoCliente.id
             });
@@ -221,7 +221,7 @@ export function FormCadastroCliente({ clienteToEdit, onSuccess, isClientPortal =
 
     if (profile?.user_id) {
       // Ao vincular um cliente, garantir que ele tenha permissões de admin
-      await (supabase as any)
+      await supabase
         .from('profiles')
         .update({ 
           permissions: {
@@ -230,11 +230,11 @@ export function FormCadastroCliente({ clienteToEdit, onSuccess, isClientPortal =
               edit: true,
               delete: true,
             }
-          }
+          } as any
         })
         .eq('user_id', profile.user_id);
 
-      const { error: linkErr } = await supabase.rpc('create_user_cliente_link' as any, {
+      const { error: linkErr } = await supabase.rpc('create_user_cliente_link', {
         p_user_id: profile.user_id,
         p_cliente_id: id
       });

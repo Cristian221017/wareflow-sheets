@@ -312,9 +312,9 @@ export function FormCadastroUsuarioCliente({ onSuccess }: FormCadastroUsuarioCli
                             <Trash2 className="w-4 h-4 text-destructive" />
                             Excluir Usuários
                           </FormLabel>
-                          <p className="text-xs text-muted-foreference">
-                            Permite remover usuários do sistema
-                          </p>
+                           <p className="text-xs text-muted-foreground">
+                             Permite remover usuários do sistema
+                           </p>
                         </div>
                       </FormItem>
                     )}
