@@ -24,13 +24,15 @@ export function useNFsCliente(status?: NFStatus) {
   return useQuery({
     queryKey: ['nfs', 'cliente', user?.id ?? 'anon', status ?? 'todas'],
     queryFn: async () => {
-      // Query otimizada - buscar apenas campos essenciais
+      // Query otimizada - buscar NFs básicas primeiro
       let query = supabase
         .from('notas_fiscais')
         .select(`
-          id, numero_nf, produto, status, status_separacao, 
-          peso, volume, localizacao, created_at, updated_at,
-          cliente_id, transportadora_id
+          id, numero_nf, numero_pedido, ordem_compra, produto, 
+          fornecedor, quantidade, peso, volume, localizacao, 
+          data_recebimento, status,
+          cliente_id, transportadora_id, created_at, updated_at,
+          requested_at, requested_by, approved_at, approved_by
         `)
         .order('created_at', { ascending: false });
       
@@ -38,13 +40,41 @@ export function useNFsCliente(status?: NFStatus) {
         query = query.eq('status', status);
       }
       
-      const { data, error } = await query;
-      if (error) throw error;
-      
-      return data?.map((nf: any) => ({
-        ...nf,
-        status_separacao: nf.status_separacao || 'pendente'
-      })) || [];
+      const { data: nfsData, error: nfsError } = await query;
+      if (nfsError) throw nfsError;
+
+      // Buscar dados de solicitações para as NFs (query sem tipagem)
+      if (!nfsData?.length) return [];
+
+      const nfIds = nfsData.map((nf: any) => nf.id);
+      const { data: solicitacoes } = await (supabase as any)
+        .from('solicitacoes_carregamento')
+        .select('nf_id, data_agendamento, observacoes, anexos, status, requested_at, requested_by')
+        .in('nf_id', nfIds);
+
+      // Mapear e unificar dados
+      return nfsData?.map((nf: any) => {
+        const solicitacao = solicitacoes?.find((s: any) => s.nf_id === nf.id);
+        
+        console.log('🔍 NF Cliente mapeada:', {
+          nf_id: nf.id,
+          numero_nf: nf.numero_nf,
+          status: nf.status,
+          tem_solicitacao: !!solicitacao,
+          data_agendamento: solicitacao?.data_agendamento,
+          observacoes: solicitacao?.observacoes,
+          anexos_count: solicitacao?.anexos?.length || 0
+        });
+        
+        return {
+          ...nf,
+          status_separacao: 'pendente', // Valor padrão
+          // Dados da solicitação
+          data_agendamento_entrega: solicitacao?.data_agendamento,
+          observacoes_solicitacao: solicitacao?.observacoes,
+          documentos_anexos: solicitacao?.anexos || [],
+        };
+      }) || [];
     },
     enabled: !!(user && user.id),
     staleTime: 2 * 60 * 1000, // 2 minutos
