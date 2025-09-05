@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Loader2, Database, Zap } from "lucide-react";
@@ -14,6 +15,32 @@ export default function DataSeeder() {
   const [financeCount, setFinanceCount] = useState(200);
   const [progress, setProgress] = useState(0);
   const [lastSeedResult, setLastSeedResult] = useState<any>(null);
+  const [selectedClient, setSelectedClient] = useState<string>("");
+  const [availableClients, setAvailableClients] = useState<any[]>([]);
+  const [loadingClients, setLoadingClients] = useState(false);
+
+  useEffect(() => {
+    loadAvailableClients();
+  }, []);
+
+  const loadAvailableClients = async () => {
+    setLoadingClients(true);
+    try {
+      const { data: clientes, error } = await supabase
+        .from('clientes')
+        .select('id, razao_social, cnpj, transportadora_id')
+        .eq('status', 'ativo')
+        .order('razao_social');
+
+      if (error) throw error;
+      setAvailableClients(clientes || []);
+    } catch (error: any) {
+      console.error('Error loading clients:', error);
+      toast.error('Failed to load available clients');
+    } finally {
+      setLoadingClients(false);
+    }
+  };
 
   const handleSeedData = async () => {
     if (seedCount < 1 || seedCount > 10000) {
@@ -41,7 +68,7 @@ export default function DataSeeder() {
         body: { 
           count: seedCount,
           financial_docs_count: financeCount,
-          // Let the function find available transportadora and cliente
+          cliente_id: selectedClient || undefined,
         }
       });
 
@@ -82,6 +109,28 @@ export default function DataSeeder() {
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="space-y-4">
+          <div>
+            <label className="text-sm font-medium">
+              Select Client (Optional)
+            </label>
+            <Select value={selectedClient} onValueChange={setSelectedClient} disabled={isSeeding || loadingClients}>
+              <SelectTrigger className="mt-1">
+                <SelectValue placeholder={loadingClients ? "Loading clients..." : "Auto-select any available client"} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">Auto-select any available client</SelectItem>
+                {availableClients.map((client) => (
+                  <SelectItem key={client.id} value={client.id}>
+                    {client.razao_social} ({client.cnpj})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground mt-1">
+              Leave empty to automatically use any available client
+            </p>
+          </div>
+
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label htmlFor="seedCount" className="text-sm font-medium">
@@ -167,10 +216,16 @@ export default function DataSeeder() {
                 <span className="text-muted-foreground">Financial Docs:</span>
                 <span className="font-medium ml-2">{lastSeedResult.financial_docs_created}</span>
               </div>
-              <div className="col-span-2">
+              <div>
                 <span className="text-muted-foreground">Transportadora ID:</span>
                 <code className="ml-2 text-xs bg-background px-1 rounded">
                   {lastSeedResult.transportadora_id}
+                </code>
+              </div>
+              <div>
+                <span className="text-muted-foreground">Cliente ID:</span>
+                <code className="ml-2 text-xs bg-background px-1 rounded">
+                  {lastSeedResult.cliente_id}
                 </code>
               </div>
             </div>
