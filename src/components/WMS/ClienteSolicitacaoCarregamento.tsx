@@ -3,10 +3,11 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useNFsCliente, useClienteFluxoMutations } from "@/hooks/useNFsCliente";
 import { useSolicitacoesTransportadora, useSolicitacoesMutations } from "@/hooks/useSolicitacoes";
 import { useLastVisit } from '@/hooks/useLastVisit';
+import { useQueryClient } from '@tanstack/react-query';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Clock, CheckCircle, X, Printer, Download } from "lucide-react";
+import { Clock, CheckCircle, X, Printer, Download, RefreshCw } from "lucide-react";
 import { NFFilters, type NFFilterState } from "@/components/NfLists/NFFilters";
 import { NFCard } from "@/components/NfLists/NFCard";
 import { NFBulkActions } from "@/components/NfLists/NFBulkActions";
@@ -18,15 +19,24 @@ export function ClienteSolicitacaoCarregamento() {
   const { user } = useAuth();
   const once = useRef(false);
   const { markVisitForComponent } = useLastVisit();
+  const queryClient = useQueryClient();
   const isCliente = user?.type === "cliente";
   const isTransportadora = user?.role === "admin_transportadora" || user?.role === "operador";
   // Usar hooks apropriados baseados no tipo de usuário
-  const { data: nfs, isLoading, isError } = isCliente 
+  const { data: nfs, isLoading, isError, refetch } = isCliente 
     ? useNFsCliente("SOLICITADA") 
     : useSolicitacoesTransportadora("PENDENTE");
   
   const { aprovar, recusar } = useSolicitacoesMutations();
   const { solicitar } = useClienteFluxoMutations();
+
+  // Função para atualizar dados
+  const handleRefresh = async () => {
+    queryClient.invalidateQueries({ queryKey: ['nfs'] });
+    queryClient.invalidateQueries({ queryKey: ['solicitacoes'] });
+    await refetch();
+    toast.success("Dados atualizados!");
+  };
 
   // Estados para filtros e seleção múltipla
   const [filters, setFilters] = useState<NFFilterState>({
@@ -328,11 +338,22 @@ export function ClienteSolicitacaoCarregamento() {
 
   return (
     <div className="space-y-6">
-      <div className="text-center">
-        <h1 className="text-3xl font-bold tracking-tight">Carregamentos Solicitados</h1>
-        <p className="text-muted-foreground mt-2">
-          Acompanhe e gerencie as solicitações de carregamento
-        </p>
+      <div className="flex items-center justify-between">
+        <div className="text-center">
+          <h1 className="text-3xl font-bold tracking-tight">Carregamentos Solicitados</h1>
+          <p className="text-muted-foreground mt-2">
+            Acompanhe e gerencie as solicitações de carregamento
+          </p>
+        </div>
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={handleRefresh}
+          className="flex items-center gap-2"
+        >
+          <RefreshCw className="h-4 w-4" />
+          Atualizar
+        </Button>
       </div>
 
       {/* Filtros */}

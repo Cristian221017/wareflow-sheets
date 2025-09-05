@@ -2,13 +2,14 @@ import { useState, useMemo, useEffect } from 'react';
 import { useFinanceiro } from '@/contexts/FinanceiroContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLastVisit } from '@/hooks/useLastVisit';
+import { useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Download, Search, FileText, Receipt, RotateCcw } from 'lucide-react';
+import { Download, Search, FileText, Receipt, RotateCcw, RefreshCw } from 'lucide-react';
 import { FinanceiroClienteDashboard } from '@/components/WMS/FinanceiroClienteDashboard';
 import { RefreshButton } from '@/components/common/RefreshButton';
 import { toast } from 'sonner';
@@ -18,6 +19,7 @@ export function FinanceiroCliente() {
   const { documentos, downloadArquivo, loading } = useFinanceiro();
   const { user } = useAuth();
   const { markVisitForComponent } = useLastVisit();
+  const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [dataInicio, setDataInicio] = useState('');
@@ -159,13 +161,30 @@ export function FinanceiroCliente() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Receipt className="w-5 h-5" />
-          Documentos Financeiros
-        </CardTitle>
-        <CardDescription>
-          Visualize e baixe seus documentos financeiros (CTEs e Boletos)
-        </CardDescription>
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle className="flex items-center gap-2">
+              <Receipt className="w-5 h-5" />
+              Documentos Financeiros
+            </CardTitle>
+            <CardDescription>
+              Visualize e baixe seus documentos financeiros (CTEs e Boletos)
+            </CardDescription>
+          </div>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => {
+              queryClient.invalidateQueries({ queryKey: ['documentos_financeiros'] });
+              queryClient.invalidateQueries({ queryKey: ['financeiro'] });
+              toast.success("Dados atualizados!");
+            }}
+            className="flex items-center gap-2"
+          >
+            <RefreshCw className="h-4 w-4" />
+            Atualizar
+          </Button>
+        </div>
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Filters */}

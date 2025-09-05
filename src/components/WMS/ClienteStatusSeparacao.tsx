@@ -3,12 +3,13 @@ import { useNFs } from "@/hooks/useNFs";
 import { useNFsCliente, useClienteFluxoMutations } from "@/hooks/useNFsCliente";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLastVisit } from '@/hooks/useLastVisit';
+import { useQueryClient } from '@tanstack/react-query';
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { CarregamentoActionButton } from './CarregamentoActionButton';
-import { AlertCircle, CheckCircle, Clock, Package, Pause, Truck, BarChart3, Eye } from "lucide-react";
+import { AlertCircle, CheckCircle, Clock, Package, Pause, Truck, BarChart3, Eye, RefreshCw } from "lucide-react";
 import { NFFilters, type NFFilterState } from "@/components/NfLists/NFFilters";
 import { NFCard } from "@/components/NfLists/NFCard";
 import { NFBulkActions } from "@/components/NfLists/NFBulkActions";
@@ -66,9 +67,17 @@ export function ClienteStatusSeparacao() {
   const { user } = useAuth();
   const once = useRef(false);
   const { markVisitForComponent } = useLastVisit();
+  const queryClient = useQueryClient();
   const isCliente = user?.type === "cliente";
-  const { data: nfs, isLoading, isError } = isCliente ? useNFsCliente("ARMAZENADA") : useNFs("ARMAZENADA");
+  const { data: nfs, isLoading, isError, refetch } = isCliente ? useNFsCliente("ARMAZENADA") : useNFs("ARMAZENADA");
   const { solicitar } = useClienteFluxoMutations();
+
+  // Função para atualizar dados
+  const handleRefresh = async () => {
+    queryClient.invalidateQueries({ queryKey: ['nfs'] });
+    await refetch();
+    toast.success("Dados atualizados!");
+  };
 
   // Estados para filtros e seleção múltipla
   const [filters, setFilters] = useState<NFFilterState>({
@@ -116,11 +125,22 @@ export function ClienteStatusSeparacao() {
   if (validNfs.length === 0) {
     return (
       <div className="space-y-6">
-        <div className="text-center">
-          <h1 className="text-3xl font-bold tracking-tight">Mercadorias Armazenadas</h1>
-          <p className="text-muted-foreground mt-2">
-            Acompanhe o status de separação das suas mercadorias armazenadas
-          </p>
+        <div className="flex items-center justify-between">
+          <div className="text-center">
+            <h1 className="text-3xl font-bold tracking-tight">Mercadorias Armazenadas</h1>
+            <p className="text-muted-foreground mt-2">
+              Acompanhe o status de separação das suas mercadorias armazenadas
+            </p>
+          </div>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={handleRefresh}
+            className="flex items-center gap-2"
+          >
+            <RefreshCw className="h-4 w-4" />
+            Atualizar
+          </Button>
         </div>
 
         <div className="text-center py-12 text-muted-foreground">
@@ -205,11 +225,22 @@ export function ClienteStatusSeparacao() {
 
   return (
     <div className="space-y-6">
-      <div className="text-center">
-        <h1 className="text-3xl font-bold tracking-tight">Mercadorias Armazenadas</h1>
-        <p className="text-muted-foreground mt-2">
-          Acompanhe o status de separação das suas mercadorias e solicite carregamentos
-        </p>
+      <div className="flex items-center justify-between">
+        <div className="text-center">
+          <h1 className="text-3xl font-bold tracking-tight">Mercadorias Armazenadas</h1>
+          <p className="text-muted-foreground mt-2">
+            Acompanhe o status de separação das suas mercadorias e solicite carregamentos
+          </p>
+        </div>
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={handleRefresh}
+          className="flex items-center gap-2"
+        >
+          <RefreshCw className="h-4 w-4" />
+          Atualizar
+        </Button>
       </div>
 
       {/* Filtros */}
