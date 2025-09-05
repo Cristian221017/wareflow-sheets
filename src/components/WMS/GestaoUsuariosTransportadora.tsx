@@ -20,7 +20,8 @@ import {
   Users,
   Crown,
   Shield,
-  User
+  User,
+  Trash2
 } from 'lucide-react';
 
 interface UsuarioTransportadora {
@@ -124,6 +125,48 @@ export function GestaoUsuariosTransportadora() {
       console.error('Erro ao alterar status:', error);
       toast.error('Erro inesperado ao alterar status');
     }
+  };
+
+  const handleDeleteUser = async (userId: string, userName: string) => {
+    try {
+      // Primeiro, deletar da tabela user_transportadoras
+      const { error: utError } = await supabase
+        .from('user_transportadoras')
+        .delete()
+        .eq('user_id', userId)
+        .eq('transportadora_id', user?.transportadoraId);
+
+      if (utError) {
+        console.error('Erro ao remover vínculo:', utError);
+        toast.error('Erro ao remover usuário');
+        return;
+      }
+
+      // Verificar se há outros vínculos com transportadoras
+      const { data: otherLinks } = await supabase
+        .from('user_transportadoras')
+        .select('id')
+        .eq('user_id', userId);
+
+      // Se não há outros vínculos, deletar o profile também
+      if (!otherLinks || otherLinks.length === 0) {
+        await supabase
+          .from('profiles')
+          .delete()
+          .eq('user_id', userId);
+      }
+
+      toast.success(`Usuário "${userName}" removido com sucesso`);
+      loadUsuarios();
+    } catch (error) {
+      console.error('Erro ao excluir usuário:', error);
+      toast.error('Erro inesperado ao excluir usuário');
+    }
+  };
+
+  const handleEditUser = () => {
+    // Funcionalidade de edição será implementada em breve
+    toast.info('Funcionalidade de edição será implementada em breve');
   };
 
   const getRoleIcon = (role: string) => {
@@ -291,7 +334,20 @@ export function GestaoUsuariosTransportadora() {
                           </TableCell>
                           <TableCell className="text-right">
                             <div className="flex justify-end space-x-2">
-                              {/* Só permite desativar se não for o próprio usuário logado */}
+                              {/* Botão de Editar */}
+                              {usuario.user_id !== user?.id && (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="gap-1"
+                                  onClick={() => handleEditUser()}
+                                >
+                                  <Edit className="w-3 h-3" />
+                                  Editar
+                                </Button>
+                              )}
+                              
+                              {/* Botão de Ativar/Desativar */}
                               {usuario.user_id !== user?.id && (
                                 <AlertDialog>
                                   <AlertDialogTrigger asChild>
@@ -331,6 +387,40 @@ export function GestaoUsuariosTransportadora() {
                                         onClick={() => handleToggleStatus(usuario.user_id, usuario.is_active)}
                                       >
                                         {usuario.is_active ? 'Desativar' : 'Ativar'}
+                                      </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                  </AlertDialogContent>
+                                </AlertDialog>
+                              )}
+
+                              {/* Botão de Excluir */}
+                              {usuario.user_id !== user?.id && usuario.role !== 'super_admin' && (
+                                <AlertDialog>
+                                  <AlertDialogTrigger asChild>
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      className="gap-1 text-destructive hover:text-destructive"
+                                    >
+                                      <Trash2 className="w-3 h-3" />
+                                      Excluir
+                                    </Button>
+                                  </AlertDialogTrigger>
+                                  <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                      <AlertDialogTitle>Excluir usuário?</AlertDialogTitle>
+                                      <AlertDialogDescription>
+                                        Tem certeza que deseja excluir o usuário "{usuario.name}"? 
+                                        Esta ação não pode ser desfeita e o usuário perderá completamente o acesso ao sistema.
+                                      </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                      <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                      <AlertDialogAction
+                                        className="bg-destructive hover:bg-destructive/90"
+                                        onClick={() => handleDeleteUser(usuario.user_id, usuario.name)}
+                                      >
+                                        Excluir
                                       </AlertDialogAction>
                                     </AlertDialogFooter>
                                   </AlertDialogContent>

@@ -5,6 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { FormCadastroUsuarioCliente } from './FormCadastroUsuarioCliente';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -14,7 +15,10 @@ import {
   Search, 
   RefreshCw,
   Users,
-  User
+  User,
+  Edit,
+  Trash2,
+  UserX
 } from 'lucide-react';
 
 interface UsuarioCliente {
@@ -86,6 +90,33 @@ export function GestaoUsuariosCliente() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleDeleteUser = async (userId: string, userName: string) => {
+    try {
+      // Para clientes, apenas deletar o profile (já que não há relação específica)
+      const { error } = await supabase
+        .from('profiles')
+        .delete()
+        .eq('user_id', userId);
+
+      if (error) {
+        console.error('Erro ao remover usuário:', error);
+        toast.error('Erro ao remover usuário');
+        return;
+      }
+
+      toast.success(`Usuário "${userName}" removido com sucesso`);
+      loadUsuarios();
+    } catch (error) {
+      console.error('Erro ao excluir usuário:', error);
+      toast.error('Erro inesperado ao excluir usuário');
+    }
+  };
+
+  const handleEditUser = () => {
+    // Funcionalidade de edição será implementada em breve
+    toast.info('Funcionalidade de edição será implementada em breve');
   };
 
   const filteredUsuarios = usuarios.filter(usuario =>
@@ -193,50 +224,101 @@ export function GestaoUsuariosCliente() {
                       <TableHead>Setor</TableHead>
                       <TableHead>Cadastrado em</TableHead>
                       <TableHead>Status</TableHead>
+                      <TableHead className="text-right">Ações</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredUsuarios.length === 0 ? (
-                      <TableRow>
-                        <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
-                          {searchTerm ? 'Nenhum usuário encontrado com os filtros aplicados' : 'Nenhum usuário cadastrado ainda'}
-                        </TableCell>
-                      </TableRow>
-                    ) : (
-                      filteredUsuarios.map((usuario) => (
-                        <TableRow key={usuario.id}>
-                          <TableCell>
-                            <div className="flex items-center space-x-2">
-                              <User className="w-4 h-4 text-muted-foreground" />
-                              <div>
-                                <p className="font-medium">{usuario.name}</p>
-                                <p className="text-sm text-muted-foreground">{usuario.email}</p>
-                              </div>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <span className="text-sm font-mono">
-                              {usuario.cpf || '-'}
-                            </span>
-                          </TableCell>
-                          <TableCell>
-                            <span className="text-sm">
-                              {usuario.setor || '-'}
-                            </span>
-                          </TableCell>
-                          <TableCell>
-                            {new Date(usuario.created_at).toLocaleDateString('pt-BR')}
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex items-center space-x-2">
-                              <Badge variant={usuario.user_id === user?.id ? "default" : "secondary"}>
-                                {usuario.user_id === user?.id ? 'Você' : 'Ativo'}
-                              </Badge>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))
-                    )}
+                        {filteredUsuarios.length === 0 ? (
+                          <TableRow>
+                            <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                              {searchTerm ? 'Nenhum usuário encontrado com os filtros aplicados' : 'Nenhum usuário cadastrado ainda'}
+                            </TableCell>
+                          </TableRow>
+                        ) : (
+                          filteredUsuarios.map((usuario) => (
+                            <TableRow key={usuario.id}>
+                              <TableCell>
+                                <div className="flex items-center space-x-2">
+                                  <User className="w-4 h-4 text-muted-foreground" />
+                                  <div>
+                                    <p className="font-medium">{usuario.name}</p>
+                                    <p className="text-sm text-muted-foreground">{usuario.email}</p>
+                                  </div>
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                <span className="text-sm font-mono">
+                                  {usuario.cpf || '-'}
+                                </span>
+                              </TableCell>
+                              <TableCell>
+                                <span className="text-sm">
+                                  {usuario.setor || '-'}
+                                </span>
+                              </TableCell>
+                              <TableCell>
+                                {new Date(usuario.created_at).toLocaleDateString('pt-BR')}
+                              </TableCell>
+                              <TableCell>
+                                <div className="flex items-center space-x-2">
+                                  <Badge variant={usuario.user_id === user?.id ? "default" : "secondary"}>
+                                    {usuario.user_id === user?.id ? 'Você' : 'Ativo'}
+                                  </Badge>
+                                </div>
+                              </TableCell>
+                              <TableCell className="text-right">
+                                <div className="flex justify-end space-x-2">
+                                  {/* Botão de Editar - apenas para outros usuários */}
+                                  {usuario.user_id !== user?.id && (
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      className="gap-1"
+                                      onClick={() => handleEditUser()}
+                                    >
+                                      <Edit className="w-3 h-3" />
+                                      Editar
+                                    </Button>
+                                  )}
+                                  
+                                  {/* Botão de Excluir - apenas para outros usuários */}
+                                  {usuario.user_id !== user?.id && (
+                                    <AlertDialog>
+                                      <AlertDialogTrigger asChild>
+                                        <Button
+                                          variant="outline"
+                                          size="sm"
+                                          className="gap-1 text-destructive hover:text-destructive"
+                                        >
+                                          <Trash2 className="w-3 h-3" />
+                                          Excluir
+                                        </Button>
+                                      </AlertDialogTrigger>
+                                      <AlertDialogContent>
+                                        <AlertDialogHeader>
+                                          <AlertDialogTitle>Excluir usuário?</AlertDialogTitle>
+                                          <AlertDialogDescription>
+                                            Tem certeza que deseja excluir o usuário "{usuario.name}"? 
+                                            Esta ação não pode ser desfeita e o usuário perderá completamente o acesso ao sistema.
+                                          </AlertDialogDescription>
+                                        </AlertDialogHeader>
+                                        <AlertDialogFooter>
+                                          <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                          <AlertDialogAction
+                                            className="bg-destructive hover:bg-destructive/90"
+                                            onClick={() => handleDeleteUser(usuario.user_id, usuario.name)}
+                                          >
+                                            Excluir
+                                          </AlertDialogAction>
+                                        </AlertDialogFooter>
+                                      </AlertDialogContent>
+                                    </AlertDialog>
+                                  )}
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          ))
+                        )}
                   </TableBody>
                 </Table>
               </div>
