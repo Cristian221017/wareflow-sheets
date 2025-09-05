@@ -75,6 +75,15 @@ export function FormCadastroUsuarioCliente({ onSuccess }: FormCadastroUsuarioCli
   const onSubmit = async (values: FormValues) => {
     setIsLoading(true);
     try {
+      // Garantir que as permissões tenham uma estrutura válida
+      const validPermissions = {
+        users: {
+          create: values.permissions?.users?.create === true,
+          edit: values.permissions?.users?.edit === true,
+          delete: values.permissions?.users?.delete === true,
+        }
+      };
+
       // Criar usuário no Supabase Auth
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: values.email,
@@ -111,11 +120,11 @@ export function FormCadastroUsuarioCliente({ onSuccess }: FormCadastroUsuarioCli
           email: values.email,
           cpf: values.cpf,
           setor: values.setor,
-          permissions: values.permissions
+          permissions: validPermissions
         }]);
 
       if (profileError) {
-        warn('Profile creation warning:', profileError);
+        console.warn('Profile creation warning:', profileError);
       }
 
       toast.success('Usuário criado com sucesso! Pode fazer login imediatamente.');

@@ -33,19 +33,39 @@ export function useUserPermissions() {
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('permissions')
+        .select('*')
         .eq('user_id', user?.id)
-        .single();
+        .maybeSingle();
 
       if (error) {
         console.warn('Error loading user permissions:', error);
+        setLoading(false);
         return;
       }
 
-      // Verificar se o campo permissions existe e tem valor
-      const userPermissions = (data as any)?.permissions;
-      if (userPermissions) {
-        setPermissions(userPermissions as UserPermissions);
+      // Verificar se o campo permissions existe e tem valor usando any para evitar erro de tipos
+      const profile = data as any;
+      if (profile?.permissions) {
+        // Garantir que a estrutura de permissões está correta
+        const userPermissions = profile.permissions;
+        const validPermissions: UserPermissions = {
+          users: {
+            create: userPermissions?.users?.create === true,
+            edit: userPermissions?.users?.edit === true,
+            delete: userPermissions?.users?.delete === true,
+          }
+        };
+        setPermissions(validPermissions);
+      } else {
+        // Se não tem permissões definidas, usar valores padrão
+        const defaultPermissions: UserPermissions = {
+          users: {
+            create: false,
+            edit: false, 
+            delete: false,
+          }
+        };
+        setPermissions(defaultPermissions);
       }
     } catch (error) {
       console.error('Error in loadUserPermissions:', error);

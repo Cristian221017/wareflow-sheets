@@ -44,7 +44,10 @@ export function GestaoUsuariosCliente() {
     try {
       setLoading(true);
       
-      // Buscar cliente pela correspondência de email com profiles
+      if (!canCreateUsers() && !['super_admin', 'admin_transportadora'].includes(user?.role || '')) {
+        toast.error('Você não tem permissão para criar usuários');
+        return;
+      }
       const { data: clienteData, error: clienteError } = await supabase
         .from('clientes')
         .select('id, razao_social')
@@ -95,6 +98,12 @@ export function GestaoUsuariosCliente() {
   };
 
   const handleDeleteUser = async (userId: string, userName: string) => {
+    // Verificar permissão antes de executar
+    if (!canDeleteUsers() && !['super_admin', 'admin_transportadora'].includes(user?.role || '')) {
+      toast.error('Você não tem permissão para excluir usuários');
+      return;
+    }
+
     try {
       // Para clientes, apenas deletar o profile (já que não há relação específica)
       const { error } = await supabase
@@ -117,6 +126,12 @@ export function GestaoUsuariosCliente() {
   };
 
   const handleEditUser = () => {
+    // Verificar permissão antes de executar
+    if (!canEditUsers() && !['super_admin', 'admin_transportadora'].includes(user?.role || '')) {
+      toast.error('Você não tem permissão para editar usuários');
+      return;
+    }
+    
     // Funcionalidade de edição será implementada em breve
     toast.info('Funcionalidade de edição será implementada em breve');
   };

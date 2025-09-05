@@ -130,6 +130,12 @@ export function GestaoUsuariosTransportadora() {
   };
 
   const handleDeleteUser = async (userId: string, userName: string) => {
+    // Verificar permissão antes de executar
+    if (!canDeleteUsers() && !['super_admin', 'admin_transportadora'].includes(user?.role || '')) {
+      toast.error('Você não tem permissão para excluir usuários');
+      return;
+    }
+
     try {
       // Primeiro, deletar da tabela user_transportadoras
       const { error: utError } = await supabase
@@ -167,6 +173,12 @@ export function GestaoUsuariosTransportadora() {
   };
 
   const handleEditUser = () => {
+    // Verificar permissão antes de executar
+    if (!canEditUsers() && !['super_admin', 'admin_transportadora'].includes(user?.role || '')) {
+      toast.error('Você não tem permissão para editar usuários');
+      return;
+    }
+    
     // Funcionalidade de edição será implementada em breve
     toast.info('Funcionalidade de edição será implementada em breve');
   };
