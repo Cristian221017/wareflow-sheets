@@ -14,7 +14,7 @@ import { ClienteStatusSeparacao } from './ClienteStatusSeparacao';
 import { FinanceiroCliente } from './FinanceiroCliente';
 import { PedidosConfirmadosTable } from './PedidosConfirmadosTable';
 import { FormCadastroUsuario } from './FormCadastroUsuario';
-import { AlterarSenhaDialog } from './AlterarSenhaDialog';
+import { GestaoUsuariosCliente } from './GestaoUsuariosCliente';
 import { EnvironmentBadge, EnvironmentIndicator } from '@/components/system/EnvironmentBadge';
 import { ApiStatusIndicator } from '@/components/system/ApiStatusIndicator';
 
@@ -142,7 +142,7 @@ export function ClienteLayout() {
       case 'financeiro':
         return <FinanceiroCliente />;
       case 'cadastro-usuario':
-        return <FormCadastroUsuario userType="cliente" />;
+        return <GestaoUsuariosCliente />;
       default:
         return <ClienteDashboard />;
     }

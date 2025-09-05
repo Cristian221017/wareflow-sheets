@@ -18,6 +18,7 @@ import { ClientesTable } from './ClientesTable';
 import { FinanceiroTransportadora } from './FinanceiroTransportadora';
 import { FormDocumentoFinanceiro } from './FormDocumentoFinanceiro';
 import IntegrationConfig from './IntegrationConfig';
+import { GestaoUsuariosTransportadora } from './GestaoUsuariosTransportadora';
 
 import { SolicitacoesPendentesTable } from './SolicitacoesPendentesTable';
 import { PedidosConfirmadosTransportadora } from './PedidosConfirmadosTransportadora';
@@ -45,6 +46,45 @@ export function TransportadoraLayout() {
   const [isIntegracaoDialogOpen, setIsIntegracaoDialogOpen] = useState(false);
   const [isCadastroUserDialogOpen, setIsCadastroUserDialogOpen] = useState(false);
   const [showClientes, setShowClientes] = useState(false);
+  const [showUsuarios, setShowUsuarios] = useState(false);
+
+  if (showUsuarios) {
+    return (
+      <div className="min-h-screen bg-background">
+        <header className="bg-card shadow-sm border-b">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center py-4 sm:py-6 gap-4">
+              <div className="flex items-center">
+                <Warehouse className="w-6 h-6 sm:w-8 sm:h-8 text-primary mr-2 sm:mr-3" />
+                <div>
+                  <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground">Gestão de Usuários</h1>
+                  <p className="text-sm sm:text-base text-muted-foreground">Transportadora - {user?.name}</p>
+                </div>
+              </div>
+              <div className="flex gap-2 sm:gap-3">
+                <Button 
+                  onClick={() => setShowUsuarios(false)}
+                  variant="outline"
+                  size="sm"
+                >
+                  Voltar
+                </Button>
+                <Button onClick={logout} variant="outline" size="sm">
+                  <LogOut className="w-4 h-4 mr-1 sm:mr-2" />
+                  <span className="hidden sm:inline">Sair</span>
+                  <span className="sm:hidden">Sair</span>
+                </Button>
+              </div>
+            </div>
+          </div>
+        </header>
+        
+        <main className="max-w-7xl mx-auto py-4 sm:py-6 px-4 sm:px-6 lg:px-8">
+          <GestaoUsuariosTransportadora />
+        </main>
+      </div>
+    );
+  }
 
   if (showClientes) {
     return (
@@ -102,6 +142,14 @@ export function TransportadoraLayout() {
             {/* Desktop Actions */}
             <div className="hidden lg:flex gap-2 xl:gap-3">
               <ApiStatusIndicator />
+              <Button 
+                onClick={() => setShowUsuarios(true)}
+                className="bg-secondary hover:bg-secondary/90 text-secondary-foreground"
+              >
+                <User className="w-4 h-4 mr-2" />
+                Usuários
+              </Button>
+              
               <Button 
                 onClick={() => setShowClientes(true)}
                 className="bg-secondary hover:bg-secondary/90 text-secondary-foreground"
@@ -183,6 +231,11 @@ export function TransportadoraLayout() {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-56">
+                    <DropdownMenuItem onClick={() => setShowUsuarios(true)}>
+                      <User className="w-4 h-4 mr-2" />
+                      Usuários
+                    </DropdownMenuItem>
+
                     <DropdownMenuItem onClick={() => setShowClientes(true)}>
                       <User className="w-4 h-4 mr-2" />
                       Clientes
