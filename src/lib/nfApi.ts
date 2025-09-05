@@ -263,18 +263,46 @@ export async function deleteNF(nfId: string): Promise<void> {
   const cleanNfId = nfId.startsWith('legacy-') ? nfId.replace('legacy-', '') : nfId;
   log('🔧 ID processado para exclusão:', { originalId: nfId, cleanId: cleanNfId });
   
+  // First verify the NF exists and user has permission
+  const { data: nfData, error: fetchError } = await supabase
+    .from('notas_fiscais')
+    .select('id, numero_nf, status, cliente_id, transportadora_id')
+    .eq('id', cleanNfId)
+    .single();
+    
+  if (fetchError || !nfData) {
+    const error = fetchError || new Error('NF não encontrada');
+    auditError('NF_DELETE_FAIL', 'NF', error, { nfId, cleanNfId, userId, step: 'fetch_verification' });
+    throw new Error(`Nota fiscal não encontrada: ${cleanNfId}`);
+  }
+  
+  log('🔍 NF encontrada para exclusão:', { 
+    numero_nf: nfData.numero_nf, 
+    status: nfData.status,
+    transportadora_id: nfData.transportadora_id 
+  });
+  
   const { error: rpcError } = await (supabase as any).rpc("nf_delete", { 
     p_nf_id: cleanNfId, 
     p_user_id: userId 
   });
   
   if (rpcError) {
-    auditError('NF_DELETE_FAIL', 'NF', rpcError, { nfId, cleanNfId, userId });
+    auditError('NF_DELETE_FAIL', 'NF', rpcError, { 
+      nfId, 
+      cleanNfId, 
+      userId, 
+      nfData,
+      step: 'rpc_execution',
+      rpcErrorCode: rpcError.code,
+      rpcErrorMessage: rpcError.message,
+      rpcErrorDetails: rpcError.details
+    });
     throw new Error(`Erro ao excluir nota fiscal: ${rpcError.message}`);
   }
   
-  audit('NF_DELETED', 'NF', { nfId, cleanNfId, userId });
-  log('✅ NF excluída com sucesso');
+  audit('NF_DELETED', 'NF', { nfId, cleanNfId, userId, numero_nf: nfData.numero_nf });
+  log('✅ NF excluída com sucesso:', { numero_nf: nfData.numero_nf });
 }
 
 export async function getAnexoUrl(path: string): Promise<string> {
