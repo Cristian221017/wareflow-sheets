@@ -259,17 +259,21 @@ export async function deleteNF(nfId: string): Promise<void> {
   const userId = await getCurrentUserId();
   log('🗑️ Excluindo NF:', { nfId, userId });
   
+  // Handle legacy IDs by stripping the "legacy-" prefix for database operations
+  const cleanNfId = nfId.startsWith('legacy-') ? nfId.replace('legacy-', '') : nfId;
+  log('🔧 ID processado para exclusão:', { originalId: nfId, cleanId: cleanNfId });
+  
   const { error: rpcError } = await (supabase as any).rpc("nf_delete", { 
-    p_nf_id: nfId, 
+    p_nf_id: cleanNfId, 
     p_user_id: userId 
   });
   
   if (rpcError) {
-    auditError('NF_DELETE_FAIL', 'NF', rpcError, { nfId, userId });
+    auditError('NF_DELETE_FAIL', 'NF', rpcError, { nfId, cleanNfId, userId });
     throw new Error(`Erro ao excluir nota fiscal: ${rpcError.message}`);
   }
   
-  audit('NF_DELETED', 'NF', { nfId, userId });
+  audit('NF_DELETED', 'NF', { nfId, cleanNfId, userId });
   log('✅ NF excluída com sucesso');
 }
 
