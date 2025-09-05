@@ -267,13 +267,43 @@ export const audit = (
 };
 
 // Utilitário para registrar erro com action/entity e erro normalizado
-export const auditError = (action: string, entity_type: string, err: any, ctx?: any) => {
-  const cid = correlationId();
-  void persistLog(
-    "ERROR",
-    `${action} em ${entity_type}`,
-    { correlationId: cid, error: normalizeError(err), context: redact(ctx) },
+export function auditError(action: string, entityType: string, error: Error | any, context: any = {}) {
+  // Aplicar throttling para evitar spam de logs
+  const errorKey = createErrorKey(action, entityType, error?.message || String(error), context);
+  
+  if (!errorThrottle.shouldLog(errorKey)) {
+    // Erro throttled - só logar localmente
+    log(`⏳ [THROTTLED] ${action} em ${entityType}:`, { 
+      message: error?.message, 
+      throttled: true,
+      errorKey 
+    });
+    return;
+  }
+  
+  const errorData = {
     action,
-    entity_type
+    entityType,
+    error: {
+      message: error?.message || String(error),
+      name: error?.name,
+      stack: error?.stack
+    },
+    context,
+    correlationId: correlationId(),
+    timestamp: new Date().toISOString(),
+    userAgent: navigator?.userAgent,
+    url: window?.location?.href
+  };
+  
+  log(`🔥 ${action} em ${entityType}:`, errorData);
+  
+  // Log para sistema remoto apenas se não foi throttled
+  persistLog(
+    "ERROR",
+    `${action} em ${entityType}`,
+    errorData,
+    action,
+    entityType
   );
-};
+}

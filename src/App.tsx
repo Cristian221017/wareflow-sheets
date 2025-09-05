@@ -17,6 +17,7 @@ import MercadoriasEntregues from "@/pages/MercadoriasEntregues";
 import React from 'react';
 import RealtimeProvider from "@/providers/RealtimeProvider";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { ErrorLoopDetector } from "@/components/system/ErrorLoopDetector";
 import { DiagnosticPage } from "@/components/system/DiagnosticPage";
 import { SystemHealthDashboard } from "@/components/system/SystemHealthDashboard";
 import { ApiStatusIndicator } from "@/components/system/ApiStatusIndicator";
@@ -105,10 +106,11 @@ function App() {
             <WMSProvider>
               <FinanceiroProvider>
                 <RealtimeProvider>
-                  <div className="min-h-screen bg-background">
-                    <Sonner />
-                    
-                    <Routes>
+                   <div className="min-h-screen bg-background">
+                     <Sonner />
+                     <ErrorLoopDetector />
+                     
+                     <Routes>
                       <Route path="/" element={<Index />} />
                       <Route path="/health" element={<HealthPage />} />
                       <Route path="/diagnostic" element={<DiagnosticPage />} />

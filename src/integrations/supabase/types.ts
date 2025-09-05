@@ -1180,6 +1180,10 @@ export type Database = {
         Args: { retention_days?: number }
         Returns: number
       }
+      cleanup_old_logs_optimized: {
+        Args: { retention_days?: number }
+        Returns: Json
+      }
       cleanup_orphaned_users: {
         Args: Record<PropertyKey, never>
         Returns: number
