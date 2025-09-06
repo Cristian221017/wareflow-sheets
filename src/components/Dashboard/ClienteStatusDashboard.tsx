@@ -20,34 +20,47 @@ import type { NotaFiscal } from "@/types/nf";
 import { log } from "@/utils/logger";
 import { toast } from "sonner";
 
-// Configuração dos status para o cliente
-const statusClienteConfig = {
-  armazenadas: {
-    label: "Armazenadas",
+// Configuração completa do fluxo (igual ao transportador)
+const statusFluxoCompleto = {
+  pendente: {
+    label: "Aguardando Separação",
+    icon: Clock,
+    color: "hsl(var(--muted-foreground))",
+    bgColor: "bg-slate-50",
+    textColor: "text-slate-700",
+    description: "Aguardando início da separação",
+    progress: 15,
+    step: 1,
+  },
+  em_separacao: {
+    label: "Em Separação",
     icon: Package,
     color: "hsl(214 100% 59%)",
     bgColor: "bg-blue-50",
     textColor: "text-blue-700",
-    description: "Mercadorias disponíveis no armazém",
-    status: "ARMAZENADA",
+    description: "Mercadoria sendo separada",
+    progress: 40,
+    step: 2,
   },
-  solicitadas: {
-    label: "Solicitadas",
-    icon: FileText,
-    color: "hsl(38 92% 50%)",
-    bgColor: "bg-orange-50", 
-    textColor: "text-orange-700",
-    description: "Aguardando aprovação da transportadora",
-    status: "SOLICITADA",
-  },
-  confirmadas: {
-    label: "Confirmadas",
+  separacao_concluida: {
+    label: "Separação Concluída",
     icon: CheckCircle,
     color: "hsl(142 76% 36%)",
     bgColor: "bg-green-50",
-    textColor: "text-green-700", 
-    description: "Prontas para retirada",
-    status: "CONFIRMADA",
+    textColor: "text-green-700",
+    description: "Separação finalizada com sucesso",
+    progress: 65,
+    step: 3,
+  },
+  separacao_com_pendencia: {
+    label: "Separação com Pendência",
+    icon: AlertCircle,
+    color: "hsl(0 84% 60%)",
+    bgColor: "bg-red-50",
+    textColor: "text-red-700",
+    description: "Separação com problemas ou itens faltantes",
+    progress: 50,
+    step: 2.5,
   },
   em_viagem: {
     label: "Em Viagem",
@@ -55,74 +68,74 @@ const statusClienteConfig = {
     color: "hsl(262 83% 58%)",
     bgColor: "bg-indigo-50",
     textColor: "text-indigo-700",
-    description: "Mercadorias em transporte",
-    status: "CONFIRMADA",
-    extraFilter: (nf: NotaFiscal) => !!nf.data_embarque && !nf.data_entrega,
+    description: "Mercadoria despachada e em transporte",
+    progress: 85,
+    step: 4,
   },
-  entregues: {
-    label: "Entregues",
+  entregue: {
+    label: "Entregue",
     icon: PackageCheck,
     color: "hsl(142 76% 36%)",
-    bgColor: "bg-emerald-50", 
+    bgColor: "bg-emerald-50",
     textColor: "text-emerald-700",
-    description: "Entregas concluídas com sucesso",
-    status: "ALL",
-    extraFilter: (nf: NotaFiscal) => !!nf.data_entrega || nf.status_separacao === 'entregue',
+    description: "Mercadoria entregue ao destinatário",
+    progress: 100,
+    step: 5,
   },
 };
 
-// Configuração do status de separação para detalhamento
-const statusSeparacaoConfig = {
-  pendente: {
-    label: "Aguardando Separação",
-    icon: Clock,
-    color: "hsl(var(--muted-foreground))",
-    progress: 25,
-  },
-  em_separacao: {
-    label: "Em Separação", 
-    icon: Package,
-    color: "hsl(213 94% 68%)",
-    progress: 50,
-  },
-  separacao_concluida: {
-    label: "Separação Concluída",
-    icon: CheckCircle,
-    color: "hsl(142 76% 36%)",
-    progress: 75,
-  },
-  separacao_com_pendencia: {
-    label: "Pendências na Separação",
-    icon: AlertCircle,
-    color: "hsl(0 84% 60%)",
-    progress: 60,
-  },
-};
+interface StatusCount {
+  count: number;
+  items: NotaFiscal[];
+}
+
+interface DashboardStats {
+  armazenadas: StatusCount;
+  solicitadas: StatusCount;
+  confirmadas: StatusCount;
+  statusSeparacao: Record<string, StatusCount>;
+  total: number;
+}
 
 export function ClienteStatusDashboard() {
   const queryClient = useQueryClient();
   
   // Buscar todas as NFs do cliente
   const { data: todasNfs, isLoading } = useNFsCliente();
-  const { data: nfsArmazenadas } = useNFsCliente("ARMAZENADA");
-  const { data: nfsSolicitadas } = useNFsCliente("SOLICITADA");  
-  const { data: nfsConfirmadas } = useNFsCliente("CONFIRMADA");
 
-  // Calcular estatísticas
-  const stats = useMemo(() => {
+  // Calcular estatísticas baseadas no fluxo completo
+  const stats: DashboardStats | null = useMemo(() => {
     if (!todasNfs || !Array.isArray(todasNfs)) {
       return null;
     }
 
+    log('📊 Calculando dashboard completo baseado em NFs reais:', todasNfs);
+
+    // Status principais
     const armazenadas = todasNfs.filter(nf => nf.status === 'ARMAZENADA');
     const solicitadas = todasNfs.filter(nf => nf.status === 'SOLICITADA');
     const confirmadas = todasNfs.filter(nf => nf.status === 'CONFIRMADA');
-    const emViagem = todasNfs.filter(nf => 
-      nf.status === 'CONFIRMADA' && nf.data_embarque && !nf.data_entrega
-    );
-    const entregues = todasNfs.filter(nf => 
-      nf.data_entrega || nf.status_separacao === 'entregue'
-    );
+
+    // Status de separação detalhados (para todas as NFs)
+    const statusSeparacao: Record<string, StatusCount> = {};
+    
+    Object.keys(statusFluxoCompleto).forEach(status => {
+      const nfsComStatus = todasNfs.filter(nf => {
+        const statusSeparacaoAtual = nf.status_separacao || 'pendente';
+        
+        // Mapear status especiais
+        if (status === 'em_viagem') {
+          return nf.data_embarque && !nf.data_entrega;
+        }
+        if (status === 'entregue') {
+          return nf.data_entrega || nf.status_separacao === 'entregue';
+        }
+        
+        return statusSeparacaoAtual === status;
+      });
+      
+      statusSeparacao[status] = { count: nfsComStatus.length, items: nfsComStatus };
+    });
 
     const total = todasNfs.length;
 
@@ -130,8 +143,7 @@ export function ClienteStatusDashboard() {
       armazenadas: { count: armazenadas.length, items: armazenadas },
       solicitadas: { count: solicitadas.length, items: solicitadas },
       confirmadas: { count: confirmadas.length, items: confirmadas },
-      em_viagem: { count: emViagem.length, items: emViagem },
-      entregues: { count: entregues.length, items: entregues },
+      statusSeparacao,
       total
     };
   }, [todasNfs]);
@@ -161,7 +173,7 @@ export function ClienteStatusDashboard() {
           <div className="animate-pulse space-y-4">
             <div className="h-6 bg-muted rounded w-1/3"></div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {[1, 2, 3, 4, 5].map((i) => (
+              {[1, 2, 3, 4, 5, 6].map((i) => (
                 <div key={i} className="p-4 border rounded-lg space-y-2">
                   <div className="h-4 bg-muted rounded"></div>
                   <div className="h-2 bg-muted rounded"></div>
@@ -197,14 +209,14 @@ export function ClienteStatusDashboard() {
 
   return (
     <div className="space-y-6">
-      {/* Header com título e refresh */}
+      {/* Fluxo Completo de Status de Separação (Igual ao Transportador) */}
       <Card>
         <CardContent className="p-6">
           <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-2">
-              <BarChart3 className="w-5 h-5" />
-              <h3 className="text-lg font-semibold">Status das Suas Mercadorias</h3>
-            </div>
+            <h3 className="text-xl font-semibold flex items-center gap-2">
+              <BarChart3 className="w-6 h-6" />
+              Acompanhamento das Suas Mercadorias
+            </h3>
             <div className="flex items-center gap-4">
               <Badge variant="outline" className="px-3 py-1">
                 Total: {stats.total} mercadorias
@@ -216,83 +228,142 @@ export function ClienteStatusDashboard() {
             </div>
           </div>
           
-          {/* Grid de status principais */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-            {Object.entries(statusClienteConfig).map(([key, config]) => {
-              const statData = stats[key as keyof typeof stats];
-              const count = typeof statData === 'object' ? statData.count : 0;
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {Object.entries(statusFluxoCompleto).map(([status, config]) => {
+              const statusData = stats.statusSeparacao[status];
+              const count = statusData?.count || 0;
               const percentage = stats.total > 0 ? (count / stats.total) * 100 : 0;
               
               return (
-                <div key={key} className={`p-4 rounded-lg border ${config.bgColor}`}>
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-2">
-                      <config.icon className="w-5 h-5" style={{ color: config.color }} />
-                      <span className="text-sm font-medium">{config.label}</span>
+                <div key={status} className={`p-5 rounded-lg border-2 transition-all ${count > 0 ? 'border-primary/20 shadow-md' : 'border-muted'} ${config.bgColor}`}>
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center justify-center w-10 h-10 rounded-full bg-white/60 shadow-sm">
+                        <config.icon className="w-5 h-5" style={{ color: config.color }} />
+                      </div>
+                      <div>
+                        <span className="font-semibold text-sm">{config.label}</span>
+                        <div className="text-xs text-muted-foreground">Etapa {config.step}</div>
+                      </div>
                     </div>
-                    <Badge variant="secondary" className="bg-white/60">
+                    <Badge variant="secondary" className="bg-white/80 font-bold text-sm">
                       {count}
                     </Badge>
                   </div>
-                  <div className="mb-2">
-                    <Progress value={percentage} className="h-2" />
+                  
+                  <div className="mb-4">
+                    <div className="flex justify-between text-xs mb-2">
+                      <span className="text-muted-foreground">Progresso da Etapa</span>
+                      <span className={config.textColor}>{config.progress}%</span>
+                    </div>
+                    <Progress value={config.progress} className="h-2.5" />
                   </div>
-                  <div className="space-y-1">
+                  
+                  <div className="space-y-2">
                     <div className="flex justify-between text-xs">
-                      <span className="text-muted-foreground">{percentage.toFixed(0)}%</span>
+                      <span className="text-muted-foreground">{percentage.toFixed(1)}% do total</span>
                       <span className={config.textColor}>{count}/{stats.total}</span>
                     </div>
-                    <p className="text-xs text-muted-foreground">{config.description}</p>
+                    <p className="text-xs text-muted-foreground leading-relaxed">{config.description}</p>
+                  </div>
+                  
+                  {/* Barra de representação visual */}
+                  <div className="mt-3">
+                    <div className="w-full bg-white/50 rounded-full h-1.5">
+                      <div 
+                        className="h-1.5 rounded-full transition-all duration-500"
+                        style={{ 
+                          width: `${Math.max(percentage, 2)}%`, // Mínimo 2% para visibilidade
+                          backgroundColor: config.color 
+                        }}
+                      ></div>
+                    </div>
                   </div>
                 </div>
               );
             })}
           </div>
+          
+          {/* Fluxo sequencial */}
+          <div className="mt-8 p-4 bg-gradient-to-r from-muted/30 to-muted/10 rounded-lg">
+            <div className="flex items-center gap-2 mb-4">
+              <BarChart3 className="w-4 h-4" />
+              <span className="font-medium">Fluxo do Processo</span>
+            </div>
+            
+            <div className="flex items-center justify-between space-x-2 overflow-x-auto">
+              {Object.entries(statusFluxoCompleto)
+                .sort((a, b) => a[1].step - b[1].step)
+                .map(([status, config], index, array) => {
+                  const count = stats.statusSeparacao[status]?.count || 0;
+                  const isActive = count > 0;
+                  
+                  return (
+                    <div key={status} className="flex items-center">
+                      <div className={`flex flex-col items-center min-w-[120px] p-3 rounded-lg transition-all ${isActive ? config.bgColor + ' border-2 border-primary/20' : 'bg-muted/20'}`}>
+                        <div className={`flex items-center justify-center w-8 h-8 rounded-full mb-2 ${isActive ? 'bg-white shadow-sm' : 'bg-muted'}`}>
+                          <config.icon 
+                            className="w-4 h-4" 
+                            style={{ color: isActive ? config.color : 'hsl(var(--muted-foreground))' }} 
+                          />
+                        </div>
+                        <span className={`text-xs font-medium text-center leading-tight ${isActive ? config.textColor : 'text-muted-foreground'}`}>
+                          {config.label}
+                        </span>
+                        <Badge variant={isActive ? "default" : "secondary"} className="mt-1 text-xs">
+                          {count}
+                        </Badge>
+                      </div>
+                      
+                      {/* Seta conectora */}
+                      {index < array.length - 1 && (
+                        <div className="flex items-center px-2">
+                          <div className="w-6 h-0.5 bg-muted-foreground/30 rounded"></div>
+                          <div className="w-0 h-0 border-l-[6px] border-l-muted-foreground/30 border-t-[3px] border-t-transparent border-b-[3px] border-b-transparent ml-1"></div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+            </div>
+          </div>
         </CardContent>
       </Card>
 
-      {/* Status de Separação detalhado (apenas para armazenadas) */}
-      {stats.armazenadas.count > 0 && (
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h4 className="font-medium flex items-center gap-2">
-                <Package className="w-4 h-4" />
-                Detalhamento das Mercadorias Armazenadas
-              </h4>
-              <Badge variant="outline">{stats.armazenadas.count} itens</Badge>
+      {/* Resumo Textual */}
+      <Card>
+        <CardContent className="p-6">
+          <div className="flex items-center gap-2 mb-4">
+            <Package className="w-4 h-4" />
+            <h4 className="font-medium">Resumo do Status das Suas Mercadorias</h4>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+            <div className="space-y-2">
+              <p>
+                📦 <strong>{stats.armazenadas.count}</strong> mercadorias armazenadas no depósito
+              </p>
+              <p>
+                📝 <strong>{stats.solicitadas.count}</strong> solicitações de carregamento pendentes
+              </p>
+              <p>
+                ✅ <strong>{stats.confirmadas.count}</strong> mercadorias confirmadas para retirada
+              </p>
             </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              {Object.entries(statusSeparacaoConfig).map(([status, config]) => {
-                const nfsWithStatus = stats.armazenadas.items.filter(
-                  nf => (nf.status_separacao || 'pendente') === status
-                );
-                const count = nfsWithStatus.length;
-                const percentage = stats.armazenadas.count > 0 ? (count / stats.armazenadas.count) * 100 : 0;
-                
-                return (
-                  <div key={status} className="p-3 border rounded-lg bg-card">
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center gap-1.5">
-                        <config.icon className="w-4 h-4" style={{ color: config.color }} />
-                        <span className="text-xs font-medium">{config.label}</span>
-                      </div>
-                      <Badge variant="secondary" className="text-xs px-2 py-0">
-                        {count}
-                      </Badge>
-                    </div>
-                    <Progress value={config.progress} className="h-1.5 mb-1" />
-                    <div className="text-xs text-muted-foreground">
-                      {percentage.toFixed(0)}% das armazenadas
-                    </div>
-                  </div>
-                );
-              })}
+            <div className="space-y-2">
+              <p>
+                🚚 <strong>{stats.statusSeparacao.em_viagem?.count || 0}</strong> mercadorias em viagem
+              </p>
+              <p>
+                🎯 <strong>{stats.statusSeparacao.entregue?.count || 0}</strong> entregas concluídas
+              </p>
+              <p className="text-muted-foreground">
+                Total: <strong>{stats.total}</strong> mercadorias no sistema
+              </p>
             </div>
-          </CardContent>
-        </Card>
-      )}
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
