@@ -213,12 +213,24 @@ function handleNFChange(payload: any, queryClient: QueryClient) {
   // Dashboard sempre
   queryClient.invalidateQueries({ queryKey: ["dashboard"] });
   
-  // Log detalhado para debug
+  // Log detalhado para debug - incluindo status de separação
   if (payload.eventType === 'UPDATE' && payload.new && payload.old) {
     const oldStatus = payload.old.status;
     const newStatus = payload.new.status;
+    const oldStatusSeparacao = payload.old.status_separacao;
+    const newStatusSeparacao = payload.new.status_separacao;
+    
     if (oldStatus !== newStatus) {
       log(`🔄 Status da NF mudou: ${oldStatus} → ${newStatus} (NF: ${payload.new.numero_nf})`);
+    }
+    
+    if (oldStatusSeparacao !== newStatusSeparacao) {
+      log(`📦 Status de separação mudou: ${oldStatusSeparacao} → ${newStatusSeparacao} (NF: ${payload.new.numero_nf})`);
+      
+      // Invalidação extra específica para cliente quando status de separação muda
+      queryClient.invalidateQueries({ queryKey: ['nfs', 'cliente'] });
+      queryClient.invalidateQueries({ queryKey: ['nfs', 'ARMAZENADA'] });
+      queryClient.invalidateQueries({ queryKey: ['nfs-cliente'] });
     }
   }
 }
