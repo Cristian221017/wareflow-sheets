@@ -2,6 +2,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { log, warn } from "@/utils/logger";
 import type { QueryClient } from "@tanstack/react-query";
 import type { RealtimeChannel } from "@supabase/supabase-js";
+import { realtimeDebugger } from '@/utils/realtimeDebugger';
 
 const CENTRAL_CHANNEL_NAME = "wms-central-realtime";
 
@@ -87,6 +88,17 @@ function createRealtimeSubscription(queryClient: QueryClient, isReconnect = fals
       },
       (payload) => {
         log('📡 Mudança detectada em notas_fiscais:', payload);
+        
+        // Debug detalhado para comunicação entre portais
+        realtimeDebugger.logRealtimeEvent(payload, 'notas_fiscais');
+        
+        // Log mais detalhado para debug de comunicação cliente-transportadora
+        if (payload.eventType === 'UPDATE' && payload.new && payload.old) {
+          if (payload.old.status_separacao !== payload.new.status_separacao) {
+            log(`🚨 COMUNICAÇÃO PORTAIS: Status separação NF ${payload.new.numero_nf} mudou de ${payload.old.status_separacao} para ${payload.new.status_separacao}`);
+          }
+        }
+        
         handleNFChange(payload, queryClient);
       }
     )
