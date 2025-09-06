@@ -26,10 +26,55 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // References to avoid stale closures
   const userRef = useRef<User | null>(null);
   const loadingRef = useRef(false);
+  
+  // Session timeout management
+  const sessionTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const lastActivityRef = useRef<number>(Date.now());
+  const SESSION_TIMEOUT = 30 * 60 * 1000; // 30 minutes
 
   // Sync refs with state
   useEffect(() => {
     userRef.current = user;
+  }, [user]);
+
+  // Session timeout management
+  const resetSessionTimeout = () => {
+    lastActivityRef.current = Date.now();
+    
+    if (sessionTimeoutRef.current) {
+      clearTimeout(sessionTimeoutRef.current);
+    }
+    
+    if (user) {
+      sessionTimeoutRef.current = setTimeout(() => {
+        warn('🕐 Session timeout - logging out user');
+        logout();
+      }, SESSION_TIMEOUT);
+    }
+  };
+
+  // Activity monitoring
+  useEffect(() => {
+    if (!user) return;
+
+    const events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart'];
+    const activityHandler = () => resetSessionTimeout();
+    
+    events.forEach(event => {
+      document.addEventListener(event, activityHandler, true);
+    });
+    
+    // Initial timeout setup
+    resetSessionTimeout();
+    
+    return () => {
+      events.forEach(event => {
+        document.removeEventListener(event, activityHandler, true);
+      });
+      if (sessionTimeoutRef.current) {
+        clearTimeout(sessionTimeoutRef.current);
+      }
+    };
   }, [user]);
 
   useEffect(() => {
