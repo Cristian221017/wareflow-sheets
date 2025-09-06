@@ -8,17 +8,55 @@ import { StatusSeparacaoSummary } from '@/components/Dashboard/StatusSeparacaoSu
 import { ReportsActions } from '@/components/Dashboard/ReportsActions';
 import { useNFsCliente } from '@/hooks/useNFsCliente';
 import { useQueryClient } from '@tanstack/react-query';
+import { useMemo } from 'react';
 
 export function ClienteDashboard() {
   const { data: stats, isLoading, error, refetch } = useDashboard();
   const { user } = useAuth();
   const queryClient = useQueryClient();
   
-  // Buscar NFs para relatórios
-  const { data: nfsArmazenadas } = useNFsCliente("ARMAZENADA");
-  const { data: nfsSolicitadas } = useNFsCliente("SOLICITADA");
-  const { data: nfsConfirmadas } = useNFsCliente("CONFIRMADA");
-  
+  // Buscar todas as NFs do cliente para cálculos precisos
+  const { data: nfsArmazenadas, isLoading: loadingArmazenadas } = useNFsCliente("ARMAZENADA");
+  const { data: nfsSolicitadas, isLoading: loadingSolicitadas } = useNFsCliente("SOLICITADA");
+  const { data: nfsConfirmadas, isLoading: loadingConfirmadas } = useNFsCliente("CONFIRMADA");
+  const { data: todasNfs, isLoading: loadingTodas } = useNFsCliente(); // Todas as NFs
+
+  // Calcular estatísticas baseadas nas NFs reais do cliente
+  const calculatedStats = useMemo(() => {
+    if (!todasNfs || !Array.isArray(todasNfs)) {
+      return null;
+    }
+
+    log('📊 Calculando dashboard baseado em NFs reais:', todasNfs);
+
+    const armazenadas = todasNfs.filter(nf => nf.status === 'ARMAZENADA').length;
+    const solicitadas = todasNfs.filter(nf => nf.status === 'SOLICITADA').length;
+    const confirmadas = todasNfs.filter(nf => nf.status === 'CONFIRMADA').length;
+    
+    // Em viagem: NFs confirmadas que têm data_embarque mas não data_entrega
+    const emViagem = todasNfs.filter(nf => 
+      nf.status === 'CONFIRMADA' && 
+      nf.data_embarque && 
+      !nf.data_entrega
+    ).length;
+    
+    // Entregues: NFs com data_entrega ou status_separacao = 'entregue'
+    const entregues = todasNfs.filter(nf => 
+      nf.data_entrega || nf.status_separacao === 'entregue'
+    ).length;
+
+    const calculated = {
+      nfsArmazenadas: armazenadas,
+      solicitacoesPendentes: solicitadas,
+      nfsConfirmadas: confirmadas,
+      nfsEmViagem: emViagem,
+      nfsEntregues: entregues
+    };
+
+    log('📊 Dashboard calculado:', calculated);
+    return calculated;
+  }, [todasNfs]);
+
   const allNfs = [
     ...(Array.isArray(nfsArmazenadas) ? nfsArmazenadas : []),
     ...(Array.isArray(nfsSolicitadas) ? nfsSolicitadas : []),
@@ -26,12 +64,26 @@ export function ClienteDashboard() {
   ];
 
   const handleRefresh = async () => {
-    // Invalidar apenas queries relacionadas ao dashboard
+    log('🔄 DASHBOARD: Atualizando todas as queries do cliente');
+    
+    // Invalidar todas as queries relacionadas
     queryClient.invalidateQueries({ queryKey: ['dashboard'] });
-    await refetch();
+    queryClient.invalidateQueries({ queryKey: ['nfs-cliente'] });
+    queryClient.invalidateQueries({ queryKey: ['nfs'] });
+    
+    // Refetch forçado
+    await Promise.all([
+      refetch(),
+      queryClient.refetchQueries({ 
+        predicate: (query) => {
+          const [firstKey] = query.queryKey || [];
+          return firstKey === 'nfs-cliente' || firstKey === 'nfs' || firstKey === 'dashboard';
+        }
+      })
+    ]);
   };
 
-  if (isLoading || !stats) {
+  if (isLoading || loadingTodas || !calculatedStats) {
     return (
       <div className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
@@ -46,10 +98,16 @@ export function ClienteDashboard() {
     );
   }
 
-  // Cálculos baseados nos dados do dashboard - apenas mercadorias que ainda estão com o cliente ou em processo
-  const totalNFs = stats.nfsArmazenadas + stats.solicitacoesPendentes + stats.nfsConfirmadas + (stats.nfsEmViagem || 0);
-  const totalPeso = 0;
-  const totalVolume = 0;
+  // Usar stats calculadas baseadas nas NFs reais, com fallback para o RPC
+  const finalStats = calculatedStats || {
+    nfsArmazenadas: stats?.nfsArmazenadas || 0,
+    solicitacoesPendentes: stats?.solicitacoesPendentes || 0,
+    nfsConfirmadas: stats?.nfsConfirmadas || 0,
+    nfsEmViagem: stats?.nfsEmViagem || 0,
+    nfsEntregues: stats?.nfsEntregues || 0
+  };
+
+  log('📊 Stats finais para exibição:', finalStats);
 
   return (
     <div className="space-y-6">
@@ -75,7 +133,7 @@ export function ClienteDashboard() {
             <Package className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.nfsArmazenadas}</div>
+            <div className="text-2xl font-bold">{finalStats.nfsArmazenadas}</div>
             <p className="text-xs text-muted-foreground">
               Disponíveis
             </p>
@@ -90,7 +148,7 @@ export function ClienteDashboard() {
             <FileText className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.solicitacoesPendentes}</div>
+            <div className="text-2xl font-bold">{finalStats.solicitacoesPendentes}</div>
             <p className="text-xs text-muted-foreground">
               Aguardando análise
             </p>
@@ -105,7 +163,7 @@ export function ClienteDashboard() {
             <Truck className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.nfsConfirmadas}</div>
+            <div className="text-2xl font-bold">{finalStats.nfsConfirmadas}</div>
             <p className="text-xs text-muted-foreground">
               Prontas para retirada
             </p>
@@ -128,35 +186,35 @@ export function ClienteDashboard() {
                   <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
                   <span className="text-sm">Armazenadas</span>
                 </div>
-                <span className="text-sm font-medium">{stats.nfsArmazenadas}</span>
+                <span className="text-sm font-medium">{finalStats.nfsArmazenadas}</span>
               </div>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <div className="w-3 h-3 bg-orange-500 rounded-full"></div>
                   <span className="text-sm">Solicitadas</span>
                 </div>
-                <span className="text-sm font-medium">{stats.solicitacoesPendentes}</span>
+                <span className="text-sm font-medium">{finalStats.solicitacoesPendentes}</span>
               </div>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <div className="w-3 h-3 bg-green-500 rounded-full"></div>
                   <span className="text-sm">Confirmadas</span>
                 </div>
-                <span className="text-sm font-medium">{stats.nfsConfirmadas}</span>
+                <span className="text-sm font-medium">{finalStats.nfsConfirmadas}</span>
               </div>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <div className="w-3 h-3 bg-indigo-500 rounded-full"></div>
                   <span className="text-sm">Em Viagem</span>
                 </div>
-                <span className="text-sm font-medium">{stats.nfsEmViagem || 0}</span>
+                <span className="text-sm font-medium">{finalStats.nfsEmViagem}</span>
               </div>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <div className="w-3 h-3 bg-emerald-500 rounded-full"></div>
                   <span className="text-sm">Entregues</span>
                 </div>
-                <span className="text-sm font-medium">{stats.nfsEntregues || 0}</span>
+                <span className="text-sm font-medium">{finalStats.nfsEntregues}</span>
               </div>
             </div>
           </CardContent>
@@ -180,7 +238,7 @@ export function ClienteDashboard() {
                   </div>
                 </div>
                 <div className="text-2xl font-bold text-blue-600">
-                  {stats.nfsEmViagem || 0}
+                  {finalStats.nfsEmViagem}
                 </div>
               </div>
 
@@ -193,7 +251,7 @@ export function ClienteDashboard() {
                   </div>
                 </div>
                 <div className="text-2xl font-bold text-green-600">
-                  {stats.nfsEntregues || 0}
+                  {finalStats.nfsEntregues}
                 </div>
               </div>
             </div>

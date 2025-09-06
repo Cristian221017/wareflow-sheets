@@ -222,7 +222,7 @@ function handleNFChange(payload: any, queryClient: QueryClient) {
     }
   });
   
-  // Dashboard sempre
+  // Dashboard sempre para refletir contadores atualizados
   queryClient.invalidateQueries({ queryKey: ["dashboard"] });
   
   // Log detalhado para debug - incluindo status de separação
@@ -234,6 +234,9 @@ function handleNFChange(payload: any, queryClient: QueryClient) {
     
     if (oldStatus !== newStatus) {
       log(`🔄 Status da NF mudou: ${oldStatus} → ${newStatus} (NF: ${payload.new.numero_nf})`);
+      
+      // Forçar refresh do dashboard quando status principal muda
+      queryClient.refetchQueries({ queryKey: ["dashboard"] });
     }
     
     if (oldStatusSeparacao !== newStatusSeparacao) {
@@ -246,15 +249,22 @@ function handleNFChange(payload: any, queryClient: QueryClient) {
       queryClient.invalidateQueries({ queryKey: ['nfs-cliente'] });
       queryClient.invalidateQueries({ queryKey: ['nfs', 'cliente'] });
       queryClient.invalidateQueries({ queryKey: ['nfs', 'ARMAZENADA'] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
       
       // Refetch FORÇADO para garantir atualização
       queryClient.refetchQueries({ 
         predicate: (query) => {
           const [firstKey] = query.queryKey || [];
-          return firstKey === 'nfs-cliente' || firstKey === 'nfs';
+          return firstKey === 'nfs-cliente' || firstKey === 'nfs' || firstKey === 'dashboard';
         }
       });
     }
+  }
+
+  // Para qualquer mudança em NF, invalidar dashboard
+  if (payload.eventType === 'INSERT' || payload.eventType === 'DELETE') {
+    queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+    queryClient.refetchQueries({ queryKey: ["dashboard"] });
   }
 }
 
@@ -268,10 +278,11 @@ function handleDocumentoChange(payload: any, queryClient: QueryClient) {
     }
   });
   
-  // Dashboard sempre
+  // Dashboard sempre - importante para contadores financeiros
   queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+  queryClient.refetchQueries({ queryKey: ["dashboard"] });
   
-  log('💰 Documento financeiro atualizado em tempo real');
+  log('💰 Documento financeiro atualizado em tempo real - dashboard invalidado');
 }
 
 function handleEventLogChange(payload: any, queryClient: QueryClient) {
