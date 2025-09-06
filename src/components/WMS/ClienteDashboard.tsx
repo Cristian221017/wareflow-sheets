@@ -3,7 +3,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useDashboard } from '@/hooks/useDashboard';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Package, FileText, Truck, BarChart3, PackageCheck, RefreshCw, Bug } from 'lucide-react';
+import { Package, FileText, Truck, BarChart3, PackageCheck, RefreshCw, Bug, CheckCircle2 } from 'lucide-react';
 import { StatusSeparacaoSummary } from '@/components/Dashboard/StatusSeparacaoSummary';
 import { ClienteStatusDashboard } from '@/components/Dashboard/ClienteStatusDashboard';
 import { ReportsActions } from '@/components/Dashboard/ReportsActions';
@@ -221,12 +221,42 @@ export function ClienteDashboard() {
             <CardTitle className="text-sm font-medium">
               Confirmadas
             </CardTitle>
-            <Truck className="h-4 w-4 text-muted-foreground" />
+            <CheckCircle2 className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{finalStats.nfsConfirmadas}</div>
             <p className="text-xs text-muted-foreground">
               Prontas para retirada
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              Em Viagem
+            </CardTitle>
+            <Truck className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{finalStats.nfsEmViagem}</div>
+            <p className="text-xs text-muted-foreground">
+              Em trânsito
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              Entregues
+            </CardTitle>
+            <PackageCheck className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{finalStats.nfsEntregues}</div>
+            <p className="text-xs text-muted-foreground">
+              Concluídas
             </p>
           </CardContent>
         </Card>
