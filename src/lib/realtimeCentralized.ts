@@ -218,7 +218,7 @@ function handleNFChange(payload: any, queryClient: QueryClient) {
     predicate: (query) => {
       if (!Array.isArray(query.queryKey)) return false;
       const [firstKey] = query.queryKey;
-      return firstKey === 'nfs' || firstKey === 'solicitacoes';
+      return firstKey === 'nfs' || firstKey === 'solicitacoes' || firstKey === 'nfs-cliente';
     }
   });
   
@@ -239,10 +239,21 @@ function handleNFChange(payload: any, queryClient: QueryClient) {
     if (oldStatusSeparacao !== newStatusSeparacao) {
       log(`📦 Status de separação mudou: ${oldStatusSeparacao} → ${newStatusSeparacao} (NF: ${payload.new.numero_nf})`);
       
-      // Invalidação extra específica para cliente quando status de separação muda
+      // Debug detalhado para comunicação entre portais
+      realtimeDebugger.logRealtimeEvent(payload, 'notas_fiscais');
+      
+      // Invalidação FORÇADA para queries específicas do cliente
+      queryClient.invalidateQueries({ queryKey: ['nfs-cliente'] });
       queryClient.invalidateQueries({ queryKey: ['nfs', 'cliente'] });
       queryClient.invalidateQueries({ queryKey: ['nfs', 'ARMAZENADA'] });
-      queryClient.invalidateQueries({ queryKey: ['nfs-cliente'] });
+      
+      // Refetch FORÇADO para garantir atualização
+      queryClient.refetchQueries({ 
+        predicate: (query) => {
+          const [firstKey] = query.queryKey || [];
+          return firstKey === 'nfs-cliente' || firstKey === 'nfs';
+        }
+      });
     }
   }
 }

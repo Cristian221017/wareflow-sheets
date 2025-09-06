@@ -16,6 +16,7 @@ import { NFBulkActions } from "@/components/NfLists/NFBulkActions";
 import type { NotaFiscal } from "@/types/nf";
 import { log } from "@/utils/logger";
 import { toast } from "sonner";
+import { RefreshButton } from "@/components/common/RefreshButton";
 
 // Configuração dos status de separação
 const statusConfig = {
@@ -74,9 +75,23 @@ export function ClienteStatusSeparacao() {
 
   // Função para atualizar dados
   const handleRefresh = async () => {
+    console.log('🔄 CLIENTE: Forçando refresh completo do portal cliente');
+    
+    // Invalidar todas as queries relacionadas a NFs do cliente
+    queryClient.invalidateQueries({ queryKey: ['nfs-cliente'] });
     queryClient.invalidateQueries({ queryKey: ['nfs'] });
+    queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+    
+    // Refetch forçado
+    await queryClient.refetchQueries({ 
+      predicate: (query) => {
+        const [firstKey] = query.queryKey || [];
+        return firstKey === 'nfs-cliente' || firstKey === 'nfs' || firstKey === 'dashboard';
+      }
+    });
+    
     await refetch();
-    toast.success("Dados atualizados!");
+    toast.success("Dados sincronizados!");
   };
 
   // Estados para filtros e seleção múltipla
@@ -239,7 +254,7 @@ export function ClienteStatusSeparacao() {
           className="flex items-center gap-2"
         >
           <RefreshCw className="h-4 w-4" />
-          Atualizar
+          Sincronizar Portais
         </Button>
       </div>
 

@@ -22,15 +22,17 @@ export function useNFsCliente(status?: NFStatus) {
   const { user } = useAuth();
   
   return useQuery({
-    queryKey: ['nfs', 'cliente', user?.id ?? 'anon', status ?? 'todas'],
+    queryKey: ['nfs-cliente', user?.id ?? 'anon', status ?? 'todas'],
     queryFn: async () => {
+      console.log('🔍 Buscando NFs do cliente - Query executada:', { userId: user?.id, status });
+      
       // Query otimizada - buscar NFs básicas primeiro
-      let query = supabase
+       let query = supabase
         .from('notas_fiscais')
         .select(`
           id, numero_nf, numero_pedido, ordem_compra, produto, 
           fornecedor, quantidade, peso, volume, localizacao, 
-          data_recebimento, status,
+          data_recebimento, status, status_separacao,
           cliente_id, transportadora_id, created_at, updated_at,
           requested_at, requested_by, approved_at, approved_by
         `)
@@ -75,6 +77,7 @@ export function useNFsCliente(status?: NFStatus) {
           nf_id: nf.id,
           numero_nf: nf.numero_nf,
           status: nf.status,
+          status_separacao: nf.status_separacao, // ← Agora vem do banco!
           tem_solicitacao: !!solicitacao,
           data_agendamento: solicitacao?.data_agendamento,
           observacoes: solicitacao?.observacoes,
@@ -85,7 +88,7 @@ export function useNFsCliente(status?: NFStatus) {
         
         return {
           ...nf,
-          status_separacao: 'pendente', // Valor padrão
+          // status_separacao vem do banco agora, não mais hardcode!
           // Dados da solicitação
           data_agendamento_entrega: solicitacao?.data_agendamento,
           observacoes_solicitacao: solicitacao?.observacoes,
@@ -94,8 +97,8 @@ export function useNFsCliente(status?: NFStatus) {
       }) || [];
     },
     enabled: !!(user && user.id),
-    staleTime: 2 * 60 * 1000, // 2 minutos
-    refetchOnWindowFocus: false,
+    staleTime: 30 * 1000, // 30 segundos - mais agressivo para mudanças rápidas
+    refetchOnWindowFocus: true, // Ativar para garantir sincronização
     refetchInterval: false,
   });
 }
