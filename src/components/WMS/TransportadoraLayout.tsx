@@ -140,7 +140,6 @@ export function TransportadoraLayout() {
             
             {/* Desktop Actions */}
             <div className="hidden lg:flex gap-2 xl:gap-3">
-              <ApiStatusIndicator />
               <Button 
                 onClick={() => setShowUsuarios(true)}
                 className="bg-secondary hover:bg-secondary/90 text-secondary-foreground"
@@ -148,6 +147,8 @@ export function TransportadoraLayout() {
                 <User className="w-4 h-4 mr-2" />
                 Gestão de usuários
               </Button>
+              
+              <ApiStatusIndicator />
               
               <Button 
                 onClick={() => setShowClientes(true)}

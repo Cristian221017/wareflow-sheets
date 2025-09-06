@@ -68,11 +68,11 @@ export function ClienteLayout() {
 
   const navigationItems = [
     { id: 'dashboard', label: 'Dashboard', icon: Home, shortLabel: 'Home', notification: 0 },
+    { id: 'cadastro-usuario', label: 'Gestão de Usuários', icon: UserPlus, shortLabel: 'Usuários', notification: 0 },
     { id: 'status-separacao', label: 'Mercadorias Armazenadas', icon: Package, shortLabel: 'Armazenadas', notification: 0 },
     { id: 'pedidos', label: 'Carregamentos Solicitados', icon: FileText, shortLabel: 'Solicitados', notification: 0 },
     { id: 'liberados', label: 'Carregamentos Confirmados', icon: CheckCircle, shortLabel: 'Confirmados', notification: notifications.pedidosLiberados },
-    { id: 'financeiro', label: 'Financeiro', icon: Receipt, shortLabel: 'Fin', notification: notifications.documentosFinanceiros },
-    { id: 'cadastro-usuario', label: 'Gestão de Usuários', icon: UserPlus, shortLabel: 'Usuários', notification: 0 }
+    { id: 'financeiro', label: 'Financeiro', icon: Receipt, shortLabel: 'Fin', notification: notifications.documentosFinanceiros }
   ];
 
   const MobileNavigation = () => (

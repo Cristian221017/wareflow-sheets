@@ -43,12 +43,12 @@ export function SuperAdminLayout() {
   const { user, logout } = useAuth();
   const [isUserDialogOpen, setIsUserDialogOpen] = useState(false);
   const [isTransportadoraDialogOpen, setIsTransportadoraDialogOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState("dashboard");
+  const [activeTab, setActiveTab] = useState("usuarios");
 
   const tabs = [
+    { value: "usuarios", label: "Super Admins", icon: Users },
     { value: "dashboard", label: "Dashboard", icon: BarChart3 },
     { value: "transportadoras", label: "Transportadoras", icon: Building2 },
-    { value: "usuarios", label: "Super Admins", icon: Users },
     { value: "production", label: "Production", icon: Rocket },
     { value: "backup", label: "Backup", icon: HardDrive },
     { value: "deployment", label: "Deployment Seguro", icon: Shield },
