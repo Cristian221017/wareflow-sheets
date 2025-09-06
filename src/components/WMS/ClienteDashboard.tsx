@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Package, FileText, Truck, BarChart3, PackageCheck, RefreshCw } from 'lucide-react';
 import { StatusSeparacaoSummary } from '@/components/Dashboard/StatusSeparacaoSummary';
+import { ClienteStatusDashboard } from '@/components/Dashboard/ClienteStatusDashboard';
 import { ReportsActions } from '@/components/Dashboard/ReportsActions';
 import { useNFsCliente } from '@/hooks/useNFsCliente';
 import { useQueryClient } from '@tanstack/react-query';
@@ -259,8 +260,8 @@ export function ClienteDashboard() {
         </Card>
       </div>
 
-      {/* Status Separação Summary - apenas armazenadas */}
-      <StatusSeparacaoSummary showOnlyArmazenadas={true} />
+      {/* Status Separação Summary - componente visual melhorado */}
+      <ClienteStatusDashboard />
 
       {/* Reports Actions */}
       <ReportsActions 
