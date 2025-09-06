@@ -15,10 +15,23 @@ interface SecurityEvent {
 class SecurityMonitor {
   private failedLoginAttempts = new Map<string, { count: number; lastAttempt: number }>();
   private suspiciousIPs = new Set<string>();
+  private logThrottle = new Map<string, number>();
   private MAX_FAILED_ATTEMPTS = 5;
   private LOCKOUT_DURATION = 15 * 60 * 1000; // 15 minutes
+  private LOG_THROTTLE_INTERVAL = 5000; // 5 seconds between similar logs
 
   async recordSecurityEvent(event: Omit<SecurityEvent, 'timestamp'>) {
+    // Throttle similar events to prevent spam
+    const eventKey = `${event.type}_${event.userId || 'anonymous'}`;
+    const now = Date.now();
+    const lastLog = this.logThrottle.get(eventKey);
+    
+    if (lastLog && (now - lastLog < this.LOG_THROTTLE_INTERVAL)) {
+      return; // Skip this log to prevent spam
+    }
+    
+    this.logThrottle.set(eventKey, now);
+
     const securityEvent: SecurityEvent = {
       ...event,
       timestamp: new Date().toISOString(),
@@ -26,25 +39,18 @@ class SecurityMonitor {
       userAgent: navigator?.userAgent
     };
 
-    // Log locally
-    const logLevel = event.severity === 'critical' || event.severity === 'high' ? 'ERROR' : 'WARN';
-    const message = `Security Event: ${event.type} (${event.severity})`;
-    
-    if (logLevel === 'ERROR') {
-      error(message, securityEvent);
-    } else {
-      warn(message, securityEvent);
-    }
-
-    // Store in database
-    try {
-      await this.persistSecurityEvent(securityEvent);
-    } catch (err) {
-      error('Failed to persist security event:', err);
-    }
-
-    // Handle high severity events
+    // Log locally (only for high severity to reduce noise)
     if (event.severity === 'high' || event.severity === 'critical') {
+      const message = `Security Event: ${event.type} (${event.severity})`;
+      error(message, securityEvent);
+      
+      // Store in database for high severity events
+      try {
+        await this.persistSecurityEvent(securityEvent);
+      } catch (err) {
+        error('Failed to persist security event:', err);
+      }
+      
       await this.handleHighSeverityEvent(securityEvent);
     }
   }

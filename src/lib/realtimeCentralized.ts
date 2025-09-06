@@ -115,7 +115,10 @@ function createRealtimeSubscription(queryClient: QueryClient, isReconnect = fals
       }
     )
     .subscribe((status) => {
-      log('📡 Status da subscription centralizada:', status);
+      // Only log important status changes to reduce noise
+      if (status === 'SUBSCRIBED' || status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+        log('📡 Status da subscription centralizada:', status);
+      }
       
       if (status === 'SUBSCRIBED') {
         log('✅ Subscription realtime centralizada ativa');
