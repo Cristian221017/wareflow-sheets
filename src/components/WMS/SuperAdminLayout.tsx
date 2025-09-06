@@ -19,6 +19,7 @@ import { SystemMaintenanceTab } from './SystemMaintenanceTab';
 import { ProductionReadinessCheck } from '@/components/production/ProductionReadinessCheck';
 import DataSeeder from '@/components/system/DataSeeder';
 import SecurityInstructions from '@/components/production/SecurityInstructions';
+import ProductionSecurityChecklist from '@/components/production/ProductionSecurityChecklist';
 import ClientesDebugPanel from '@/components/system/ClientesDebugPanel';
 import { EnvironmentBadge, EnvironmentIndicator } from '@/components/system/EnvironmentBadge';
 import { ApiStatusIndicator } from '@/components/system/ApiStatusIndicator';
@@ -253,6 +254,7 @@ export function SuperAdminLayout() {
           <TabsContent value="production">
             <div className="space-y-6">
               <ProductionReadinessCheck />
+              <ProductionSecurityChecklist />
               <SecurityInstructions />
               <DataSeeder />
               <ClientesDebugPanel />
