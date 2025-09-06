@@ -168,7 +168,7 @@ class SecurityMonitor {
 
   private async persistSecurityEvent(event: SecurityEvent) {
     try {
-      const { error } = await supabase.rpc('log_security_event', {
+      const { error } = await (supabase.rpc as any)('log_security_event', {
         p_event_type: event.type,
         p_severity: event.severity,
         p_user_id: event.userId || null,

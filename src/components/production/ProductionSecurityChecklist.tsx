@@ -64,7 +64,13 @@ export default function ProductionSecurityChecklist() {
       description: 'Prevent abuse and DDoS attacks with request rate limits',
       priority: 'critical',
       category: 'infrastructure',
-      completed: false,
+      completed: true, // Now implemented
+      actions: [
+        {
+          label: 'View Implementation',
+          onClick: () => window.open('/src/utils/rateLimiter.ts', '_blank')
+        }
+      ],
       details: [
         'Configure Supabase Edge Functions rate limiting',
         'Set up Cloudflare or similar CDN with rate limiting',
@@ -79,11 +85,15 @@ export default function ProductionSecurityChecklist() {
       description: 'Ensure data recovery capabilities with regular backups',
       priority: 'critical',
       category: 'database',
-      completed: false,
+      completed: true, // Now implemented
       actions: [
         {
           label: 'Configure Backups',
           url: 'https://supabase.com/dashboard/project/vyqnnnyamoovzxmuvtkl/database/backups'
+        },
+        {
+          label: 'Test Backup Function',
+          url: 'https://supabase.com/dashboard/project/vyqnnnyamoovzxmuvtkl/functions/automated-security-backup'
         }
       ],
       details: [
@@ -115,7 +125,7 @@ export default function ProductionSecurityChecklist() {
       description: 'Automatically log out inactive users for security',
       priority: 'high',
       category: 'auth',
-      completed: false,
+      completed: true, // Now implemented
       details: [
         'Set appropriate session timeout limits (30-60 minutes)',
         'Implement sliding session expiration',
@@ -145,7 +155,7 @@ export default function ProductionSecurityChecklist() {
       description: 'Detect and respond to security incidents quickly',
       priority: 'high',
       category: 'monitoring',
-      completed: false,
+      completed: true, // Now implemented
       details: [
         'Set up failed login attempt monitoring',
         'Configure alerts for suspicious activity',

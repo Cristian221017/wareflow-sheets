@@ -1179,6 +1179,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      check_login_security: {
+        Args: { p_email: string; p_ip?: unknown }
+        Returns: Json
+      }
       cleanup_old_logs: {
         Args: { retention_days?: number }
         Returns: number
@@ -1377,6 +1381,18 @@ export type Database = {
               p_event_type: string
               p_payload?: Json
             }
+        Returns: undefined
+      }
+      log_security_event: {
+        Args: {
+          p_event_type: string
+          p_ip?: unknown
+          p_metadata?: Json
+          p_severity: string
+          p_user_agent?: string
+          p_user_email?: string
+          p_user_id?: string
+        }
         Returns: undefined
       }
       log_system_event: {

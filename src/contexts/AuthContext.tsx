@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import type { User as SupabaseUser, Session } from '@supabase/supabase-js';
 import type { User } from '@/types/auth';
 import { log, warn, error as logError } from '@/utils/logger';
+import { securityMonitor } from '@/utils/securityMonitor';
 
 interface AuthContextType {
   user: User | null;
@@ -321,6 +322,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
+      // Check if account is locked
+      const lockStatus = securityMonitor.isAccountLocked(email);
+      if (lockStatus) {
+        const remainingTime = Math.ceil(securityMonitor.getRemainingLockoutTime(email) / 1000);
+        warn(`Login blocked - account locked for ${remainingTime} seconds`);
+        return false;
+      }
+
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -328,9 +337,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (error) {
         logError('Login error:', error);
+        // Record failed login attempt
+        await securityMonitor.recordFailedLogin(email);
         return false;
       }
 
+      // Reset session timeout on successful login
+      resetSessionTimeout();
+      
       return !!data.user;
     } catch (error) {
       logError('Login exception:', error);
@@ -365,6 +379,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const logout = async () => {
     try {
+      // Clear session timeout
+      if (sessionTimeoutRef.current) {
+        clearTimeout(sessionTimeoutRef.current);
+      }
+      
       // Clear cached user profile on logout to allow fresh login
       const userId = user?.id;
       if (userId) {
