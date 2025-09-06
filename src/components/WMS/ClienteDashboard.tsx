@@ -45,12 +45,39 @@ export function ClienteDashboard() {
     const solicitadas = todasNfs.filter(nf => nf.status === 'SOLICITADA').length;
     const confirmadas = todasNfs.filter(nf => nf.status === 'CONFIRMADA').length;
     
-    // Em viagem: NFs confirmadas que têm data_embarque mas não data_entrega
+    // Em viagem: Priorizar status_separacao como fonte de verdade
     const emViagem = todasNfs.filter(nf => {
+      // Se tem status_separacao 'em_viagem', é a fonte de verdade
+      if (nf.status_separacao === 'em_viagem') return true;
+      
+      // Fallback para lógica de datas (quando status_separacao não está definido)
       const temEmbarque = nf.data_embarque && nf.data_embarque !== null;
       const temEntrega = nf.data_entrega && nf.data_entrega !== null;
       return nf.status === 'CONFIRMADA' && temEmbarque && !temEntrega;
     }).length;
+    
+    // Debug específico para o problema reportado
+    const nfsEmViagemDebug = todasNfs.filter(nf => {
+      const isEmViagem = nf.status_separacao === 'em_viagem' || 
+        (nf.status === 'CONFIRMADA' && nf.data_embarque && !nf.data_entrega);
+      if (isEmViagem) {
+        log(`🚚 NF EM VIAGEM detectada: ${nf.numero_nf}`, {
+          status: nf.status,
+          status_separacao: nf.status_separacao,
+          data_embarque: nf.data_embarque,
+          data_entrega: nf.data_entrega
+        });
+      }
+      return isEmViagem;
+    });
+    
+    log(`📊 CÁLCULO EM VIAGEM - Total encontradas: ${emViagem}`, {
+      detalhes: nfsEmViagemDebug.map(nf => ({
+        numero_nf: nf.numero_nf,
+        status: nf.status,
+        status_separacao: nf.status_separacao
+      }))
+    });
     
     // Entregues: NFs com data_entrega ou status_separacao = 'entregue'
     const entregues = todasNfs.filter(nf => {

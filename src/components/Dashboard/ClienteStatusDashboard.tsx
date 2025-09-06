@@ -123,12 +123,12 @@ export function ClienteStatusDashboard() {
       const nfsComStatus = todasNfs.filter(nf => {
         const statusSeparacaoAtual = nf.status_separacao || 'pendente';
         
-        // Mapear status especiais
+        // Mapear status especiais baseados em status_separacao como prioridade
         if (status === 'em_viagem') {
-          return nf.data_embarque && !nf.data_entrega;
+          return nf.status_separacao === 'em_viagem' || (nf.data_embarque && !nf.data_entrega);
         }
         if (status === 'entregue') {
-          return nf.data_entrega || nf.status_separacao === 'entregue';
+          return nf.status_separacao === 'entregue' || nf.data_entrega;
         }
         
         return statusSeparacaoAtual === status;
