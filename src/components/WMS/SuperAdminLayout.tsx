@@ -20,6 +20,7 @@ import { ProductionReadinessCheck } from '@/components/production/ProductionRead
 import DataSeeder from '@/components/system/DataSeeder';
 import SecurityInstructions from '@/components/production/SecurityInstructions';
 import ProductionSecurityChecklist from '@/components/production/ProductionSecurityChecklist';
+import SystemIntegrityCheck from '@/components/system/SystemIntegrityCheck';
 import ClientesDebugPanel from '@/components/system/ClientesDebugPanel';
 import { EnvironmentBadge, EnvironmentIndicator } from '@/components/system/EnvironmentBadge';
 import { ApiStatusIndicator } from '@/components/system/ApiStatusIndicator';
@@ -255,6 +256,7 @@ export function SuperAdminLayout() {
             <div className="space-y-6">
               <ProductionReadinessCheck />
               <ProductionSecurityChecklist />
+              <SystemIntegrityCheck />
               <SecurityInstructions />
               <DataSeeder />
               <ClientesDebugPanel />
